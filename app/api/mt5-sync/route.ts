@@ -61,7 +61,7 @@ interface Deal {
   accountCurrencyExchangeRate?: number
 }
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const supabase  = await createClient()
     const token     = process.env.METAAPI_TOKEN
@@ -71,13 +71,17 @@ export async function POST(_req: NextRequest) {
       return NextResponse.json({ error: 'MetaAPI credentials not configured' }, { status: 400 })
     }
 
-    // Fetch account info + open positions + full-year deal history in parallel
-    // Use Jan 1 of current year so yearly P&L is always complete.
-    // Also look back 400 days to catch any trades near the year boundary.
-    const from = new Date(Math.min(
-      new Date(new Date().getFullYear(), 0, 1).getTime(),   // Jan 1 this year
-      Date.now() - 400 * 24 * 60 * 60 * 1000               // or 400 days, whichever is earlier
-    )).toISOString()
+    // quick=true → only last 14 days (fast, used on page load)
+    // quick=false/omitted → full year history (used for deep sync)
+    const url   = new URL(req.url)
+    const quick = url.searchParams.get('quick') === 'true'
+
+    const from = quick
+      ? new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+      : new Date(Math.min(
+          new Date(new Date().getFullYear(), 0, 1).getTime(),
+          Date.now() - 400 * 24 * 60 * 60 * 1000
+        )).toISOString()
     const to   = new Date().toISOString()
 
     const [accountInfo, positions, allDeals] = await Promise.all([

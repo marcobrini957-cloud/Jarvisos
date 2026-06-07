@@ -35,11 +35,11 @@ export default function Topbar() {
     return () => clearInterval(id)
   }, [])
 
-  const runSync = useCallback(async () => {
+  const runSync = useCallback(async (quick = true) => {
     if (syncing) return
     setSyncing(true)
     try {
-      const res  = await fetch('/api/mt5-sync', { method: 'POST' })
+      const res  = await fetch(`/api/mt5-sync?quick=${quick}`, { method: 'POST' })
       const data = await res.json()
       if (res.ok) {
         setStatus({
@@ -56,10 +56,31 @@ export default function Topbar() {
     }
   }, [syncing])
 
+  // On mount: show cached snapshot instantly, then quick sync in background
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return
-    const t = setTimeout(runSync, 2000)
-    const i = setInterval(runSync, 60000)
+
+    // 1. Load cached data from Supabase immediately
+    fetch('/api/mt5-sync')
+      .then(r => r.json())
+      .then(d => {
+        if (d.snapshot) {
+          setStatus({
+            connected:     true,
+            balance:       d.snapshot.balance,
+            equity:        d.snapshot.equity,
+            openPositions: d.snapshot.open_trades_count ?? 0,
+            syncedAt:      d.snapshot.snapshot_at,
+            error:         null,
+          })
+        }
+      })
+      .catch(() => {})
+
+    // 2. Quick sync after 3 seconds (only last 14 days — fast)
+    const t = setTimeout(() => runSync(true), 3000)
+    // 3. Full sync once per hour
+    const i = setInterval(() => runSync(false), 60 * 60 * 1000)
     return () => { clearTimeout(t); clearInterval(i) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
