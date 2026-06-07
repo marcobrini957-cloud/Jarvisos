@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { fetchFFCalendar, todaysEvents, highImpactForTrading } from '@/lib/forex-factory/calendar'
 
+export const maxDuration = 60
+
 // GET /api/macro — returns calendar events + latest briefing
 export async function GET() {
   try {

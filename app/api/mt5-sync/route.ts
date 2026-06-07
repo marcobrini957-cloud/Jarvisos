@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+export const maxDuration = 60
+
 const METAAPI_BASE = 'https://mt-client-api-v1.london.agiliumtrade.ai'
 
 async function metaApi(path: string, token: string) {
