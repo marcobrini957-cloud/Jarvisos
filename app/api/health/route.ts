@@ -21,5 +21,24 @@ export async function GET() {
     checks['supabase_connection'] = `EXCEPTION: ${String(e)}`
   }
 
+  // Test MetaAPI connection
+  try {
+    const token     = process.env.METAAPI_TOKEN
+    const accountId = process.env.MT5_ACCOUNT_ID
+    const res = await fetch(
+      `https://mt-client-api-v1.london.agiliumtrade.ai/users/current/accounts/${accountId}/account-information`,
+      { headers: { 'auth-token': token! }, cache: 'no-store' }
+    )
+    const text = await res.text()
+    if (res.ok) {
+      const data = JSON.parse(text)
+      checks['metaapi_connection'] = `OK — balance: ${data.balance} ${data.currency}`
+    } else {
+      checks['metaapi_connection'] = `ERROR ${res.status}: ${text.slice(0, 200)}`
+    }
+  } catch (e) {
+    checks['metaapi_connection'] = `EXCEPTION: ${String(e)}`
+  }
+
   return NextResponse.json(checks)
 }
