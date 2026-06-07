@@ -14,11 +14,17 @@ export async function GET() {
   checks['METAAPI_TOKEN']                 = !!process.env.METAAPI_TOKEN
   checks['MT5_ACCOUNT_ID']               = !!process.env.MT5_ACCOUNT_ID
 
-  // Test Supabase connection
+  // Test Supabase connection + data counts
   try {
     const supabase = await createClient()
     const { error } = await supabase.from('account_snapshots').select('id').limit(1)
     checks['supabase_connection'] = error ? `ERROR: ${error.message}` : 'OK'
+
+    const { count: tradeCount } = await supabase.from('trades').select('*', { count: 'exact', head: true })
+    checks['trades_in_db'] = tradeCount ?? 0
+
+    const { count: snapshotCount } = await supabase.from('account_snapshots').select('*', { count: 'exact', head: true })
+    checks['snapshots_in_db'] = snapshotCount ?? 0
   } catch (e) {
     checks['supabase_connection'] = `EXCEPTION: ${String(e)}`
   }
