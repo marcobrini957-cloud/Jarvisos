@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+export const maxDuration = 60
+
 export async function GET() {
   const token     = process.env.METAAPI_TOKEN!
   const accountId = process.env.MT5_ACCOUNT_ID!
