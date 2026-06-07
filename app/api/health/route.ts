@@ -21,10 +21,10 @@ export async function GET() {
     checks['supabase_connection'] = error ? `ERROR: ${error.message}` : 'OK'
 
     const { count: tradeCount } = await supabase.from('trades').select('*', { count: 'exact', head: true })
-    checks['trades_in_db'] = tradeCount ?? 0
+    checks['trades_in_db'] = `${tradeCount ?? 0}`
 
     const { count: snapshotCount } = await supabase.from('account_snapshots').select('*', { count: 'exact', head: true })
-    checks['snapshots_in_db'] = snapshotCount ?? 0
+    checks['snapshots_in_db'] = `${snapshotCount ?? 0}`
   } catch (e) {
     checks['supabase_connection'] = `EXCEPTION: ${String(e)}`
   }
