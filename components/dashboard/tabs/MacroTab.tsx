@@ -80,8 +80,6 @@ export default function MacroTab() {
   const [showFull, setShowFull]     = useState(false)
   const [briefingText, setBriefingText] = useState<string | null>(null)
   const [newsRefresh, setNewsRefresh] = useState(0)
-  const [tgSending, setTgSending] = useState(false)
-  const [tgSent,    setTgSent]    = useState(false)
 
   // Fetch calendar + briefing
   useEffect(() => {
@@ -112,44 +110,8 @@ export default function MacroTab() {
     setGenerating(true); setBriefingText(null)
     const res  = await fetch('/api/macro', { method: 'POST' })
     const data = await res.json()
-    if (res.ok) { setBriefingText(data.text); setBriefing(data.briefing); setTgSent(false) }
+    if (res.ok) { setBriefingText(data.text); setBriefing(data.briefing) }
     setGenerating(false)
-  }
-
-  async function sendToTelegram() {
-    if (!briefingText) return
-    setTgSending(true)
-    try {
-      const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-      const biasLine = (label: string, b: string | null) =>
-        `• ${label}: ${b ? b.charAt(0).toUpperCase() + b.slice(1) : 'Analysing…'}`
-      const eventLines = todayEvents.slice(0, 5).map(e => `• ${e.currency} — ${e.title} (${e.time})`).join('\n')
-
-      const message = [
-        `🌅 *Jarvis Morning Briefing*`,
-        `📅 ${today}`,
-        ``,
-        `📊 *Market Bias*`,
-        biasLine('Gold XAUUSD', bias?.gold ?? null),
-        biasLine('Nasdaq NAS100', bias?.nasdaq ?? null),
-        biasLine('Dollar DXY', bias?.dxy ?? null),
-        ``,
-        todayEvents.length > 0 ? `📅 *High-Impact Today*\n${eventLines}` : `📅 No high-impact events today`,
-        ``,
-        `🤖 *Jarvis Analysis*`,
-        briefingText.slice(0, 800) + (briefingText.length > 800 ? '…' : ''),
-      ].join('\n')
-
-      const res = await fetch('/api/telegram/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message }),
-      })
-      const d = await res.json()
-      setTgSent(d.ok === true)
-    } finally {
-      setTgSending(false)
-    }
   }
 
   const today = new Date().toDateString()
@@ -270,17 +232,6 @@ export default function MacroTab() {
           {/* Jarvis briefing */}
           <Panel title="Jarvis NY Open Briefing" action={
             <div className="flex items-center gap-2">
-              <button onClick={briefingText ? sendToTelegram : undefined}
-                disabled={tgSending || tgSent || !briefingText}
-                title={!briefingText ? 'Generate a briefing first' : 'Send to Telegram'}
-                style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '6px',
-                  cursor: (!briefingText || tgSending || tgSent) ? 'not-allowed' : 'pointer',
-                  background: tgSent ? 'rgba(56,211,100,0.12)' : 'rgba(88,166,255,0.1)',
-                  border: tgSent ? '1px solid rgba(56,211,100,0.3)' : '1px solid rgba(88,166,255,0.25)',
-                  color: tgSent ? 'var(--gr2)' : !briefingText ? 'var(--t3)' : 'var(--ac)',
-                  opacity: !briefingText ? 0.5 : 1 }}>
-                {tgSending ? 'Sending…' : tgSent ? '✓ Sent' : '✈ Telegram'}
-              </button>
               <button onClick={generateBriefing} disabled={generating}
                 style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '6px', cursor: generating ? 'not-allowed' : 'pointer',
                   background: 'rgba(232,201,106,0.12)', border: '1px solid rgba(232,201,106,0.25)', color: 'var(--go2)' }}>

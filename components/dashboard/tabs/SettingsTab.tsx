@@ -36,10 +36,6 @@ function saveTheme(key: string, value: unknown) {
 export default function SettingsTab() {
   const [accent,       setAccent]       = useState('#58A6FF')
   const [bgTheme,      setBgTheme]      = useState('Default')
-  const [tgEnabled,    setTgEnabled]    = useState(true)
-  const [tgTesting,    setTgTesting]    = useState(false)
-  const [tgResult,     setTgResult]     = useState<{ ok: boolean; msg: string } | null>(null)
-  const [tgConfigured, setTgConfigured] = useState<boolean | null>(null)
 
   // Load saved preferences on mount
   useEffect(() => {
@@ -51,14 +47,7 @@ export default function SettingsTab() {
         const theme = BG_THEMES.find(t => t.name === saved.bgTheme)
         if (theme) applyVars(theme.vars)
       }
-      if (typeof saved.tgEnabled === 'boolean') setTgEnabled(saved.tgEnabled)
     } catch { /* ignore */ }
-
-    // Check if Telegram is configured by sending a silent test
-    fetch('/api/telegram/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: '' }) })
-      .then(r => r.json())
-      .then(d => setTgConfigured(d.error !== 'Telegram not configured. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env.local'))
-      .catch(() => setTgConfigured(false))
   }, [])
 
   function handleAccent(hex: string) {
@@ -72,23 +61,6 @@ export default function SettingsTab() {
     const theme = BG_THEMES.find(t => t.name === name)
     if (theme) applyVars(theme.vars)
     saveTheme('bgTheme', name)
-  }
-
-  async function sendTestMessage() {
-    setTgTesting(true); setTgResult(null)
-    try {
-      const res = await fetch('/api/telegram/send', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ message: '✅ *Jarvis OS* — Telegram connected successfully! Morning briefings will appear here.' }),
-      })
-      const d = await res.json()
-      setTgResult(d.ok ? { ok: true, msg: 'Message sent! Check your Telegram.' } : { ok: false, msg: d.error ?? 'Failed' })
-    } catch {
-      setTgResult({ ok: false, msg: 'Network error' })
-    } finally {
-      setTgTesting(false)
-    }
   }
 
   const row = (label: string, value: string, color = 'var(--t2)') => (
@@ -157,56 +129,6 @@ export default function SettingsTab() {
         </div>
       </Panel>
 
-      {/* ── Telegram ── */}
-      <Panel title="Telegram Alerts">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p style={{ color: 'var(--t1)', fontSize: '13px', fontWeight: 500 }}>Morning Briefing</p>
-              <p style={{ color: 'var(--t3)', fontSize: '11px', marginTop: '2px' }}>Send Jarvis macro briefing to Telegram after generating it</p>
-            </div>
-            <button onClick={() => { setTgEnabled(v => !v); saveTheme('tgEnabled', !tgEnabled) }}
-              className="rounded-full transition-all"
-              style={{
-                width: '44px', height: '24px', padding: '0 2px',
-                background: tgEnabled ? 'var(--ac)' : 'var(--s3)',
-                border: 'none', cursor: 'pointer', position: 'relative',
-              }}>
-              <span style={{
-                display: 'block', width: '20px', height: '20px', borderRadius: '50%',
-                background: 'white', transition: 'transform 0.2s',
-                transform: tgEnabled ? 'translateX(20px)' : 'translateX(0)',
-              }} />
-            </button>
-          </div>
-
-          {/* Status + test */}
-          <div className="rounded-lg p-3 flex items-center justify-between" style={{ background: 'var(--s2)', border: '1px solid var(--bd2)' }}>
-            <div className="flex items-center gap-2">
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: tgConfigured === null ? 'var(--am2)' : tgConfigured ? 'var(--gr2)' : 'var(--re)', display: 'inline-block' }} />
-              <span style={{ color: 'var(--t2)', fontSize: '12px' }}>
-                {tgConfigured === null ? 'Checking…' : tgConfigured ? 'Bot token configured' : 'Not configured — set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID in .env.local'}
-              </span>
-            </div>
-            {tgConfigured && (
-              <button onClick={sendTestMessage} disabled={tgTesting}
-                style={{ fontSize: '11px', padding: '4px 12px', borderRadius: '6px', cursor: tgTesting ? 'not-allowed' : 'pointer',
-                  background: 'rgba(88,166,255,0.12)', border: '1px solid rgba(88,166,255,0.25)', color: 'var(--ac)' }}>
-                {tgTesting ? 'Sending…' : 'Send test message'}
-              </button>
-            )}
-          </div>
-
-          {tgResult && (
-            <p style={{ fontSize: '12px', color: tgResult.ok ? 'var(--gr2)' : 'var(--re)',
-              background: tgResult.ok ? 'rgba(56,211,100,0.08)' : 'rgba(248,81,73,0.08)',
-              border: `1px solid ${tgResult.ok ? 'rgba(56,211,100,0.2)' : 'rgba(248,81,73,0.2)'}`,
-              padding: '8px 12px', borderRadius: '6px' }}>
-              {tgResult.msg}
-            </p>
-          )}
-        </div>
-      </Panel>
 
       {/* ── Screenshot Storage ── */}
       <Panel title="Screenshot Storage">
@@ -232,7 +154,6 @@ export default function SettingsTab() {
           {row('gold-api.com (metals)',        'Active',    'var(--gr2)')}
           {row('Frankfurter (EUR/USD)',        'Active',    'var(--gr2)')}
           {row('Forex Factory (calendar)',     'Active',    'var(--gr2)')}
-          {row('Telegram Bot',                tgConfigured === null ? 'Checking…' : tgConfigured ? 'Connected' : 'Not configured', tgConfigured ? 'var(--gr2)' : 'var(--re)')}
         </div>
       </Panel>
     </div>
