@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 
 export const maxDuration = 60
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>) {
-  // Last 30 days of trades
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
   const { data: trades } = await supabase
     .from('trades')
@@ -35,7 +34,6 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>) 
     .select('ticker,name,quantity,avg_buy_price,currency,sector')
     .eq('is_active', true)
 
-  // Compute stats
   const t = (trades ?? [])
   const wins     = t.filter(x => (x.net_profit ?? 0) > 0)
   const losses   = t.filter(x => (x.net_profit ?? 0) < 0)
@@ -44,7 +42,6 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>) 
   const avgWin   = wins.length  > 0 ? (wins.reduce((s,x)=>s+(x.net_profit??0),0)/wins.length).toFixed(2)  : '0'
   const avgLoss  = losses.length > 0 ? (losses.reduce((s,x)=>s+(x.net_profit??0),0)/losses.length).toFixed(2) : '0'
 
-  // Tag breakdown
   const tagMap = new Map<string, { w: number; t: number }>()
   for (const tr of t) {
     for (const tag of tr.tags ?? []) {
@@ -58,7 +55,6 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>) 
     .map(([tag, s]) => `${tag}: ${(s.w/s.t*100).toFixed(0)}% WR (${s.t} trades)`)
     .join(', ')
 
-  // Session breakdown
   const sessionMap = new Map<string, { w: number; t: number }>()
   for (const tr of t) {
     const s = tr.session ?? 'unknown'
@@ -71,7 +67,6 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>) 
     .map(([s, v]) => `${s}: ${(v.w/v.t*100).toFixed(0)}% WR (${v.t} trades)`)
     .join(', ')
 
-  // Emotion breakdown
   const emoMap = new Map<string, { pnl: number; t: number }>()
   for (const tr of t) {
     if (!tr.emotion_pre) continue
@@ -128,8 +123,8 @@ export async function POST(req: NextRequest) {
     const { message, history = [] } = await req.json()
     if (!message) return NextResponse.json({ error: 'No message' }, { status: 400 })
 
-    const supabase  = await createClient()
-    const context   = await buildContext(supabase)
+    const supabase = await createClient()
+    const context  = await buildContext(supabase)
 
     const systemPrompt = `You are Jarvis, Marco's personal AI trading assistant.
 
@@ -150,30 +145,25 @@ YOUR JOB:
 - Keep responses concise but insightful. Use bullet points for patterns.
 - If the data shows something concerning (e.g. trading angry, overtrading), call it out directly.`
 
-    // Build messages for Claude
-    const messages: Anthropic.MessageParam[] = [
-      ...history.slice(-10), // keep last 10 turns for context
-      { role: 'user', content: message },
+    const messages = [
+      ...history.slice(-10),
+      { role: 'user' as const, content: message },
     ]
 
-    // Stream the response
-    const stream = await anthropic.messages.stream({
-      model:      'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
-      system:     systemPrompt,
-      messages,
+    const stream = await groq.chat.completions.create({
+      model:       'llama-3.3-70b-versatile',
+      max_tokens:  1500,
+      temperature: 0.3,
+      messages:    [{ role: 'system', content: systemPrompt }, ...messages],
+      stream:      true,
     })
 
-    const encoder   = new TextEncoder()
-    const readable  = new ReadableStream({
+    const encoder  = new TextEncoder()
+    const readable = new ReadableStream({
       async start(controller) {
         for await (const chunk of stream) {
-          if (
-            chunk.type === 'content_block_delta' &&
-            chunk.delta.type === 'text_delta'
-          ) {
-            controller.enqueue(encoder.encode(chunk.delta.text))
-          }
+          const text = chunk.choices[0]?.delta?.content ?? ''
+          if (text) controller.enqueue(encoder.encode(text))
         }
         controller.close()
       },
@@ -181,8 +171,8 @@ YOUR JOB:
 
     return new NextResponse(readable, {
       headers: {
-        'Content-Type':  'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache',
+        'Content-Type':      'text/plain; charset=utf-8',
+        'Cache-Control':     'no-cache',
         'X-Accel-Buffering': 'no',
       },
     })

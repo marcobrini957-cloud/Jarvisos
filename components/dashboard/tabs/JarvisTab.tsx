@@ -52,7 +52,7 @@ export default function JarvisTab() {
       if (!res.ok || !res.body) {
         setMessages(prev => {
           const copy = [...prev]
-          copy[copy.length - 1] = { role: 'assistant', content: 'Error reaching Jarvis. Check that ANTHROPIC_API_KEY is set in .env.local.' }
+          copy[copy.length - 1] = { role: 'assistant', content: 'Error reaching Jarvis. Check that GROQ_API_KEY is set in environment variables.' }
           return copy
         })
         return

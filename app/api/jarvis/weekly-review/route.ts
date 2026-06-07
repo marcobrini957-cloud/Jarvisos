@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 
 export const maxDuration = 60
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +14,6 @@ export async function POST(req: NextRequest) {
     const since    = new Date(week + 'T00:00:00').toISOString()
     const until    = new Date(new Date(week + 'T00:00:00').getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
-    // Pull week's trades
     const { data: trades } = await supabase
       .from('trades')
       .select('symbol,trade_type,net_profit,pips,session,setup_type,tags,emotion_pre,followed_plan')
@@ -27,7 +26,6 @@ export async function POST(req: NextRequest) {
     const winRate    = t.length > 0 ? (t.filter(x => (x.net_profit ?? 0) > 0).length / t.length * 100).toFixed(1) : '0'
     const tradeCount = t.length
 
-    // Pull week's journal entries
     const { data: journal } = await supabase
       .from('journal_entries')
       .select('entry_date,mood,energy_level,body_text,is_trading_day')
@@ -69,19 +67,20 @@ Include:
 
 Be direct. Don't sugarcoat. This is for someone who wants to become a better trader.`
 
-    const stream = await anthropic.messages.stream({
-      model:      'claude-haiku-4-5-20251001',
-      max_tokens: 1200,
-      messages:   [{ role: 'user', content: prompt }],
+    const stream = await groq.chat.completions.create({
+      model:       'llama-3.3-70b-versatile',
+      max_tokens:  1200,
+      temperature: 0.4,
+      messages:    [{ role: 'user', content: prompt }],
+      stream:      true,
     })
 
     const encoder  = new TextEncoder()
     const readable = new ReadableStream({
       async start(controller) {
         for await (const chunk of stream) {
-          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-            controller.enqueue(encoder.encode(chunk.delta.text))
-          }
+          const text = chunk.choices[0]?.delta?.content ?? ''
+          if (text) controller.enqueue(encoder.encode(text))
         }
         controller.close()
       },

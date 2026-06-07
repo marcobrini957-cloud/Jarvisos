@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { fetchFFCalendar, todaysEvents, highImpactForTrading } from '@/lib/forex-factory/calendar'
 
 export const maxDuration = 60
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 // GET /api/macro — returns calendar events + latest briefing
 export async function GET() {
@@ -87,29 +90,18 @@ Write a comprehensive briefing with these sections:
 
 Be comprehensive but scannable. Use specific numbers, price levels, percentages wherever possible.`
 
-    // Call Claude Haiku
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type':   'application/json',
-        'x-api-key':      process.env.ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model:      'claude-haiku-4-5-20251001',
-        max_tokens: 2048,
-        system:     systemPrompt,
-        messages:   [{ role: 'user', content: userPrompt }],
-      }),
+    // Call Groq (Llama)
+    const completion = await groq.chat.completions.create({
+      model:       'llama-3.3-70b-versatile',
+      max_tokens:  2048,
+      temperature: 0.3,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: userPrompt   },
+      ],
     })
 
-    if (!anthropicRes.ok) {
-      const err = await anthropicRes.text()
-      throw new Error(`Claude API error: ${err}`)
-    }
-
-    const aiResult = await anthropicRes.json()
-    const briefingText: string = aiResult.content[0].text
+    const briefingText: string = completion.choices[0]?.message?.content ?? ''
 
     // Parse bias from text (simple heuristic)
     const goldBias    = briefingText.toLowerCase().includes('gold') && briefingText.toLowerCase().includes('bullish') ? 'bullish'
