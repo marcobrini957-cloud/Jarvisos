@@ -1,0 +1,172 @@
+'use client'
+
+import { useState } from 'react'
+
+interface MT5ConnectModalProps {
+  onClose: () => void
+  onSave: (data: { accountId: string; investorPassword: string; server: string }) => Promise<void>
+  currentAccountId?: string
+  isConnected?: boolean
+}
+
+export default function MT5ConnectModal({ onClose, onSave, currentAccountId, isConnected }: MT5ConnectModalProps) {
+  const [accountId, setAccountId]           = useState(currentAccountId ?? '')
+  const [investorPassword, setInvestorPw]   = useState('')
+  const [server, setServer]                 = useState('BlueberryMarkets-Live')
+  const [saving, setSaving]                 = useState(false)
+  const [error, setError]                   = useState('')
+
+  async function handleSave() {
+    if (!accountId.trim() || !investorPassword.trim() || !server.trim()) {
+      setError('All fields are required.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    try {
+      await onSave({ accountId: accountId.trim(), investorPassword: investorPassword.trim(), server: server.trim() })
+      onClose()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to connect. Check your credentials.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40"
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div
+        className="fixed z-50 rounded-xl p-6 flex flex-col gap-4"
+        style={{
+          top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          width: '420px', maxWidth: 'calc(100vw - 32px)',
+          background: 'var(--s1)', border: '1px solid var(--bd2)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 style={{ color: 'var(--t1)', fontSize: '15px', fontWeight: 500 }}>Connect MetaTrader 5</h2>
+            <p style={{ color: 'var(--t2)', fontSize: '12px', marginTop: '2px' }}>
+              Investor password is read-only — no trading access.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '18px', cursor: 'pointer', lineHeight: 1 }}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Status pill */}
+        {isConnected && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-md"
+            style={{ background: 'rgba(99,153,34,0.1)', border: '1px solid rgba(99,153,34,0.2)' }}>
+            <span className="rounded-full" style={{ width: '7px', height: '7px', background: 'var(--gr2)', display: 'inline-block' }} />
+            <span style={{ color: 'var(--gr2)', fontSize: '12px' }}>Currently connected — update credentials below to reconnect</span>
+          </div>
+        )}
+
+        {/* Fields */}
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Account ID (Login)</label>
+            <input
+              value={accountId}
+              onChange={e => setAccountId(e.target.value)}
+              placeholder="e.g. 1234567"
+              style={{
+                background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
+                padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
+              }}
+              onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+              onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Investor Password</label>
+            <input
+              type="password"
+              value={investorPassword}
+              onChange={e => setInvestorPw(e.target.value)}
+              placeholder="Read-only investor password"
+              style={{
+                background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
+                padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
+              }}
+              onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+              onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
+            />
+            <p style={{ color: 'var(--t3)', fontSize: '11px' }}>
+              In MT5: Tools → Options → Server → Change investor password
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Server</label>
+            <input
+              value={server}
+              onChange={e => setServer(e.target.value)}
+              placeholder="BlueberryMarkets-Live"
+              style={{
+                background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
+                padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
+              }}
+              onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+              onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
+            />
+            <p style={{ color: 'var(--t3)', fontSize: '11px' }}>
+              Find in MT5: File → Open Account — shown next to your account
+            </p>
+          </div>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <p style={{ color: 'var(--re)', fontSize: '12px', background: 'rgba(226,75,74,0.08)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(226,75,74,0.2)' }}>
+            {error}
+          </p>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-md"
+            style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 py-2.5 rounded-md font-medium"
+            style={{
+              background: saving ? 'rgba(55,138,221,0.3)' : 'var(--ac)',
+              border: 'none', color: 'white', fontSize: '13px', cursor: saving ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {saving ? 'Connecting…' : 'Connect MT5'}
+          </button>
+        </div>
+
+        {/* Info note */}
+        <p style={{ color: 'var(--t3)', fontSize: '11px', textAlign: 'center', lineHeight: '1.5' }}>
+          Powered by MetaAPI. Your credentials are encrypted and stored securely in Supabase.
+          The investor password cannot place or modify trades.
+        </p>
+      </div>
+    </>
+  )
+}

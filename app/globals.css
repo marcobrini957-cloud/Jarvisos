@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg:  #0A0E14;
+  --color-s1:  #111720;
+  --color-s2:  #161D2A;
+  --color-s3:  #1C2535;
+  --color-t1:  #EDF2F7;
+  --color-t2:  #8892A0;
+  --color-t3:  #434B56;
+  --color-ac:  #4F8EF7;
+  --color-gr:  #34C759;
+  --color-gr2: #4CD964;
+  --color-re:  #FF3B30;
+  --color-go:  #C8851A;
+  --color-go2: #D4A034;
+  --color-am:  #C97B2E;
+  --color-am2: #E09840;
+  --color-pu:  #9B72F0;
+}
+
+:root {
+  --bg:  #0A0E14;
+  --s1:  #111720;
+  --s2:  #161D2A;
+  --s3:  #1C2535;
+  --bd:  rgba(255,255,255,0.05);
+  --bd2: rgba(255,255,255,0.09);
+  --bd3: rgba(255,255,255,0.14);
+  --t1:  #EDF2F7;
+  --t2:  #8892A0;
+  --t3:  #434B56;
+  --ac:  #4F8EF7;
+  --ac2: #6FA3FF;
+  --gr:  #34C759;
+  --gr2: #4CD964;
+  --re:  #FF3B30;
+  --go:  #C8851A;
+  --go2: #D4A034;
+  --am:  #C97B2E;
+  --am2: #E09840;
+  --pu:  #9B72F0;
+
+  /* Elevation shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.25);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3);
+  --shadow-xl: 0 32px 80px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.35);
+
+  /* Radius system */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 18px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--t1);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Typography utilities ── */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.03em;
+}
+
+.label-caps {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar         { width: 3px; height: 3px; }
+::-webkit-scrollbar-track   { background: transparent; }
+::-webkit-scrollbar-thumb   { background: rgba(255,255,255,0.07); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.07) transparent; }
+
+/* ── Reset ── */
+button { cursor: pointer; font: inherit; }
+a      { text-decoration: none; color: inherit; }
+input, textarea, select { font: inherit; }
+
+/* ── Focus ring ── */
+:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Animations ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1;   transform: scale(1);   }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(79,142,247,0.3); }
+  50%       { box-shadow: 0 0 16px rgba(79,142,247,0.6); }
+}
+
+.fade-in  { animation: fade-in  0.18s ease both; }
+.slide-up { animation: slide-up 0.22s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* ── Glass surfaces ── */
+.glass {
+  background: rgba(17,23,32,0.85);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+}
+
+/* ── Input base style ── */
+.input-base {
+  background: var(--s2);
+  border: 1px solid var(--bd2);
+  border-radius: var(--r-md);
+  color: var(--t1);
+  padding: 9px 12px;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.input-base:focus {
+  outline: none;
+  border-color: var(--ac);
+}
+.input-base::placeholder { color: var(--t3); }
+
+/* ── Gradient text ── */
+.gradient-gold {
+  background: linear-gradient(135deg, var(--go2), var(--am2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
