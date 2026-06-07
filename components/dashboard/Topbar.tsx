@@ -47,10 +47,12 @@ export default function Topbar() {
           openPositions: data.openPositions, syncedAt: data.syncedAt, error: null,
         })
       } else {
-        setStatus(prev => ({ ...prev, connected: false, error: data.error }))
+        // Keep existing balance visible, just flag the sync error
+        setStatus(prev => ({ ...prev, error: data.error ?? 'Sync error' }))
       }
     } catch {
-      setStatus(prev => ({ ...prev, connected: false, error: 'Network error' }))
+      // Don't hide existing data on sync failure — just show a warning
+      setStatus(prev => ({ ...prev, error: 'Sync failed — showing cached data' }))
     } finally {
       setSyncing(false)
     }

@@ -257,11 +257,9 @@ export async function POST(req: NextRequest) {
       syncedAt:      new Date().toISOString(),
     })
   } catch (err: unknown) {
-    console.error('[mt5-sync]', err)
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Sync failed' },
-      { status: 500 }
-    )
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[mt5-sync] FAILED:', msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
