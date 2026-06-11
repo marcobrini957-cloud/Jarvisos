@@ -1880,7 +1880,7 @@ export default function TradingTab() {
                   <span style={{ color:'var(--t1)', fontWeight:500, fontSize:'13px' }}>{trade.symbol}</span>
                   <div className="flex gap-1 flex-wrap">
                     <Badge variant={trade.trade_type as 'buy'|'sell'}>{trade.trade_type.toUpperCase()}</Badge>
-                    {trade.screenshot_missing && <Badge variant="screenshot">no screenshot</Badge>}
+                    {trade.screenshot_missing && !trade.screenshot_open_url && !trade.screenshot_close_url && <Badge variant="screenshot">no screenshot</Badge>}
                   </div>
                 </div>
 

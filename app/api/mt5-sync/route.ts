@@ -190,15 +190,20 @@ export async function POST(req: NextRequest) {
     const { data: existingRows } = closedTickets.length > 0
       ? await supabase
           .from('trades')
-          .select('mt5_ticket, screenshot_open_url, screenshot_close_url')
+          .select('mt5_ticket, screenshot_open_url, screenshot_close_url, screenshot_missing')
           .in('mt5_ticket', closedTickets)
           .eq('user_id', userId)
       : { data: [] }
 
+    // hasScreenshot = true if any screenshot has been uploaded (open OR close)
+    // screenshotMissingOverride = false if user already marked it as not missing
     const screenshotMap = new Map(
       (existingRows ?? []).map(r => [
         r.mt5_ticket as number,
-        !!(r.screenshot_open_url && r.screenshot_close_url),
+        {
+          hasScreenshot: !!(r.screenshot_open_url || r.screenshot_close_url),
+          alreadyFalse:  r.screenshot_missing === false,
+        },
       ])
     )
 
@@ -235,7 +240,11 @@ export async function POST(req: NextRequest) {
       const pips      = calcPips(symbol, entryDeal.price ?? 0, lastExit.price ?? 0, tradeType as 'buy' | 'sell')
       const duration  = Math.round((new Date(closeTime).getTime() - new Date(openTime).getTime()) / 60000)
       const ticket    = parseInt(positionId)
-      const hasBothScreenshots = screenshotMap.get(ticket)
+      const existing  = screenshotMap.get(ticket)
+      // Never flip screenshot_missing back to true if user already has a screenshot or marked it done
+      const screenshotMissing = existing
+        ? (!existing.hasScreenshot && !existing.alreadyFalse)
+        : true
 
       tradesToUpsert.push({
         user_id:            userId,
@@ -257,7 +266,7 @@ export async function POST(req: NextRequest) {
         net_profit:         totalProfit + totalCommission + totalSwap,
         status:             'closed',
         session:            detectSession(openTime),
-        screenshot_missing: hasBothScreenshots === undefined ? true : !hasBothScreenshots,
+        screenshot_missing: screenshotMissing,
       })
 
       if (screenshotMap.has(ticket)) updatedTrades++
