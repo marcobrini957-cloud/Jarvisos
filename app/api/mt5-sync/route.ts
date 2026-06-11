@@ -27,9 +27,14 @@ async function metaApi(path: string, token: string, attempt = 0): Promise<unknow
 
 function detectSession(isoTime: string): string {
   const h = new Date(isoTime).getUTCHours()
-  if (h >= 13 && h < 17) return 'overlap'
-  if (h >= 8  && h < 13) return 'london'
-  if (h >= 17 && h < 22) return 'new_york'
+  // All times UTC. Vienna = UTC+2 summer / UTC+1 winter.
+  // London:   07–12 UTC  (09–14 Vienna summer)
+  // Overlap:  12–16 UTC  (14–18 Vienna summer) — London + NY both open
+  // New York: 16–22 UTC  (18–00 Vienna summer)
+  // Asian:    22–07 UTC  (00–09 Vienna summer)
+  if (h >= 12 && h < 16) return 'overlap'
+  if (h >= 7  && h < 12) return 'london'
+  if (h >= 16 && h < 22) return 'new_york'
   return 'asian'
 }
 
