@@ -48,11 +48,13 @@ function EntryModal({
   date,
   existing,
   onSave,
+  onDelete,
   onClose,
 }: {
   date: string
   existing?: JournalEntry
   onSave: (data: Parameters<ReturnType<typeof useJournalEntries>['addEntry']>[0]) => Promise<unknown>
+  onDelete?: (id: string) => Promise<void>
   onClose: () => void
 }) {
   const [mood, setMood]         = useState<Mood>((existing?.mood as Mood) ?? 'neutral')
@@ -60,7 +62,9 @@ function EntryModal({
   const [body, setBody]         = useState(existing?.body_text ?? '')
   const [trading, setTrading]   = useState(existing?.is_trading_day ?? true)
   const [tagInput, setTagInput] = useState((existing?.tags ?? []).join(', '))
-  const [saving, setSaving]     = useState(false)
+  const [saving,   setSaving]   = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const displayDate = new Date(date + 'T12:00:00').toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
@@ -182,16 +186,48 @@ function EntryModal({
 
         {/* Actions */}
         <div className="flex gap-2 pt-2">
-          <button onClick={onClose}
-            className="flex-1 py-2.5 rounded-md"
-            style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
-            Cancel
-          </button>
-          <button onClick={handleSave} disabled={saving}
-            className="flex-1 py-2.5 rounded-md font-medium"
-            style={{ background: saving ? 'rgba(99,153,34,0.3)' : 'var(--gr)', border: 'none', color: 'white', fontSize: '13px', cursor: saving ? 'not-allowed' : 'pointer' }}>
-            {saving ? 'Saving…' : existing ? 'Update Entry' : '+ Save Entry'}
-          </button>
+          {existing && onDelete && (
+            confirmDelete ? (
+              <>
+                <button
+                  onClick={async () => {
+                    setDeleting(true)
+                    await onDelete(existing.id)
+                    onClose()
+                  }}
+                  disabled={deleting}
+                  className="flex-1 py-2.5 rounded-md font-medium"
+                  style={{ background: 'var(--re)', border: 'none', color: 'white', fontSize: '13px', cursor: deleting ? 'not-allowed' : 'pointer' }}>
+                  {deleting ? 'Deleting…' : 'Confirm delete'}
+                </button>
+                <button onClick={() => setConfirmDelete(false)}
+                  className="py-2.5 px-4 rounded-md"
+                  style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button onClick={() => setConfirmDelete(true)}
+                className="py-2.5 px-3 rounded-md"
+                style={{ background: 'transparent', border: '1px solid rgba(255,51,71,0.25)', color: 'var(--re)', fontSize: '13px', cursor: 'pointer' }}>
+                Delete
+              </button>
+            )
+          )}
+          {!confirmDelete && (
+            <>
+              <button onClick={onClose}
+                className="flex-1 py-2.5 rounded-md"
+                style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={handleSave} disabled={saving}
+                className="flex-1 py-2.5 rounded-md font-medium"
+                style={{ background: saving ? 'rgba(99,153,34,0.3)' : 'var(--gr)', border: 'none', color: 'white', fontSize: '13px', cursor: saving ? 'not-allowed' : 'pointer' }}>
+                {saving ? 'Saving…' : existing ? 'Update Entry' : '+ Save Entry'}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>
@@ -596,6 +632,7 @@ export default function JournalTab() {
           date={modal.date}
           existing={modal.existing}
           onSave={addEntry}
+          onDelete={modal.existing ? deleteEntry : undefined}
           onClose={() => setModal(null)}
         />
       )}
