@@ -35,9 +35,12 @@ export function usePortfolio() {
   const loadHoldings = useCallback(async () => {
     setLoading(true)
     const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setLoading(false); return }
     const { data } = await supabase
       .from('portfolio_holdings')
       .select('*')
+      .eq('user_id', user.id)
       .eq('is_active', true)
       .order('created_at', { ascending: true })
     const rows = (data ?? []) as PortfolioHolding[]
@@ -150,7 +153,9 @@ export function usePortfolio() {
     sector?: string; notes?: string; target_pct?: number
   }) {
     const supabase = createClient()
-    const { data } = await supabase.from('portfolio_holdings').insert({ ...h, is_active: true }).select().single()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+    const { data } = await supabase.from('portfolio_holdings').insert({ ...h, is_active: true, user_id: user.id }).select().single()
     if (data) await loadHoldings()
     return data
   }

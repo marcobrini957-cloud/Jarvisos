@@ -27,11 +27,14 @@ export function useHabits() {
     setLoading(true)
     try {
       const supabase = createClient()
-      const since    = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
       const [{ data: h }, { data: c }] = await Promise.all([
-        supabase.from('habits').select('*').eq('is_active', true).order('sort_order'),
-        supabase.from('habit_completions').select('*').gte('completed_date', since),
+        supabase.from('habits').select('*').eq('user_id', user.id).eq('is_active', true).order('sort_order'),
+        supabase.from('habit_completions').select('*').eq('user_id', user.id).gte('completed_date', since),
       ])
 
       setHabits((h ?? []) as Habit[])
@@ -51,6 +54,9 @@ export function useHabits() {
 
   async function toggleHabit(habitId: string, date: string = today) {
     const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
     const done = isCompleted(habitId, date)
 
     if (done) {
@@ -58,21 +64,25 @@ export function useHabits() {
         .delete()
         .eq('habit_id', habitId)
         .eq('completed_date', date)
+        .eq('user_id', user.id)
       setCompletions(prev => prev.filter(c => !(c.habit_id === habitId && c.completed_date === date)))
     } else {
       const { data } = await supabase.from('habit_completions')
-        .insert({ habit_id: habitId, completed_date: date })
+        .insert({ habit_id: habitId, completed_date: date, user_id: user.id })
         .select().single()
       if (data) setCompletions(prev => [...prev, data as HabitCompletion])
     }
   }
 
   async function addHabit(name: string, icon: string, category: string) {
-    const supabase   = createClient()
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
     const sort_order = habits.length + 1
     const { data }   = await supabase
       .from('habits')
-      .insert({ name, icon, category, is_active: true, sort_order })
+      .insert({ name, icon, category, is_active: true, sort_order, user_id: user.id })
       .select().single()
     if (data) setHabits(prev => [...prev, data as Habit])
   }
@@ -83,7 +93,6 @@ export function useHabits() {
     setHabits(prev => prev.filter(h => h.id !== id))
   }
 
-  // Streak calculation (consecutive days ending today)
   function calcStreak(habitId: string): number {
     const dates = new Set(
       completions.filter(c => c.habit_id === habitId).map(c => c.completed_date)
@@ -99,11 +108,9 @@ export function useHabits() {
     return streak
   }
 
-  // Overall today completion
   const todayCompleted = habits.filter(h => isCompleted(h.id, today)).length
   const todayTotal     = habits.length
 
-  // Last 30 days completion rate per habit
   function completionRate(habitId: string): number {
     const count = completions.filter(c => c.habit_id === habitId).length
     return habits.length > 0 ? Math.round((count / 30) * 100) : 0

@@ -12,7 +12,10 @@ export function useTasks(filter?: { dueDate?: string; status?: string }) {
     setLoading(true)
     try {
       const supabase = createClient()
-      let query = supabase.from('tasks').select('*').order('due_date', { ascending: true })
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      let query = supabase.from('tasks').select('*').eq('user_id', user.id).order('due_date', { ascending: true })
       if (filter?.dueDate) query = query.eq('due_date', filter.dueDate)
       if (filter?.status)  query = query.eq('status', filter.status)
       const { data } = await query
@@ -35,7 +38,10 @@ export function useTasks(filter?: { dueDate?: string; status?: string }) {
 
   async function addTask(task: Omit<Task, 'id' | 'created_at' | 'updated_at'>) {
     const supabase = createClient()
-    const { data } = await supabase.from('tasks').insert(task).select().single()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data } = await supabase.from('tasks').insert({ ...task, user_id: user.id }).select().single()
     if (data) setTasks(prev => [...prev, data as Task])
   }
 

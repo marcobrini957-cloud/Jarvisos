@@ -19,7 +19,6 @@ export interface WeeklyReview {
   tags: string[] | null
 }
 
-// Returns the Monday of the week containing `date`
 export function weekStart(date: Date = new Date()): string {
   const d   = new Date(date)
   const day = d.getDay()
@@ -35,16 +34,20 @@ export function weekLabel(ws: string): string {
 }
 
 export function useWeeklyReview() {
-  const [reviews,     setReviews]     = useState<WeeklyReview[]>([])
-  const [loading,     setLoading]     = useState(true)
+  const [reviews, setReviews] = useState<WeeklyReview[]>([])
+  const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
       const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
       const { data } = await supabase
         .from('weekly_reviews')
         .select('*')
+        .eq('user_id', user.id)
         .order('week_start', { ascending: false })
         .limit(12)
       setReviews((data ?? []) as WeeklyReview[])
@@ -57,6 +60,9 @@ export function useWeeklyReview() {
 
   async function saveReview(ws: string, fields: Partial<Omit<WeeklyReview, 'id' | 'created_at' | 'week_start'>>) {
     const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
     const existing = reviews.find(r => r.week_start === ws)
 
     if (existing) {
@@ -70,7 +76,7 @@ export function useWeeklyReview() {
     } else {
       const { data } = await supabase
         .from('weekly_reviews')
-        .insert({ week_start: ws, ...fields })
+        .insert({ week_start: ws, user_id: user.id, ...fields })
         .select().single()
       if (data) setReviews(prev => [data as WeeklyReview, ...prev])
       return data as WeeklyReview
