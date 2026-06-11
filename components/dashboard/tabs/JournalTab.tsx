@@ -571,7 +571,7 @@ export default function JournalTab() {
                         <div style={{
                           width: `${(Math.abs(avg) / maxAbs) * 100}%`,
                           height: '100%',
-                          background: avg >= 0 ? MOOD_COLOR[m] : 'var(--re)',
+                          background: avg >= 0 ? 'var(--gr2)' : 'var(--re)',
                           borderRadius: '4px',
                         }} />
                       </div>
