@@ -12,8 +12,9 @@ async function fetchSpot(symbol: 'XAU' | 'XAG'): Promise<{ priceUsd: number; cha
   // gold-api returns price in USD per troy oz
   // changePct not always present — calculate from price if needed
   return {
-    priceUsd:  data.price   as number,
-    changePct: (data.ch && data.price) ? (data.ch / (data.price - data.ch)) * 100 : 0,
+    priceUsd:  data.price as number,
+    // gold-api returns chp = daily change %, ch = daily change in USD
+    changePct: data.chp ?? (data.ch && data.price ? (data.ch / (data.price - data.ch)) * 100 : 0),
   }
 }
 

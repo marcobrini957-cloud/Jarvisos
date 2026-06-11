@@ -717,9 +717,16 @@ export default function PortfolioTab() {
                     {/* Today */}
                     <div style={{ width: '58px', flexShrink: 0, textAlign: 'right' }}>
                       {h.change1d !== null ? (
-                        <p style={{ color: h.change1d >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: '12px', fontWeight: 500 }}>
-                          {fmtPct(h.change1d)}
-                        </p>
+                        <>
+                          <p style={{ color: h.change1d >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: '12px', fontWeight: 500 }}>
+                            {fmtPct(h.change1d)}
+                          </p>
+                          {h.currentValueEur !== null && (
+                            <p style={{ color: h.change1d >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: '11px', opacity: 0.8 }}>
+                              {h.change1d >= 0 ? '+' : '−'}€{Math.abs(h.currentValueEur * h.change1d / 100).toFixed(2)}
+                            </p>
+                          )}
+                        </>
                       ) : (
                         <p style={{ color: 'var(--t3)', fontSize: '12px' }}>—</p>
                       )}
