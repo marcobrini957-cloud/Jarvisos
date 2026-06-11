@@ -46,7 +46,7 @@ function IconBtn({
   onClick: () => void
 }) {
   const activeColor  = isGold ? 'var(--go2)' : 'var(--ac)'
-  const defaultColor = isGold ? 'var(--go)' : 'var(--t2)'
+  const defaultColor = isGold ? 'var(--go2)' : '#727272'
 
   return (
     <button
@@ -145,19 +145,19 @@ export default function Sidebar({ activeTab, onTabChange, showSettings, onSettin
           width: '36px', height: '36px',
           background: showSettings ? 'rgba(88,166,255,0.12)' : 'transparent',
           border: 'none',
-          color: showSettings ? 'var(--ac)' : 'var(--t3)',
+          color: showSettings ? 'var(--ac)' : '#727272',
           cursor: 'pointer',
         }}
         onMouseEnter={(e) => {
           if (!showSettings) {
             e.currentTarget.style.background = 'var(--s3)'
-            e.currentTarget.style.color = 'var(--t2)'
+            e.currentTarget.style.color = 'var(--t1)'
           }
         }}
         onMouseLeave={(e) => {
           if (!showSettings) {
             e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = 'var(--t3)'
+            e.currentTarget.style.color = '#727272'
           }
         }}
       >

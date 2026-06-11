@@ -34,7 +34,7 @@ export default function TabBar({ activeTab, onTabChange, showSettings, onSetting
         gap:           '2px',
       }}
     >
-      <div className="flex items-center flex-1 overflow-x-auto gap-0.5" style={{ height: '100%' }}>
+      <div className="flex items-center flex-1 overflow-x-auto gap-0.5" style={{ height: '100%', msOverflowStyle: 'none', scrollbarWidth: 'none' } as React.CSSProperties}>
         {TABS.map((tab) => {
           const isActive = !showSettings && activeTab === tab.id
           const isGold   = tab.isGold
@@ -50,7 +50,7 @@ export default function TabBar({ activeTab, onTabChange, showSettings, onSetting
                 fontWeight:   isActive ? 600 : 400,
                 color:        isActive
                   ? (isGold ? 'var(--go2)' : 'var(--t1)')
-                  : (isGold ? 'var(--go)'  : 'var(--t3)'),
+                  : (isGold ? 'var(--go2)'  : '#727272'),
                 background:   'transparent',
                 border:       'none',
                 borderBottom: isActive
@@ -65,13 +65,13 @@ export default function TabBar({ activeTab, onTabChange, showSettings, onSetting
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.color = isGold ? 'var(--go2)' : 'var(--t2)'
+                  e.currentTarget.style.color = isGold ? 'var(--go2)' : 'var(--t1)'
                   e.currentTarget.style.background = 'var(--s2)'
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.color = isGold ? 'var(--go)' : 'var(--t3)'
+                  e.currentTarget.style.color = isGold ? 'var(--go2)' : '#727272'
                   e.currentTarget.style.background = 'transparent'
                 }
               }}
@@ -90,19 +90,19 @@ export default function TabBar({ activeTab, onTabChange, showSettings, onSetting
           width: '28px', height: '28px', marginLeft: '4px',
           background: showSettings ? 'var(--s3)' : 'transparent',
           border: 'none',
-          color: showSettings ? 'var(--ac)' : 'var(--t3)',
+          color: showSettings ? 'var(--ac)' : '#727272',
           cursor: 'pointer', transition: 'all 0.12s',
         }}
         onMouseEnter={(e) => {
           if (!showSettings) {
             e.currentTarget.style.background = 'var(--s2)'
-            e.currentTarget.style.color = 'var(--t2)'
+            e.currentTarget.style.color = 'var(--t1)'
           }
         }}
         onMouseLeave={(e) => {
           if (!showSettings) {
             e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = 'var(--t3)'
+            e.currentTarget.style.color = '#727272'
           }
         }}
       >

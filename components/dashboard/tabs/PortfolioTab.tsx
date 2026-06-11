@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { usePortfolio, type HoldingWithPrice } from '@/hooks/usePortfolio'
 import MetricCard from '@/components/ui/MetricCard'
 import Panel from '@/components/ui/Panel'
@@ -34,6 +34,138 @@ const HOLDING_COLORS: Record<string, string> = {
 }
 function holdingColor(ticker: string): string {
   return HOLDING_COLORS[ticker] ?? 'var(--go2)'
+}
+
+// ── Ticker Search ─────────────────────────────────────────────────────────────
+
+interface SearchResult { ticker: string; name: string; exchange: string; type: string }
+
+function TickerSearch({
+  value,
+  displayName,
+  onSelect,
+  inp,
+}: {
+  value:       string
+  displayName: string
+  onSelect:    (ticker: string, name: string) => void
+  inp:         React.CSSProperties
+}) {
+  const [query,    setQuery]    = useState(value || displayName || '')
+  const [results,  setResults]  = useState<SearchResult[]>([])
+  const [loading,  setLoading]  = useState(false)
+  const [open,     setOpen]     = useState(false)
+  const [selected, setSelected] = useState(!!value)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wrapRef  = useRef<HTMLDivElement>(null)
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  function handleInput(v: string) {
+    setQuery(v)
+    setSelected(false)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    if (v.length < 2) { setResults([]); setOpen(false); return }
+    timerRef.current = setTimeout(async () => {
+      setLoading(true)
+      try {
+        const res  = await fetch(`/api/portfolio/search?q=${encodeURIComponent(v)}`)
+        const data = await res.json()
+        setResults(data.results ?? [])
+        setOpen(true)
+      } catch { /* ignore */ }
+      finally { setLoading(false) }
+    }, 300)
+  }
+
+  function pick(r: SearchResult) {
+    setQuery(`${r.ticker} — ${r.name}`)
+    setResults([])
+    setOpen(false)
+    setSelected(true)
+    onSelect(r.ticker, r.name)
+  }
+
+  function clear() {
+    setQuery('')
+    setSelected(false)
+    onSelect('', '')
+  }
+
+  const TYPE_COLOR: Record<string, string> = {
+    equity:         'var(--ac)',
+    etf:            'var(--gr2)',
+    etp:            'var(--go2)',
+    cryptocurrency: 'var(--am2)',
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5" ref={wrapRef} style={{ position: 'relative' }}>
+      <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>
+        Stock / ETF / Crypto
+      </label>
+      <div style={{ position: 'relative' }}>
+        <input
+          value={query}
+          onChange={e => handleInput(e.target.value)}
+          onFocus={() => { if (results.length > 0) setOpen(true) }}
+          placeholder="Search by name or ticker — e.g. Microsoft, NVDA…"
+          style={{
+            ...inp,
+            paddingRight: selected ? '36px' : inp.padding as string,
+            borderColor: selected ? 'var(--gr2)' : undefined,
+          }}
+        />
+        {selected && (
+          <button onClick={clear}
+            style={{
+              position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+              background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '16px', lineHeight: 1,
+            }}
+            title="Clear selection">×</button>
+        )}
+        {loading && (
+          <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: '11px' }}>
+            …
+          </span>
+        )}
+      </div>
+
+      {open && results.length > 0 && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 100,
+          background: 'var(--s1)', border: '1px solid var(--bd2)', borderRadius: '10px',
+          boxShadow: '0 12px 36px rgba(0,0,0,0.6)', overflow: 'hidden',
+        }}>
+          {results.map(r => (
+            <button key={r.ticker} onClick={() => pick(r)}
+              className="w-full text-left flex items-center gap-3 px-4 py-2.5"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid var(--bd)' }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--s3)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+              <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '13px', minWidth: '60px' }}>{r.ticker}</span>
+              <span style={{ color: 'var(--t2)', fontSize: '12px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <span style={{ color: 'var(--t3)', fontSize: '10px' }}>{r.exchange}</span>
+                <span style={{
+                  background: `color-mix(in srgb, ${TYPE_COLOR[r.type] ?? 'var(--ac)'} 15%, transparent)`,
+                  color: TYPE_COLOR[r.type] ?? 'var(--ac)',
+                  fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: '4px', letterSpacing: '0.06em',
+                }}>{r.type.toUpperCase()}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── Add / Edit Holding Modal ──────────────────────────────────────────────────
@@ -287,18 +419,13 @@ function HoldingModal({
         {/* ── Stock / ETF / Crypto / Cash fields ── */}
         {!isMetal && (
           <>
+            <TickerSearch
+              value={ticker}
+              displayName={name}
+              onSelect={(t, n) => { setTicker(t); setName(n) }}
+              inp={inp}
+            />
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Ticker Symbol</label>
-                <input value={ticker} onChange={e => setTicker(e.target.value.toUpperCase())}
-                  placeholder="NVDA, MSFT, IQQW.DE…" style={inp} onFocus={focus} onBlur={blur} />
-                <p style={{ color: 'var(--t3)', fontSize: '10px' }}>For EU ETFs add .DE (e.g. IQQW.DE)</p>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Name (optional)</label>
-                <input value={name} onChange={e => setName(e.target.value)}
-                  placeholder="NVIDIA Corp" style={inp} onFocus={focus} onBlur={blur} />
-              </div>
               <div className="flex flex-col gap-1.5">
                 <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Number of Shares</label>
                 <input type="number" value={qty} onChange={e => setQty(e.target.value)}
@@ -361,12 +488,29 @@ function HoldingModal({
 
 export default function PortfolioTab() {
   const {
-    holdings, loading, priceLoading, eurUsdRate,
+    holdings, loading, priceLoading, priceError, eurUsdRate,
     totalValueEur, totalCostEur, totalPnlEur, totalPnlPct,
-    addHolding, updateHolding, deleteHolding,
+    addHolding, updateHolding, deleteHolding, reload,
   } = usePortfolio()
 
-  const [modal, setModal] = useState<{ open: boolean; existing?: HoldingWithPrice }>({ open: false })
+  const [modal,  setModal]  = useState<{ open: boolean; existing?: HoldingWithPrice }>({ open: false })
+  const [sortBy, setSortBy] = useState<'default' | 'pnl' | 'alloc'>('default')
+
+  const sortedHoldings = [...holdings].sort((a, b) => {
+    if (sortBy === 'pnl') {
+      // Holdings with prices first, sorted by pnlPct desc
+      if (a.pnlPct === null && b.pnlPct === null) return 0
+      if (a.pnlPct === null) return 1
+      if (b.pnlPct === null) return -1
+      return (b.pnlPct ?? 0) - (a.pnlPct ?? 0)
+    }
+    if (sortBy === 'alloc') {
+      const aVal = a.currentValueEur ?? a.costBasisEur ?? 0
+      const bVal = b.currentValueEur ?? b.costBasisEur ?? 0
+      return bVal - aVal
+    }
+    return 0 // default: DB insertion order
+  })
 
   // Sector breakdown (exclude metals from sector calc)
   const sectorMap = new Map<string, number>()
@@ -382,12 +526,30 @@ export default function PortfolioTab() {
 
   return (
     <div className="flex flex-col gap-4">
+
+      {/* Price error banner */}
+      {priceError && !priceLoading && (
+        <div className="flex items-center justify-between px-4 py-3 rounded-lg"
+          style={{ background: 'rgba(255,51,71,0.08)', border: '1px solid rgba(255,51,71,0.25)' }}>
+          <div>
+            <p style={{ color: 'var(--re)', fontSize: '13px', fontWeight: 600 }}>Live prices unavailable</p>
+            <p style={{ color: 'var(--t3)', fontSize: '12px', marginTop: '2px' }}>
+              Showing cost basis only. Error: {priceError}
+            </p>
+          </div>
+          <button onClick={() => reload()}
+            style={{ background: 'var(--re)', border: 'none', color: 'white', fontSize: '12px', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', flexShrink: 0 }}>
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <MetricCard
           title="Total Value"
           value={loading ? '—' : fmtEur(totalValueEur)}
-          change={priceLoading ? 'Updating prices…' : `EUR/USD: ${eurUsdRate.toFixed(4)}`}
+          change={priceLoading ? 'Fetching live prices…' : priceError ? 'Cost basis only' : `EUR/USD: ${eurUsdRate.toFixed(4)}`}
           changePositive={null}
           barColor="var(--go2)"
         />
@@ -418,22 +580,41 @@ export default function PortfolioTab() {
         {/* Holdings table */}
         <div className="lg:col-span-3">
           <Panel title="Holdings" noPadding action={
-            <button onClick={() => setModal({ open: true })}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
-              style={{ background: 'var(--gr)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
-              + Add Holding
-            </button>
+            <div className="flex gap-2">
+              {/* Sort toggle */}
+              <div className="flex rounded-md overflow-hidden" style={{ border: '1px solid var(--bd2)' }}>
+                {([['default', 'Default'], ['pnl', 'P&L %'], ['alloc', 'Size']] as const).map(([val, label]) => (
+                  <button key={val} onClick={() => setSortBy(val)}
+                    style={{
+                      padding: '4px 10px', fontSize: '11px', border: 'none', cursor: 'pointer',
+                      background: sortBy === val ? 'var(--s4)' : 'var(--s2)',
+                      color: sortBy === val ? 'var(--t1)' : 'var(--t3)',
+                      borderRight: val !== 'alloc' ? '1px solid var(--bd2)' : 'none',
+                    }}>{label}</button>
+                ))}
+              </div>
+              <button onClick={() => reload()} disabled={priceLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
+                style={{ background: 'var(--s3)', border: '1px solid var(--bd2)', color: priceLoading ? 'var(--t3)' : 'var(--t2)', fontSize: '12px', cursor: priceLoading ? 'not-allowed' : 'pointer' }}>
+                {priceLoading ? '⟳ …' : '⟳'}
+              </button>
+              <button onClick={() => setModal({ open: true })}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
+                style={{ background: 'var(--gr)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
+                + Add
+              </button>
+            </div>
           }>
-            {/* Header */}
-            <div className="flex items-center px-4 py-2 gap-3"
+            {/* Header — fixed widths match row cells exactly */}
+            <div className="flex items-center px-4 py-2"
               style={{ borderBottom: '1px solid var(--bd)', fontSize: '11px', color: 'var(--t3)', letterSpacing: '0.04em' }}>
-              <span style={{ minWidth: '100px' }}>ASSET</span>
-              <span className="flex-1">ALLOCATION</span>
-              <span style={{ minWidth: '80px', textAlign: 'right' }}>CURRENT</span>
-              <span style={{ minWidth: '80px', textAlign: 'right' }}>COST</span>
-              <span style={{ minWidth: '80px', textAlign: 'right' }}>P&L</span>
-              <span style={{ minWidth: '56px', textAlign: 'right' }}>TODAY</span>
-              <span style={{ width: '32px' }} />
+              <span style={{ width: '110px', flexShrink: 0 }}>ASSET</span>
+              <span style={{ flex: 1, minWidth: 0 }}>ALLOCATION</span>
+              <span style={{ width: '82px', flexShrink: 0, textAlign: 'right' }}>CURRENT</span>
+              <span style={{ width: '76px', flexShrink: 0, textAlign: 'right' }}>COST</span>
+              <span style={{ width: '82px', flexShrink: 0, textAlign: 'right' }}>P&amp;L</span>
+              <span style={{ width: '58px', flexShrink: 0, textAlign: 'right' }}>TODAY</span>
+              <span style={{ width: '36px', flexShrink: 0 }} />
             </div>
 
             {loading ? (
@@ -449,45 +630,50 @@ export default function PortfolioTab() {
                 </button>
               </div>
             ) : (
-              holdings.map(h => {
+              sortedHoldings.map(h => {
                 const isMetal  = h.asset_type === 'metal'
                 const meta     = isMetal ? METAL_OPTIONS[h.ticker] : null
                 const alloc    = totalValueEur > 0 ? ((h.currentValueEur ?? h.costBasisEur ?? 0) / totalValueEur) * 100 : 0
                 const color    = holdingColor(h.ticker)
                 const isProfit = (h.pnlEur ?? 0) >= 0
 
+                // Short display name — ticker for stocks, metal label for metals
+                const tickerLabel = isMetal ? (meta?.label ?? h.name) : h.ticker
+                // Truncate long names to 18 chars
+                const nameLabel = isMetal
+                  ? `${h.quantity.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}g`
+                  : ((h.name ?? '').length > 20 ? (h.name ?? '').slice(0, 18) + '…' : (h.name ?? ''))
+
                 return (
                   <div key={h.id}
-                    className="flex items-center gap-3 px-4 py-3 transition-colors group"
+                    className="flex items-center px-4 py-3 transition-colors group"
                     style={{ borderBottom: '1px solid var(--bd)' }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--s3)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
 
-                    {/* Asset */}
-                    <div style={{ minWidth: '100px' }}>
+                    {/* Asset — fixed width, no overflow */}
+                    <div style={{ width: '110px', flexShrink: 0, minWidth: 0 }}>
                       <div className="flex items-center gap-1.5">
-                        {isMetal && <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />}
-                        <p style={{ color: 'var(--t1)', fontWeight: 500, fontSize: '13px' }}>
-                          {isMetal ? (meta?.label ?? h.name) : h.ticker}
+                        {isMetal && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />}
+                        <p style={{ color: 'var(--t1)', fontWeight: 600, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {tickerLabel}
                         </p>
                       </div>
-                      <p style={{ color: 'var(--t3)', fontSize: '11px' }}>
-                        {isMetal
-                          ? `${h.quantity.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}g · ${(h.quantity / TROY_OZ_TO_GRAMS).toFixed(3)} oz`
-                          : h.name}
+                      <p style={{ color: 'var(--t3)', fontSize: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>
+                        {nameLabel}
                       </p>
                     </div>
 
-                    {/* Allocation bar */}
-                    <div className="flex-1 flex items-center gap-2">
-                      <div className="flex-1 rounded-full overflow-hidden" style={{ height: '4px', background: 'var(--s3)' }}>
+                    {/* Allocation bar — flex fills remaining space */}
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '8px' }}>
+                      <div style={{ flex: 1, height: '4px', background: 'var(--s3)', borderRadius: '4px', overflow: 'hidden' }}>
                         <div style={{ width: `${alloc}%`, height: '100%', background: color, borderRadius: '4px' }} />
                       </div>
-                      <span style={{ color: 'var(--t2)', fontSize: '11px', minWidth: '32px', textAlign: 'right' }}>{alloc.toFixed(1)}%</span>
+                      <span style={{ color: 'var(--t2)', fontSize: '11px', width: '34px', textAlign: 'right', flexShrink: 0 }}>{alloc.toFixed(1)}%</span>
                     </div>
 
                     {/* Current value */}
-                    <div style={{ minWidth: '80px', textAlign: 'right' }}>
+                    <div style={{ width: '82px', flexShrink: 0, textAlign: 'right' }}>
                       {h.currentValueEur !== null ? (
                         <p style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 500 }}>{fmtEur(h.currentValueEur)}</p>
                       ) : (
@@ -495,31 +681,31 @@ export default function PortfolioTab() {
                       )}
                       {h.currentPriceEur !== null && (
                         <p style={{ color: 'var(--t3)', fontSize: '10px' }}>
-                          €{h.currentPriceEur.toFixed(2)}{isMetal ? '/g' : '/sh'}
+                          €{h.currentPriceEur < 10 ? h.currentPriceEur.toFixed(4) : h.currentPriceEur.toFixed(2)}{isMetal ? '/g' : '/sh'}
                         </p>
                       )}
                     </div>
 
                     {/* Cost basis */}
-                    <div style={{ minWidth: '80px', textAlign: 'right' }}>
+                    <div style={{ width: '76px', flexShrink: 0, textAlign: 'right' }}>
                       <p style={{ color: 'var(--t2)', fontSize: '12px' }}>
                         {h.costBasisEur !== null ? fmtEur(h.costBasisEur) : '—'}
                       </p>
                       {h.avg_buy_price && (
                         <p style={{ color: 'var(--t3)', fontSize: '10px' }}>
-                          €{h.avg_buy_price.toFixed(2)}{isMetal ? '/g' : ` avg`}
+                          €{h.avg_buy_price.toFixed(2)}{isMetal ? '/g' : ' avg'}
                         </p>
                       )}
                     </div>
 
                     {/* P&L */}
-                    <div style={{ minWidth: '80px', textAlign: 'right' }}>
+                    <div style={{ width: '82px', flexShrink: 0, textAlign: 'right' }}>
                       {h.pnlEur !== null ? (
                         <>
-                          <p className="num" style={{ color: isProfit ? 'var(--gr2)' : 'var(--re)', fontSize: '13px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+                          <p className="num" style={{ color: isProfit ? 'var(--gr2)' : 'var(--re)', fontSize: '12px', fontWeight: 700 }}>
                             {sign(h.pnlEur)}{fmtEur(h.pnlEur)}
                           </p>
-                          <p style={{ color: isProfit ? 'var(--gr2)' : 'var(--re)', fontSize: '11px', opacity: 0.75 }}>
+                          <p style={{ color: isProfit ? 'var(--gr2)' : 'var(--re)', fontSize: '11px', opacity: 0.8 }}>
                             {fmtPct(h.pnlPct ?? 0)}
                           </p>
                         </>
@@ -529,7 +715,7 @@ export default function PortfolioTab() {
                     </div>
 
                     {/* Today */}
-                    <div style={{ minWidth: '56px', textAlign: 'right' }}>
+                    <div style={{ width: '58px', flexShrink: 0, textAlign: 'right' }}>
                       {h.change1d !== null ? (
                         <p style={{ color: h.change1d >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: '12px', fontWeight: 500 }}>
                           {fmtPct(h.change1d)}
@@ -539,18 +725,18 @@ export default function PortfolioTab() {
                       )}
                       {h.marketState && !isMetal && (
                         <p style={{ color: 'var(--t3)', fontSize: '10px' }}>
-                          {h.marketState === 'REGULAR' ? '● open' : h.marketState === 'CLOSED' ? 'closed' : 'pre/ah'}
+                          {h.marketState === 'REGULAR' ? '● live' : h.marketState === 'CLOSED' ? 'closed' : 'ext'}
                         </p>
                       )}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ width: '32px' }}>
+                    <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ width: '36px', flexShrink: 0, justifyContent: 'flex-end' }}>
                       <button onClick={() => setModal({ open: true, existing: h })}
-                        style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '14px', padding: '2px' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '14px', padding: '2px 3px' }}
                         title="Edit">✎</button>
                       <button onClick={() => { if (confirm(`Remove ${h.ticker}?`)) deleteHolding(h.id) }}
-                        style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: '14px', padding: '2px' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: '14px', padding: '2px 3px' }}
                         title="Remove">×</button>
                     </div>
                   </div>

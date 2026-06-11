@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useJournalEntries } from '@/hooks/useJournalEntries'
 import { useTrades } from '@/hooks/useTrades'
 import MetricCard from '@/components/ui/MetricCard'
@@ -206,9 +206,12 @@ export default function JournalTab() {
 
   const today    = toDateStr(new Date())
   const now      = new Date()
-  const [calYear,  setCalYear]  = useState(now.getFullYear())
-  const [calMonth, setCalMonth] = useState(now.getMonth())
-  const [modal, setModal]       = useState<{ date: string; existing?: JournalEntry } | null>(null)
+  const [calYear,    setCalYear]    = useState(now.getFullYear())
+  const [calMonth,   setCalMonth]   = useState(now.getMonth())
+  const [modal,      setModal]      = useState<{ date: string; existing?: JournalEntry } | null>(null)
+  const [search,     setSearch]     = useState('')
+  const [moodFilter, setMoodFilter] = useState<Mood | ''>('')
+  const searchRef = useRef<HTMLInputElement>(null)
 
   // Calendar days for current displayed month
   const calDays   = getDaysInMonth(calYear, calMonth)
@@ -250,6 +253,19 @@ export default function JournalTab() {
     }
     return s
   }, [byDate])
+
+  const filteredEntries = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return entries.filter(e => {
+      const matchMood   = !moodFilter || e.mood === moodFilter
+      const matchSearch = !q
+        || (e.body_text ?? '').toLowerCase().includes(q)
+        || (e.tags ?? []).some(t => t.toLowerCase().includes(q))
+      return matchMood && matchSearch
+    })
+  }, [entries, search, moodFilter])
+
+  const isFiltered = search.trim() !== '' || moodFilter !== ''
 
   const avgMoodScore = entries.length > 0
     ? entries.filter(e => e.mood).reduce((s, e) => s + (MOOD_SCORE[e.mood as Mood] ?? 5), 0) / entries.filter(e => e.mood).length
@@ -360,20 +376,74 @@ export default function JournalTab() {
           </Panel>
 
           {/* Recent Entries */}
-          <Panel title="Recent Entries" noPadding>
+          <Panel title="" noPadding action={
+            <span style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>
+              {isFiltered ? `${filteredEntries.length} result${filteredEntries.length !== 1 ? 's' : ''}` : 'Recent Entries'}
+            </span>
+          }>
+            {/* Search + mood filter bar */}
+            <div className="flex flex-col gap-2 px-4 py-3" style={{ borderBottom: '1px solid var(--bd)' }}>
+              {/* Search input */}
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: '13px', pointerEvents: 'none' }}>⌕</span>
+                <input
+                  ref={searchRef}
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search entries by keyword or tag…"
+                  style={{
+                    width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)',
+                    borderRadius: '8px', padding: '8px 32px 8px 30px',
+                    color: 'var(--t1)', fontSize: '13px', outline: 'none',
+                  }}
+                  onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+                  onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
+                />
+                {search && (
+                  <button onClick={() => setSearch('')}
+                    style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}>×</button>
+                )}
+              </div>
+              {/* Mood filter chips */}
+              <div className="flex gap-1.5 flex-wrap">
+                <button
+                  onClick={() => setMoodFilter('')}
+                  style={{
+                    padding: '3px 10px', borderRadius: '20px', fontSize: '11px', cursor: 'pointer',
+                    background: moodFilter === '' ? 'var(--s4)' : 'transparent',
+                    border: moodFilter === '' ? '1px solid var(--bd2)' : '1px solid transparent',
+                    color: moodFilter === '' ? 'var(--t1)' : 'var(--t3)',
+                  }}>All</button>
+                {MOODS.map(m => (
+                  <button key={m} onClick={() => setMoodFilter(moodFilter === m ? '' : m)}
+                    style={{
+                      padding: '3px 10px', borderRadius: '20px', fontSize: '11px', cursor: 'pointer',
+                      background: moodFilter === m ? `${MOOD_COLOR[m]}20` : 'transparent',
+                      border: moodFilter === m ? `1px solid ${MOOD_COLOR[m]}60` : '1px solid transparent',
+                      color: moodFilter === m ? MOOD_COLOR[m] : 'var(--t3)',
+                      textTransform: 'capitalize',
+                    }}>{m}</button>
+                ))}
+              </div>
+            </div>
+
             {loading ? (
               <div className="flex items-center justify-center py-6"><span style={{ color: 'var(--t3)', fontSize: '13px' }}>Loading…</span></div>
             ) : entries.length === 0 ? (
               <div className="flex items-center justify-center py-6"><span style={{ color: 'var(--t3)', fontSize: '13px' }}>No entries yet — click a day on the calendar to start journaling.</span></div>
+            ) : filteredEntries.length === 0 ? (
+              <div className="flex items-center justify-center py-6">
+                <span style={{ color: 'var(--t3)', fontSize: '13px' }}>No entries match your search.</span>
+              </div>
             ) : (
               <div className="overflow-y-auto" style={{ maxHeight: '400px' }}>
-                {entries.slice(0, 10).map((entry, i) => {
+                {filteredEntries.slice(0, 30).map((entry, i) => {
                   const mood    = entry.mood as Mood | undefined
                   const dayPnl  = pnlByDate.get(entry.entry_date)
                   return (
                     <div key={entry.id}
                       className="flex flex-col gap-2 px-4 py-3 cursor-pointer transition-colors"
-                      style={{ borderBottom: i < Math.min(entries.length, 10) - 1 ? '1px solid var(--bd)' : 'none' }}
+                      style={{ borderBottom: i < Math.min(filteredEntries.length, 30) - 1 ? '1px solid var(--bd)' : 'none' }}
                       onClick={() => setModal({ date: entry.entry_date, existing: entry })}
                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--s3)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
@@ -392,12 +462,31 @@ export default function JournalTab() {
                         )}
                       </div>
 
-                      {entry.body_text && (
-                        <p style={{ color: 'var(--t1)', fontSize: '12px', lineHeight: '1.6',
-                          overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as never }}>
-                          {entry.body_text}
-                        </p>
-                      )}
+                      {entry.body_text && (() => {
+                        const q = search.trim().toLowerCase()
+                        const text = entry.body_text!
+                        if (!q) return (
+                          <p style={{ color: 'var(--t1)', fontSize: '12px', lineHeight: '1.6', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as never }}>
+                            {text}
+                          </p>
+                        )
+                        const idx = text.toLowerCase().indexOf(q)
+                        if (idx === -1) return (
+                          <p style={{ color: 'var(--t1)', fontSize: '12px', lineHeight: '1.6', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as never }}>
+                            {text}
+                          </p>
+                        )
+                        const start = Math.max(0, idx - 30)
+                        const snippet = (start > 0 ? '…' : '') + text.slice(start, idx + q.length + 60)
+                        const matchStart = idx - start + (start > 0 ? 1 : 0)
+                        return (
+                          <p style={{ color: 'var(--t1)', fontSize: '12px', lineHeight: '1.6' }}>
+                            {snippet.slice(0, matchStart)}
+                            <mark style={{ background: 'rgba(77,143,255,0.3)', color: 'var(--t1)', borderRadius: '2px', padding: '0 2px' }}>{snippet.slice(matchStart, matchStart + q.length)}</mark>
+                            {snippet.slice(matchStart + q.length)}
+                          </p>
+                        )
+                      })()}
 
                       {(entry.tags ?? []).length > 0 && (
                         <div className="flex gap-1.5 flex-wrap">

@@ -9,12 +9,12 @@ interface Message {
 }
 
 const QUICK_ACTIONS = [
+  "Full performance analysis — what's working and what isn't?",
   "Why am I losing on Nasdaq?",
-  "What's my biggest mistake this month?",
-  "Full performance analysis",
   "Mood vs P&L — what's the pattern?",
-  "Should I trade today?",
-  "Portfolio opportunities I'm missing",
+  "Am I overtrading?",
+  "What setup wins most for me?",
+  "How does my energy level affect my trading?",
 ]
 
 export default function JarvisTab() {
@@ -101,7 +101,7 @@ export default function JarvisTab() {
           <div>
             <h2 style={{ color: 'var(--go2)', fontSize: '18px', fontWeight: 600 }}>Jarvis AI</h2>
             <p style={{ color: 'var(--t2)', fontSize: '13px', marginTop: '3px', lineHeight: 1.5 }}>
-              Your personal trading intelligence. Jarvis has access to all your trade history, journal entries, habits, and portfolio data — and uses it to give you real, specific insights about your performance.
+              Your personal trading coach. Jarvis analyses your trade history, journal entries, and portfolio data to give you real, specific insights about your performance, habits, and psychology.
             </p>
           </div>
         </div>
@@ -222,9 +222,10 @@ export default function JarvisTab() {
               {[
                 '"What time of day should I stop trading?"',
                 '"Am I overtrading?"',
-                '"When do I perform worst?"',
-                '"How is my discipline this month?"',
+                '"When do I trade best — morning or afternoon?"',
+                '"What happens to my P&L when I trade angry?"',
                 '"What setup wins most for me?"',
+                '"What are my worst trading habits?"',
               ].map((q, i) => (
                 <button key={i} onClick={() => ask(q.replace(/"/g, ''))}
                   className="text-left py-2 px-1 rounded transition-colors"

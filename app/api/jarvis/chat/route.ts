@@ -6,40 +6,42 @@ export const maxDuration = 60
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
+// ── Supabase context ──────────────────────────────────────────────────────────
+
 async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>) {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-  const { data: trades } = await supabase
-    .from('trades')
-    .select('symbol,trade_type,net_profit,pips,session,setup_type,tags,emotion_pre,followed_plan,open_time,close_time')
-    .eq('status', 'closed')
-    .gte('close_time', since)
-    .order('close_time', { ascending: false })
-    .limit(100)
 
-  const { data: journal } = await supabase
-    .from('journal_entries')
-    .select('entry_date,mood,energy_level,body_text,tags,is_trading_day')
-    .order('entry_date', { ascending: false })
-    .limit(10)
+  const [tradesRes, journalRes, snapshotRes, holdingsRes] = await Promise.all([
+    supabase
+      .from('trades')
+      .select('symbol,trade_type,net_profit,pips,session,setup_type,tags,emotion_pre,followed_plan,open_time,close_time')
+      .eq('status', 'closed')
+      .gte('close_time', since)
+      .order('close_time', { ascending: false })
+      .limit(100),
+    supabase
+      .from('journal_entries')
+      .select('entry_date,mood,energy_level,body_text,tags,is_trading_day')
+      .order('entry_date', { ascending: false })
+      .limit(10),
+    supabase
+      .from('account_snapshots')
+      .select('balance,equity,daily_pnl,weekly_pnl,monthly_pnl')
+      .order('snapshot_at', { ascending: false })
+      .limit(1)
+      .single(),
+    supabase
+      .from('portfolio_holdings')
+      .select('ticker,name,quantity,avg_buy_price,currency,sector')
+      .eq('is_active', true),
+  ])
 
-  const { data: snapshot } = await supabase
-    .from('account_snapshots')
-    .select('balance,equity,daily_pnl,weekly_pnl,monthly_pnl')
-    .order('snapshot_at', { ascending: false })
-    .limit(1)
-    .single()
-
-  const { data: holdings } = await supabase
-    .from('portfolio_holdings')
-    .select('ticker,name,quantity,avg_buy_price,currency,sector')
-    .eq('is_active', true)
-
-  const t = (trades ?? [])
+  const t = (tradesRes.data ?? [])
   const wins     = t.filter(x => (x.net_profit ?? 0) > 0)
   const losses   = t.filter(x => (x.net_profit ?? 0) < 0)
   const winRate  = t.length > 0 ? (wins.length / t.length * 100).toFixed(1) : '0'
   const totalPnl = t.reduce((s, x) => s + (x.net_profit ?? 0), 0).toFixed(2)
-  const avgWin   = wins.length  > 0 ? (wins.reduce((s,x)=>s+(x.net_profit??0),0)/wins.length).toFixed(2)  : '0'
+  const avgWin   = wins.length   > 0 ? (wins.reduce((s,x)=>s+(x.net_profit??0),0)/wins.length).toFixed(2)   : '0'
   const avgLoss  = losses.length > 0 ? (losses.reduce((s,x)=>s+(x.net_profit??0),0)/losses.length).toFixed(2) : '0'
 
   const tagMap = new Map<string, { w: number; t: number }>()
@@ -83,21 +85,22 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>) 
     `[${tr.symbol} ${tr.trade_type?.toUpperCase()} | ${tr.session ?? '?'} | ${tr.setup_type ?? 'no tag'} | ${(tr.net_profit ?? 0) >= 0 ? '+' : ''}€${(tr.net_profit ?? 0).toFixed(2)}]`
   ).join('\n')
 
-  const journalSummary = (journal ?? []).map(j =>
+  const journalSummary = (journalRes.data ?? []).map(j =>
     `${j.entry_date}: mood=${j.mood ?? '?'}, energy=${j.energy_level ?? '?'}/10, trading=${j.is_trading_day ? 'yes' : 'no'}`
     + (j.body_text ? ` — "${j.body_text.slice(0, 100)}"` : '')
   ).join('\n')
 
-  const portfolioSummary = (holdings ?? []).map(h =>
+  const portfolioSummary = (holdingsRes.data ?? []).map(h =>
     `${h.ticker} (${h.currency}): ${h.quantity} shares @ ${h.currency === 'EUR' ? '€' : '$'}${h.avg_buy_price}`
   ).join(', ')
 
+  const snapshot = snapshotRes.data
   const acct = snapshot
     ? `Balance: €${snapshot.balance} | Equity: €${snapshot.equity} | Daily P&L: €${snapshot.daily_pnl} | Weekly P&L: €${snapshot.weekly_pnl} | Monthly P&L: €${snapshot.monthly_pnl}`
     : 'No account snapshot available'
 
   return `
-=== MARCO'S TRADING CONTEXT (Live from Supabase) ===
+=== MARCO'S TRADING DATA ===
 
 ACCOUNT: ${acct}
 
@@ -118,6 +121,8 @@ ${portfolioSummary || 'no holdings'}
 `.trim()
 }
 
+// ── Route ─────────────────────────────────────────────────────────────────────
+
 export async function POST(req: NextRequest) {
   try {
     const { message, history = [] } = await req.json()
@@ -126,24 +131,51 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient()
     const context  = await buildContext(supabase)
 
-    const systemPrompt = `You are Jarvis, Marco's personal AI trading assistant.
+    const now = new Date()
+    const todayStr = now.toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Vienna',
+    })
+    const timeStr = now.toLocaleTimeString('en-GB', {
+      hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Vienna',
+    })
+
+    const systemPrompt = `You are Jarvis, Marco's personal trading coach and performance analyst.
+TODAY: ${todayStr}, ${timeStr} Vienna time
 
 ${context}
 
-ABOUT MARCO:
-- Vienna-based Forex day trader
-- Trades XAUUSD (Gold) and NAS100 on MetaTrader 5 via Blueberry Markets
-- Account currency: EUR
-- Long-term portfolio on Trade Republic (stocks + ETFs)
-- Goal: become a better, more disciplined, and more profitable trader
+═══════════════════════════════════════════
+YOUR ROLE — WHAT YOU CAN AND CANNOT DO
+═══════════════════════════════════════════
 
-YOUR JOB:
-- Be direct and data-driven. Always reference actual numbers from his data.
-- Identify specific patterns in his trades (time, emotion, session, setup).
-- Give actionable recommendations, not generic advice.
-- If asked about portfolio or macro, use the data above.
-- Keep responses concise but insightful. Use bullet points for patterns.
-- If the data shows something concerning (e.g. trading angry, overtrading), call it out directly.`
+YOU ARE A PERSONAL DATA ANALYST AND TRADING COACH — NOT A MARKET ANALYST.
+
+WHAT YOU CAN DO:
+✓ Analyse Marco's trade history, P&L, win rates, session patterns, setup performance
+✓ Analyse his journal: mood trends, energy vs performance, emotional patterns
+✓ Identify habits, mistakes, and behavioural patterns from his data
+✓ Give coaching advice on trading psychology, discipline, consistency, and mindset
+✓ Answer questions like "am I overtrading?", "what setup works best for me?", "how is my mood affecting my P&L?"
+✓ Share general principles about trader psychology and discipline (e.g. "revenge trading is dangerous because...", "consistency matters because...")
+
+WHAT YOU CANNOT DO:
+✗ You have no access to live market data, prices, charts, or indicators
+✗ You cannot tell Marco what gold, NAS100, DXY, or any instrument is doing right now
+✗ You cannot give market bias, entry ideas, or technical analysis — you have no price data
+✗ Do not guess or fabricate any price levels, RSI values, MA values, or market conditions
+
+WHEN ASKED ABOUT THE MARKET (current prices, bias, "should I trade now?", technical levels):
+Respond like this: "I only have access to your personal trading data — I can't see live prices or market conditions. For current market context, check the Macro tab. What I can tell you is [pivot to something useful from his data — e.g. how he's performed at this time of day, his win rate in this session, etc.]."
+
+═══════════════════════════════════════════
+HOW TO RESPOND
+═══════════════════════════════════════════
+
+- Always reference actual numbers from Marco's data when available
+- Be direct — identify patterns, name problems, give specific observations
+- If something is concerning (overtrading, trading angry, loss streaks), say it clearly
+- For psychology/mindset questions: give concrete, practical coaching advice
+- Keep answers focused and useful — no filler, no hedging on things you know`
 
     const messages = [
       ...history.slice(-10),
@@ -152,8 +184,8 @@ YOUR JOB:
 
     const stream = await groq.chat.completions.create({
       model:       'llama-3.3-70b-versatile',
-      max_tokens:  1500,
-      temperature: 0.3,
+      max_tokens:  2048,
+      temperature: 0.4,
       messages:    [{ role: 'system', content: systemPrompt }, ...messages],
       stream:      true,
     })

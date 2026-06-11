@@ -26,10 +26,11 @@ interface MetalPriceData {
 }
 
 export function usePortfolio() {
-  const [holdings,     setHoldings] = useState<HoldingWithPrice[]>([])
-  const [loading,      setLoading]  = useState(true)
-  const [priceLoading, setPL]       = useState(false)
-  const [eurUsdRate,   setEurUsd]   = useState(1.08)
+  const [holdings,     setHoldings]   = useState<HoldingWithPrice[]>([])
+  const [loading,      setLoading]    = useState(true)
+  const [priceLoading, setPL]         = useState(false)
+  const [priceError,   setPriceError] = useState<string | null>(null)
+  const [eurUsdRate,   setEurUsd]     = useState(1.08)
 
   const loadHoldings = useCallback(async () => {
     setLoading(true)
@@ -45,6 +46,7 @@ export function usePortfolio() {
       currentPrice: null, currentPriceEur: null, prevCloseEur: null,
       change1d: null, marketState: null,
       currentValueEur: null, pnlEur: null, pnlPct: null,
+      // avg_buy_price is always in EUR (entered via Trade Republic / our form)
       costBasisEur: h.avg_buy_price ? h.quantity * h.avg_buy_price : null,
     }))
     setHoldings(enriched)
@@ -55,6 +57,7 @@ export function usePortfolio() {
 
   async function fetchPrices(rows: PortfolioHolding[]) {
     setPL(true)
+    setPriceError(null)
     try {
       const metals    = rows.filter(h => h.asset_type === 'metal')
       const nonMetals = rows.filter(h => h.asset_type !== 'metal')
@@ -72,9 +75,9 @@ export function usePortfolio() {
             const q = quotes?.find((q: { ticker: string }) => q.ticker === h.ticker)
             if (!q) return h
 
-            const costBasisEur    = h.currency === 'EUR'
-              ? h.quantity * (h.avg_buy_price ?? 0)
-              : h.quantity * (h.avg_buy_price ?? 0) / (fx ?? 1.08)
+            // avg_buy_price is always stored in EUR (entered via Trade Republic / our form)
+            // Only the live market price from Yahoo needs FX conversion (handled by the API)
+            const costBasisEur    = h.quantity * (h.avg_buy_price ?? 0)
             const currentValueEur = h.quantity * q.priceEur
             const pnlEur          = currentValueEur - costBasisEur
             const pnlPct          = costBasisEur > 0 ? (pnlEur / costBasisEur) * 100 : 0
@@ -120,6 +123,8 @@ export function usePortfolio() {
           }))
         }
       }
+    } catch (err) {
+      setPriceError(err instanceof Error ? err.message : 'Failed to load prices')
     } finally {
       setPL(false)
     }
@@ -168,7 +173,7 @@ export function usePortfolio() {
   const totalPnlPct   = totalCostEur > 0 ? (totalPnlEur / totalCostEur) * 100 : 0
 
   return {
-    holdings, loading, priceLoading, eurUsdRate,
+    holdings, loading, priceLoading, priceError, eurUsdRate,
     totalValueEur, totalCostEur, totalPnlEur, totalPnlPct,
     addHolding, updateHolding, deleteHolding, reload: loadHoldings,
   }
