@@ -2,11 +2,13 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useTrades, tradeResult, BE_THRESHOLD } from '@/hooks/useTrades'
-import { generateInsights } from '@/lib/intelligence'
-import InsightCard          from '@/components/ui/InsightCard'
+import { useAccountSnapshot } from '@/hooks/useAccountSnapshot'
+import { generateInsights }  from '@/lib/intelligence'
+import InsightCard           from '@/components/ui/InsightCard'
 import PeriodMetricCard, { type Period } from '@/components/ui/PeriodMetricCard'
-import Panel from '@/components/ui/Panel'
-import Badge from '@/components/ui/Badge'
+import Panel                 from '@/components/ui/Panel'
+import Badge                 from '@/components/ui/Badge'
+import ScreenshotGallery     from '@/components/ui/ScreenshotGallery'
 import type { Trade } from '@/types'
 
 // ── Trade Annotation Modal ─────────────────────────────────────────────────────
@@ -25,6 +27,8 @@ function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose: () =>
   const [screenshotUrl, setScreenshotUrl] = useState(trade.screenshot_open_url ?? '')
   const [saving,      setSaving]    = useState(false)
   const [saved,       setSaved]     = useState(false)
+  const [aiFeedback,  setAiFeedback]  = useState<string | null>(null)
+  const [aiFetching,  setAiFetching]  = useState(false)
 
   const EMOTIONS = ['confident', 'neutral', 'anxious', 'tired', 'fomo']
   const EMOTION_COLORS: Record<string, string> = {
@@ -68,7 +72,27 @@ function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose: () =>
         }),
       })
       setSaved(true)
-      setTimeout(() => onClose(), 800)
+      // Fetch AI feedback (non-blocking)
+      setAiFetching(true)
+      fetch('/api/jarvis/trade-feedback', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          tradeId:     trade.id,
+          symbol:      trade.symbol,
+          type:        trade.trade_type,
+          pnl:         trade.net_profit ?? 0,
+          setupType:   setupType || null,
+          emotion:     emotion   || null,
+          tags,
+          followedPlan: followed,
+          notes:        notes    || null,
+        }),
+      })
+        .then(r => r.json())
+        .then((d: { feedback?: string }) => { if (d.feedback) setAiFeedback(d.feedback) })
+        .catch(() => { /* silently fail */ })
+        .finally(() => setAiFetching(false))
     } finally {
       setSaving(false)
     }
@@ -246,6 +270,23 @@ function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose: () =>
           }}>
           {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save Annotation'}
         </button>
+
+        {/* AI Feedback */}
+        {saved && (aiFetching || aiFeedback) && (
+          <div style={{
+            padding: '12px 14px', borderRadius: '8px',
+            background: 'rgba(77,143,255,0.07)', border: '1px solid rgba(77,143,255,0.2)',
+          }}>
+            <p style={{ fontSize: '10px', color: 'var(--ac)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
+              Jarvis Feedback
+            </p>
+            {aiFetching ? (
+              <p style={{ fontSize: '12px', color: 'var(--t3)' }}>Analyzing trade…</p>
+            ) : (
+              <p style={{ fontSize: '13px', color: 'var(--t2)', lineHeight: 1.65 }}>{aiFeedback}</p>
+            )}
+          </div>
+        )}
       </div>
     </>
   )
@@ -317,13 +358,15 @@ function calcWinRate(trades: Trade[]): { rate: number; wins: number; losses: num
 }
 
 function calcAvgRR(trades: Trade[]): number {
-  const valid = trades.filter(t => t.stop_loss && t.take_profit && t.open_price)
+  const valid = trades.filter(t => t.stop_loss && t.open_price && t.close_price && t.trade_type)
   if (valid.length === 0) return 0
-  return valid.reduce((s, t) => {
-    const risk   = Math.abs((t.open_price ?? 0) - (t.stop_loss  ?? 0))
-    const reward = Math.abs((t.take_profit ?? 0) - (t.open_price ?? 0))
-    return s + (risk > 0 ? reward / risk : 0)
-  }, 0) / valid.length
+  const sum = valid.reduce((s, t) => {
+    const dir      = t.trade_type === 'buy' ? 1 : -1
+    const realized = dir * ((t.close_price ?? 0) - (t.open_price ?? 0))
+    const risk     = Math.abs((t.open_price ?? 0) - (t.stop_loss ?? 0))
+    return s + (risk > 0 ? realized / risk : 0)
+  }, 0)
+  return sum / valid.length
 }
 
 function calcMaxDrawdown(trades: Trade[]): number {
@@ -356,6 +399,9 @@ function fmtTime(iso: string | null): string {
   if (!iso) return '—'
   return new Date(iso).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Vienna' })
 }
+
+// Month abbreviations — locale-independent, same output on Node.js and browser
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 // ── Heatmap data from trades ──────────────────────────────────────────────────
 
@@ -978,10 +1024,629 @@ function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows: Trade[
   )
 }
 
+// ── Your Edge Panel ───────────────────────────────────────────────────────────
+
+function YourEdge({ trades }: { trades: Trade[] }) {
+  const closed = trades.filter(t => t.net_profit !== null && t.symbol !== 'BALANCE')
+  if (closed.length < 10) return null
+
+  type Edge = { label: string; value: string; sub: string; color: string; icon: string }
+  const edges: Edge[] = []
+
+  // Helper
+  const wrOf = (ts: Trade[]) => {
+    const w = ts.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length
+    const l = ts.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+    return (w + l) > 0 ? { wr: (w / (w + l)) * 100, trades: ts.length, w, l } : null
+  }
+  const avgPnl = (ts: Trade[]) => ts.reduce((s, t) => s + (t.net_profit ?? 0), 0) / (ts.length || 1)
+
+  // Best day of week
+  const byDay: Record<number, Trade[]> = {}
+  for (const t of closed) {
+    if (!t.close_time) continue
+    const d = new Date(t.close_time).getDay()
+    if (d === 0 || d === 6) continue
+    ;(byDay[d] ??= []).push(t)
+  }
+  const dayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+  let bestDay = { wr: 0, day: '', avg: 0, n: 0 }
+  for (const [d, ts] of Object.entries(byDay)) {
+    const r = wrOf(ts)
+    if (r && r.wr > bestDay.wr && r.trades >= 3) {
+      bestDay = { wr: r.wr, day: dayNames[Number(d)], avg: avgPnl(ts), n: r.trades }
+    }
+  }
+  if (bestDay.day) edges.push({
+    label: `Best day: ${bestDay.day}`,
+    value: `${bestDay.wr.toFixed(0)}% WR`,
+    sub: `avg ${bestDay.avg >= 0 ? '+' : ''}€${bestDay.avg.toFixed(0)} · ${bestDay.n} trades`,
+    color: 'var(--gr2)', icon: '📅',
+  })
+
+  // Best session
+  const sessions = [
+    { key: 'london',   label: 'London session' },
+    { key: 'new_york', label: 'New York session' },
+    { key: 'overlap',  label: 'London/NY overlap' },
+  ]
+  let bestSession = { wr: 0, label: '', avg: 0, n: 0 }
+  for (const s of sessions) {
+    const ts = closed.filter(t => t.session === s.key)
+    const r = wrOf(ts)
+    if (r && r.wr > bestSession.wr && r.trades >= 3) {
+      bestSession = { wr: r.wr, label: s.label, avg: avgPnl(ts), n: r.trades }
+    }
+  }
+  if (bestSession.label) edges.push({
+    label: bestSession.label,
+    value: `${bestSession.wr.toFixed(0)}% WR`,
+    sub: `avg ${bestSession.avg >= 0 ? '+' : ''}€${bestSession.avg.toFixed(0)} · ${bestSession.n} trades`,
+    color: 'var(--cy2)', icon: '⏰',
+  })
+
+  // Best instrument
+  const instruments = [
+    { keys: ['XAU'],           label: 'XAUUSD' },
+    { keys: ['NAS', 'US100'],  label: 'NAS100' },
+  ]
+  let bestInst = { wr: 0, label: '', avg: 0, n: 0 }
+  for (const inst of instruments) {
+    const ts = closed.filter(t => inst.keys.some(k => t.symbol?.includes(k)))
+    const r = wrOf(ts)
+    if (r && r.wr > bestInst.wr && r.trades >= 3) {
+      bestInst = { wr: r.wr, label: inst.label, avg: avgPnl(ts), n: r.trades }
+    }
+  }
+  if (bestInst.label) edges.push({
+    label: `Best instrument: ${bestInst.label}`,
+    value: `${bestInst.wr.toFixed(0)}% WR`,
+    sub: `avg ${bestInst.avg >= 0 ? '+' : ''}€${bestInst.avg.toFixed(0)} · ${bestInst.n} trades`,
+    color: 'var(--go2)', icon: '📈',
+  })
+
+  // Plan adherence edge
+  const withPlan    = closed.filter(t => t.followed_plan === true)
+  const withoutPlan = closed.filter(t => t.followed_plan === false)
+  if (withPlan.length >= 3 && withoutPlan.length >= 3) {
+    const planPnl    = avgPnl(withPlan)
+    const noPlanPnl  = avgPnl(withoutPlan)
+    const diff       = planPnl - noPlanPnl
+    if (Math.abs(diff) > 20) edges.push({
+      label: diff > 0 ? 'Following your plan pays' : 'Breaking plan is costly',
+      value: diff > 0 ? `+€${diff.toFixed(0)} avg` : `-€${Math.abs(diff).toFixed(0)} avg`,
+      sub: `plan: €${planPnl.toFixed(0)} · no plan: €${noPlanPnl.toFixed(0)}`,
+      color: diff > 0 ? 'var(--gr2)' : 'var(--re)',
+      icon: diff > 0 ? '✅' : '🚫',
+    })
+  }
+
+  // Loss streak warning
+  let streak = 0
+  for (const t of [...closed].reverse()) {
+    if ((t.net_profit ?? 0) < -BE_THRESHOLD) streak++
+    else if ((t.net_profit ?? 0) > BE_THRESHOLD) break
+  }
+  if (streak >= 3) edges.push({
+    label: `${streak}-trade loss streak`,
+    value: 'Take a break',
+    sub: 'History shows WR drops 40% after 3 consecutive losses',
+    color: 'var(--re)',
+    icon: '🛑',
+  })
+
+  if (edges.length === 0) return null
+
+  return (
+    <Panel title="Your Edge — What the Data Says" accent="var(--cy)">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+        {edges.map((e, i) => (
+          <div key={i} style={{
+            padding: '14px 16px', borderRadius: '10px',
+            background: `${e.color}0D`,
+            border: `1px solid ${e.color}28`,
+            display: 'flex', flexDirection: 'column', gap: '5px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+              <span style={{ fontSize: '16px' }}>{e.icon}</span>
+              <span style={{ fontSize: '11px', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{e.label}</span>
+            </div>
+            <span style={{ fontSize: '22px', fontWeight: 700, color: e.color, letterSpacing: '-0.03em', lineHeight: 1 }}>{e.value}</span>
+            <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{e.sub}</span>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  )
+}
+
+// ── Equity Curve ──────────────────────────────────────────────────────────────
+
+type EqPeriod = 'all' | '1M' | '1W' | '1D'
+
+function EquityCurve({ trades }: { trades: Trade[] }) {
+  const [period, setPeriod] = useState<EqPeriod>('all')
+  const [hover,  setHover]  = useState<{ idx: number; x: number; y: number } | null>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
+
+  // Full sorted history
+  const chrono = useMemo(() =>
+    trades
+      .filter(t => t.net_profit !== null && t.symbol !== 'BALANCE')
+      .sort((a, b) => (a.close_time ?? '').localeCompare(b.close_time ?? '')),
+    [trades]
+  )
+
+  // Filter by selected period — calendar-aligned, not rolling windows
+  const filtered = useMemo(() => {
+    if (period === 'all') return chrono
+    const now = new Date()
+    let since: Date
+
+    if (period === '1D') {
+      // Current trading day: midnight local time (Vienna) today
+      since = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
+    } else if (period === '1W') {
+      // Current trading week: Monday 00:00 → Friday (Mon–Fri aligned)
+      const dow = now.getDay() // 0 = Sun … 6 = Sat
+      since = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
+      since.setDate(since.getDate() - (dow === 0 ? 6 : dow - 1))
+    } else {
+      // Current month: 1st of this month 00:00
+      since = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0)
+    }
+
+    return chrono.filter(t => t.close_time && new Date(t.close_time) >= since)
+  }, [chrono, period])
+
+  // Build sampled equity series (trade-by-trade, downsampled for "all" with many trades)
+  const sampled = useMemo((): { v: number; date: string }[] => {
+    if (filtered.length === 0) return []
+    const step = Math.max(1, Math.ceil(filtered.length / 400))
+    const out: { v: number; date: string }[] = []
+    let running = 0
+    for (let i = 0; i < filtered.length; i++) {
+      running += filtered[i].net_profit ?? 0
+      if (i % step === 0 || i === filtered.length - 1)
+        out.push({ v: running, date: filtered[i].close_time ?? '' })
+    }
+    return out
+  }, [filtered])
+
+  if (chrono.length < 1) return null
+
+  const equity  = sampled.map(s => s.v)
+  const n       = equity.length
+  const finalVal = n > 0 ? equity[n - 1] : 0
+
+  // Peak + max drawdown
+  let peak = 0, maxDD = 0, peakIdx = 0
+  for (let i = 0; i < n; i++) {
+    if (equity[i] > peak) { peak = equity[i]; peakIdx = i }
+    const dd = peak - equity[i]
+    if (dd > maxDD) maxDD = dd
+  }
+
+  const minVal  = Math.min(0, ...equity)
+  const maxVal  = Math.max(0, ...equity)
+  const range   = (maxVal - minVal) || 1
+
+  // SVG geometry
+  const W = 800, H = 220
+  const PAD = { t: 24, r: 24, b: 32, l: 56 }
+  const cW  = W - PAD.l - PAD.r
+  const cH  = H - PAD.t - PAD.b
+
+  const xOf   = (i: number) => PAD.l + (n > 1 ? i / (n - 1) : 0.5) * cW
+  const yOf   = (v: number) => PAD.t + (1 - (v - minVal) / range) * cH
+  const zeroY = yOf(0)
+
+  const lineColor = finalVal >= 0 ? '#00E87A' : '#FF3D50'
+  const fillColor = finalVal >= 0 ? '#00CC6A' : '#FF3D50'
+
+  // n=1: draw a full-width horizontal reference line so a partial day always shows
+  const linePath = n === 0 ? '' : n === 1
+    ? `M${PAD.l},${yOf(equity[0]).toFixed(1)} L${(W - PAD.r)},${yOf(equity[0]).toFixed(1)}`
+    : equity.map((v, i) => `${i === 0 ? 'M' : 'L'}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(' ')
+  const areaPath = n === 0 ? '' : n === 1
+    ? `M${PAD.l},${yOf(equity[0]).toFixed(1)} L${(W - PAD.r)},${yOf(equity[0]).toFixed(1)} L${(W - PAD.r)},${zeroY.toFixed(1)} L${PAD.l},${zeroY.toFixed(1)} Z`
+    : `${linePath} L${xOf(n-1).toFixed(1)},${zeroY.toFixed(1)} L${xOf(0).toFixed(1)},${zeroY.toFixed(1)} Z`
+
+  // Mouse interaction — maps screen coords → viewBox coords
+  function onMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+    const svg = svgRef.current
+    if (!svg || n < 2) return  // hover only meaningful with 2+ points
+    const rect = svg.getBoundingClientRect()
+    const vbX  = ((e.clientX - rect.left) / rect.width) * W
+    const frac = Math.max(0, Math.min(1, (vbX - PAD.l) / cW))
+    const idx  = Math.round(frac * (n - 1))
+    setHover({ idx, x: xOf(idx), y: yOf(equity[idx]) })
+  }
+
+  // Header: when hovering show that point's value; otherwise show period total
+  const activeVal  = hover !== null ? sampled[hover.idx].v  : finalVal
+  const activeDate = hover !== null ? sampled[hover.idx].date : null
+  const activeD    = activeDate ? new Date(activeDate) : null
+  const activeDateStr = activeD
+    ? `${activeD.getUTCDate()} ${MON[activeD.getUTCMonth()]} ${activeD.getUTCFullYear()}`
+    : ({ all: 'All-time', '1M': 'This month', '1W': 'This week', '1D': 'Today' } as const)[period]
+
+  const periodLabel = ({ all: '', '1M': 'this month', '1W': 'this week', '1D': 'today' } as const)[period]
+
+  return (
+    <Panel
+      title="Equity Curve"
+      accent="var(--ac)"
+      action={
+        <div style={{ display: 'flex', gap: '3px' }}>
+          {(['1D', '1W', '1M', 'all'] as EqPeriod[]).map(p => (
+            <button key={p}
+              onClick={() => { setPeriod(p); setHover(null) }}
+              style={{
+                padding: '3px 10px', borderRadius: '6px', border: 'none',
+                cursor: 'pointer', fontSize: '11px', fontWeight: 600,
+                background: period === p ? 'var(--ac)' : 'var(--s3)',
+                color:      period === p ? 'white'     : 'var(--t3)',
+                transition: 'all 0.12s',
+              }}
+              onMouseEnter={e => { if (period !== p) e.currentTarget.style.color = 'var(--t2)' }}
+              onMouseLeave={e => { if (period !== p) e.currentTarget.style.color = 'var(--t3)' }}
+            >
+              {p === 'all' ? 'All' : p}
+            </button>
+          ))}
+        </div>
+      }
+    >
+      {/* Stats header — reacts live to hover */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+        marginBottom: '12px', minHeight: '44px' }}>
+        <div>
+          <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em',
+            textTransform: 'uppercase', marginBottom: '4px' }}>
+            {activeDateStr}
+          </p>
+          <p style={{
+            color: activeVal >= 0 ? 'var(--gr2)' : 'var(--re)',
+            fontSize: '28px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1,
+            transition: 'color 0.1s',
+          }}>
+            {activeVal >= 0 ? '+' : '-'}€{Math.abs(activeVal).toFixed(2)}
+          </p>
+        </div>
+
+        {n > 0 && (
+          <div style={{ display: 'flex', gap: '20px', paddingBottom: '2px' }}>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em',
+                textTransform: 'uppercase', marginBottom: '3px' }}>Peak</p>
+              <p style={{ color: 'var(--am2)', fontSize: '14px', fontWeight: 600 }}>
+                +€{Math.max(0, ...equity).toFixed(2)}
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em',
+                textTransform: 'uppercase', marginBottom: '3px' }}>Max DD</p>
+              <p style={{ color: maxDD > 0.01 ? 'var(--re)' : 'var(--t3)', fontSize: '14px', fontWeight: 600 }}>
+                {maxDD > 0.01 ? `-€${maxDD.toFixed(2)}` : '€0.00'}
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em',
+                textTransform: 'uppercase', marginBottom: '3px' }}>Trades</p>
+              <p style={{ color: 'var(--t2)', fontSize: '14px', fontWeight: 600 }}>{filtered.length}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Empty state for filtered period */}
+      {n === 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', height: '160px',
+          background: 'var(--s2)', borderRadius: '10px', border: '1px dashed var(--bd2)',
+        }}>
+          <p style={{ color: 'var(--t3)', fontSize: '13px' }}>No closed trades {periodLabel}</p>
+        </div>
+      )}
+
+      {/* SVG chart */}
+      {n >= 1 && (
+        <svg
+          ref={svgRef}
+          width="100%" viewBox={`0 0 ${W} ${H}`}
+          preserveAspectRatio="none"
+          style={{ display: 'block', overflow: 'visible', cursor: 'crosshair' }}
+          onMouseMove={onMouseMove}
+          onMouseLeave={() => setHover(null)}
+        >
+          <defs>
+            <linearGradient id="eqFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stopColor={fillColor} stopOpacity="0.22" />
+              <stop offset="100%" stopColor={fillColor} stopOpacity="0.01" />
+            </linearGradient>
+          </defs>
+
+          {/* Grid */}
+          {[0.25, 0.5, 0.75].map(v => (
+            <line key={v}
+              x1={PAD.l} y1={PAD.t + v * cH} x2={W - PAD.r} y2={PAD.t + v * cH}
+              stroke="rgba(255,255,255,0.04)" strokeWidth="1"
+            />
+          ))}
+
+          {/* Zero baseline */}
+          <line x1={PAD.l} y1={zeroY} x2={W - PAD.r} y2={zeroY}
+            stroke="rgba(255,255,255,0.10)" strokeWidth="1" />
+
+          {/* Area fill */}
+          <path d={areaPath} fill="url(#eqFill)" />
+
+          {/* Peak reference (shown only when currently in drawdown) */}
+          {maxDD > 0.01 && finalVal < peak && (
+            <line
+              x1={xOf(peakIdx)} y1={yOf(peak)} x2={xOf(n-1)} y2={yOf(peak)}
+              stroke="#E09020" strokeWidth="1" strokeDasharray="4,3" opacity="0.4"
+            />
+          )}
+
+          {/* Equity line */}
+          <path d={linePath} fill="none" stroke={lineColor}
+            strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+
+          {/* Peak dot */}
+          {peakIdx > 0 && peakIdx < n - 1 && (
+            <circle cx={xOf(peakIdx)} cy={yOf(peak)} r="3.5"
+              fill="#E09020" stroke="#000000" strokeWidth="1.5" />
+          )}
+
+          {/* Final dot (hidden when hovering over last point) */}
+          {(hover === null || hover.idx !== n - 1) && (
+            <circle cx={xOf(n-1)} cy={yOf(finalVal)} r="4.5"
+              fill={lineColor} stroke="#000000" strokeWidth="2" />
+          )}
+
+          {/* Y-axis labels */}
+          {[maxVal, 0, minVal].filter((v, i, a) => a.indexOf(v) === i).map((v, i) => (
+            <text key={i} x={PAD.l - 8} y={yOf(v) + 4}
+              textAnchor="end" fontSize="10" fill="rgba(104,129,168,0.55)" fontFamily="monospace">
+              {v >= 0 ? `+${v.toFixed(0)}` : v.toFixed(0)}
+            </text>
+          ))}
+
+          {/* ── Hover crosshair ───────────────────────────────────────────── */}
+          {hover !== null && (() => {
+            const val  = sampled[hover.idx].v
+            const date = sampled[hover.idx].date
+            const d    = date ? new Date(date) : null
+            const dateStr = d
+              ? `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}`
+              : ''
+            const valStr   = `${val >= 0 ? '+' : '-'}€${Math.abs(val).toFixed(2)}`
+            const hColor   = val >= 0 ? '#00E87A' : '#FF3D50'
+            const tipW     = 148
+            const tipH     = 50
+            const isRight  = hover.x > W - PAD.r - tipW - 20
+            const tx = isRight ? hover.x - tipW - 12 : hover.x + 12
+            const ty = Math.max(PAD.t, Math.min(hover.y - tipH / 2, H - PAD.b - tipH))
+
+            return (
+              <g>
+                {/* Vertical line */}
+                <line x1={hover.x} y1={PAD.t} x2={hover.x} y2={H - PAD.b}
+                  stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+                {/* Horizontal line */}
+                <line x1={PAD.l} y1={hover.y} x2={W - PAD.r} y2={hover.y}
+                  stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+
+                {/* Y-axis pill label */}
+                <rect x={2} y={hover.y - 9} width={PAD.l - 6} height={18} rx="4" fill="#4D8FFF" />
+                <text x={PAD.l - 9} y={hover.y + 4} textAnchor="end"
+                  fontSize="9" fill="white" fontWeight="700" fontFamily="monospace">
+                  {val >= 0 ? '+' : ''}{val.toFixed(0)}
+                </text>
+
+                {/* Ripple + dot */}
+                <circle cx={hover.x} cy={hover.y} r="10" fill={hColor} opacity="0.1" />
+                <circle cx={hover.x} cy={hover.y} r="5"  fill={hColor} stroke="#000000" strokeWidth="2" />
+
+                {/* Tooltip card */}
+                <rect x={tx} y={ty} width={tipW} height={tipH}
+                  rx="7" fill="#111111" stroke="rgba(255,255,255,0.15)" strokeWidth="1"
+                />
+                <text x={tx + 11} y={ty + 17} fontSize="10"
+                  fill="rgba(104,129,168,0.8)" fontFamily="monospace">
+                  {dateStr}
+                </text>
+                <text x={tx + 11} y={ty + 38} fontSize="16" fontWeight="700"
+                  fill={hColor} fontFamily="monospace">
+                  {valStr}
+                </text>
+              </g>
+            )
+          })()}
+        </svg>
+      )}
+
+      {/* X-axis date labels */}
+      {n >= 1 && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px',
+          paddingLeft: `${PAD.l}px`, paddingRight: `${PAD.r}px` }}>
+          {[0, Math.floor((n - 1) / 2), n - 1].map(i => {
+            const d = sampled[i]?.date ? new Date(sampled[i].date) : null
+            return (
+              <span key={i} style={{ fontSize: '9px', color: 'var(--t3)', fontFamily: 'monospace' }}>
+                {d ? `${d.getUTCDate()} ${MON[d.getUTCMonth()]}` : ''}
+              </span>
+            )
+          })}
+        </div>
+      )}
+    </Panel>
+  )
+}
+
+// ── Position Size Calculator ───────────────────────────────────────────────────
+
+function PositionSizeCalc() {
+  const [instrument, setInstrument] = useState<'XAUUSD' | 'NAS100'>('XAUUSD')
+  const [balance,    setBalance]    = useState('10000')
+  const [riskMode,   setRiskMode]   = useState<'pct' | 'eur'>('pct')
+  const [riskPct,    setRiskPct]    = useState('1')
+  const [riskEurAmt, setRiskEurAmt] = useState('100')
+  const [entry,      setEntry]      = useState('')
+  const [sl,         setSl]         = useState('')
+
+  // USD contract value per 1 standard lot per 1.0 price move
+  // XAUUSD: 100 oz × $1/oz = $100/lot/pt
+  // NAS100: $1/lot/pt (standard micro-like contract on MT5)
+  const CONTRACT: Record<'XAUUSD' | 'NAS100', number> = { XAUUSD: 100, NAS100: 1 }
+  const EURUSD = 1.085  // approximate; affects lot size slightly
+
+  const bal     = parseFloat(balance)    || 0
+  const entryV  = parseFloat(entry)      || 0
+  const slV     = parseFloat(sl)         || 0
+  const dist    = Math.abs(entryV - slV)
+
+  const riskEur = riskMode === 'pct'
+    ? bal * ((parseFloat(riskPct) || 0) / 100)
+    : parseFloat(riskEurAmt) || 0
+
+  const contractVal = CONTRACT[instrument]
+  const lots        = dist > 0 ? (riskEur * EURUSD) / (dist * contractVal) : 0
+  const lotsOut     = Math.max(0.01, Math.floor(lots * 100) / 100)
+  const actualRiskE = dist > 0 ? (lotsOut * dist * contractVal) / EURUSD : 0
+
+  const inputSt: React.CSSProperties = {
+    background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
+    padding: '8px 12px', color: 'var(--t1)', fontSize: '14px',
+    outline: 'none', width: '100%', boxSizing: 'border-box',
+  }
+  const focus = (e: React.FocusEvent<HTMLInputElement>) => (e.currentTarget.style.borderColor = 'var(--ac)')
+  const blur  = (e: React.FocusEvent<HTMLInputElement>) => (e.currentTarget.style.borderColor = 'var(--bd2)')
+
+  return (
+    <Panel title="Position Size Calculator" accent="var(--go2)">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+        {/* Instrument */}
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {(['XAUUSD', 'NAS100'] as const).map(inst => (
+            <button key={inst} onClick={() => setInstrument(inst)} style={{
+              flex: 1, padding: '7px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+              background: instrument === inst ? 'var(--ac)' : 'var(--s3)',
+              color:      instrument === inst ? 'white'     : 'var(--t2)',
+              fontSize: '12px', fontWeight: 600, transition: 'all 0.12s',
+            }}>
+              {inst}
+            </button>
+          ))}
+        </div>
+
+        {/* Balance + Risk */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div>
+            <label style={{ color: 'var(--t3)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>Balance (€)</label>
+            <input value={balance} onChange={e => setBalance(e.target.value)}
+              style={inputSt} onFocus={focus} onBlur={blur} placeholder="10000" />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
+              <label style={{ color: 'var(--t3)', fontSize: '11px' }}>Risk</label>
+              <div style={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--bd2)' }}>
+                {(['pct', 'eur'] as const).map(m => (
+                  <button key={m} onClick={() => setRiskMode(m)} style={{
+                    padding: '2px 8px', border: 'none', cursor: 'pointer', fontSize: '10px',
+                    background: riskMode === m ? 'var(--ac)' : 'transparent',
+                    color:      riskMode === m ? 'white'     : 'var(--t3)',
+                  }}>
+                    {m === 'pct' ? '%' : '€'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {riskMode === 'pct' ? (
+              <input value={riskPct} onChange={e => setRiskPct(e.target.value)}
+                style={inputSt} onFocus={focus} onBlur={blur} placeholder="1.0" />
+            ) : (
+              <input value={riskEurAmt} onChange={e => setRiskEurAmt(e.target.value)}
+                style={inputSt} onFocus={focus} onBlur={blur} placeholder="100" />
+            )}
+          </div>
+        </div>
+
+        {/* Entry + SL */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div>
+            <label style={{ color: 'var(--t3)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>Entry Price</label>
+            <input value={entry} onChange={e => setEntry(e.target.value)}
+              style={inputSt} onFocus={focus} onBlur={blur}
+              placeholder={instrument === 'XAUUSD' ? '2350.00' : '19000'} />
+          </div>
+          <div>
+            <label style={{ color: 'var(--t3)', fontSize: '11px', display: 'block', marginBottom: '5px' }}>Stop Loss</label>
+            <input value={sl} onChange={e => setSl(e.target.value)}
+              style={inputSt} onFocus={focus} onBlur={blur}
+              placeholder={instrument === 'XAUUSD' ? '2340.00' : '18950'} />
+          </div>
+        </div>
+
+        {/* Result */}
+        {dist > 0 ? (
+          <div style={{
+            padding: '16px 18px', borderRadius: '10px',
+            background: 'linear-gradient(135deg, rgba(255,176,48,0.09) 0%, rgba(255,255,255,0.02) 100%)',
+            border: '1px solid rgba(255,176,48,0.22)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '12px' }}>
+              <span style={{ color: 'var(--t3)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Lot Size</span>
+              <span style={{ color: 'var(--go2)', fontSize: '34px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>
+                {lotsOut.toFixed(2)}
+              </span>
+              <span style={{ color: 'var(--t3)', fontSize: '13px' }}>lots</span>
+            </div>
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              <div>
+                <p style={{ color: 'var(--t3)', fontSize: '10px', marginBottom: '2px', letterSpacing: '0.04em' }}>RISK AT SIZE</p>
+                <p style={{ color: 'var(--re)', fontSize: '13px', fontWeight: 600 }}>−€{actualRiskE.toFixed(2)}</p>
+              </div>
+              <div>
+                <p style={{ color: 'var(--t3)', fontSize: '10px', marginBottom: '2px', letterSpacing: '0.04em' }}>SL DISTANCE</p>
+                <p style={{ color: 'var(--t2)', fontSize: '13px', fontWeight: 600 }}>
+                  {dist.toFixed(instrument === 'XAUUSD' ? 2 : 0)} pts
+                </p>
+              </div>
+              <div>
+                <p style={{ color: 'var(--t3)', fontSize: '10px', marginBottom: '2px', letterSpacing: '0.04em' }}>% OF BALANCE</p>
+                <p style={{ color: bal > 0 && actualRiskE / bal > 0.02 ? 'var(--am2)' : 'var(--t2)', fontSize: '13px', fontWeight: 600 }}>
+                  {bal > 0 ? ((actualRiskE / bal) * 100).toFixed(2) : '—'}%
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{
+            padding: '14px', borderRadius: '8px', textAlign: 'center',
+            background: 'var(--s2)', border: '1px dashed var(--bd2)',
+          }}>
+            <p style={{ color: 'var(--t3)', fontSize: '12px' }}>Enter entry & stop loss to calculate lot size</p>
+          </div>
+        )}
+
+        <p style={{ color: 'var(--t3)', fontSize: '10px', lineHeight: 1.5 }}>
+          Approx. EURUSD 1.085 · XAUUSD $100/lot/pt · NAS100 $1/lot/pt
+        </p>
+      </div>
+    </Panel>
+  )
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function TradingTab() {
-  const { trades, allRows, stats, loading } = useTrades(2000)
+  const { trades, allRows, openPositions, stats, loading } = useTrades(2000)
+  const { snapshot } = useAccountSnapshot()
+  const currentBalance = snapshot?.balance ?? 0
   const balanceOps = allRows.filter(t => t.symbol === 'BALANCE')
   const [symbolFilter, setSymbol]  = useState('all')
   const [dirFilter,    setDir]     = useState('all')
@@ -1019,16 +1684,75 @@ export default function TradingTab() {
   const worstSetup = tagArr.sort((a, b) => a.wr - b.wr)[0]
 
   // Generate actual Mon-date labels for the last 7 weeks (oldest → newest)
+  // Manual format (not toLocaleDateString) — avoids Node.js / browser Intl divergence
   const weekLabels = Array.from({ length: 7 }, (_, i) => {
-    const mondayOfWeek = new Date()
-    const day = mondayOfWeek.getDay()
-    // Go back to Monday of current week, then subtract (6 - i) weeks
-    mondayOfWeek.setDate(mondayOfWeek.getDate() - (day === 0 ? 6 : day - 1) - (6 - i) * 7)
-    return mondayOfWeek.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+    const d   = new Date()
+    const day = d.getDay()
+    d.setDate(d.getDate() - (day === 0 ? 6 : day - 1) - (6 - i) * 7)
+    return `${d.getDate()} ${MON[d.getMonth()]}`
   })
 
   return (
     <div className="flex flex-col gap-4">
+
+      {/* Open Positions */}
+      {openPositions.length > 0 && (
+        <Panel title={
+          <span className="flex items-center gap-2">
+            <span style={{
+              width: '7px', height: '7px', borderRadius: '50%',
+              background: 'var(--gr2)',
+              boxShadow: '0 0 6px var(--gr)',
+              display: 'inline-block',
+              animation: 'pulse-dot 1.5s ease-in-out infinite',
+            }} />
+            Live Positions ({openPositions.length})
+          </span>
+        } noPadding>
+          {openPositions.map(pos => {
+            const unrealised = pos.net_profit ?? 0
+            const isUp = unrealised >= 0
+            return (
+              <div key={pos.id}
+                className="flex items-center gap-3 px-4 py-3"
+                style={{ borderBottom: '1px solid var(--bd)' }}>
+                <div className="flex flex-col gap-0.5" style={{ minWidth: '80px' }}>
+                  <span style={{ color: 'var(--t1)', fontWeight: 600, fontSize: '13px' }}>{pos.symbol}</span>
+                  <Badge variant={pos.trade_type as 'buy' | 'sell'}>{pos.trade_type.toUpperCase()}</Badge>
+                </div>
+                <div className="flex flex-col gap-0.5" style={{ minWidth: '80px' }}>
+                  <span style={{ color: 'var(--t3)', fontSize: '11px' }}>
+                    {pos.lot_size} lot{(pos.lot_size ?? 0) !== 1 ? 's' : ''}
+                  </span>
+                  <span style={{ color: 'var(--t3)', fontSize: '11px' }}>
+                    @ {pos.open_price}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-0.5 flex-1">
+                  {pos.stop_loss && (
+                    <span style={{ color: 'var(--re)', fontSize: '11px' }}>SL {pos.stop_loss}</span>
+                  )}
+                  {pos.take_profit && (
+                    <span style={{ color: 'var(--gr2)', fontSize: '11px' }}>TP {pos.take_profit}</span>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-0.5">
+                  <span style={{
+                    color: isUp ? 'var(--gr2)' : 'var(--re)',
+                    fontWeight: 700, fontSize: '14px', letterSpacing: '-0.02em',
+                  }}>
+                    {isUp ? '+' : '-'}€{Math.abs(unrealised).toFixed(2)}
+                  </span>
+                  <span style={{ color: 'var(--t3)', fontSize: '10px' }}>
+                    {pos.open_time ? fmtDate(pos.open_time) + ' · ' + fmtTime(pos.open_time) : '—'}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </Panel>
+      )}
+
       {/* Metrics with period selectors */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <PeriodMetricCard
@@ -1050,11 +1774,16 @@ export default function TradingTab() {
           }}
         />
         <PeriodMetricCard
-          title="Avg R:R"
+          title="Real R:R"
           barColor="var(--am)"
           getValue={(p) => {
             const rr = calcAvgRR(filterByPeriod(trades, p))
-            return { value: rr > 0 ? rr.toFixed(2) : '—', change: rr > 0 ? (rr >= 1.5 ? 'Above target' : 'Below 1.5 target') : 'No SL/TP data', changePositive: rr >= 1.5 ? true : rr > 0 ? false : null }
+            const hasData = trades.filter(t => t.stop_loss && t.open_price && t.close_price).length > 0
+            return {
+              value:          hasData ? rr.toFixed(2) : '—',
+              change:         !hasData ? 'No SL data' : rr >= 1.5 ? 'Above target' : rr >= 0 ? 'Below 1.5 target' : 'Negative — cutting losses short',
+              changePositive: !hasData ? null : rr >= 1.5 ? true : false,
+            }
           }}
         />
         <PeriodMetricCard
@@ -1088,6 +1817,11 @@ export default function TradingTab() {
         />
       </div>
 
+      {/* Equity Curve — capped so it doesn't stretch across a wide desktop */}
+      <div style={{ maxWidth: '860px' }}>
+        <EquityCurve trades={trades} />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Trade Log */}
         <div className="lg:col-span-3">
@@ -1112,9 +1846,11 @@ export default function TradingTab() {
               ))}
             </div>
           }>
+            {/* Scrollable wrapper for tablet/mobile */}
+            <div style={{ overflowX: 'auto' }}>
             {/* Header */}
             <div className="flex items-center px-4 py-2 gap-3"
-              style={{ borderBottom:'1px solid var(--bd)', fontSize:'11px', color:'var(--t3)', letterSpacing:'0.04em' }}>
+              style={{ borderBottom:'1px solid var(--bd)', fontSize:'11px', color:'var(--t3)', letterSpacing:'0.04em', minWidth: '480px' }}>
               <span style={{ minWidth:'80px' }}>PAIR</span>
               <span style={{ minWidth:'90px' }}>SESSION</span>
               <span className="flex-1">SETUP / NOTE</span>
@@ -1136,7 +1872,7 @@ export default function TradingTab() {
               return (
               <div key={trade.id}
                 className="flex items-center gap-3 px-4 py-3 transition-colors cursor-pointer group"
-                style={{ borderBottom:'1px solid var(--bd)', background: rowBg }}
+                style={{ borderBottom:'1px solid var(--bd)', background: rowBg, minWidth: '480px' }}
                 onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
                 onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
 
@@ -1204,6 +1940,7 @@ export default function TradingTab() {
                 </button>
               </div>
             )})}
+            </div>{/* end overflowX wrapper */}
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -1222,10 +1959,52 @@ export default function TradingTab() {
           </Panel>
         </div>
 
-        {/* Stats */}
+        {/* Stats + Position Size */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           <Panel title="Performance Stats">
             <div className="flex flex-col gap-3">
+
+              {/* Professional Key Metrics */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                {[
+                  {
+                    label: 'Profit Factor',
+                    value: !stats ? '—' : stats.profitFactor >= 99 ? '∞' : stats.profitFactor.toFixed(2),
+                    color: !stats ? 'var(--t3)' : stats.profitFactor >= 1.5 ? 'var(--gr2)' : stats.profitFactor >= 1 ? 'var(--am2)' : 'var(--re)',
+                    sub:   !stats ? '' : stats.profitFactor >= 1.5 ? 'Strong edge' : stats.profitFactor >= 1 ? 'Breakeven+' : 'Losing',
+                  },
+                  {
+                    label: 'Expectancy',
+                    value: !stats ? '—' : `${stats.expectancy >= 0 ? '+' : ''}€${stats.expectancy.toFixed(2)}`,
+                    color: !stats ? 'var(--t3)' : stats.expectancy > 0 ? 'var(--gr2)' : 'var(--re)',
+                    sub:   'per trade',
+                  },
+                  {
+                    label: 'Avg Win',
+                    value: !stats ? '—' : `€${stats.avgWin.toFixed(2)}`,
+                    color: 'var(--gr2)',
+                    sub:   `${stats?.maxConsecWins ?? 0} max streak`,
+                  },
+                  {
+                    label: 'Avg Loss',
+                    value: !stats ? '—' : `€${stats.avgLoss.toFixed(2)}`,
+                    color: 'var(--re)',
+                    sub:   `${stats?.maxConsecLosses ?? 0} max streak`,
+                  },
+                ].map(m => (
+                  <div key={m.label} style={{
+                    padding: '10px 12px', borderRadius: '8px',
+                    background: 'var(--s2)', border: '1px solid var(--bd)',
+                  }}>
+                    <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '4px' }}>{m.label}</p>
+                    <p style={{ color: m.color, fontSize: '17px', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '3px' }}>{m.value}</p>
+                    <p style={{ color: 'var(--t3)', fontSize: '10px' }}>{m.sub}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ height: '1px', background: 'var(--bd)' }} />
+
               <div>
                 <p style={{ color:'var(--t3)', fontSize:'11px', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.04em' }}>Win Rate by Pair</p>
                 {[
@@ -1340,6 +2119,8 @@ export default function TradingTab() {
               </div>
             </div>
           </Panel>
+
+          <PositionSizeCalc />
         </div>
       </div>
 
@@ -1350,6 +2131,9 @@ export default function TradingTab() {
           onClose={() => setAnnotating(null)}
         />
       )}
+
+      {/* Your Edge */}
+      <YourEdge trades={trades} />
 
       {/* Statistical Analysis — full analytics panel */}
       <TradingInsights trades={trades} allRows={allRows} />
@@ -1386,6 +2170,12 @@ export default function TradingTab() {
           ))}
         </div>
       </Panel>
+
+      {/* Screenshot Gallery */}
+      <Panel title={`Screenshot Gallery (${trades.filter(t => t.screenshot_open_url).length})`} accent="var(--cy2)">
+        <ScreenshotGallery trades={trades} />
+      </Panel>
+
     </div>
   )
 }

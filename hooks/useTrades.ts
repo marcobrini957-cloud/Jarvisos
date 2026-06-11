@@ -5,17 +5,24 @@ import { createClient } from '@/lib/supabase/client'
 import type { Trade } from '@/types'
 
 interface TradeStats {
-  monthPnl:      number
-  weekPnl:       number
-  winRate:       number
-  totalTrades:   number
-  avgRR:         number
-  maxDrawdown:   number
-  xauWinRate:    number
-  nasWinRate:    number
-  londonWinRate: number
-  nyWinRate:     number
-  weeklyPnl:     number[]   // last 7 weeks
+  monthPnl:        number
+  weekPnl:         number
+  winRate:         number
+  totalTrades:     number
+  avgRR:           number
+  maxDrawdown:     number
+  xauWinRate:      number
+  nasWinRate:      number
+  londonWinRate:   number
+  nyWinRate:       number
+  weeklyPnl:       number[]   // last 7 weeks
+  // Professional metrics
+  profitFactor:    number     // gross wins / gross losses (99 = no losses)
+  expectancy:      number     // EUR expected value per trade
+  avgWin:          number     // average EUR per winning trade
+  avgLoss:         number     // average absolute EUR per losing trade
+  maxConsecWins:   number
+  maxConsecLosses: number
 }
 
 // Break-even threshold: trades within ±€10 of zero are considered break-even.
@@ -33,34 +40,40 @@ function isRealTrade(t: Trade) {
 }
 
 export function useTrades(limit = 50) {
-  const [trades,  setTrades]  = useState<Trade[]>([])
-  const [allRows, setAllRows] = useState<Trade[]>([])
-  const [stats, setStats]     = useState<TradeStats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [trades,        setTrades]        = useState<Trade[]>([])
+  const [allRows,       setAllRows]       = useState<Trade[]>([])
+  const [openPositions, setOpenPositions] = useState<Trade[]>([])
+  const [stats,         setStats]         = useState<TradeStats | null>(null)
+  const [loading,       setLoading]       = useState(true)
+  const [error,         setError]         = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
       const supabase = createClient()
-      // Fetch ALL closed rows — including balance/withdrawal ops (lot_size=0, symbol=null)
-      // so that P&L correctly reflects deposits and withdrawals.
-      const { data, error: err } = await supabase
-        .from('trades')
-        .select('*')
-        .eq('status', 'closed')
-        .order('close_time', { ascending: false })
-        .limit(limit)
 
-      if (err) throw err
-      const rows = (data ?? []) as Trade[]
+      // Fetch closed rows + open positions in parallel
+      const [closedRes, openRes] = await Promise.all([
+        supabase
+          .from('trades')
+          .select('*')
+          .eq('status', 'closed')
+          .order('close_time', { ascending: false })
+          .limit(limit),
+        supabase
+          .from('trades')
+          .select('*')
+          .eq('status', 'open')
+          .order('open_time', { ascending: false }),
+      ])
 
-      // trades = real trades only (for the trade log / win-rate / R:R)
+      if (closedRes.error) throw closedRes.error
+
+      const rows = (closedRes.data ?? []) as Trade[]
       setTrades(rows.filter(isRealTrade))
-      // allRows used by P&L period calculations — includes balance/withdrawal ops
       setAllRows(rows)
-      // stats P&L uses ALL rows so withdrawals/deposits are counted
       setStats(computeStats(rows))
+      setOpenPositions((openRes.data ?? []).filter(isRealTrade) as Trade[])
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load trades')
     } finally {
@@ -70,7 +83,26 @@ export function useTrades(limit = 50) {
 
   useEffect(() => { load() }, [load])
 
-  return { trades, allRows, stats, loading, error, reload: load }
+  // Realtime subscription — instantly reflects any DB insert/update on the trades table
+  useEffect(() => {
+    const supabase = createClient()
+    const channel  = supabase
+      .channel('trades-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trades' }, () => {
+        load()
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [load])
+
+  // Also reload on manual mt5-synced event (belt-and-suspenders)
+  useEffect(() => {
+    const handler = () => load()
+    window.addEventListener('mt5-synced', handler)
+    return () => window.removeEventListener('mt5-synced', handler)
+  }, [load])
+
+  return { trades, allRows, openPositions, stats, loading, error, reload: load }
 }
 
 function computeStats(allRows: Trade[]): TradeStats {
@@ -94,13 +126,36 @@ function computeStats(allRows: Trade[]): TradeStats {
   const decisive  = wins.length + losses.length
   const winRate   = decisive > 0 ? (wins.length / decisive) * 100 : 0
 
-  // Avg R:R — real trades with SL and TP
-  const rrTrades = realClosed.filter(t => t.stop_loss && t.take_profit && t.open_price)
+  // Professional metrics
+  const grossWins    = wins.reduce((s, t) => s + (t.net_profit ?? 0), 0)
+  const grossLosses  = Math.abs(losses.reduce((s, t) => s + (t.net_profit ?? 0), 0))
+  const profitFactor = grossLosses > 0 ? grossWins / grossLosses : grossWins > 0 ? 99 : 0
+  const avgWin       = wins.length   > 0 ? grossWins   / wins.length   : 0
+  const avgLoss      = losses.length > 0 ? grossLosses / losses.length : 0
+  const wr100        = decisive > 0 ? wins.length   / decisive : 0
+  const lr100        = decisive > 0 ? losses.length / decisive : 0
+  const expectancy   = wr100 * avgWin - lr100 * avgLoss
+
+  // Max consecutive wins/losses (needs chronological order)
+  const chrono = [...realClosed].sort((a, b) =>
+    (a.close_time ?? '').localeCompare(b.close_time ?? ''))
+  let maxConsecWins = 0, maxConsecLosses = 0, curW = 0, curL = 0
+  for (const t of chrono) {
+    const r = tradeResult(t.net_profit ?? 0)
+    if (r === 'win')  { curW++; curL = 0; if (curW > maxConsecWins)   maxConsecWins   = curW }
+    if (r === 'loss') { curL++; curW = 0; if (curL > maxConsecLosses) maxConsecLosses = curL }
+    // breakeven: preserve both streaks
+  }
+
+  // Avg Realized R:R — actual exit vs entry, measured in units of initial risk (entry → SL)
+  // Requires SL, open price, close price. No TP needed — reflects what actually happened.
+  const rrTrades = realClosed.filter(t => t.stop_loss && t.open_price && t.close_price && t.trade_type)
   const avgRR    = rrTrades.length > 0
     ? rrTrades.reduce((s, t) => {
-        const risk   = Math.abs((t.open_price ?? 0) - (t.stop_loss  ?? 0))
-        const reward = Math.abs((t.take_profit ?? 0) - (t.open_price ?? 0))
-        return s + (risk > 0 ? reward / risk : 0)
+        const dir      = t.trade_type === 'buy' ? 1 : -1
+        const realized = dir * ((t.close_price ?? 0) - (t.open_price ?? 0))
+        const risk     = Math.abs((t.open_price ?? 0) - (t.stop_loss ?? 0))
+        return s + (risk > 0 ? realized / risk : 0)
       }, 0) / rrTrades.length
     : 0
 
@@ -126,28 +181,43 @@ function computeStats(allRows: Trade[]): TradeStats {
   const londonWR = wrOf(london)
   const nyWR     = wrOf(ny)
 
-  // Last 7 weeks P&L — real trades only
+  // Last 7 weeks P&L — aligned to calendar Mon–Sun weeks (matches MT5 weekly P&L)
   const weeklyPnl: number[] = []
+  const currentMonday = new Date(now)
+  const dow = currentMonday.getDay()
+  currentMonday.setDate(currentMonday.getDate() - (dow === 0 ? 6 : dow - 1))
+  currentMonday.setHours(0, 0, 0, 0)
+
   for (let i = 6; i >= 0; i--) {
-    const wEnd   = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000)
-    const wStart = new Date(wEnd.getTime() - 7 * 24 * 60 * 60 * 1000)
-    const wPnl   = realClosed
+    // i=6 → 6 weeks ago (oldest), i=0 → current week (newest)
+    const wStart = new Date(currentMonday)
+    wStart.setDate(wStart.getDate() - i * 7)
+    const wEnd = new Date(wStart)
+    wEnd.setDate(wEnd.getDate() + 7)
+
+    const wPnl = realClosed
       .filter(t => t.close_time && new Date(t.close_time) >= wStart && new Date(t.close_time) < wEnd)
       .reduce((s, t) => s + (t.net_profit ?? 0), 0)
     weeklyPnl.push(parseFloat(wPnl.toFixed(2)))
   }
 
   return {
-    monthPnl:      parseFloat(monthPnl.toFixed(2)),
-    weekPnl:       parseFloat(weekPnl.toFixed(2)),
-    winRate:       parseFloat(winRate.toFixed(1)),
-    totalTrades:   realClosed.length,
-    avgRR:         parseFloat(avgRR.toFixed(2)),
-    maxDrawdown:   parseFloat(maxDrawdown.toFixed(2)),
-    xauWinRate:    parseFloat(xauWR.toFixed(1)),
-    nasWinRate:    parseFloat(nasWR.toFixed(1)),
-    londonWinRate: parseFloat(londonWR.toFixed(1)),
-    nyWinRate:     parseFloat(nyWR.toFixed(1)),
+    monthPnl:        parseFloat(monthPnl.toFixed(2)),
+    weekPnl:         parseFloat(weekPnl.toFixed(2)),
+    winRate:         parseFloat(winRate.toFixed(1)),
+    totalTrades:     realClosed.length,
+    avgRR:           parseFloat(avgRR.toFixed(2)),
+    maxDrawdown:     parseFloat(maxDrawdown.toFixed(2)),
+    xauWinRate:      parseFloat(xauWR.toFixed(1)),
+    nasWinRate:      parseFloat(nasWR.toFixed(1)),
+    londonWinRate:   parseFloat(londonWR.toFixed(1)),
+    nyWinRate:       parseFloat(nyWR.toFixed(1)),
     weeklyPnl,
+    profitFactor:    parseFloat(profitFactor.toFixed(2)),
+    expectancy:      parseFloat(expectancy.toFixed(2)),
+    avgWin:          parseFloat(avgWin.toFixed(2)),
+    avgLoss:         parseFloat(avgLoss.toFixed(2)),
+    maxConsecWins,
+    maxConsecLosses,
   }
 }

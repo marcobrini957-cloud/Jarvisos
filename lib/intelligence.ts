@@ -200,22 +200,23 @@ export function generateInsights(data: JarvisData): JarvisInsight[] {
     }
   }
 
-  // Average R:R
-  const rrTrades = closed.filter(t => t.stop_loss && t.open_price && (t.net_profit ?? 0) !== 0)
+  // Average Realized R:R — actual exit vs entry in units of initial risk
+  const rrTrades = closed.filter(t => t.stop_loss && t.open_price && t.close_price && t.trade_type)
   if (rrTrades.length >= 5) {
     const avgRR = rrTrades.reduce((s, t) => {
-      const risk   = Math.abs((t.open_price ?? 0) - (t.stop_loss ?? 0))
-      const reward = Math.abs(t.net_profit ?? 0)
-      return s + (risk > 0 ? reward / risk : 0)
+      const dir      = t.trade_type === 'buy' ? 1 : -1
+      const realized = dir * ((t.close_price ?? 0) - (t.open_price ?? 0))
+      const risk     = Math.abs((t.open_price ?? 0) - (t.stop_loss ?? 0))
+      return s + (risk > 0 ? realized / risk : 0)
     }, 0) / rrTrades.length
 
     if (avgRR < 1.5) {
       push({ category: 'trading', priority: 'medium',
-        message: `Average R:R is ${avgRR.toFixed(2)}. Target is 2.0 — you are leaving money on the table by closing winners too early or setting stops too tight.`,
+        message: `Realized R:R is ${avgRR.toFixed(2)}. Target is 1.5 — you may be closing winners too early or letting losers run.`,
         valuePct: avgRR })
     } else if (avgRR >= 2.0) {
       push({ category: 'trading', priority: 'low',
-        message: `R:R ratio at ${avgRR.toFixed(2)} — above your 2.0 target. Good trade management.`,
+        message: `Realized R:R at ${avgRR.toFixed(2)} — solid trade execution. You are letting winners run.`,
         valuePct: avgRR })
     }
   }
