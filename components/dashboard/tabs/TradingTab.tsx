@@ -1651,7 +1651,8 @@ export default function TradingTab() {
   const [symbolFilter, setSymbol]  = useState('all')
   const [dirFilter,    setDir]     = useState('all')
   const [page,         setPage]    = useState(0)
-  const [annotating,   setAnnotating] = useState<Trade | null>(null)
+  const [annotating,       setAnnotating]       = useState<Trade | null>(null)
+  const [screenshotViewing, setScreenshotViewing] = useState<string | null>(null)
 
   const PAGE_SIZE = 10
 
@@ -1892,18 +1893,20 @@ export default function TradingTab() {
                   </span>
                 </div>
 
-                {/* Screenshot indicator — always occupies same space, hidden when screenshot exists */}
-                <span
-                  title="No screenshot"
-                  style={{
-                    fontSize: '13px',
-                    flexShrink: 0,
-                    visibility: (trade.screenshot_missing && !trade.screenshot_open_url && !trade.screenshot_close_url) ? 'visible' : 'hidden',
-                    color: 'var(--t3)',
-                  }}
-                >
-                  📷
-                </span>
+                {/* Screenshot indicator — shown only when screenshot exists, clickable to view */}
+                {(trade.screenshot_open_url || trade.screenshot_close_url) ? (
+                  <button
+                    onClick={e => { e.stopPropagation(); setScreenshotViewing(trade.screenshot_open_url || trade.screenshot_close_url || '') }}
+                    title="View screenshot"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', flexShrink: 0, padding: '2px', lineHeight: 1, opacity: 0.7 }}
+                    onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}
+                  >
+                    📷
+                  </button>
+                ) : (
+                  <span style={{ width: '22px', flexShrink: 0 }} />
+                )}
 
                 <div className="flex-1">
                   <span style={{ color:'var(--t2)', fontSize:'12px' }}>
@@ -2140,6 +2143,29 @@ export default function TradingTab() {
           trade={annotating}
           onClose={() => setAnnotating(null)}
         />
+      )}
+
+      {/* Screenshot Lightbox */}
+      {screenshotViewing && (
+        <>
+          <div
+            onClick={() => setScreenshotViewing(null)}
+            style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', cursor: 'zoom-out' }}
+          />
+          <div style={{ position: 'fixed', inset: 0, zIndex: 51, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', pointerEvents: 'none' }}>
+            <img
+              src={screenshotViewing}
+              alt="Trade screenshot"
+              style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '12px', boxShadow: '0 32px 80px rgba(0,0,0,0.8)', pointerEvents: 'auto' }}
+            />
+          </div>
+          <button
+            onClick={() => setScreenshotViewing(null)}
+            style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 52, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: 'white', fontSize: '18px', width: '36px', height: '36px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            ×
+          </button>
+        </>
       )}
 
       {/* Your Edge */}
