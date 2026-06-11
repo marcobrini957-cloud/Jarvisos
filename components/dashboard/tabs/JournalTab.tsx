@@ -34,7 +34,11 @@ function getDaysInMonth(year: number, month: number): Date[] {
 }
 
 function toDateStr(d: Date): string {
-  return d.toISOString().split('T')[0]
+  // Use local date (not UTC) so midnight-hour entries land on the correct day
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function isWeekday(d: Date): boolean {
@@ -259,7 +263,8 @@ export default function JournalTab() {
     const map = new Map<string, number>()
     for (const t of trades) {
       if (!t.close_time) continue
-      const d = t.close_time.split('T')[0]
+      // Use local date so trades closing near midnight match the journal entry date
+      const d = toDateStr(new Date(t.close_time))
       map.set(d, (map.get(d) ?? 0) + (t.net_profit ?? 0))
     }
     return map
