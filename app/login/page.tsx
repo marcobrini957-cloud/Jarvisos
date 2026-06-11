@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-type Mode = 'signin' | 'signup'
+type Mode = 'signin' | 'signup' | 'reset'
 
 const FEATURES = [
   { icon: '📊', text: 'Real-time MT5 sync' },
@@ -26,6 +26,7 @@ export default function LoginPage() {
   // Sign-up extra
   const [displayName, setDisplayName] = useState('')
   const [signedUp,    setSignedUp]    = useState(false)
+  const [resetSent,   setResetSent]   = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -38,6 +39,21 @@ export default function LoginPage() {
     setMode(m)
     setError('')
     setSignedUp(false)
+    setResetSent(false)
+  }
+
+  async function handleReset(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const supabase = createClient()
+      const { error: authError } = await supabase.auth.resetPasswordForEmail(email)
+      if (authError) setError(authError.message)
+      else setResetSent(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleSignIn(e: React.FormEvent) {
@@ -256,7 +272,16 @@ export default function LoginPage() {
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Password</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <label style={{ ...labelStyle, marginBottom: 0 }}>Password</label>
+                      <button
+                        type="button"
+                        onClick={() => switchMode('reset')}
+                        style={{ background: 'none', border: 'none', color: 'var(--ac)', fontSize: '12px', cursor: 'pointer', padding: 0 }}
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
                     <input
                       type="password"
                       value={password}
@@ -375,7 +400,74 @@ export default function LoginPage() {
                 </form>
               )}
 
+              {/* Reset password form */}
+              {mode === 'reset' && (
+                resetSent ? (
+                  <div style={{
+                    padding: '20px',
+                    background: 'rgba(0,217,110,0.08)',
+                    border: '1px solid rgba(0,217,110,0.2)',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    display: 'flex', flexDirection: 'column', gap: '8px',
+                  }}>
+                    <span style={{ fontSize: '24px' }}>✉️</span>
+                    <p style={{ color: 'var(--gr2)', fontSize: '14px', fontWeight: 600, margin: 0 }}>Check your email</p>
+                    <p style={{ color: 'var(--t2)', fontSize: '13px', margin: 0, lineHeight: 1.6 }}>
+                      Password reset link sent to <strong style={{ color: 'var(--t1)' }}>{email}</strong>.
+                    </p>
+                    <button onClick={() => switchMode('signin')} style={{ marginTop: '8px', background: 'none', border: 'none', color: 'var(--ac)', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>
+                      Back to sign in
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <p style={{ color: 'var(--t2)', fontSize: '13px', margin: 0, lineHeight: 1.6 }}>
+                      Enter your email and we&apos;ll send you a reset link.
+                    </p>
+                    <div>
+                      <label style={labelStyle}>Email</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        required
+                        autoComplete="email"
+                        style={inputStyle}
+                        onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+                        onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
+                      />
+                    </div>
+                    {error && (
+                      <p style={{ color: 'var(--re)', fontSize: '13px', background: 'rgba(255,51,71,0.08)', border: '1px solid rgba(255,51,71,0.2)', borderRadius: '8px', padding: '10px 12px', margin: 0 }}>
+                        {error}
+                      </p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={loading || !email}
+                      style={{
+                        width: '100%', padding: '13px',
+                        background: loading || !email ? 'var(--s2)' : 'var(--ac)',
+                        border: 'none', borderRadius: '10px',
+                        color: loading || !email ? 'var(--t3)' : 'white',
+                        fontSize: '14px', fontWeight: 600,
+                        cursor: loading || !email ? 'default' : 'pointer',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {loading ? 'Sending…' : 'Send reset link'}
+                    </button>
+                    <button onClick={() => switchMode('signin')} type="button" style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '13px', cursor: 'pointer' }}>
+                      Back to sign in
+                    </button>
+                  </form>
+                )
+              )}
+
               {/* Toggle mode */}
+              {mode !== 'reset' && (
               <p style={{ textAlign: 'center', color: 'var(--t3)', fontSize: '13px', margin: 0 }}>
                 {mode === 'signin' ? (
                   <>Don&apos;t have an account?{' '}
@@ -397,6 +489,7 @@ export default function LoginPage() {
                   </>
                 )}
               </p>
+              )}
             </>
           )}
         </div>
