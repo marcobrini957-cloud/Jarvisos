@@ -1878,10 +1878,7 @@ export default function TradingTab() {
 
                 <div className="flex flex-col gap-1" style={{ minWidth:'80px' }}>
                   <span style={{ color:'var(--t1)', fontWeight:500, fontSize:'13px' }}>{trade.symbol}</span>
-                  <div className="flex gap-1 flex-wrap">
-                    <Badge variant={trade.trade_type as 'buy'|'sell'}>{trade.trade_type.toUpperCase()}</Badge>
-                    {trade.screenshot_missing && !trade.screenshot_open_url && !trade.screenshot_close_url && <Badge variant="screenshot">no screenshot</Badge>}
-                  </div>
+                  <Badge variant={trade.trade_type as 'buy'|'sell'}>{trade.trade_type.toUpperCase()}</Badge>
                 </div>
 
                 <div className="flex flex-col gap-1" style={{ minWidth:'90px' }}>
@@ -1894,6 +1891,19 @@ export default function TradingTab() {
                     {fmtDate(trade.open_time)} · {fmtTime(trade.open_time)}
                   </span>
                 </div>
+
+                {/* Screenshot indicator — always occupies same space, hidden when screenshot exists */}
+                <span
+                  title="No screenshot"
+                  style={{
+                    fontSize: '13px',
+                    flexShrink: 0,
+                    visibility: (trade.screenshot_missing && !trade.screenshot_open_url && !trade.screenshot_close_url) ? 'visible' : 'hidden',
+                    color: 'var(--t3)',
+                  }}
+                >
+                  📷
+                </span>
 
                 <div className="flex-1">
                   <span style={{ color:'var(--t2)', fontSize:'12px' }}>
