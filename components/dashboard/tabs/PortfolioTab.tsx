@@ -1012,7 +1012,7 @@ export default function PortfolioTab() {
         {/* Holdings table */}
         <div className="lg:col-span-3">
           <Panel title="Holdings" noPadding action={
-            <div className="flex gap-2">
+            <div className="portfolio-panel-actions flex gap-2">
               {/* Sort toggle */}
               <div className="flex rounded-md overflow-hidden" style={{ border: '1px solid var(--bd2)' }}>
                 {([['default', 'Default'], ['pnl', 'P&L %'], ['alloc', 'Size']] as const).map(([val, label]) => (
@@ -1065,6 +1065,7 @@ export default function PortfolioTab() {
               )}
             </div>
           }>
+            <div className="portfolio-table-wrap">
             {/* Header — fixed widths match row cells exactly */}
             <div className="flex items-center px-4 py-2"
               style={{ borderBottom: '1px solid var(--bd)', fontSize: '11px', color: 'var(--t3)', letterSpacing: '0.04em' }}>
@@ -1220,6 +1221,7 @@ export default function PortfolioTab() {
                 )
               })
             )}
+            </div>{/* end portfolio-table-wrap */}
           </Panel>
         </div>
 

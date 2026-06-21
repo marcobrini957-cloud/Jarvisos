@@ -196,7 +196,7 @@ export default function Topbar() {
           }}>
             ⬡
           </div>
-          <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '13px', letterSpacing: '-0.01em' }}>
+          <span className="topbar-brand-text" style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '13px', letterSpacing: '-0.01em' }}>
             Velquor
           </span>
         </Link>
@@ -223,14 +223,14 @@ export default function Topbar() {
 
           {status.connected ? (
             <div className="flex items-center gap-3">
-              <span style={{ color: 'var(--t2)', fontSize: '12px' }}>MT5</span>
+              <span className="topbar-mt5-label" style={{ color: 'var(--t2)', fontSize: '12px' }}>MT5</span>
               {status.balance !== null && (
                 <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 500 }}>
                   €{status.balance.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               )}
               {status.openPositions > 0 && (
-                <span style={{
+                <span className="topbar-mt5-open" style={{
                   background: 'rgba(88,166,255,0.12)', color: 'var(--ac)',
                   fontSize: '11px', padding: '1px 7px', borderRadius: '4px',
                 }}>
@@ -238,7 +238,7 @@ export default function Topbar() {
                 </span>
               )}
               {status.syncedAt && (
-                <span style={{ color: 'var(--t3)', fontSize: '11px' }}>{timeAgo(status.syncedAt)}</span>
+                <span className="topbar-mt5-time" style={{ color: 'var(--t3)', fontSize: '11px' }}>{timeAgo(status.syncedAt)}</span>
               )}
             </div>
           ) : status.error ? (

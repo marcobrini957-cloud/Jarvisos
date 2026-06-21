@@ -703,7 +703,7 @@ function StatRow({ label, trades: rowTrades, avgPnl, highlight }: {
   const decisive  = wins + losses
   const wr        = decisive > 0 ? (wins / decisive) * 100 : 0
   return (
-    <div style={{
+    <div className="stat-row-grid" style={{
       display: 'grid', gridTemplateColumns: '1fr 90px 60px 80px',
       alignItems: 'center', gap: '8px',
       padding: '8px 0',
@@ -735,7 +735,7 @@ function StatRow({ label, trades: rowTrades, avgPnl, highlight }: {
 
 function TableHeader() {
   return (
-    <div style={{
+    <div className="stat-table-header" style={{
       display: 'grid', gridTemplateColumns: '1fr 90px 60px 80px',
       gap: '8px', padding: '0 0 6px 0',
       borderBottom: '1px solid var(--bd2)',

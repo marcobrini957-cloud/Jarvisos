@@ -306,7 +306,8 @@ input, textarea, select { font: inherit; }
 @media (max-width: 640px) {
   /* Main content: room for fixed bottom nav + safe area */
   .dashboard-main {
-    padding: 12px 12px calc(80px + env(safe-area-inset-bottom)) !important;
+    padding: 10px 10px calc(80px + env(safe-area-inset-bottom)) !important;
+    gap: 10px !important;
   }
 
   /* Hero section: tighter padding */
@@ -352,7 +353,7 @@ input, textarea, select { font: inherit; }
     display: none !important;
   }
 
-  /* Session clock: smaller text on mobile */
+  /* Session clock: wrap on narrow screens */
   .session-clock-row {
     flex-wrap: wrap !important;
     gap: 8px !important;
@@ -370,9 +371,71 @@ input, textarea, select { font: inherit; }
     bottom: calc(65px + env(safe-area-inset-bottom)) !important;
   }
 
-  /* Topbar: safe area at top for notched phones */
+  /* ── Topbar ───────────────────────────────────────────────────────── */
+  /* Safe area for notched phones */
   .topbar-root {
     padding-top: env(safe-area-inset-top) !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
     height: calc(48px + env(safe-area-inset-top)) !important;
   }
+  /* Hide "Velquor" brand text — only the logo icon stays */
+  .topbar-brand-text {
+    display: none !important;
+  }
+  /* In the MT5 button: hide "MT5" label, open-positions badge, sync time */
+  .topbar-mt5-label {
+    display: none !important;
+  }
+  .topbar-mt5-open {
+    display: none !important;
+  }
+  .topbar-mt5-time {
+    display: none !important;
+  }
+
+  /* ── Trading tab — Stat rows & table header ───────────────────────── */
+  /* On mobile: show only label + avg P&L, hide the W/BE/L pills and win-rate bar */
+  .stat-row-grid,
+  .stat-table-header {
+    grid-template-columns: 1fr auto !important;
+  }
+  .stat-row-grid > :nth-child(2),
+  .stat-row-grid > :nth-child(3),
+  .stat-table-header > :nth-child(2),
+  .stat-table-header > :nth-child(3) {
+    display: none !important;
+  }
+
+  /* ── Portfolio — holdings table horizontal scroll ─────────────────── */
+  .portfolio-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Give each row/header inside the scroll area a minimum width so it scrolls */
+  .portfolio-table-wrap > * {
+    min-width: 480px;
+  }
+
+  /* ── Portfolio — action bar wrapping ─────────────────────────────── */
+  /* The action buttons in the Holdings Panel header need to wrap on mobile */
+  .portfolio-panel-actions {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    justify-content: flex-end !important;
+    max-width: 200px !important;
+  }
+
+  /* ── Journal tab ──────────────────────────────────────────────────── */
+  /* Calendar cells get tight on small phones; reduce font size */
+  .calendar-header-grid div {
+    font-size: 9px !important;
+  }
+
+  /* ── Panel padding & header ───────────────────────────────────────── */
+  /* Tighter panel inner padding on mobile */
+  .panel-inner-content {
+    padding: 12px !important;
+  }
+
 }
