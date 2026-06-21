@@ -5,19 +5,21 @@ import { cookies } from 'next/headers'
 
 export const maxDuration = 60
 
-const METAAPI_BASE = 'https://mt-client-api-v1.london.agiliumtrade.ai'
+// MetaAPI regions to try in order (london + new-york currently share IP 57.129.144.25)
+const METAAPI_REGIONS = [
+  'london',
+  'new-york',
+]
 
-// Retry MetaAPI calls once on 504 (account temporarily disconnected from broker)
-async function metaApi(path: string, token: string, attempt = 0): Promise<unknown> {
-  const res = await fetch(`${METAAPI_BASE}${path}`, {
+async function metaApiCall(base: string, path: string, token: string, attempt = 0): Promise<unknown> {
+  const res = await fetch(`${base}${path}`, {
     headers: { 'auth-token': token },
     cache: 'no-store',
   })
   if (!res.ok) {
     if (res.status === 504 && attempt === 0) {
-      // Wait 3s and retry once — broker connection usually recovers quickly
       await new Promise(r => setTimeout(r, 3000))
-      return metaApi(path, token, 1)
+      return metaApiCall(base, path, token, 1)
     }
     const text = await res.text()
     throw new Error(`MetaAPI ${res.status}: ${text}`)
@@ -25,16 +27,30 @@ async function metaApi(path: string, token: string, attempt = 0): Promise<unknow
   return res.json()
 }
 
+async function metaApi(path: string, token: string): Promise<unknown> {
+  let lastErr: Error = new Error('MetaAPI: all regions unreachable')
+  for (const region of METAAPI_REGIONS) {
+    const base = `https://mt-client-api-v1.${region}.agiliumtrade.ai`
+    try {
+      return await metaApiCall(base, path, token)
+    } catch (e) {
+      lastErr = e instanceof Error ? e : new Error(String(e))
+      console.warn(`[mt5-sync] region ${region} failed: ${lastErr.message}`)
+    }
+  }
+  throw lastErr
+}
+
 function detectSession(isoTime: string): string {
-  const h = new Date(isoTime).getUTCHours()
-  // All times UTC. Vienna = UTC+2 summer / UTC+1 winter.
-  // London:   07–12 UTC  (09–14 Vienna summer)
-  // Overlap:  12–16 UTC  (14–18 Vienna summer) — London + NY both open
-  // New York: 16–22 UTC  (18–00 Vienna summer)
-  // Asian:    22–07 UTC  (00–09 Vienna summer)
-  if (h >= 12 && h < 16) return 'overlap'
-  if (h >= 7  && h < 12) return 'london'
-  if (h >= 16 && h < 22) return 'new_york'
+  const d = new Date(isoTime)
+  const mins = d.getUTCHours() * 60 + d.getUTCMinutes()
+  // Official forex session hours (UTC, DST-independent):
+  // New York:  13:30–22:00 UTC (NYSE 9:30 AM–4:00 PM ET)
+  // London:    08:00–16:30 UTC (LSE 8:00 AM–4:30 PM UK)
+  // Asian:     22:00–08:00 UTC
+  // NY takes priority during London/NY overlap (13:30–16:30 UTC)
+  if (mins >= 13 * 60 + 30 && mins < 22 * 60) return 'new_york'
+  if (mins >= 8 * 60 && mins < 16 * 60 + 30)  return 'london'
   return 'asian'
 }
 
@@ -98,12 +114,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase  = await createClient()
-    const token     = process.env.METAAPI_TOKEN
-    const accountId = process.env.MT5_ACCOUNT_ID
+    const supabase = await createClient()
+    const token    = process.env.METAAPI_TOKEN
 
-    if (!token || !accountId) {
-      return NextResponse.json({ error: 'MetaAPI credentials not configured' }, { status: 400 })
+    if (!token) {
+      return NextResponse.json({ error: 'MetaAPI token not configured on server' }, { status: 400 })
+    }
+
+    // Read user's MetaAPI account ID from their profile
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('mt5_account_id')
+      .eq('id', userId)
+      .single()
+
+    // Fallback to env var so existing single-user setup still works
+    const accountId = profile?.mt5_account_id ?? process.env.MT5_ACCOUNT_ID
+
+    if (!accountId) {
+      return NextResponse.json({ error: 'No MT5 account connected. Go to Settings to connect your account.' }, { status: 400 })
     }
 
     const url   = new URL(req.url)

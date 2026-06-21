@@ -5,7 +5,17 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public paths — always allowed
-  if (pathname.startsWith('/login') || pathname.startsWith('/_next') || pathname.startsWith('/favicon')) {
+  const isPublic =
+    pathname === '/' ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/onboarding') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/api/market') ||
+    pathname.startsWith('/api/macro')
+
+  if (isPublic) {
     return NextResponse.next()
   }
 

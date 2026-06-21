@@ -12,12 +12,12 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Jarvis OS',
-  description: 'Personal trading and life operating system',
+  title: 'Velquor',
+  description: 'Your trading operating system — powered by Jarvis AI',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Jarvis OS',
+    title: 'Velquor',
   },
 }
 

@@ -7,7 +7,7 @@ interface DailyMaxLossProps {
   allRows: Trade[]
 }
 
-const STORAGE_KEY = 'jarvis-daily-limit'
+const STORAGE_KEY = 'velquor-daily-limit'
 const DEFAULT_LIMIT = 200
 
 function todayDateStr(): string {

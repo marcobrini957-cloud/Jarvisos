@@ -19,7 +19,7 @@ interface PropFirmTrackerProps {
   balance:     number
 }
 
-const STORAGE_KEY = 'jarvis-prop-firm'
+const STORAGE_KEY = 'velquor-prop-firm'
 
 const DEFAULT_CONFIG: PropFirmConfig = {
   enabled:          false,

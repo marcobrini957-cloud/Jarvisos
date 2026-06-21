@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Trade } from '@/types'
 
@@ -46,9 +46,12 @@ export function useTrades(limit = 50) {
   const [stats,         setStats]         = useState<TradeStats | null>(null)
   const [loading,       setLoading]       = useState(true)
   const [error,         setError]         = useState<string | null>(null)
+  const initialized = useRef(false)
 
   const load = useCallback(async () => {
-    setLoading(true)
+    // Only show loading spinner on the very first fetch.
+    // Background refreshes (poll, realtime, mt5-synced) update silently.
+    if (!initialized.current) setLoading(true)
     try {
       const supabase = createClient()
 
@@ -74,6 +77,7 @@ export function useTrades(limit = 50) {
       setAllRows(rows)
       setStats(computeStats(rows))
       setOpenPositions((openRes.data ?? []).filter(isRealTrade) as Trade[])
+      initialized.current = true
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load trades')
     } finally {
@@ -100,6 +104,13 @@ export function useTrades(limit = 50) {
     const handler = () => load()
     window.addEventListener('mt5-synced', handler)
     return () => window.removeEventListener('mt5-synced', handler)
+  }, [load])
+
+  // Self-contained poll — guarantees fresh data even when tab was unmounted
+  // during a Topbar background sync and missed the mt5-synced event
+  useEffect(() => {
+    const id = setInterval(() => load(), 30_000)
+    return () => clearInterval(id)
   }, [load])
 
   return { trades, allRows, openPositions, stats, loading, error, reload: load }

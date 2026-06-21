@@ -43,10 +43,79 @@ function BiasCard({ label, ticker, bias, reason, loading }: { label: string; tic
   )
 }
 
-function vienaTime(date: string, time: string): string {
+// ── Event explanations ────────────────────────────────────────────────────────
+
+const EVENT_EXPLANATIONS: Record<string, string> = {
+  // US
+  'non-farm payrolls':       'Measures the number of new jobs added in the US economy (excluding farms). A strong number means the economy is growing — bad for Gold, usually good for USD and Nasdaq.',
+  'nfp':                     'Measures the number of new jobs added in the US economy (excluding farms). A strong number means the economy is growing — bad for Gold, usually good for USD and Nasdaq.',
+  'cpi':                     'Consumer Price Index — measures inflation by tracking price changes for everyday goods. Higher than expected = more Fed rate hikes → Gold drops, USD rises.',
+  'core cpi':                'CPI excluding food and energy — the Fed\'s preferred inflation gauge. Moves Gold and USD sharply because it directly influences interest rate decisions.',
+  'ppi':                     'Producer Price Index — inflation at the wholesale/factory level. A leading indicator of CPI. Surprise spike = risk-off, Gold up.',
+  'core pce':                'The Fed\'s favourite inflation measure. Drives rate expectations more than CPI. Hot print = hawkish Fed → Gold down, USD up.',
+  'pce':                     'Personal Consumption Expenditures — broad inflation measure. The Fed watches this closely to decide whether to raise or cut rates.',
+  'fomc':                    'Federal Open Market Committee — the Fed\'s rate-setting meeting. Every word of the statement moves markets. Rate hikes hurt Gold; rate cuts send it flying.',
+  'fomc minutes':            'The detailed record of the last Fed meeting, released 3 weeks later. Traders hunt for hints about the next rate move — big Gold and Nasdaq mover.',
+  'federal funds rate':      'The Fed\'s benchmark interest rate decision. The single most important event for Gold, Nasdaq, and USD. Higher rates = Gold down; cuts = Gold up.',
+  'interest rate decision':  'Central bank sets the official interest rate. Biggest market mover of any session — expect wide spreads and fast candles across Gold and indices.',
+  'initial jobless claims':  'Weekly count of Americans filing for unemployment. Rising claims = weakening economy = Gold up. Released every Thursday, consistently moves USD pairs.',
+  'gdp':                     'Gross Domestic Product — the total size of the economy. Beats expectations = risk-on (Nasdaq up, Gold down). Miss = risk-off (Gold up).',
+  'retail sales':            'Measures consumer spending — the biggest driver of US GDP. Strong number = strong economy = USD up, Gold pressure. Weak = opposite.',
+  'jolts':                   'Job Openings and Labor Turnover Survey — shows how many jobs are available. More openings = tight labour market = Fed stays hawkish = Gold sells off.',
+  'adp':                     'ADP Employment Change — private payrolls preview released 2 days before NFP. Acts as a warm-up number. Big beat often front-runs NFP reaction.',
+  'ism manufacturing':       'Surveys factory managers on production, orders, and employment. Below 50 = contraction. Weak reading = risk-off = Gold up, Nasdaq down.',
+  'ism services':            'Same as ISM Manufacturing but for the service sector (70% of US economy). A soft number hits Nasdaq harder than Gold.',
+  'consumer confidence':     'How optimistic Americans feel about the economy. Low confidence = less spending = slower growth = Gold can rally.',
+  'michigan sentiment':      'University of Michigan consumer sentiment survey. Includes inflation expectations — if people expect more inflation, Gold reacts positively.',
+  'trade balance':           'Difference between US exports and imports. A large deficit weighs on USD which tends to lift Gold.',
+  // ECB / EUR
+  'ecb':                     'European Central Bank rate decision or statement. Moves EUR pairs and indirectly affects Gold through USD strength/weakness.',
+  'ecb rate':                'ECB interest rate decision. Hawkish surprise (bigger hike) = EUR up = USD down = Gold up. Dovish = opposite.',
+  // BOE / GBP
+  'boe':                     'Bank of England rate decision. Moves GBP pairs. Can ripple into Gold if it triggers a broad USD move.',
+  'bank of england':         'Bank of England rate decision. Moves GBP pairs and can trigger broader risk sentiment shifts.',
+  // BOJ / JPY
+  'boj':                     'Bank of Japan decision. JPY is a safe-haven currency — any BOJ surprise can move Gold as traders shift between safe-haven assets.',
+  // Generic
+  'flash pmi':               'Preliminary Purchasing Managers Index — early read on whether the economy is expanding (>50) or contracting (<50). Fast mover for index futures.',
+  'pmi':                     'Purchasing Managers Index — survey of business activity. Above 50 = expansion. Key risk gauge for Nasdaq and Gold.',
+  'treasury':                'US government bond auction or yield data. Rising yields hurt Gold and pressure Nasdaq valuations.',
+  'yield':                   'Bond yield movement. Higher yields = higher opportunity cost of holding Gold → Gold drops.',
+  'crude oil':               'Oil inventory or production data. Sharp moves in oil affect inflation expectations which feed back into Gold and USD.',
+}
+
+function getEventExplanation(title: string): string | null {
+  const lower = title.toLowerCase()
+  for (const [key, val] of Object.entries(EVENT_EXPLANATIONS)) {
+    if (lower.includes(key)) return val
+  }
+  return null
+}
+
+function vienaTime(dateIso: string, timeStr: string): string {
   try {
-    return new Date(`${date} ${time}`).toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Vienna' }) + ' VIE'
-  } catch { return time }
+    // Extract YYYY-MM-DD from ISO string like "2025-06-06T00:00:00-0500"
+    const datePart = dateIso.split('T')[0]
+    // Parse "8:30am" / "12:00pm" / "All Day"
+    const match = timeStr.match(/(\d+):(\d+)(am|pm)/i)
+    if (!match) return timeStr
+    let h = parseInt(match[1])
+    const m = parseInt(match[2])
+    const ampm = match[3].toLowerCase()
+    if (ampm === 'pm' && h !== 12) h += 12
+    if (ampm === 'am' && h === 12) h = 0
+    // Treat FF times as US Eastern (UTC-5 as conservative base)
+    const d = new Date(`${datePart}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00-05:00`)
+    if (isNaN(d.getTime())) return timeStr
+    return d.toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Vienna' }) + ' VIE'
+  } catch { return timeStr }
+}
+
+function dayLabel(dateIso: string): string {
+  try {
+    const datePart = dateIso.split('T')[0]
+    return new Date(datePart + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+  } catch { return dateIso }
 }
 
 function newsTimeAgo(iso: string): string {
@@ -67,6 +136,67 @@ const NEWS_CAT_COLOR: Record<string, string> = {
   Energy:       'var(--gr2)',
   Asia:         'var(--ac2)',
   Markets:      'var(--t2)',
+}
+
+// ── Event Row ─────────────────────────────────────────────────────────────────
+
+function EventRow({ ev, explanation, isToday }: { ev: FFEvent; explanation: string | null; isToday: boolean }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div
+      onClick={() => explanation && setOpen(o => !o)}
+      style={{
+        borderBottom: '1px solid var(--bd)',
+        borderLeft: `2px solid ${isToday ? 'var(--re)' : 'rgba(255,61,80,0.3)'}`,
+        cursor: explanation ? 'pointer' : 'default',
+        transition: 'background 0.1s',
+      }}
+      onMouseEnter={e => { if (explanation) (e.currentTarget as HTMLDivElement).style.background = 'var(--s3)' }}
+      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent' }}
+    >
+      <div className="flex items-start gap-3 px-4 py-3">
+        {/* Time + currency */}
+        <div style={{ flexShrink: 0, minWidth: '56px' }}>
+          <p style={{ color: 'var(--go2)', fontSize: '12px', fontWeight: 600 }}>{vienaTime(ev.date, ev.time)}</p>
+          <p style={{ color: 'var(--t3)', fontSize: '10px', marginTop: '1px' }}>{ev.currency}</p>
+        </div>
+
+        {/* Title + numbers */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p style={{ color: 'var(--t1)', fontSize: '13px', fontWeight: 600 }}>{ev.title}</p>
+            {explanation && (
+              <span style={{ fontSize: '10px', color: 'var(--t3)', opacity: 0.7 }}>{open ? '▲' : '▼'}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 mt-1 flex-wrap">
+            {ev.actual   && <span style={{ fontSize: '11px', color: 'var(--gr2)', fontWeight: 600 }}>Actual: {ev.actual}</span>}
+            {ev.forecast && <span style={{ fontSize: '11px', color: 'var(--t2)' }}>Fcst: {ev.forecast}</span>}
+            {ev.previous && <span style={{ fontSize: '11px', color: 'var(--t3)' }}>Prev: {ev.previous}</span>}
+          </div>
+          <div className="flex gap-1.5 mt-1.5">
+            {ev.affectsGold   && <span style={{ fontSize: '10px', color: 'var(--go2)', background: 'rgba(201,168,76,0.12)', padding: '1px 6px', borderRadius: '4px' }}>Gold</span>}
+            {ev.affectsNasdaq && <span style={{ fontSize: '10px', color: 'var(--ac2)', background: 'rgba(55,138,221,0.12)', padding: '1px 6px', borderRadius: '4px' }}>Nasdaq</span>}
+          </div>
+
+          {/* Explanation */}
+          {open && explanation && (
+            <p style={{
+              marginTop: '8px', fontSize: '11px', lineHeight: 1.6,
+              color: 'var(--t2)',
+              padding: '8px 10px',
+              background: 'rgba(255,255,255,0.04)',
+              borderRadius: '6px',
+              borderLeft: '2px solid rgba(255,176,48,0.4)',
+            }}>
+              {explanation}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function MacroTab() {
@@ -114,10 +244,10 @@ export default function MacroTab() {
     setGenerating(false)
   }
 
-  const today = new Date().toDateString()
-  const todayEvents = calendar.filter(e => new Date(e.date).toDateString() === today)
+  const todayDateStr = new Date().toISOString().split('T')[0]
+  const todayEvents  = calendar.filter(e => e.date.split('T')[0] === todayDateStr)
   const byDay = calendar.reduce<Record<string, FFEvent[]>>((acc, ev) => {
-    const d = new Date(ev.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+    const d = dayLabel(ev.date)
     if (!acc[d]) acc[d] = []
     acc[d].push(ev)
     return acc
@@ -141,7 +271,7 @@ export default function MacroTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* LEFT: High-impact calendar (red only) */}
+        {/* LEFT: High-impact calendar */}
         <Panel title="High-Impact Events — This Week" noPadding action={
           <span style={{ color: 'var(--t3)', fontSize: '11px' }}>Forex Factory · red only</span>
         }>
@@ -150,42 +280,64 @@ export default function MacroTab() {
           ) : calendar.length === 0 ? (
             <div className="flex items-center justify-center py-8"><span style={{ color: 'var(--t3)', fontSize: '13px' }}>No high-impact events this week</span></div>
           ) : (
-            <div className="overflow-y-auto" style={{ maxHeight: '480px' }}>
-              {Object.entries(byDay).map(([day, events]) => (
-                <div key={day}>
-                  <div className="sticky top-0 px-4 py-1.5 flex items-center justify-between"
-                    style={{ background: 'var(--s2)', borderBottom: '1px solid var(--bd)', zIndex: 1 }}>
-                    <span style={{ color: 'var(--t2)', fontSize: '11px', fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{day}</span>
-                    <span style={{ color: 'var(--re)', fontSize: '10px' }}>{events.length} event{events.length !== 1 ? 's' : ''}</span>
+            <div className="overflow-y-auto" style={{ maxHeight: '560px' }}>
+              {Object.entries(byDay).map(([day, events], groupIdx) => {
+                const isToday    = events.some(e => e.date.split('T')[0] === todayDateStr)
+                const isTomorrow = (() => {
+                  const tom = new Date(); tom.setDate(tom.getDate() + 1)
+                  const tomStr = tom.toISOString().split('T')[0]
+                  return events.some(e => e.date.split('T')[0] === tomStr)
+                })()
+
+                return (
+                  <div key={day}>
+                    {/* Day header — banner style for today/tomorrow */}
+                    {isToday ? (
+                      <div className="sticky top-0 px-4 py-3 flex items-center justify-between" style={{
+                        background: 'rgba(255,61,80,0.12)',
+                        borderBottom: '1px solid rgba(255,61,80,0.25)',
+                        borderLeft: '3px solid var(--re)',
+                        zIndex: 1,
+                      }}>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full" style={{ width: '7px', height: '7px', background: 'var(--re)', display: 'inline-block', boxShadow: '0 0 6px var(--re)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+                          <span style={{ color: 'var(--re)', fontSize: '13px', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>TODAY</span>
+                          <span style={{ color: 'var(--t3)', fontSize: '11px' }}>{day}</span>
+                        </div>
+                        <span style={{ color: 'var(--re)', fontSize: '12px', fontWeight: 600 }}>{events.length} event{events.length !== 1 ? 's' : ''}</span>
+                      </div>
+                    ) : isTomorrow ? (
+                      <div className="sticky top-0 px-4 py-2.5 flex items-center justify-between" style={{
+                        background: 'rgba(240,168,64,0.08)',
+                        borderBottom: '1px solid rgba(240,168,64,0.2)',
+                        borderLeft: '3px solid var(--am2)',
+                        zIndex: 1,
+                      }}>
+                        <div className="flex items-center gap-2">
+                          <span style={{ color: 'var(--am2)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>TOMORROW</span>
+                          <span style={{ color: 'var(--t3)', fontSize: '11px' }}>{day}</span>
+                        </div>
+                        <span style={{ color: 'var(--am2)', fontSize: '11px' }}>{events.length} event{events.length !== 1 ? 's' : ''}</span>
+                      </div>
+                    ) : (
+                      <div className="sticky top-0 px-4 py-1.5 flex items-center justify-between" style={{
+                        background: 'var(--s2)', borderBottom: '1px solid var(--bd)', zIndex: 1,
+                      }}>
+                        <span style={{ color: 'var(--t2)', fontSize: '11px', fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{day}</span>
+                        <span style={{ color: 'var(--re)', fontSize: '10px' }}>{events.length} event{events.length !== 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+
+                    {/* Events */}
+                    {events.map((ev, i) => {
+                      const explanation = getEventExplanation(ev.title)
+                      return (
+                        <EventRow key={i} ev={ev} explanation={explanation} isToday={isToday} />
+                      )
+                    })}
                   </div>
-                  {events.map((ev, i) => (
-                    <div key={i} className="flex items-start gap-3 px-4 py-3 transition-colors"
-                      style={{ borderBottom: '1px solid var(--bd)', borderLeft: '2px solid var(--re)' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--s3)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-
-                      <div className="flex-shrink-0" style={{ minWidth: '52px' }}>
-                        <span style={{ color: 'var(--re)', fontSize: '10px', fontWeight: 500, letterSpacing: '0.04em' }}>HIGH</span>
-                        <p style={{ color: 'var(--go2)', fontSize: '11px', fontWeight: 500 }}>{ev.currency}</p>
-                      </div>
-
-                      <div className="flex-1">
-                        <p style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 500 }}>{ev.title}</p>
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          <span style={{ color: 'var(--t3)', fontSize: '11px' }}>{vienaTime(ev.date, ev.time)}</span>
-                          {ev.forecast && <span style={{ color: 'var(--t2)', fontSize: '11px' }}>Fcst: <strong>{ev.forecast}</strong></span>}
-                          {ev.previous && <span style={{ color: 'var(--t3)', fontSize: '11px' }}>Prev: {ev.previous}</span>}
-                          {ev.actual   && <span style={{ color: 'var(--gr2)', fontSize: '11px' }}>Actual: <strong>{ev.actual}</strong></span>}
-                        </div>
-                        <div className="flex gap-1.5 mt-1.5">
-                          {ev.affectsGold   && <span style={{ fontSize: '10px', color: 'var(--go2)', background: 'rgba(201,168,76,0.12)', padding: '1px 6px', borderRadius: '4px' }}>Gold</span>}
-                          {ev.affectsNasdaq && <span style={{ fontSize: '10px', color: 'var(--ac2)', background: 'rgba(55,138,221,0.12)', padding: '1px 6px', borderRadius: '4px' }}>Nasdaq</span>}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </Panel>

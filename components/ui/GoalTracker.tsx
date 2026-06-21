@@ -6,7 +6,7 @@ interface GoalTrackerProps {
   monthPnl: number
 }
 
-const STORAGE_KEY = 'jarvis-monthly-goal'
+const STORAGE_KEY = 'velquor-monthly-goal'
 const DEFAULT_GOAL = 1500
 
 export default function GoalTracker({ monthPnl }: GoalTrackerProps) {

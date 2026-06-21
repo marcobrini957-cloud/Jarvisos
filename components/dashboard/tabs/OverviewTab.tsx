@@ -1,6 +1,21 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
+import MobileOverviewTab from './MobileOverviewTab'
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 639px)').matches : false
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)')
+    setIsMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
 import { useTrades, BE_THRESHOLD } from '@/hooks/useTrades'
 import { useTasks }           from '@/hooks/useTasks'
 import { useAccountSnapshot } from '@/hooks/useAccountSnapshot'
@@ -37,6 +52,148 @@ function fullDate() {
 
 const MOOD_COLOR: Record<string, string> = {
   great: 'var(--gr2)', good: 'var(--gr2)', neutral: 'var(--am2)', low: 'var(--re)', bad: 'var(--re)',
+}
+
+// ── Market Strip ─────────────────────────────────────────────────────────────
+
+interface StripItem { symbol: string; label: string; price: number; change1d: number; currency: string; marketState: string }
+
+function MarketStrip() {
+  const [items, setItems] = useState<StripItem[]>([])
+  const [ts,    setTs]    = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const res = await fetch('/api/market/strip', { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!cancelled) {
+          setItems(data.items ?? [])
+          setTs(new Date().toLocaleTimeString('de-AT', { hour: '2-digit', minute: '2-digit' }))
+        }
+      } catch { /* silent */ }
+    }
+    load()
+    const t = setInterval(load, 5 * 60 * 1000) // refresh every 5 min
+    return () => { cancelled = true; clearInterval(t) }
+  }, [])
+
+  if (items.length === 0) return null
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: '0',
+      background: 'var(--s1)', border: '1px solid var(--bd)',
+      borderRadius: '10px', overflow: 'hidden', height: '36px',
+    }}>
+      {items.map((item, i) => {
+        const up    = item.change1d >= 0
+        const color = item.label === 'VIX'
+          ? (item.change1d > 0 ? 'var(--re)' : 'var(--gr2)') // VIX up = bad
+          : (up ? 'var(--gr2)' : 'var(--re)')
+        const fmtPrice = item.label === 'VIX'
+          ? item.price.toFixed(2)
+          : item.price >= 1000
+            ? item.price.toLocaleString('en-US', { maximumFractionDigits: 0 })
+            : item.price.toFixed(2)
+        return (
+          <div key={item.symbol} style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '0 16px', height: '100%',
+            borderRight: i < items.length - 1 ? '1px solid var(--bd)' : 'none',
+            flexShrink: 0,
+          }}>
+            <span style={{ color: 'var(--t3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em' }}>{item.label}</span>
+            <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 600, letterSpacing: '-0.01em' }}>{fmtPrice}</span>
+            <span style={{ color, fontSize: '11px', fontWeight: 600 }}>{up ? '+' : ''}{item.change1d.toFixed(2)}%</span>
+            {item.marketState === 'REGULAR' && (
+              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--gr2)', boxShadow: '0 0 5px rgba(0,232,122,0.6)', display: 'inline-block', flexShrink: 0, animation: 'pulse-dot 2s ease-in-out infinite' }} />
+            )}
+          </div>
+        )
+      })}
+      {ts && (
+        <div style={{ marginLeft: 'auto', padding: '0 12px', borderLeft: '1px solid var(--bd)', height: '100%', display: 'flex', alignItems: 'center' }}>
+          <span style={{ color: 'var(--t3)', fontSize: '10px' }}>↻ {ts}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Net Worth Sparkline ───────────────────────────────────────────────────────
+
+function NetWorthSparkline({ allRows }: { allRows: Trade[] }) {
+  const points = useMemo(() => {
+    const realTrades = allRows.filter(t => t.close_time && t.symbol !== 'BALANCE')
+    if (realTrades.length === 0) return []
+
+    const earliest   = realTrades.reduce((min, t) => t.close_time! < min ? t.close_time! : min, realTrades[0].close_time!)
+    const startDate  = new Date(earliest)
+    const now        = new Date()
+
+    const months: { month: number; year: number; pnl: number }[] = []
+    let y = startDate.getFullYear(), m = startDate.getMonth()
+    while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth())) {
+      const yCopy = y, mCopy = m
+      const pnl = realTrades
+        .filter(t => { const d = new Date(t.close_time!); return d.getFullYear() === yCopy && d.getMonth() === mCopy })
+        .reduce((s, t) => s + (t.net_profit ?? 0), 0)
+      months.push({ month: m, year: y, pnl })
+      m++; if (m > 11) { m = 0; y++ }
+    }
+
+    let cum = 0
+    return months.map(mo => { cum += mo.pnl; return { month: mo.month, year: mo.year, value: cum } })
+  }, [allRows])
+
+  if (points.length === 0) return null
+
+  const values = points.map(p => p.value)
+  const minVal = Math.min(0, ...values)
+  const maxVal = Math.max(0, ...values)
+  const range  = maxVal - minVal || 1
+  const VW = 800, VH = 160, PAD = 8
+  const GOLD = '#FFB030'
+
+  const toY = (v: number) => PAD + (1 - (v - minVal) / range) * (VH - PAD * 2)
+  const toX = (i: number) => (i / Math.max(1, points.length - 1)) * VW
+
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(2)},${toY(p.value).toFixed(2)}`).join(' ')
+  const zeroY = toY(0)
+  const fillD = `${pathD} L${VW},${zeroY} L0,${zeroY} Z`
+  const endX  = toX(points.length - 1)
+  const endY  = toY(values[values.length - 1])
+
+  return (
+    <div style={{ width: '100%' }}>
+      <svg
+        viewBox={`0 0 ${VW} ${VH}`}
+        width="100%"
+        height="56"
+        preserveAspectRatio="none"
+        style={{ display: 'block', shapeRendering: 'geometricPrecision' }}
+      >
+        <defs>
+          <linearGradient id="goldSparkGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor={GOLD} stopOpacity="0.45" />
+            <stop offset="100%" stopColor={GOLD} stopOpacity="0.02" />
+          </linearGradient>
+          <filter id="dotGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        <line x1="0" y1={zeroY} x2={VW} y2={zeroY} stroke="rgba(255,255,255,0.07)" strokeWidth="1.5" strokeDasharray="6 4" />
+        <path d={fillD} fill="url(#goldSparkGrad)" />
+        <path d={pathD} fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <circle cx={endX} cy={endY} r="5" fill={GOLD} filter="url(#dotGlow)" />
+        <circle cx={endX} cy={endY} r="3.5" fill={GOLD} />
+      </svg>
+    </div>
+  )
 }
 
 // ── Win Rate Ring ─────────────────────────────────────────────────────────────
@@ -115,35 +272,164 @@ function WeeklyChart({ weeklyPnl }: { weeklyPnl: number[] }) {
 
 // ── Trade Calendar ────────────────────────────────────────────────────────────
 
+function DayDetailPanel({ dateStr, trades, onClose }: {
+  dateStr: string
+  trades: Trade[]
+  onClose: () => void
+}) {
+  const totalPnl = trades.reduce((s, t) => s + (t.net_profit ?? 0), 0)
+  const wins     = trades.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length
+  const losses   = trades.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+  const label    = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+  return (
+    <div style={{
+      marginTop: '16px',
+      padding: '16px',
+      background: 'var(--s1)',
+      border: `1px solid ${totalPnl >= 0 ? 'rgba(0,232,122,0.2)' : 'rgba(255,61,80,0.2)'}`,
+      borderRadius: '12px',
+      animation: 'fadeIn 0.15s ease',
+    }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div>
+          <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)', marginBottom: '2px' }}>{label}</p>
+          <p style={{ fontSize: '11px', color: 'var(--t3)' }}>
+            {trades.length} trade{trades.length !== 1 ? 's' : ''} · {wins}W {losses}L
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <span style={{ fontSize: '20px', fontWeight: 700, color: totalPnl >= 0 ? 'var(--gr2)' : 'var(--re)', letterSpacing: '-0.03em' }}>
+            {totalPnl >= 0 ? '+' : ''}€{totalPnl.toFixed(2)}
+          </span>
+          <button onClick={onClose} style={{
+            background: 'var(--s3)', border: '1px solid var(--bd2)',
+            borderRadius: '6px', width: '26px', height: '26px',
+            color: 'var(--t3)', cursor: 'pointer', fontSize: '14px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>✕</button>
+        </div>
+      </div>
+
+      {/* Trade rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {trades.map((t, i) => {
+          const pnl = t.net_profit ?? 0
+          const col = pnl > BE_THRESHOLD ? 'var(--gr2)' : pnl < -BE_THRESHOLD ? 'var(--re)' : 'var(--t3)'
+          const openTime  = t.open_time  ? new Date(t.open_time ).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'
+          const closeTime = t.close_time ? new Date(t.close_time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'
+          return (
+            <div key={t.id ?? i} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '9px 12px',
+              background: 'rgba(255,255,255,0.025)',
+              borderRadius: '8px',
+              border: `1px solid ${pnl > BE_THRESHOLD ? 'rgba(0,232,122,0.1)' : pnl < -BE_THRESHOLD ? 'rgba(255,61,80,0.1)' : 'var(--bd)'}`,
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)' }}>{t.symbol}</span>
+                  {t.trade_type && (
+                    <span style={{
+                      fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em',
+                      color: t.trade_type === 'buy' ? 'var(--gr2)' : 'var(--re)',
+                      background: t.trade_type === 'buy' ? 'rgba(0,232,122,0.1)' : 'rgba(255,61,80,0.1)',
+                      padding: '1px 6px', borderRadius: '4px',
+                    }}>{t.trade_type.toUpperCase()}</span>
+                  )}
+                  {t.lot_size != null && (
+                    <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{t.lot_size} lot{t.lot_size !== 1 ? 's' : ''}</span>
+                  )}
+                </div>
+                <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{openTime} → {closeTime}</span>
+              </div>
+              <span style={{ fontSize: '14px', fontWeight: 700, color: col, letterSpacing: '-0.02em', flexShrink: 0, marginLeft: '12px' }}>
+                {pnl >= 0 ? '+' : ''}€{pnl.toFixed(2)}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function TradeCalendar({ allRows }: { allRows: Trade[] }) {
   const now   = new Date()
-  const year  = now.getFullYear()
-  const month = now.getMonth()
   const today = now.toISOString().split('T')[0]
-  const daysInMonth    = new Date(year, month + 1, 0).getDate()
-  const firstDayOfWeek = new Date(year, month, 1).getDay()
+
+  const [viewYear,  setViewYear]  = useState(now.getFullYear())
+  const [viewMonth, setViewMonth] = useState(now.getMonth())
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+
+  function prevMonth() {
+    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
+    else setViewMonth(m => m - 1)
+    setSelectedDate(null)
+  }
+  function nextMonth() {
+    const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth()
+    if (isCurrentMonth) return
+    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0) }
+    else setViewMonth(m => m + 1)
+    setSelectedDate(null)
+  }
+
+  const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth()
+
+  const daysInMonth    = new Date(viewYear, viewMonth + 1, 0).getDate()
+  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay()
   const startOffset    = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
 
-  const dailyPnl = useMemo(() => {
-    const map = new Map<string, number>()
+  // Build daily map and per-day trade list for selected month
+  const { dailyPnl, dailyTrades } = useMemo(() => {
+    const pnlMap    = new Map<string, number>()
+    const tradesMap = new Map<string, Trade[]>()
     for (const t of allRows) {
       if (!t.close_time || t.symbol === 'BALANCE') continue
       const d = new Date(t.close_time)
-      if (d.getFullYear() !== year || d.getMonth() !== month) continue
+      if (d.getFullYear() !== viewYear || d.getMonth() !== viewMonth) continue
       const key = t.close_time.split('T')[0]
-      map.set(key, (map.get(key) ?? 0) + (t.net_profit ?? 0))
+      pnlMap.set(key, (pnlMap.get(key) ?? 0) + (t.net_profit ?? 0))
+      const arr = tradesMap.get(key) ?? []
+      arr.push(t)
+      tradesMap.set(key, arr)
     }
-    return map
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allRows, year, month])
+    return { dailyPnl: pnlMap, dailyTrades: tradesMap }
+  }, [allRows, viewYear, viewMonth])
 
   const maxAbs     = Math.max(1, ...Array.from(dailyPnl.values()).map(Math.abs))
   const totalPnl   = Array.from(dailyPnl.values()).reduce((s, v) => s + v, 0)
   const profitDays = Array.from(dailyPnl.values()).filter(v => v > 0).length
   const lossDays   = Array.from(dailyPnl.values()).filter(v => v < 0).length
 
+  const selectedTrades = selectedDate ? (dailyTrades.get(selectedDate) ?? []) : []
+
+  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+      {/* Month navigation */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <button onClick={prevMonth} style={{
+          background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: '8px',
+          width: '32px', height: '32px', color: 'var(--t2)', cursor: 'pointer', fontSize: '16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.12s',
+        }}>‹</button>
+        <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em' }}>
+          {monthLabel}
+        </span>
+        <button onClick={nextMonth} style={{
+          background: isCurrentMonth ? 'transparent' : 'var(--s3)',
+          border: '1px solid var(--bd2)', borderRadius: '8px',
+          width: '32px', height: '32px',
+          color: isCurrentMonth ? 'var(--bd3)' : 'var(--t2)',
+          cursor: isCurrentMonth ? 'default' : 'pointer', fontSize: '16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.12s',
+        }}>›</button>
+      </div>
 
       {/* Summary bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
@@ -163,21 +449,22 @@ function TradeCalendar({ allRows }: { allRows: Trade[] }) {
       </div>
 
       {/* Day headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+      <div className="calendar-header-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
         {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
           <div key={d} style={{ textAlign: 'center', fontSize: '11px', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.04em', paddingBottom: '4px' }}>{d}</div>
         ))}
       </div>
 
       {/* Day grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: '46px', gap: '4px' }}>
+      <div className="calendar-day-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: '46px', gap: '4px' }}>
         {Array.from({ length: startOffset }).map((_, i) => <div key={`e${i}`} />)}
         {Array.from({ length: daysInMonth }, (_, i) => {
           const dayNum   = i + 1
-          const dateStr  = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
+          const dateStr  = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
           const pnl      = dailyPnl.get(dateStr)
           const isToday  = dateStr === today
           const isFuture = dateStr > today
+          const isSelected = dateStr === selectedDate
           const has      = pnl !== undefined
           const intensity = has ? Math.min(1, Math.abs(pnl!) / maxAbs) : 0
 
@@ -204,19 +491,33 @@ function TradeCalendar({ allRows }: { allRows: Trade[] }) {
                        : ''
 
           return (
-            <div key={dayNum} title={has ? `${dateStr}: ${pnl! >= 0 ? '+' : ''}€${pnl!.toFixed(2)}` : dateStr}
+            <div
+              key={dayNum}
+              onClick={() => {
+                if (!has) return
+                setSelectedDate(prev => prev === dateStr ? null : dateStr)
+              }}
               style={{
                 borderRadius: '7px', background: bg,
-                border: isToday ? '1.5px solid rgba(77,143,255,0.6)' : `1px solid ${border}`,
-                boxShadow: isToday ? '0 0 0 3px rgba(77,143,255,0.1)' : shadow,
+                border: isSelected
+                  ? '2px solid rgba(77,143,255,0.8)'
+                  : isToday
+                    ? '1.5px solid rgba(77,143,255,0.6)'
+                    : `1px solid ${border}`,
+                boxShadow: isSelected
+                  ? '0 0 0 3px rgba(77,143,255,0.15)'
+                  : isToday
+                    ? '0 0 0 3px rgba(77,143,255,0.1)'
+                    : shadow,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px',
                 transition: 'all 0.12s',
+                cursor: has ? 'pointer' : 'default',
               }}>
-              <span style={{ fontSize: '11px', fontWeight: isToday ? 700 : 400, lineHeight: 1, color: isToday ? 'var(--ac)' : has ? txtCol : 'var(--t3)' }}>
+              <span style={{ fontSize: '11px', fontWeight: isToday || isSelected ? 700 : 400, lineHeight: 1, color: isSelected ? 'var(--ac)' : isToday ? 'var(--ac)' : has ? txtCol : 'var(--t3)' }}>
                 {dayNum}
               </span>
               {has && pnlStr && (
-                <span style={{ fontSize: '10px', fontWeight: 700, color: txtCol, lineHeight: 1, letterSpacing: '-0.02em' }}>
+                <span className="calendar-pnl-label" style={{ fontSize: '10px', fontWeight: 700, color: txtCol, lineHeight: 1, letterSpacing: '-0.02em' }}>
                   {pnlStr}
                 </span>
               )}
@@ -224,6 +525,15 @@ function TradeCalendar({ allRows }: { allRows: Trade[] }) {
           )
         })}
       </div>
+
+      {/* Day detail panel */}
+      {selectedDate && selectedTrades.length > 0 && (
+        <DayDetailPanel
+          dateStr={selectedDate}
+          trades={selectedTrades.sort((a, b) => (a.open_time ?? '').localeCompare(b.open_time ?? ''))}
+          onClose={() => setSelectedDate(null)}
+        />
+      )}
     </div>
   )
 }
@@ -268,11 +578,11 @@ export default function OverviewTab() {
   const [dailyLimit, setDailyLimit] = useState(200)
 
   useEffect(() => {
-    const stored = localStorage.getItem('jarvis-daily-limit')
+    const stored = localStorage.getItem('velquor-daily-limit')
     if (stored) setDailyLimit(parseFloat(stored) || 200)
     // Listen for storage changes (e.g. if DailyMaxLoss updates it)
     const handler = () => {
-      const v = localStorage.getItem('jarvis-daily-limit')
+      const v = localStorage.getItem('velquor-daily-limit')
       if (v) setDailyLimit(parseFloat(v) || 200)
     }
     window.addEventListener('storage', handler)
@@ -284,8 +594,11 @@ export default function OverviewTab() {
   const { snapshot }    = useAccountSnapshot()
   const { holdings, totalValueEur, totalPnlEur, totalPnlPct } = usePortfolio()
   const { entries }     = useJournalEntries()
-  const { habits, isCompleted, todayCompleted, todayTotal } = useHabits()
+  const { habits, isCompleted, todayCompleted, todayTotal, calcStreak } = useHabits()
   const { displayMode } = useDisplayMode()
+  const isMobile = useIsMobile()
+
+  if (isMobile) return <MobileOverviewTab />
 
   const balance  = snapshot?.balance ?? 0
   const equity   = snapshot?.equity  ?? 0
@@ -341,6 +654,8 @@ export default function OverviewTab() {
     ? { label: 'XAUUSD', wr: stats?.xauWinRate ?? 0 }
     : { label: 'NAS100', wr: stats?.nasWinRate ?? 0 }
 
+  const bestHabitStreak = habits.length > 0 ? Math.max(...habits.map(h => calcStreak(h.id))) : 0
+
   const todayColor = todayPnl > 0 ? 'var(--gr2)' : todayPnl < 0 ? 'var(--re)' : 'var(--t2)'
   const monthColor = monthPnl >= 0 ? 'var(--gr2)' : 'var(--re)'
 
@@ -348,10 +663,13 @@ export default function OverviewTab() {
   return (
     <div className="flex flex-col gap-5 fade-in">
 
+      {/* Market Strip */}
+      <MarketStrip />
+
       {/* ══════════════════════════════════════════════════════════
           HERO
       ══════════════════════════════════════════════════════════ */}
-      <div style={{
+      <div className="hero-section" style={{
         position: 'relative', overflow: 'hidden',
         background: 'var(--s1)',
         border: '1px solid var(--bd2)',
@@ -379,9 +697,14 @@ export default function OverviewTab() {
                   })}
                 </div>
               )}
+              {bestHabitStreak >= 3 && (
+                <span style={{ fontSize: '12px', fontWeight: 700, color: bestHabitStreak >= 7 ? 'var(--go2)' : 'var(--pu)', textShadow: bestHabitStreak >= 7 ? '0 0 14px rgba(255,176,48,0.4)' : 'none' }}>
+                  🔥 {bestHabitStreak}d habit streak
+                </span>
+              )}
               {journalStreak >= 1 && (
                 <span style={{ fontSize: '12px', fontWeight: 700, color: journalStreak >= 7 ? 'var(--go2)' : 'var(--gr2)', textShadow: journalStreak >= 7 ? '0 0 14px rgba(255,176,48,0.55)' : '0 0 10px rgba(0,232,122,0.5)' }}>
-                  {journalStreak >= 7 ? '🔥' : '✓'} {journalStreak}d streak
+                  {journalStreak >= 7 ? '🔥' : '✓'} {journalStreak}d journal
                 </span>
               )}
             </div>
@@ -389,7 +712,7 @@ export default function OverviewTab() {
 
           {/* Row 2: greeting + streak alert */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px', flexWrap: 'wrap' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+            <h1 className="greeting-heading" style={{ fontSize: '28px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
               {greeting()}, Marco
             </h1>
             <StreakBadge trades={trades} />
@@ -406,10 +729,10 @@ export default function OverviewTab() {
           </div>
 
           {/* Row 4: Metric grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', minWidth: 0 }}>
+          <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', minWidth: 0 }}>
 
             {/* Balance */}
-            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.025)', borderRadius: '12px', border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '5px', minWidth: 0 }}>
+            <div className="metric-card" style={{ padding: '16px', background: 'rgba(255,255,255,0.025)', borderRadius: '12px', border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '5px', minWidth: 0 }}>
               <span style={{ fontSize: 'clamp(9px, 1.5vw, 10px)', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>MT5 Balance</span>
               <span style={{ fontSize: 'clamp(16px, 3vw, 24px)', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', lineHeight: 1 }}>{fmtEur(balance)}</span>
               {equity > 0 && equity !== balance && <span style={{ fontSize: 'clamp(10px, 1.5vw, 11px)', color: 'var(--t3)' }}>Equity {fmtEur(equity)}</span>}
@@ -417,21 +740,21 @@ export default function OverviewTab() {
             </div>
 
             {/* Today P&L */}
-            <div style={{ padding: '16px', background: todayPnl !== 0 ? `rgba(${todayPnl > 0 ? '0,232,122' : '255,61,80'},0.07)` : 'rgba(255,255,255,0.025)', borderRadius: '12px', border: `1px solid ${todayPnl !== 0 ? (todayPnl > 0 ? 'rgba(0,232,122,0.18)' : 'rgba(255,61,80,0.18)') : 'var(--bd2)'}`, borderLeft: `3px solid ${todayColor}`, display: 'flex', flexDirection: 'column', gap: '5px', minWidth: 0 }}>
+            <div className="metric-card" style={{ padding: '16px', background: todayPnl !== 0 ? `rgba(${todayPnl > 0 ? '0,232,122' : '255,61,80'},0.07)` : 'rgba(255,255,255,0.025)', borderRadius: '12px', border: `1px solid ${todayPnl !== 0 ? (todayPnl > 0 ? 'rgba(0,232,122,0.18)' : 'rgba(255,61,80,0.18)') : 'var(--bd2)'}`, borderLeft: `3px solid ${todayColor}`, display: 'flex', flexDirection: 'column', gap: '5px', minWidth: 0 }}>
               <span style={{ fontSize: 'clamp(9px, 1.5vw, 10px)', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>Today P&L</span>
               <span className={todayPnl !== 0 ? (todayPnl > 0 ? 'glow-green' : 'glow-red') : ''} style={{ fontSize: 'clamp(16px, 3vw, 24px)', fontWeight: 700, color: todayColor, letterSpacing: '-0.03em', lineHeight: 1 }}>{todayPnl !== 0 ? fmtPnl(todayPnl) : '€0.00'}</span>
               <span style={{ fontSize: 'clamp(10px, 1.5vw, 11px)', color: 'var(--t3)', marginTop: '2px' }}>{todayPnl !== 0 ? `${(balance > 0 ? todayPnl / balance * 100 : 0).toFixed(2)}% of balance` : 'No closed trades today'}</span>
             </div>
 
             {/* Month P&L */}
-            <div style={{ padding: '16px', background: `rgba(${monthPnl >= 0 ? '0,232,122' : '255,61,80'},0.06)`, borderRadius: '12px', border: `1px solid ${monthPnl >= 0 ? 'rgba(0,232,122,0.15)' : 'rgba(255,61,80,0.15)'}`, display: 'flex', flexDirection: 'column', gap: '5px', minWidth: 0 }}>
+            <div className="metric-card" style={{ padding: '16px', background: `rgba(${monthPnl >= 0 ? '0,232,122' : '255,61,80'},0.06)`, borderRadius: '12px', border: `1px solid ${monthPnl >= 0 ? 'rgba(0,232,122,0.15)' : 'rgba(255,61,80,0.15)'}`, display: 'flex', flexDirection: 'column', gap: '5px', minWidth: 0 }}>
               <span style={{ fontSize: 'clamp(9px, 1.5vw, 10px)', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>Month P&L</span>
               <span style={{ fontSize: 'clamp(16px, 3vw, 24px)', fontWeight: 700, color: monthColor, letterSpacing: '-0.03em', lineHeight: 1 }}>{stats ? formatValue(monthPnl, monthPnlPct, displayMode, { showSign: true }) : '—'}</span>
               <span style={{ fontSize: 'clamp(10px, 1.5vw, 11px)', color: 'var(--t3)', marginTop: '2px' }}>{monthWins}W · {monthLosses}L this month</span>
             </div>
 
             {/* Win Rate */}
-            <div style={{ padding: '16px', background: 'rgba(255,255,255,0.025)', borderRadius: '12px', border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
+            <div className="metric-card" style={{ padding: '16px', background: 'rgba(255,255,255,0.025)', borderRadius: '12px', border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
               <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>Win Rate</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 <WinRing wr={wr} />
@@ -443,10 +766,17 @@ export default function OverviewTab() {
             </div>
 
             {/* Net Worth */}
-            <div style={{ padding: '16px', background: 'rgba(255,176,48,0.06)', borderRadius: '12px', border: '1px solid rgba(255,176,48,0.15)', display: 'flex', flexDirection: 'column', gap: '5px', minWidth: 0 }}>
-              <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>Net Worth</span>
-              <span style={{ fontSize: '24px', fontWeight: 700, color: 'var(--go2)', letterSpacing: '-0.03em', lineHeight: 1 }}>{fmtEur(netWorth, 0)}</span>
-              <span style={{ fontSize: '11px', color: 'var(--t3)', marginTop: '2px' }}>MT5 + portfolio combined</span>
+            <div className="metric-card" style={{ padding: '14px 16px', background: 'rgba(255,176,48,0.06)', borderRadius: '12px', border: '1px solid rgba(255,176,48,0.15)', display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, overflow: 'hidden' }}>
+              {/* Left: text */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
+                <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>Net Worth</span>
+                <span className="net-worth-value" style={{ fontSize: 'clamp(14px, 2.2vw, 20px)', fontWeight: 700, color: 'var(--go2)', letterSpacing: '-0.03em', lineHeight: 1 }}>{fmtEur(netWorth, 0)}</span>
+                <span style={{ fontSize: '10px', color: 'var(--t3)' }}>MT5 + portfolio</span>
+              </div>
+              {/* Right: sparkline fills remaining space */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <NetWorthSparkline allRows={allRows} />
+              </div>
             </div>
 
             {/* Weekly chart */}
@@ -464,7 +794,7 @@ export default function OverviewTab() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         <div className="lg:col-span-2">
-          <Panel title={`${new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })} — Daily P&L`} accent="var(--gr)">
+          <Panel title="Daily P&L Calendar" accent="var(--gr)">
             <TradeCalendar allRows={allRows} />
           </Panel>
         </div>

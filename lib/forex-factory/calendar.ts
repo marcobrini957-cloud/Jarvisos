@@ -34,9 +34,9 @@ export async function fetchFFCalendar(): Promise<FFEvent[]> {
 
     const raw: Array<{ title: string; country: string; date: string; time: string; impact: string; forecast: string; previous: string; actual?: string }> = await res.json()
 
-    // ── HIGH IMPACT ONLY (red folders) ───────────────────────────────────────
+    // ── USD HIGH IMPACT ONLY ─────────────────────────────────────────────────
     return raw
-      .filter(e => e.impact === 'High')
+      .filter(e => e.impact === 'High' && e.country?.toUpperCase() === 'USD')
       .map(e => ({
         title:    e.title,
         country:  e.country,

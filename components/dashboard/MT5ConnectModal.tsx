@@ -4,30 +4,46 @@ import { useState } from 'react'
 
 interface MT5ConnectModalProps {
   onClose: () => void
-  onSave: (data: { accountId: string; investorPassword: string; server: string }) => Promise<void>
+  onSave?: (data: { accountId: string; investorPassword: string; server: string }) => Promise<void>
   currentAccountId?: string
   isConnected?: boolean
 }
 
 export default function MT5ConnectModal({ onClose, onSave, currentAccountId, isConnected }: MT5ConnectModalProps) {
-  const [accountId, setAccountId]           = useState(currentAccountId ?? '')
-  const [investorPassword, setInvestorPw]   = useState('')
-  const [server, setServer]                 = useState('BlueberryMarkets-Live')
-  const [saving, setSaving]                 = useState(false)
-  const [error, setError]                   = useState('')
+  const [login,    setLogin]   = useState(currentAccountId ?? '')
+  const [password, setPassword] = useState('')
+  const [server,   setServer]  = useState('BlueberryMarkets-Live')
+  const [saving,   setSaving]  = useState(false)
+  const [error,    setError]   = useState('')
+  const [done,     setDone]    = useState(false)
 
   async function handleSave() {
-    if (!accountId.trim() || !investorPassword.trim() || !server.trim()) {
+    if (!login.trim() || !password.trim() || !server.trim()) {
       setError('All fields are required.')
       return
     }
     setSaving(true)
     setError('')
     try {
-      await onSave({ accountId: accountId.trim(), investorPassword: investorPassword.trim(), server: server.trim() })
-      onClose()
+      // New flow: submit to /api/user/mt5-credentials which provisions via MetaAPI
+      const res = await fetch('/api/user/mt5-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: login.trim(), password: password.trim(), server: server.trim() }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setError(json.error ?? 'Failed to connect. Check your credentials.')
+        return
+      }
+      // Also call legacy onSave if provided (for backward compat)
+      if (onSave) {
+        await onSave({ accountId: json.metaAccountId, investorPassword: password.trim(), server: server.trim() })
+      }
+      setDone(true)
+      setTimeout(onClose, 1200)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to connect. Check your credentials.')
+      setError(e instanceof Error ? e.message : 'Failed to connect.')
     } finally {
       setSaving(false)
     }
@@ -77,13 +93,23 @@ export default function MT5ConnectModal({ onClose, onSave, currentAccountId, isC
           </div>
         )}
 
+        {/* Success state */}
+        {done && (
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ fontSize: '28px', marginBottom: '8px' }}>✓</div>
+            <p style={{ color: 'var(--gr2)', fontSize: '14px', fontWeight: 600, margin: 0 }}>MT5 account connected!</p>
+            <p style={{ color: 'var(--t2)', fontSize: '12px', margin: '4px 0 0' }}>Syncing your trades now…</p>
+          </div>
+        )}
+
         {/* Fields */}
+        {!done && (
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Account ID (Login)</label>
+            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>MT5 Login Number</label>
             <input
-              value={accountId}
-              onChange={e => setAccountId(e.target.value)}
+              value={login}
+              onChange={e => setLogin(e.target.value)}
               placeholder="e.g. 1234567"
               style={{
                 background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
@@ -92,15 +118,16 @@ export default function MT5ConnectModal({ onClose, onSave, currentAccountId, isC
               onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
               onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
             />
+            <p style={{ color: 'var(--t3)', fontSize: '11px' }}>Your numeric account number from your broker</p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Investor Password</label>
+            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Investor Password <span style={{ color: 'var(--t3)', fontWeight: 400 }}>(read-only)</span></label>
             <input
               type="password"
-              value={investorPassword}
-              onChange={e => setInvestorPw(e.target.value)}
-              placeholder="Read-only investor password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Your investor / read-only password"
               style={{
                 background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
                 padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
@@ -109,16 +136,16 @@ export default function MT5ConnectModal({ onClose, onSave, currentAccountId, isC
               onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
             />
             <p style={{ color: 'var(--t3)', fontSize: '11px' }}>
-              In MT5: Tools → Options → Server → Change investor password
+              In MT5: Tools → Options → Server → Change investor password. This gives read-only access — no trades can be placed.
             </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Server</label>
+            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Broker Server</label>
             <input
               value={server}
               onChange={e => setServer(e.target.value)}
-              placeholder="BlueberryMarkets-Live"
+              placeholder="e.g. BlueberryMarkets-Live"
               style={{
                 background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
                 padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
@@ -127,10 +154,11 @@ export default function MT5ConnectModal({ onClose, onSave, currentAccountId, isC
               onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
             />
             <p style={{ color: 'var(--t3)', fontSize: '11px' }}>
-              Find in MT5: File → Open Account — shown next to your account
+              Find in MT5: File → Open Account — the server name shown next to your account
             </p>
           </div>
         </div>
+        )}
 
         {/* Error */}
         {error && (

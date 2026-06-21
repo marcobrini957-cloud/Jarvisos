@@ -5,27 +5,23 @@ import Topbar from './Topbar'
 import { UserProfileProvider } from '@/context/UserProfileContext'
 import TabBar from './TabBar'
 import MobileNav from './MobileNav'
-import OverviewTab      from './tabs/OverviewTab'
-import TradingTab       from './tabs/TradingTab'
-import PortfolioTab     from './tabs/PortfolioTab'
-import JournalTab       from './tabs/JournalTab'
-import MacroTab         from './tabs/MacroTab'
-import TasksTab         from './tabs/TasksTab'
-import HabitsTab        from './tabs/HabitsTab'
-import WeeklyReviewTab  from './tabs/WeeklyReviewTab'
-import JarvisTab        from './tabs/JarvisTab'
-import SettingsTab      from './tabs/SettingsTab'
+import OverviewTab    from './tabs/OverviewTab'
+import TradingTab     from './tabs/TradingTab'
+import PortfolioTab   from './tabs/PortfolioTab'
+import JournalTab     from './tabs/JournalTab'
+import MacroTab       from './tabs/MacroTab'
+import DisciplineTab  from './tabs/DisciplineTab'
+import JarvisTab      from './tabs/JarvisTab'
+import SettingsTab    from './tabs/SettingsTab'
 
 const TAB_COMPONENTS = [
-  OverviewTab,
-  TradingTab,
-  PortfolioTab,
-  JournalTab,
-  MacroTab,
-  TasksTab,
-  HabitsTab,
-  WeeklyReviewTab,
-  JarvisTab,
+  OverviewTab,   // 0
+  TradingTab,    // 1
+  PortfolioTab,  // 2
+  JournalTab,    // 3
+  MacroTab,      // 4
+  DisciplineTab, // 5
+  JarvisTab,     // 6
 ]
 
 export default function DashboardShell() {
@@ -56,7 +52,7 @@ export default function DashboardShell() {
 
         {/* Main content — padded bottom on mobile for the nav bar */}
         <main
-          className="flex-1 overflow-y-auto"
+          className="flex-1 overflow-y-auto dashboard-main sm:pb-0 pb-24"
           style={{ padding: 'clamp(16px, 2vw, 28px)' }}
         >
           {showSettings ? <SettingsTab /> : <ActiveTab />}

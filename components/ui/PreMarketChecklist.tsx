@@ -13,7 +13,7 @@ const ITEMS = [
 
 function todayKey(): string {
   const d = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Vienna' })
-  return `jarvis-checklist-${d}`
+  return `velquor-checklist-${d}`
 }
 
 export default function PreMarketChecklist() {

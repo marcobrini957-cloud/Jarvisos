@@ -5,6 +5,344 @@ import { usePortfolio, type HoldingWithPrice } from '@/hooks/usePortfolio'
 import MetricCard from '@/components/ui/MetricCard'
 import Panel from '@/components/ui/Panel'
 
+// ── CSV Import ────────────────────────────────────────────────────────────────
+
+interface CsvRow {
+  ticker:        string
+  name:          string
+  quantity:      number
+  avg_buy_price: number
+  asset_type:    string
+  skip:          boolean
+}
+
+function parseCSV(text: string): string[][] {
+  const rows: string[][] = []
+  const lines = text.trim().split(/\r?\n/)
+  for (const line of lines) {
+    if (!line.trim()) continue
+    const cells: string[] = []
+    let cur = '', inQ = false
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i]
+      if (ch === '"') { inQ = !inQ }
+      else if ((ch === ',' || ch === ';') && !inQ) { cells.push(cur.trim()); cur = '' }
+      else cur += ch
+    }
+    cells.push(cur.trim())
+    rows.push(cells)
+  }
+  return rows
+}
+
+// Handles both US "1,234.56" and European "1.234,56" / "482,20" formats
+function parseNum(raw: string): number {
+  const s = raw.trim().replace(/[€$£\s+%]/g, '')
+  if (!s) return NaN
+  const hasComma = s.includes(',')
+  const hasDot   = s.includes('.')
+  if (hasComma && hasDot) {
+    // Determine which is decimal separator by which comes last
+    return s.lastIndexOf(',') > s.lastIndexOf('.')
+      ? parseFloat(s.replace(/\./g, '').replace(',', '.'))  // European: "1.234,56"
+      : parseFloat(s.replace(/,/g, ''))                     // US: "1,234.56"
+  }
+  if (hasComma) {
+    // Only comma — decimal if ≤2 digits after it ("482,20"), thousands otherwise ("1,234")
+    const after = s.split(',')[1] ?? ''
+    return after.length <= 2
+      ? parseFloat(s.replace(',', '.'))
+      : parseFloat(s.replace(',', ''))
+  }
+  return parseFloat(s)
+}
+
+function detectColumns(headers: string[]) {
+  const h = headers.map(x => x.toLowerCase().replace(/[^a-z0-9]/g, ''))
+  // Find first column whose normalized header includes any keyword
+  const find = (...keys: string[]) => h.findIndex(x => keys.some(k => x.includes(k)))
+  // Try specific keys first, fall back to generic
+  const findBest = (specific: string[], generic: string[]) => {
+    const s = find(...specific); return s >= 0 ? s : find(...generic)
+  }
+  return {
+    ticker: find('isin','wkn','ticker','symbol'),
+    name:   find('name','bezeichnung','wertpapier','security'),
+    qty:    find('anzahl','quantity','shares','units','stueck','menge','antal','amount'),
+    // Prioritise avg-buy-price columns; only fall back to generic "price/kurs" if nothing else found
+    price:  findBest(
+      ['avgprice','averageprice','avgcost','averagecost','averagebuyprice','buyprice',
+       'kaufpreis','einstandspreis','openrate','openavg','purchaseprice','costprice'],
+      ['price','preis','kurs','cost','rate','koers']
+    ),
+  }
+}
+
+function guessAssetType(name: string, ticker: string): string {
+  const n = (name + ticker).toLowerCase()
+  if (n.includes('etf') || n.includes('fund') || n.includes('iqq') || n.includes('vang') || n.includes('ishares')) return 'etf'
+  if (n.includes('bitcoin') || n.includes('eth') || n.includes('crypto') || n.includes('btc')) return 'crypto'
+  if (n.includes('gold') || n.includes('silver') || n.includes('xau') || n.includes('xag')) return 'metal'
+  return 'stock'
+}
+
+const ISIN_RE = /^[A-Z]{2}[A-Z0-9]{10}$/
+
+function CsvImportModal({ onClose, onImport }: {
+  onClose:  () => void
+  onImport: (rows: CsvRow[]) => Promise<void>
+}) {
+  const [step,      setStep]      = useState<'upload' | 'preview'>('upload')
+  const [rows,      setRows]      = useState<CsvRow[]>([])
+  const [resolving, setResolving] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [error,     setError]     = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setError('')
+    const reader = new FileReader()
+    reader.onload = async ev => {
+      try {
+        const text    = ev.target?.result as string
+        const all     = parseCSV(text)
+        if (all.length < 2) { setError('CSV appears empty or has no data rows.'); return }
+
+        const headers = all[0]
+        const cols    = detectColumns(headers)
+
+        if (cols.qty < 0 || cols.price < 0) {
+          setError(`Couldn't find quantity or price columns. Headers found: ${headers.join(', ')}`)
+          return
+        }
+
+        const parsed: CsvRow[] = []
+        for (let i = 1; i < all.length; i++) {
+          const r      = all[i]
+          const cell   = (idx: number) => idx >= 0 ? (r[idx] ?? '').trim() : ''
+          const ticker = cell(cols.ticker).toUpperCase()
+          const name   = cell(cols.name) || ticker
+          const qty    = parseNum(cell(cols.qty))
+          const price  = parseNum(cell(cols.price))
+          if (!ticker || isNaN(qty) || qty <= 0 || isNaN(price) || price <= 0) continue
+          parsed.push({
+            ticker, name: name || ticker,
+            quantity: qty, avg_buy_price: price,
+            asset_type: guessAssetType(name, ticker),
+            skip: false,
+          })
+        }
+
+        if (parsed.length === 0) {
+          setError(`No valid rows found. Detected columns — ticker:${cols.ticker} name:${cols.name} qty:${cols.qty} price:${cols.price}. Headers: ${headers.join(' | ')}`)
+          return
+        }
+
+        // ── Resolve any ISINs to real ticker symbols ──────────────────────────
+        const isinRows = parsed.filter(r => ISIN_RE.test(r.ticker))
+        if (isinRows.length > 0) {
+          setResolving(true)
+          try {
+            const res  = await fetch('/api/portfolio/isin', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ isins: isinRows.map(r => r.ticker) }),
+            })
+            const { results } = await res.json() as { results: Record<string, { ticker: string; name: string } | null> }
+            for (const row of parsed) {
+              const isin = row.ticker  // save original ISIN before overwriting
+              if (ISIN_RE.test(isin) && results[isin]) {
+                const resolved = results[isin]!
+                // Replace name if it looks like an ISIN or is empty
+                if (ISIN_RE.test(row.name) || !row.name) {
+                  row.name = resolved.name
+                }
+                row.ticker     = resolved.ticker
+                row.asset_type = guessAssetType(resolved.name, resolved.ticker)
+              }
+            }
+          } catch { /* silently ignore — user can fix manually */ }
+          setResolving(false)
+        }
+
+        setRows(parsed)
+        setStep('preview')
+      } catch {
+        setError('Failed to parse CSV. Make sure it is a valid CSV file.')
+        setResolving(false)
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  async function handleImport() {
+    const toImport = rows.filter(r => !r.skip)
+    if (toImport.length === 0) return
+    setImporting(true)
+    try {
+      await onImport(toImport)
+      onClose()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Import failed')
+      setImporting(false)
+    }
+  }
+
+  const overlay: React.CSSProperties = {
+    position: 'fixed', inset: 0, zIndex: 100,
+    background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
+  }
+  const card: React.CSSProperties = {
+    background: 'var(--s1)', border: '1px solid var(--bd2)', borderRadius: '16px',
+    width: '100%', maxWidth: '620px', maxHeight: '80vh',
+    display: 'flex', flexDirection: 'column', overflow: 'hidden',
+  }
+
+  return (
+    <div style={overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={card}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid var(--bd)' }}>
+          <div>
+            <p style={{ fontWeight: 700, color: 'var(--t1)', fontSize: '15px' }}>
+              {step === 'upload' ? 'Import Portfolio CSV' : `Preview — ${rows.filter(r => !r.skip).length} holdings`}
+            </p>
+            <p style={{ fontSize: '11px', color: 'var(--t3)', marginTop: '2px' }}>
+              {step === 'upload' ? 'Trade Republic · eToro · Degiro · any broker export' : 'Uncheck rows you don\'t want to import'}
+            </p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '20px', cursor: 'pointer' }}>×</button>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+          {step === 'upload' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Drop zone */}
+              <div
+                onClick={() => fileRef.current?.click()}
+                style={{
+                  border: '2px dashed var(--bd2)', borderRadius: '12px',
+                  padding: '40px 24px', textAlign: 'center', cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--ac)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--bd2)')}
+              >
+                <p style={{ fontSize: '32px', marginBottom: '10px' }}>📂</p>
+                <p style={{ color: 'var(--t1)', fontWeight: 600, marginBottom: '4px' }}>Click to select your CSV file</p>
+                <p style={{ color: 'var(--t3)', fontSize: '12px' }}>or drag and drop</p>
+                <input ref={fileRef} type="file" accept=".csv,.txt" style={{ display: 'none' }} onChange={handleFile} />
+              </div>
+
+              {/* Supported formats */}
+              <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '10px', padding: '14px', border: '1px solid var(--bd)' }}>
+                <p style={{ fontSize: '11px', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '10px' }}>How to export your CSV</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                  {[
+                    ['Trade Republic', 'Portfolio → Share → Export as CSV'],
+                    ['eToro',          'Portfolio → History → Download Statement'],
+                    ['Degiro',         'Portfolio → Export → CSV'],
+                    ['IBKR',           'Reports → Activity → Holdings → CSV'],
+                    ['Other',          'Any CSV with columns: ticker/symbol, shares/qty, avg price'],
+                  ].map(([broker, instruction]) => (
+                    <div key={broker} style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
+                      <span style={{ color: 'var(--t2)', fontWeight: 600, minWidth: '100px' }}>{broker}</span>
+                      <span style={{ color: 'var(--t3)' }}>{instruction}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {resolving && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'rgba(77,143,255,0.08)', borderRadius: '8px', border: '1px solid rgba(77,143,255,0.2)' }}>
+                  <span style={{ fontSize: '14px', animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span>
+                  <p style={{ color: 'var(--ac)', fontSize: '12px' }}>Resolving ISIN codes to ticker symbols…</p>
+                </div>
+              )}
+
+              {error && <p style={{ color: 'var(--re)', fontSize: '12px', padding: '10px 12px', background: 'rgba(255,61,80,0.08)', borderRadius: '8px', border: '1px solid rgba(255,61,80,0.2)' }}>{error}</p>}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* Column headers */}
+              <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr 1fr 80px 80px 80px', gap: '8px', padding: '6px 8px', fontSize: '10px', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                <span />
+                <span>Ticker</span>
+                <span>Name</span>
+                <span>Qty</span>
+                <span>Avg Price</span>
+                <span>Type</span>
+              </div>
+
+              {rows.some(r => !r.skip && ISIN_RE.test(r.ticker)) && (
+                <div style={{ padding: '10px 12px', background: 'rgba(240,168,64,0.08)', borderRadius: '8px', border: '1px solid rgba(240,168,64,0.2)', fontSize: '12px', color: 'var(--am2)' }}>
+                  ⚠ Some tickers couldn't be resolved from their ISIN. Edit them manually in the Ticker column before importing.
+                </div>
+              )}
+
+              {rows.map((row, i) => {
+                const needsFix = ISIN_RE.test(row.ticker)
+                return (
+                <div key={i} style={{
+                  display: 'grid', gridTemplateColumns: '32px 1fr 1fr 80px 80px 80px',
+                  gap: '8px', alignItems: 'center', padding: '10px 8px',
+                  background: row.skip ? 'transparent' : needsFix ? 'rgba(240,168,64,0.05)' : 'rgba(255,255,255,0.025)',
+                  borderRadius: '8px', border: `1px solid ${needsFix && !row.skip ? 'rgba(240,168,64,0.3)' : 'var(--bd)'}`,
+                  opacity: row.skip ? 0.35 : 1, transition: 'all 0.1s',
+                }}>
+                  <input type="checkbox" checked={!row.skip}
+                    onChange={() => setRows(prev => prev.map((r, j) => j === i ? { ...r, skip: !r.skip } : r))}
+                    style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--ac)' }} />
+                  <input value={row.ticker}
+                    onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, ticker: e.target.value.toUpperCase() } : r))}
+                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px', padding: '5px 8px', color: 'var(--t1)', fontSize: '12px', fontWeight: 600, width: '100%' }} />
+                  <input value={row.name}
+                    onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, name: e.target.value } : r))}
+                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px', padding: '5px 8px', color: 'var(--t2)', fontSize: '12px', width: '100%' }} />
+                  <input value={row.quantity} type="number"
+                    onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, quantity: parseFloat(e.target.value) || 0 } : r))}
+                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px', padding: '5px 8px', color: 'var(--t1)', fontSize: '12px', width: '100%' }} />
+                  <input value={row.avg_buy_price} type="number"
+                    onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, avg_buy_price: parseFloat(e.target.value) || 0 } : r))}
+                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px', padding: '5px 8px', color: 'var(--t1)', fontSize: '12px', width: '100%' }} />
+                  <select value={row.asset_type}
+                    onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, asset_type: e.target.value } : r))}
+                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px', padding: '5px 6px', color: 'var(--t2)', fontSize: '11px', width: '100%' }}>
+                    <option value="stock">Stock</option>
+                    <option value="etf">ETF</option>
+                    <option value="crypto">Crypto</option>
+                    <option value="metal">Metal</option>
+                  </select>
+                </div>
+              )})}
+
+              {error && <p style={{ color: 'var(--re)', fontSize: '12px', padding: '10px 12px', background: 'rgba(255,61,80,0.08)', borderRadius: '8px', border: '1px solid rgba(255,61,80,0.2)' }}>{error}</p>}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        {step === 'preview' && (
+          <div style={{ padding: '14px 20px', borderTop: '1px solid var(--bd)', display: 'flex', gap: '10px' }}>
+            <button onClick={() => { setStep('upload'); setRows([]); setError('') }}
+              style={{ flex: 1, padding: '10px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: '8px', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
+              ← Back
+            </button>
+            <button onClick={handleImport} disabled={importing || rows.filter(r => !r.skip).length === 0}
+              style={{ flex: 2, padding: '10px', background: 'var(--gr)', border: 'none', borderRadius: '8px', color: 'white', fontSize: '13px', fontWeight: 600, cursor: importing ? 'not-allowed' : 'pointer', opacity: importing ? 0.7 : 1 }}>
+              {importing ? 'Importing…' : `Import ${rows.filter(r => !r.skip).length} holding${rows.filter(r => !r.skip).length !== 1 ? 's' : ''}`}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TROY_OZ_TO_GRAMS = 31.1034768
@@ -484,6 +822,50 @@ function HoldingModal({
   )
 }
 
+// ── Donut Chart ───────────────────────────────────────────────────────────────
+
+function DonutChart({ slices }: { slices: Array<{ pct: number; color: string }> }) {
+  // SVG donut: circumference = 2π × 15.9155 ≈ 100 (convenient unit)
+  // dashoffset = 25 starts at 12 o'clock; subtract accumulated pct for each segment
+  let acc = 0
+  const segments = slices
+    .filter(s => s.pct > 1)
+    .map(s => {
+      const dashoffset = 25 - acc
+      acc += s.pct
+      return { ...s, dashoffset, dash: Math.max(0, s.pct - 0.8) }
+    })
+
+  return (
+    <svg viewBox="0 0 36 36" style={{ width: '108px', height: '108px', flexShrink: 0 }}>
+      {/* Track */}
+      <circle cx="18" cy="18" r="15.9155" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="3.8" />
+      {segments.map((s, i) => (
+        <circle key={i}
+          cx="18" cy="18" r="15.9155"
+          fill="none"
+          stroke={s.color}
+          strokeWidth="3.8"
+          strokeLinecap="round"
+          strokeDasharray={`${s.dash} ${100 - s.dash}`}
+          strokeDashoffset={s.dashoffset}
+        />
+      ))}
+    </svg>
+  )
+}
+
+// ── Breakdown categories (order = donut order) ────────────────────────────────
+
+const BREAKDOWN_CATS: Array<{ key: string; label: string; color: string }> = [
+  { key: 'etf',    label: 'ETFs',    color: '#00FF85' },
+  { key: 'tech',   label: 'Tech',    color: '#4D8FFF' },
+  { key: 'stock',  label: 'Stocks',  color: '#A87EFF' },
+  { key: 'metal',  label: 'Metals',  color: '#FFB830' },
+  { key: 'crypto', label: 'Crypto',  color: '#F5B040' },
+  { key: 'cash',   label: 'Cash',    color: '#707070' },
+]
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function PortfolioTab() {
@@ -493,8 +875,45 @@ export default function PortfolioTab() {
     addHolding, updateHolding, deleteHolding, reload,
   } = usePortfolio()
 
-  const [modal,  setModal]  = useState<{ open: boolean; existing?: HoldingWithPrice }>({ open: false })
-  const [sortBy, setSortBy] = useState<'default' | 'pnl' | 'alloc'>('default')
+  const [modal,      setModal]      = useState<{ open: boolean; existing?: HoldingWithPrice }>({ open: false })
+  const [csvModal,   setCsvModal]   = useState(false)
+  const [sortBy,     setSortBy]     = useState<'default' | 'pnl' | 'alloc'>('default')
+  const [selectMode, setSelectMode] = useState(false)
+  const [selected,   setSelected]   = useState<Set<string>>(new Set())
+  const [deleting,   setDeleting]   = useState(false)
+
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
+  function toggleSelectAll() {
+    if (selected.size === sortedHoldings.length) setSelected(new Set())
+    else setSelected(new Set(sortedHoldings.map(h => h.id)))
+  }
+  async function deleteSelected() {
+    if (selected.size === 0) return
+    setDeleting(true)
+    for (const id of selected) await deleteHolding(id)
+    setSelected(new Set())
+    setSelectMode(false)
+    setDeleting(false)
+  }
+
+  async function handleCsvImport(rows: CsvRow[]) {
+    for (const row of rows) {
+      await addHolding({
+        ticker:        row.ticker,
+        name:          row.name,
+        asset_type:    row.asset_type,
+        quantity:      row.quantity,
+        avg_buy_price: row.avg_buy_price,
+        currency:      'EUR',
+      })
+    }
+  }
 
   const sortedHoldings = [...holdings].sort((a, b) => {
     if (sortBy === 'pnl') {
@@ -512,17 +931,30 @@ export default function PortfolioTab() {
     return 0 // default: DB insertion order
   })
 
-  // Sector breakdown (exclude metals from sector calc)
-  const sectorMap = new Map<string, number>()
+  // Asset-type breakdown (auto-categorised)
+  const breakdownMap = new Map<string, number>()
   for (const h of holdings) {
-    if (h.asset_type === 'metal') continue
-    const s = h.sector ?? 'Other'
-    sectorMap.set(s, (sectorMap.get(s) ?? 0) + (h.currentValueEur ?? h.costBasisEur ?? 0))
+    const val = h.currentValueEur ?? h.costBasisEur ?? 0
+    if (val <= 0) continue
+    // Split 'stock' into 'tech' when sector says so
+    const cat: string = (h.asset_type === 'stock' && h.sector?.toLowerCase().includes('tech'))
+      ? 'tech'
+      : h.asset_type
+    breakdownMap.set(cat, (breakdownMap.get(cat) ?? 0) + val)
   }
-  const sectorEntries = Array.from(sectorMap.entries()).sort((a, b) => b[1] - a[1])
-  const techPct = Array.from(sectorMap.entries())
-    .filter(([s]) => s.toLowerCase().includes('tech'))
-    .reduce((sum, [, v]) => sum + v, 0) / (totalValueEur || 1) * 100
+
+  const totalBreakdown = Array.from(breakdownMap.values()).reduce((s, v) => s + v, 0) || 1
+  const breakdownEntries = BREAKDOWN_CATS
+    .map(cat => ({ ...cat, value: breakdownMap.get(cat.key) ?? 0 }))
+    .filter(c => c.value > 0)
+    .sort((a, b) => b.value - a.value)
+
+  const donutSlices = breakdownEntries.map(c => ({
+    pct:   (c.value / totalBreakdown) * 100,
+    color: c.color,
+  }))
+
+  const techPct = ((breakdownMap.get('tech') ?? 0) / totalBreakdown) * 100
 
   return (
     <div className="flex flex-col gap-4">
@@ -598,11 +1030,39 @@ export default function PortfolioTab() {
                 style={{ background: 'var(--s3)', border: '1px solid var(--bd2)', color: priceLoading ? 'var(--t3)' : 'var(--t2)', fontSize: '12px', cursor: priceLoading ? 'not-allowed' : 'pointer' }}>
                 {priceLoading ? '⟳ …' : '⟳'}
               </button>
-              <button onClick={() => setModal({ open: true })}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
-                style={{ background: 'var(--gr)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
-                + Add
-              </button>
+              {selectMode ? (
+                <>
+                  <button onClick={toggleSelectAll}
+                    style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: '6px', color: 'var(--t2)', cursor: 'pointer' }}>
+                    {selected.size === sortedHoldings.length ? 'Deselect all' : 'Select all'}
+                  </button>
+                  <button onClick={deleteSelected} disabled={selected.size === 0 || deleting}
+                    style={{ padding: '4px 10px', fontSize: '11px', background: selected.size > 0 ? 'rgba(255,61,80,0.15)' : 'var(--s3)', border: `1px solid ${selected.size > 0 ? 'rgba(255,61,80,0.35)' : 'var(--bd2)'}`, borderRadius: '6px', color: selected.size > 0 ? 'var(--re)' : 'var(--t3)', cursor: selected.size > 0 ? 'pointer' : 'default', fontWeight: 600 }}>
+                    {deleting ? 'Deleting…' : `Delete${selected.size > 0 ? ` (${selected.size})` : ''}`}
+                  </button>
+                  <button onClick={() => { setSelectMode(false); setSelected(new Set()) }}
+                    style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: '6px', color: 'var(--t2)', cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setSelectMode(true)}
+                    style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: '6px', color: 'var(--t2)', cursor: 'pointer' }}>
+                    Select
+                  </button>
+                  <button onClick={() => setCsvModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
+                    style={{ background: 'var(--s3)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '12px', cursor: 'pointer' }}>
+                    ↑ CSV
+                  </button>
+                  <button onClick={() => setModal({ open: true })}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
+                    style={{ background: 'var(--gr)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
+                    + Add
+                  </button>
+                </>
+              )}
             </div>
           }>
             {/* Header — fixed widths match row cells exactly */}
@@ -647,9 +1107,10 @@ export default function PortfolioTab() {
                 return (
                   <div key={h.id}
                     className="flex items-center px-4 py-3 transition-colors group"
-                    style={{ borderBottom: '1px solid var(--bd)' }}
+                    onClick={selectMode ? () => toggleSelect(h.id) : undefined}
+                    style={{ borderBottom: '1px solid var(--bd)', cursor: selectMode ? 'pointer' : 'default', background: selectMode && selected.has(h.id) ? 'rgba(255,61,80,0.06)' : undefined }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--s3)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                    onMouseLeave={e => (e.currentTarget.style.background = selectMode && selected.has(h.id) ? 'rgba(255,61,80,0.06)' : 'transparent')}>
 
                     {/* Asset — fixed width, no overflow */}
                     <div style={{ width: '110px', flexShrink: 0, minWidth: 0 }}>
@@ -738,14 +1199,23 @@ export default function PortfolioTab() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ width: '36px', flexShrink: 0, justifyContent: 'flex-end' }}>
-                      <button onClick={() => setModal({ open: true, existing: h })}
-                        style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '14px', padding: '2px 3px' }}
-                        title="Edit">✎</button>
-                      <button onClick={() => { if (confirm(`Remove ${h.ticker}?`)) deleteHolding(h.id) }}
-                        style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: '14px', padding: '2px 3px' }}
-                        title="Remove">×</button>
-                    </div>
+                    {selectMode ? (
+                      <div style={{ width: '32px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <input type="checkbox" checked={selected.has(h.id)}
+                          onChange={() => toggleSelect(h.id)}
+                          onClick={e => e.stopPropagation()}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--re)' }} />
+                      </div>
+                    ) : (
+                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ width: '36px', flexShrink: 0, justifyContent: 'flex-end' }}>
+                        <button onClick={() => setModal({ open: true, existing: h })}
+                          style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '14px', padding: '2px 3px' }}
+                          title="Edit">✎</button>
+                        <button onClick={() => { if (confirm(`Remove ${h.ticker}?`)) deleteHolding(h.id) }}
+                          style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: '14px', padding: '2px 3px' }}
+                          title="Remove">×</button>
+                      </div>
+                    )}
                   </div>
                 )
               })
@@ -755,33 +1225,47 @@ export default function PortfolioTab() {
 
         {/* Right: Stats */}
         <div className="lg:col-span-2 flex flex-col gap-4">
-          {/* Sector breakdown */}
-          <Panel title="Sector Breakdown">
-            {sectorEntries.length === 0 ? (
+          {/* Asset breakdown */}
+          <Panel title="Diversification">
+            {breakdownEntries.length === 0 ? (
               <p style={{ color: 'var(--t3)', fontSize: '12px' }}>Add holdings to see breakdown.</p>
             ) : (
-              <div className="flex flex-col gap-3">
-                {sectorEntries.map(([sector, value]) => {
-                  const pct = totalValueEur > 0 ? (value / totalValueEur) * 100 : 0
-                  const isOverweight = sector.toLowerCase().includes('tech') && pct > 60
-                  return (
-                    <div key={sector}>
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <span style={{ color: 'var(--t1)', fontSize: '12px' }}>{sector}</span>
-                          {isOverweight && <span style={{ color: 'var(--am2)', fontSize: '10px' }}>⚠ Overweight</span>}
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                {/* Donut */}
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <DonutChart slices={donutSlices} />
+                  {/* Centre label */}
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                    <p style={{ color: 'var(--t1)', fontSize: '14px', fontWeight: 700, lineHeight: 1 }}>{breakdownEntries.length}</p>
+                    <p style={{ color: 'var(--t3)', fontSize: '9px', letterSpacing: '0.05em', textTransform: 'uppercase', marginTop: '2px' }}>types</p>
+                  </div>
+                </div>
+
+                {/* Legend */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {breakdownEntries.map(cat => {
+                    const pct = (cat.value / totalBreakdown) * 100
+                    const isOver = cat.key === 'tech' && pct > 60
+                    return (
+                      <div key={cat.key}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                            <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: cat.color, flexShrink: 0, display: 'inline-block' }} />
+                            <span style={{ color: 'var(--t2)', fontSize: '12px' }}>{cat.label}</span>
+                            {isOver && <span style={{ color: 'var(--am2)', fontSize: '10px' }}>⚠</span>}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ color: 'var(--t3)', fontSize: '11px' }}>{fmtEur(cat.value)}</span>
+                            <span style={{ color: cat.color, fontSize: '12px', fontWeight: 700, minWidth: '38px', textAlign: 'right' }}>{pct.toFixed(1)}%</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span style={{ color: 'var(--t3)', fontSize: '11px' }}>{fmtEur(value)}</span>
-                          <span style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500, minWidth: '40px', textAlign: 'right' }}>{pct.toFixed(1)}%</span>
+                        <div style={{ height: '3px', background: 'var(--s3)', borderRadius: '3px', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', borderRadius: '3px', background: cat.color, opacity: 0.75 }} />
                         </div>
                       </div>
-                      <div className="rounded-full overflow-hidden" style={{ height: '4px', background: 'var(--s3)' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', borderRadius: '4px', background: isOverweight ? 'var(--am)' : 'var(--ac)' }} />
-                      </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
             )}
           </Panel>
@@ -820,6 +1304,13 @@ export default function PortfolioTab() {
           existing={modal.existing}
           onSave={modal.existing ? (d) => updateHolding(modal.existing!.id, d as Parameters<typeof updateHolding>[1]) : addHolding}
           onClose={() => setModal({ open: false })}
+        />
+      )}
+
+      {csvModal && (
+        <CsvImportModal
+          onClose={() => setCsvModal(false)}
+          onImport={handleCsvImport}
         />
       )}
     </div>

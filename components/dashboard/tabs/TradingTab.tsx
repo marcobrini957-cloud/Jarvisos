@@ -106,10 +106,10 @@ function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose: () =>
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
-      <div className="fixed z-50 rounded-xl flex flex-col gap-4"
+      <div className="modal-sheet fixed z-50 rounded-xl flex flex-col gap-4"
         style={{
           top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-          width: '520px', maxWidth: 'calc(100vw - 32px)', maxHeight: '90vh',
+          width: '520px', maxWidth: 'calc(100vw - 24px)', maxHeight: '90dvh',
           background: 'var(--s1)', border: '1px solid var(--bd2)',
           boxShadow: '0 24px 64px rgba(0,0,0,0.5)', padding: '24px', overflowY: 'auto',
         }}>
@@ -749,6 +749,335 @@ function TableHeader() {
   )
 }
 
+// ── FIFA-style Trader Radar ───────────────────────────────────────────────────
+
+function TraderRadar({ closed }: { closed: Trade[] }) {
+  const N  = 6
+  // Give the hex generous room so labels never clip
+  const W  = 600, H = 520
+  const cx = 300, cy = 260, R = 138
+
+  // ── Metric computations ───────────────────────────────────────────────────
+
+  // 1. Win Rate
+  const wins   = closed.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).length
+  const losses = closed.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+  const winRate = (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : 0
+
+  // 2. Profit Factor — the single most important edge metric
+  const grossWin  = closed.reduce((s, t) => s + Math.max(0, t.net_profit ?? 0), 0)
+  const grossLoss = Math.abs(closed.reduce((s, t) => s + Math.min(0, t.net_profit ?? 0), 0))
+  const pf        = grossLoss > 0 ? grossWin / grossLoss : grossWin > 0 ? 3 : 1
+  // PF 1.0 = breakeven (score 33), PF 2.0 = good (score 67), PF 3.0+ = elite (score 100)
+  const pfScore   = Math.min(100, (pf / 3) * 100)
+
+  // 3. Avg realized R:R — quality of entry & exit
+  const rrTrades = closed.filter(t => t.stop_loss && t.open_price && t.close_price && t.trade_type)
+  const avgRR    = rrTrades.length > 0
+    ? rrTrades.reduce((s, t) => {
+        const dir      = t.trade_type === 'buy' ? 1 : -1
+        const realized = dir * ((t.close_price ?? 0) - (t.open_price ?? 0))
+        const risk     = Math.abs((t.open_price ?? 0) - (t.stop_loss ?? 0))
+        return s + (risk > 0 ? realized / risk : 0)
+      }, 0) / rrTrades.length
+    : null
+  // -1R = 0, 0R = 33, +2R = 100
+  const rrScore = avgRR !== null ? Math.min(100, Math.max(0, (avgRR + 1) / 3 * 100)) : 50
+
+  // 4. Discipline — plan adherence
+  const planTrades = closed.filter(t => t.followed_plan !== null && t.followed_plan !== undefined)
+  const discScore  = planTrades.length > 0
+    ? (planTrades.filter(t => t.followed_plan).length / planTrades.length) * 100
+    : 50
+
+  // 5. Risk Management — % trades with SL defined, penalized for bad risk tags
+  const slTrades      = closed.filter(t => (t.stop_loss ?? 0) > 0)
+  const badRiskTrades = closed.filter(t => t.tags?.some(tag => ['No SL', 'Oversize', 'No stop'].includes(tag)))
+  const slRate        = closed.length > 0 ? slTrades.length / closed.length : 0.5
+  const badRiskRate   = closed.length > 0 ? badRiskTrades.length / closed.length : 0
+  const riskScore     = Math.min(100, Math.max(0, (slRate * 70 + (1 - badRiskRate) * 30)))
+
+  // 6. Mindset — emotional discipline (no FOMO / revenge / tilt)
+  const emotionTrades = closed.filter(t => t.emotion_pre)
+  const tiltTrades    = emotionTrades.filter(t => ['fomo', 'anxious', 'tired'].includes(t.emotion_pre!))
+  const revengeCount  = closed.filter(t => t.tags?.some(tag => ['Revenge trade', 'FOMO', 'Emotional'].includes(tag))).length
+  const tiltRate      = emotionTrades.length > 0 ? tiltTrades.length / emotionTrades.length : 0
+  const revengeRate   = closed.length > 0 ? revengeCount / closed.length : 0
+  const mindsetScore  = Math.min(100, Math.max(0, 100 - (tiltRate * 60 + revengeRate * 40) * 100))
+
+  // Axes: order = top, TR, BR, bottom, BL, TL (clockwise from 12 o'clock)
+  const axes = [
+    {
+      id: 'wr',
+      label: 'WIN RATE',
+      value: `${winRate.toFixed(0)}%`,
+      sub:   `${wins}W · ${losses}L`,
+      score: winRate,
+    },
+    {
+      id: 'pf',
+      label: 'PROFIT FACTOR',
+      value: `${pf.toFixed(2)}×`,
+      sub:   pf >= 2 ? 'elite edge' : pf >= 1.5 ? 'solid edge' : pf >= 1 ? 'marginal' : 'losing',
+      score: pfScore,
+    },
+    {
+      id: 'rr',
+      label: 'AVG R:R',
+      value: avgRR !== null ? `${avgRR >= 0 ? '+' : ''}${avgRR.toFixed(2)}R` : '—',
+      sub:   rrTrades.length > 0 ? `${rrTrades.length} trades w/ SL` : 'add SL to trades',
+      score: rrScore,
+    },
+    {
+      id: 'disc',
+      label: 'DISCIPLINE',
+      value: planTrades.length > 0 ? `${discScore.toFixed(0)}%` : '—',
+      sub:   planTrades.length > 0 ? `${planTrades.length} annotated` : 'log plan adherence',
+      score: discScore,
+    },
+    {
+      id: 'risk',
+      label: 'RISK MGMT',
+      value: `${riskScore.toFixed(0)}%`,
+      sub:   `${slTrades.length}/${closed.length} with SL`,
+      score: riskScore,
+    },
+    {
+      id: 'mind',
+      label: 'MINDSET',
+      value: emotionTrades.length > 0 ? `${mindsetScore.toFixed(0)}%` : '—',
+      sub:   emotionTrades.length > 0
+        ? tiltTrades.length === 0 ? 'no tilt detected' : `${tiltTrades.length} tilt sessions`
+        : 'log emotions',
+      score: mindsetScore,
+    },
+  ]
+
+  const ovr      = Math.round(axes.reduce((s, a) => s + a.score, 0) / N)
+  const scoreCol = (s: number) => s >= 70 ? '#4ade80' : s >= 45 ? '#facc15' : '#f87171'
+  const ovrColor = scoreCol(ovr)
+
+  // ── SVG geometry ──────────────────────────────────────────────────────────
+  const angle   = (i: number) => -Math.PI / 2 + (2 * Math.PI / N) * i
+  const pt      = (i: number, v: number) => ({
+    x: cx + R * v * Math.cos(angle(i)),
+    y: cy + R * v * Math.sin(angle(i)),
+  })
+  const hexPath = (v: number) => {
+    const pts = Array.from({ length: N }, (_, i) => pt(i, v))
+    return pts.map((p, k) => `${k === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z'
+  }
+  const dataPath = () => {
+    const pts = axes.map((a, i) => pt(i, Math.max(0.04, a.score / 100)))
+    return pts.map((p, k) => `${k === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z'
+  }
+
+  // Per-axis label anchor & origin (tuned per position so nothing clips)
+  // DIST 1.43 × R=138 = ~197px from center
+  const LDIST = 1.43
+  const labelCfg: { lx: number; ly: number; anchor: 'start' | 'middle' | 'end' }[] = axes.map((_, i) => {
+    const ang    = angle(i)
+    const cosA   = Math.cos(ang)
+    const sinA   = Math.sin(ang)
+    const lx     = cx + R * LDIST * cosA
+    const ly     = cy + R * LDIST * sinA
+    const anchor: 'start' | 'middle' | 'end' = cosA > 0.25 ? 'start' : cosA < -0.25 ? 'end' : 'middle'
+    // Nudge top/bottom labels slightly along Y so the 3 text lines don't run together
+    const lyAdj  = sinA < -0.5 ? ly - 4 : sinA > 0.5 ? ly + 4 : ly
+    return { lx, ly: lyAdj, anchor }
+  })
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <svg
+        width="100%"
+        viewBox={`0 0 ${W} ${H}`}
+        style={{ display: 'block', overflow: 'visible', maxWidth: '600px' }}
+      >
+        <defs>
+          {/* Polygon glow */}
+          <filter id="rglow2" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          {/* Dot glow */}
+          <filter id="dglow2" x="-120%" y="-120%" width="340%" height="340%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          {/* OVR badge inner glow */}
+          <filter id="oglow2" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          {/* Data fill gradient — blue → purple */}
+          <linearGradient id="rfill2" x1="0.3" y1="0" x2="0.7" y2="1">
+            <stop offset="0%"   stopColor="#3b82f6" stopOpacity="0.32" />
+            <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.10" />
+          </linearGradient>
+        </defs>
+
+        {/* ── Background hex tint ── */}
+        <path d={hexPath(1)} fill="rgba(255,255,255,0.016)" />
+
+        {/* ── Grid rings ── */}
+        {[0.25, 0.5, 0.75, 1.0].map(v => (
+          <path key={v} d={hexPath(v)} fill="none"
+            stroke={v === 1.0 ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.055)'}
+            strokeWidth={v === 1.0 ? 1.5 : 1}
+            strokeDasharray={v < 1.0 ? '3 4' : undefined}
+          />
+        ))}
+
+        {/* ── Ring value labels along top spoke ── */}
+        {[25, 50, 75].map(v => {
+          const p = pt(0, v / 100)
+          return (
+            <text key={v}
+              x={(p.x + 5).toFixed(1)} y={(p.y + 1).toFixed(1)}
+              fontSize="8" fill="rgba(255,255,255,0.18)"
+              fontFamily="monospace" textAnchor="start"
+            >{v}</text>
+          )
+        })}
+
+        {/* ── Spoke cross-ticks ── */}
+        {axes.map((_, i) =>
+          [0.25, 0.5, 0.75].map(v => {
+            const p   = pt(i, v)
+            const ang = angle(i)
+            const tx  = Math.sin(ang) * 4
+            const ty  = -Math.cos(ang) * 4
+            return (
+              <line key={`${i}-${v}`}
+                x1={(p.x - tx).toFixed(1)} y1={(p.y - ty).toFixed(1)}
+                x2={(p.x + tx).toFixed(1)} y2={(p.y + ty).toFixed(1)}
+                stroke="rgba(255,255,255,0.14)" strokeWidth="1"
+              />
+            )
+          })
+        )}
+
+        {/* ── Axis spokes ── */}
+        {axes.map((_, i) => {
+          const end = pt(i, 1)
+          return (
+            <line key={i} x1={cx} y1={cy}
+              x2={end.x.toFixed(1)} y2={end.y.toFixed(1)}
+              stroke="rgba(255,255,255,0.07)" strokeWidth="1"
+            />
+          )
+        })}
+
+        {/* ── Data polygon fill ── */}
+        <path d={dataPath()} fill="url(#rfill2)" />
+
+        {/* ── Data polygon outline — glow pass ── */}
+        <path d={dataPath()} fill="none"
+          stroke="#3b82f6" strokeWidth="4"
+          filter="url(#rglow2)" opacity="0.40"
+        />
+        {/* ── Data polygon outline — crisp pass ── */}
+        <path d={dataPath()} fill="none"
+          stroke="#93c5fd" strokeWidth="1.8" opacity="0.90"
+        />
+
+        {/* ── Vertex dots ── */}
+        {axes.map((a, i) => {
+          const p   = pt(i, Math.max(0.04, a.score / 100))
+          const col = scoreCol(a.score)
+          return (
+            <g key={i} filter="url(#dglow2)">
+              <circle cx={p.x.toFixed(1)} cy={p.y.toFixed(1)}
+                r="7" fill="rgba(2,6,23,0.95)" stroke={col} strokeWidth="2.5" />
+              <circle cx={p.x.toFixed(1)} cy={p.y.toFixed(1)}
+                r="3.5" fill={col} />
+            </g>
+          )
+        })}
+
+        {/* ── Axis labels — 3 lines: name / value / context ── */}
+        {axes.map((a, i) => {
+          const { lx, ly, anchor } = labelCfg[i]
+          const col = scoreCol(a.score)
+          return (
+            <g key={a.id}>
+              {/* metric name */}
+              <text
+                x={lx.toFixed(1)} y={(ly - 12).toFixed(1)}
+                textAnchor={anchor} fontSize="8.5"
+                fill="rgba(255,255,255,0.30)"
+                fontFamily="system-ui, sans-serif"
+                style={{ letterSpacing: '0.12em' }}
+              >{a.label}</text>
+              {/* main value */}
+              <text
+                x={lx.toFixed(1)} y={(ly + 6).toFixed(1)}
+                textAnchor={anchor} fontSize="16"
+                fill={col} fontFamily="monospace" fontWeight="800"
+              >{a.value}</text>
+              {/* context sub-line */}
+              <text
+                x={lx.toFixed(1)} y={(ly + 20).toFixed(1)}
+                textAnchor={anchor} fontSize="8"
+                fill="rgba(255,255,255,0.20)"
+                fontFamily="system-ui"
+              >{a.sub}</text>
+            </g>
+          )
+        })}
+
+        {/* ── Center OVR badge ── */}
+        {/* Outer glow ring */}
+        <circle cx={cx} cy={cy} r="50" fill={ovrColor} opacity="0.06" filter="url(#oglow2)" />
+        {/* Dark bg */}
+        <circle cx={cx} cy={cy} r="48" fill="rgba(2,6,23,0.88)" />
+        {/* Accent ring */}
+        <circle cx={cx} cy={cy} r="48" fill="none" stroke={ovrColor} strokeWidth="1.5" opacity="0.55" />
+        <circle cx={cx} cy={cy} r="44" fill="none" stroke={ovrColor} strokeWidth="0.5" opacity="0.18" />
+        {/* Label */}
+        <text x={cx} y={cy - 13} textAnchor="middle" fontSize="9"
+          fill="rgba(255,255,255,0.28)" fontFamily="system-ui"
+          style={{ letterSpacing: '0.20em' }}>OVR</text>
+        {/* Score */}
+        <text x={cx} y={cy + 22} textAnchor="middle" fontSize="40"
+          fill={ovrColor} fontFamily="monospace" fontWeight="900">{ovr}</text>
+      </svg>
+
+      {/* ── Score breakdown pills — flex-wrap so 6-col on desktop, 3-col on mobile ── */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
+        gap: '6px', width: '100%', maxWidth: '560px', marginTop: '8px',
+      }}>
+        {axes.map(a => {
+          const col = scoreCol(a.score)
+          const bg  = a.score >= 70
+            ? 'rgba(74,222,128,0.08)' : a.score >= 45
+            ? 'rgba(77,143,255,0.08)' : 'rgba(248,113,113,0.08)'
+          return (
+            <div key={a.id} style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+              padding: '8px 12px', borderRadius: '8px',
+              background: bg, border: `1px solid ${col}25`,
+              minWidth: '80px', flex: '1 1 80px',
+            }}>
+              <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.30)', letterSpacing: '0.08em', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                {a.label}
+              </span>
+              <span style={{ fontSize: '14px', color: col, fontFamily: 'monospace', fontWeight: 800 }}>
+                {a.value}
+              </span>
+              <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.18)', textAlign: 'center' }}>
+                {a.sub}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ── Full analytics panel ──────────────────────────────────────────────────────
 
 function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows: Trade[] }) {
@@ -820,6 +1149,30 @@ function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows: Trade[
       .sort((a, b) => avgPnl(b.trades) - avgPnl(a.trades))
   }, [closed])
 
+  // ── Setup: total P&L per setup (for horizontal bar chart) ─────────────────
+  const setupPnlChart = useMemo(() =>
+    setupData
+      .map(g => ({ label: g.label, total: g.trades.reduce((s, t) => s + (t.net_profit ?? 0), 0) }))
+      .sort((a, b) => b.total - a.total)
+  , [setupData])
+
+  // ── Setup: avg realized R:R per setup ─────────────────────────────────────
+  const setupRRChart = useMemo(() => {
+    return setupData.map(g => {
+      const rrTrades = g.trades.filter(t => t.stop_loss && t.open_price && t.close_price && t.trade_type)
+      if (rrTrades.length === 0) return null
+      const sum = rrTrades.reduce((s, t) => {
+        const dir      = t.trade_type === 'buy' ? 1 : -1
+        const realized = dir * ((t.close_price ?? 0) - (t.open_price ?? 0))
+        const risk     = Math.abs((t.open_price ?? 0) - (t.stop_loss ?? 0))
+        return s + (risk > 0 ? realized / risk : 0)
+      }, 0)
+      return { label: g.label, avgRR: sum / rrTrades.length }
+    })
+    .filter((x): x is { label: string; avgRR: number } => x !== null)
+    .sort((a, b) => b.avgRR - a.avgRR)
+  }, [setupData])
+
   // ── Tags ──────────────────────────────────────────────────────────────────
   const tagData = useMemo((): Group[] => {
     const map = new Map<string, Trade[]>()
@@ -868,6 +1221,12 @@ function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows: Trade[
 
   return (
     <Panel title={`Statistical Analysis — ${closed.length} trades`}>
+
+      {/* ── Trader Radar (FIFA-style) ── */}
+      <div style={{ marginBottom: '28px', paddingBottom: '24px', borderBottom: '1px solid var(--bd)' }}>
+        <TraderRadar closed={closed} />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Left column */}
@@ -960,6 +1319,105 @@ function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows: Trade[
 
         </div>
       </div>
+
+      {/* ── Visual setup charts ───────────────────────────────────────────── */}
+      {setupPnlChart.length > 0 && (() => {
+        const ROW_H   = 36
+        const LABEL_W = 160
+        const BAR_MAX = 180
+        const PAD_R   = 56
+        const W       = LABEL_W + BAR_MAX * 2 + PAD_R
+        const fmt     = (v: number) => `€${v >= 0 ? '+' : ''}${v.toFixed(0)}`
+        const fmtRR   = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}R`
+        const pnlMax  = Math.max(...setupPnlChart.map(d => Math.abs(d.total)), 0.01)
+        const rrMax   = setupRRChart.length > 0 ? Math.max(...setupRRChart.map(d => Math.abs(d.avgRR)), 0.01) : 1
+
+        const HorizBar = ({ data, formatVal, maxAbs, id }: {
+          data: { label: string; value: number }[]
+          formatVal: (v: number) => string
+          maxAbs: number
+          id: string
+        }) => {
+          const H = data.length * ROW_H
+          return (
+            <svg key={id} width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
+              {/* zero line */}
+              <line x1={LABEL_W + BAR_MAX} y1={0} x2={LABEL_W + BAR_MAX} y2={H}
+                stroke="rgba(255,255,255,0.10)" strokeWidth="1" />
+              {data.map((d, i) => {
+                const barW  = Math.max(2, (Math.abs(d.value) / maxAbs) * BAR_MAX)
+                const isPos = d.value >= 0
+                const y     = i * ROW_H
+                const barColor = isPos ? '#22c55e' : '#ef4444'
+                const barX  = isPos ? LABEL_W + BAR_MAX : LABEL_W + BAR_MAX - barW
+                return (
+                  <g key={d.label}>
+                    {/* Row bg on hover handled via CSS — skip for now */}
+                    <text
+                      x={LABEL_W - 8} y={y + ROW_H / 2 + 4}
+                      textAnchor="end" fontSize="11" fill="rgba(255,255,255,0.65)"
+                      fontFamily="system-ui, sans-serif"
+                    >
+                      {d.label}
+                    </text>
+                    <rect x={barX} y={y + 8} width={barW} height={ROW_H - 16} rx="3" fill={barColor} opacity="0.85" />
+                    <text
+                      x={isPos ? barX + barW + 5 : barX - 5}
+                      y={y + ROW_H / 2 + 4}
+                      textAnchor={isPos ? 'start' : 'end'}
+                      fontSize="10" fill={barColor}
+                      fontFamily="monospace"
+                      fontWeight="600"
+                    >
+                      {formatVal(d.value)}
+                    </text>
+                  </g>
+                )
+              })}
+            </svg>
+          )
+        }
+
+        return (
+          <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--bd)' }}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+              {/* Setup Performance (Grouped) */}
+              <div>
+                <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '12px' }}>
+                  Setup Performance (Grouped)
+                </p>
+                <HorizBar
+                  id="setup-pnl"
+                  data={setupPnlChart.map(d => ({ label: d.label, value: d.total }))}
+                  formatVal={fmt}
+                  maxAbs={pnlMax}
+                />
+              </div>
+
+              {/* Avg R:R by Setup */}
+              <div>
+                <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '12px' }}>
+                  Avg R:R by Setup
+                </p>
+                {setupRRChart.length > 0 ? (
+                  <HorizBar
+                    id="setup-rr"
+                    data={setupRRChart.map(d => ({ label: d.label, value: d.avgRR }))}
+                    formatVal={fmtRR}
+                    maxAbs={rrMax}
+                  />
+                ) : (
+                  <p style={{ color: 'var(--t3)', fontSize: '12px', fontStyle: 'italic', padding: '8px 0' }}>
+                    Add stop loss to trades to see R:R by setup.
+                  </p>
+                )}
+              </div>
+
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Insight cards — warnings + key findings */}
       {insights.length > 0 && (
@@ -1641,6 +2099,170 @@ function PositionSizeCalc() {
   )
 }
 
+// ── Report download bar ───────────────────────────────────────────────────────
+
+function toYMD(d: Date) { return d.toISOString().split('T')[0] }
+
+function ReportDownloadBar() {
+  const [downloading, setDownloading] = useState<string | null>(null)
+  const [showCustom,  setShowCustom]  = useState(false)
+  const [customFrom,  setCustomFrom]  = useState('')
+  const [customTo,    setCustomTo]    = useState('')
+
+  async function download(label: string, from: string, to: string, period: 'weekly' | 'monthly') {
+    if (!from || !to) return
+    setDownloading(label)
+    try {
+      const res = await fetch(`/api/reports?period=${period}&from=${from}&to=${to}`)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Failed' }))
+        alert(`Report failed: ${err.error}`)
+        return
+      }
+      const blob    = await res.blob()
+      const link    = document.createElement('a')
+      link.href     = URL.createObjectURL(blob)
+      link.download = `velquor-report-${from}-to-${to}.pdf`
+      link.click()
+      URL.revokeObjectURL(link.href)
+    } finally {
+      setDownloading(null)
+    }
+  }
+
+  const now     = new Date()
+  const m1Start = new Date(now.getFullYear(), now.getMonth(), 1)
+  const m1End   = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  const m2Start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const m2End   = new Date(now.getFullYear(), now.getMonth(), 0)
+
+  const presets = [
+    { label: 'This Month', from: toYMD(m1Start), to: toYMD(m1End),   period: 'monthly' as const },
+    { label: 'Last Month', from: toYMD(m2Start), to: toYMD(m2End),   period: 'monthly' as const },
+    { label: 'Last Year',  from: `${now.getFullYear() - 1}-01-01`, to: `${now.getFullYear() - 1}-12-31`, period: 'monthly' as const },
+  ]
+
+  const inputStyle: React.CSSProperties = {
+    background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px',
+    color: 'var(--t1)', fontSize: '12px', padding: '5px 8px', outline: 'none',
+    colorScheme: 'dark',
+  }
+
+  const BtnBase: React.CSSProperties = {
+    display: 'flex', alignItems: 'center', gap: '5px',
+    padding: '5px 13px', borderRadius: '6px', fontSize: '12px',
+    cursor: 'pointer', transition: 'all 0.12s', fontWeight: 500,
+  }
+
+  return (
+    <div style={{
+      borderRadius: '10px', background: 'var(--s1)', border: '1px solid var(--bd2)',
+      overflow: 'hidden',
+    }}>
+      {/* ── Main bar ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', padding: '10px 14px' }}>
+        {/* Icon + label */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '4px' }}>
+          <span style={{ fontSize: '13px' }}>📄</span>
+          <span style={{ fontSize: '11px', color: 'var(--t3)', letterSpacing: '0.06em' }}>PDF REPORT</span>
+        </div>
+
+        {/* Presets */}
+        {presets.map(r => {
+          const busy = downloading === r.label
+          return (
+            <button
+              key={r.label}
+              onClick={() => download(r.label, r.from, r.to, r.period)}
+              disabled={!!downloading}
+              style={{
+                ...BtnBase,
+                background: busy ? 'var(--ac)' : 'var(--s2)',
+                color:      busy ? '#fff'       : 'var(--t2)',
+                border:     `1px solid ${busy ? 'var(--ac)' : 'var(--bd2)'}`,
+                opacity:    downloading && !busy ? 0.45 : 1,
+              }}
+              onMouseEnter={e => { if (!downloading) { e.currentTarget.style.background = 'var(--s3)'; e.currentTarget.style.color = 'var(--t1)' } }}
+              onMouseLeave={e => { if (!downloading) { e.currentTarget.style.background = busy ? 'var(--ac)' : 'var(--s2)'; e.currentTarget.style.color = busy ? '#fff' : 'var(--t2)' } }}
+            >
+              {busy
+                ? <span style={{ width: '10px', height: '10px', borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+                : <span style={{ fontSize: '11px', opacity: 0.6 }}>↓</span>
+              }
+              {r.label}
+            </button>
+          )
+        })}
+
+        {/* Custom button */}
+        <button
+          onClick={() => setShowCustom(v => !v)}
+          style={{
+            ...BtnBase,
+            background: showCustom ? 'rgba(77,143,255,0.12)' : 'var(--s2)',
+            color:      showCustom ? 'var(--ac)'              : 'var(--t2)',
+            border:     `1px solid ${showCustom ? 'var(--ac)' : 'var(--bd2)'}`,
+            marginLeft: 'auto',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--s3)'; e.currentTarget.style.color = 'var(--t1)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = showCustom ? 'rgba(77,143,255,0.12)' : 'var(--s2)'; e.currentTarget.style.color = showCustom ? 'var(--ac)' : 'var(--t2)' }}
+        >
+          <span style={{ fontSize: '11px' }}>⊞</span>
+          Custom range
+        </button>
+      </div>
+
+      {/* ── Custom date picker (expands below) ── */}
+      {showCustom && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
+          padding: '12px 14px',
+          borderTop: '1px solid var(--bd)',
+          background: 'var(--s2)',
+          animation: 'fade-in 0.15s ease',
+        }}>
+          <span style={{ fontSize: '11px', color: 'var(--t3)' }}>From</span>
+          <input
+            type="date"
+            value={customFrom}
+            onChange={e => setCustomFrom(e.target.value)}
+            style={inputStyle}
+          />
+          <span style={{ fontSize: '11px', color: 'var(--t3)' }}>to</span>
+          <input
+            type="date"
+            value={customTo}
+            onChange={e => setCustomTo(e.target.value)}
+            style={inputStyle}
+          />
+          <button
+            onClick={() => {
+              if (customFrom && customTo) {
+                download('custom', customFrom, customTo, 'monthly')
+                setShowCustom(false)
+              }
+            }}
+            disabled={!customFrom || !customTo || !!downloading}
+            style={{
+              ...BtnBase,
+              background: customFrom && customTo ? 'var(--ac)' : 'var(--s3)',
+              color:       customFrom && customTo ? '#fff'       : 'var(--t3)',
+              border:      '1px solid transparent',
+              opacity:     !customFrom || !customTo ? 0.5 : 1,
+            }}
+          >
+            {downloading === 'custom'
+              ? <span style={{ width: '10px', height: '10px', borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+              : <span style={{ fontSize: '11px' }}>↓</span>
+            }
+            Download
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function TradingTab() {
@@ -1693,8 +2315,64 @@ export default function TradingTab() {
     return `${d.getDate()} ${MON[d.getMonth()]}`
   })
 
+  // ── Loading state ──────────────────────────────────────────────────────────
+  if (loading && trades.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '16px' }}>
+        <div style={{
+          width: '40px', height: '40px', borderRadius: '50%',
+          border: '2px solid var(--bd2)',
+          borderTopColor: 'var(--ac)',
+          animation: 'spin 0.8s linear infinite',
+        }} />
+        <p style={{ color: 'var(--t3)', fontSize: '13px' }}>Loading trades…</p>
+      </div>
+    )
+  }
+
+  // ── Empty state — no trades yet ────────────────────────────────────────────
+  if (!loading && trades.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '20px', padding: '40px 20px', textAlign: 'center' }}>
+        {/* Icon */}
+        <div style={{
+          width: '72px', height: '72px', borderRadius: '20px',
+          background: 'linear-gradient(145deg, var(--go2) 0%, var(--am) 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '32px',
+          boxShadow: '0 8px 32px rgba(200,133,26,0.25)',
+        }}>
+          ⬡
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <p style={{ color: 'var(--t1)', fontSize: '18px', fontWeight: 600 }}>No trades yet</p>
+          <p style={{ color: 'var(--t3)', fontSize: '13px', maxWidth: '320px', lineHeight: 1.6 }}>
+            Connect your MT5 account to start syncing trades automatically. Jarvis will analyse your performance in real time.
+          </p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '280px' }}>
+          <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '18px' }}>1</span>
+            <span style={{ color: 'var(--t2)', fontSize: '13px' }}>Click the MT5 button in the top bar</span>
+          </div>
+          <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '18px' }}>2</span>
+            <span style={{ color: 'var(--t2)', fontSize: '13px' }}>Enter your account ID &amp; investor password</span>
+          </div>
+          <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '18px' }}>3</span>
+            <span style={{ color: 'var(--t2)', fontSize: '13px' }}>Trades sync automatically every 30 seconds</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-4">
+
+      {/* ── Report download bar ── */}
+      <ReportDownloadBar />
 
       {/* Open Positions */}
       {openPositions.length > 0 && (

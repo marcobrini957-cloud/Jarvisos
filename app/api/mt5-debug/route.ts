@@ -4,6 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 export const maxDuration = 60
 
 export async function GET() {
+  const supabaseAuth = await createClient()
+  const { data: { user } } = await supabaseAuth.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const token     = process.env.METAAPI_TOKEN!
   const accountId = process.env.MT5_ACCOUNT_ID!
   const base      = 'https://mt-client-api-v1.london.agiliumtrade.ai'
@@ -43,8 +47,8 @@ export async function GET() {
 
   const balancePnl = balanceDeals.reduce((s: number, d: {profit: number}) => s + (d.profit ?? 0), 0)
 
-  // What's in Supabase right now
-  const supabase = await createClient()
+  // What's in Supabase right now (reuse authenticated client)
+  const supabase = supabaseAuth
   const { data: dbTrades } = await supabase
     .from('trades')
     .select('symbol, lot_size, net_profit, close_time, trade_type')

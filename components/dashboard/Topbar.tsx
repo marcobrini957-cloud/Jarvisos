@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import MT5ConnectModal from './MT5ConnectModal'
 import { useDisplayMode } from '@/context/DisplayModeContext'
 import { useUserProfile } from '@/context/UserProfileContext'
@@ -174,7 +175,7 @@ export default function Topbar() {
   return (
     <>
       <div
-        className="flex items-center justify-between flex-shrink-0"
+        className="topbar-root flex items-center justify-between flex-shrink-0"
         style={{
           height: '48px',
           padding: '0 20px',
@@ -184,7 +185,7 @@ export default function Topbar() {
         }}
       >
         {/* Logo */}
-        <div className="flex items-center gap-2.5">
+        <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
           <div style={{
             width: '26px', height: '26px',
             background: 'linear-gradient(145deg, var(--go2) 0%, var(--am) 100%)',
@@ -195,13 +196,10 @@ export default function Topbar() {
           }}>
             ⬡
           </div>
-          <div className="flex items-baseline gap-1">
-            <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '13px', letterSpacing: '-0.01em' }}>
-              Jarvis
-            </span>
-            <span style={{ color: '#686868', fontSize: '10px', fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase' }}>OS</span>
-          </div>
-        </div>
+          <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '13px', letterSpacing: '-0.01em' }}>
+            Velquor
+          </span>
+        </Link>
 
         {/* MT5 Status */}
         <button

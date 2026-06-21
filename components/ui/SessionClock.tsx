@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 
-// Session windows in UTC minutes from midnight
-// London: 07:00–15:30 UTC | NY: 13:30–20:00 UTC | Asian: 23:00–08:00 UTC
+// Official forex session hours (UTC, DST-independent)
+// London: 08:00–16:30 UTC | NY: 13:30–22:00 UTC | Asian: 22:00–08:00 UTC
+// Overlap (London + NY both open): 13:30–16:30 UTC
 const SESSIONS = [
-  { id: 'asian',   name: 'Asian',   color: 'var(--pu2)', start: 23 * 60,       end: 8 * 60,        wrapsDay: true },
-  { id: 'london',  name: 'London',  color: 'var(--cy2)', start: 7 * 60,        end: 15 * 60 + 30,  wrapsDay: false },
-  { id: 'overlap', name: 'Overlap', color: 'var(--go2)', start: 13 * 60 + 30,  end: 15 * 60 + 30,  wrapsDay: false },
-  { id: 'ny',      name: 'New York',color: 'var(--ac2)', start: 13 * 60 + 30,  end: 20 * 60,       wrapsDay: false },
+  { id: 'asian',   name: 'Asian',   color: 'var(--pu2)', start: 22 * 60,       end: 8 * 60,        wrapsDay: true },
+  { id: 'london',  name: 'London',  color: 'var(--cy2)', start: 8 * 60,        end: 16 * 60 + 30,  wrapsDay: false },
+  { id: 'overlap', name: 'Overlap', color: 'var(--go2)', start: 13 * 60 + 30,  end: 16 * 60 + 30,  wrapsDay: false },
+  { id: 'ny',      name: 'New York',color: 'var(--ac2)', start: 13 * 60 + 30,  end: 22 * 60,       wrapsDay: false },
 ]
 
 function utcMins(): number {

@@ -4,11 +4,11 @@ import { useState } from 'react'
 
 // Primary tabs shown in the bottom bar (5 max)
 const PRIMARY_TABS = [
-  { id: 0, label: 'Home',    icon: '⌂'  },
-  { id: 1, label: 'Trading', icon: '📈' },
-  { id: 8, label: 'Jarvis',  icon: '✦', isGold: true },
-  { id: 3, label: 'Journal', icon: '✍' },
-  { id: -1, label: 'More',   icon: '⋯'  },
+  { id: 0, label: 'Home',       icon: '⌂'  },
+  { id: 1, label: 'Trading',    icon: '📈' },
+  { id: 6, label: 'Jarvis',     icon: '✦', isGold: true },
+  { id: 3, label: 'Journal',    icon: '✍' },
+  { id: -1, label: 'More',      icon: '⋯'  },
 ]
 
 // All tabs for the "More" drawer
@@ -18,10 +18,8 @@ const ALL_TABS = [
   { id: 2, label: 'Portfolio',  icon: '💼' },
   { id: 3, label: 'Journal',    icon: '✍' },
   { id: 4, label: 'Macro',      icon: '🌐' },
-  { id: 5, label: 'Tasks',      icon: '✓'  },
-  { id: 6, label: 'Habits',     icon: '🔥' },
-  { id: 7, label: 'Review',     icon: '📋' },
-  { id: 8, label: 'Jarvis AI',  icon: '✦', isGold: true },
+  { id: 5, label: 'Discipline', icon: '🎯' },
+  { id: 6, label: 'Jarvis AI',  icon: '✦', isGold: true },
 ]
 
 interface Props {
@@ -62,7 +60,7 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
       )}
 
       {/* More drawer — slides up from above the nav bar */}
-      <div style={{
+      <div className={drawerOpen ? 'mobile-drawer' : ''} style={{
         position: 'fixed',
         left: 0, right: 0,
         bottom: drawerOpen ? '65px' : '-400px',

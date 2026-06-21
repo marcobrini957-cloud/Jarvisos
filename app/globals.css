@@ -206,6 +206,9 @@ input, textarea, select { font: inherit; }
 }
 
 /* ── Animations ──────────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 @keyframes pulse-dot {
   0%, 100% { opacity: 1;   transform: scale(1);   }
   50%       { opacity: 0.4; transform: scale(0.75); }
@@ -236,6 +239,11 @@ input, textarea, select { font: inherit; }
   35%       { opacity: 0.6;  transform: translate(-12px,8px)  scale(1.06); }
   65%       { opacity: 0.25; transform: translate(8px,-10px)  scale(0.93); }
 }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
@@ -292,4 +300,79 @@ input, textarea, select { font: inherit; }
 .live-dot-red {
   background: var(--re);
   box-shadow: 0 0 0 2px rgba(255,61,80,0.2), 0 0 8px rgba(255,61,80,0.5);
+}
+
+/* ── Mobile responsiveness ─────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  /* Main content: room for fixed bottom nav + safe area */
+  .dashboard-main {
+    padding: 12px 12px calc(80px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Hero section: tighter padding */
+  .hero-section {
+    padding: 16px 14px 14px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Hide decorative ambient glows (performance + overflow fix) */
+  .ambient-blue, .ambient-gold, .ambient-green, .ambient-cyan {
+    display: none !important;
+  }
+
+  /* Greeting: scale down */
+  .greeting-heading {
+    font-size: 20px !important;
+  }
+
+  /* Metric grid: 2 columns instead of 3 */
+  .metric-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Net worth value: smaller */
+  .net-worth-value {
+    font-size: 18px !important;
+  }
+
+  /* Metric card padding: tighter */
+  .metric-card {
+    padding: 12px !important;
+  }
+
+  /* Trade calendar: smaller row height, hide P&L text */
+  .calendar-day-grid {
+    grid-auto-rows: 32px !important;
+    gap: 3px !important;
+  }
+  .calendar-header-grid {
+    gap: 3px !important;
+  }
+  .calendar-pnl-label {
+    display: none !important;
+  }
+
+  /* Session clock: smaller text on mobile */
+  .session-clock-row {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  /* Modals: full-width with safe area */
+  .modal-sheet {
+    width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 40px) !important;
+    top: 50% !important;
+  }
+
+  /* Mobile drawer: sit above the nav bar including safe area */
+  .mobile-drawer {
+    bottom: calc(65px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Topbar: safe area at top for notched phones */
+  .topbar-root {
+    padding-top: env(safe-area-inset-top) !important;
+    height: calc(48px + env(safe-area-inset-top)) !important;
+  }
 }
