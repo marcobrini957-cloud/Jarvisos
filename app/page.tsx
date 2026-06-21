@@ -1031,10 +1031,11 @@ function Footer() {
         }}>⬡</div>
         <span style={{ color: 'var(--t3)', fontSize: '12px' }}>Velquor © 2026</span>
       </div>
-      <div style={{ display: 'flex', gap: '20px' }}>
+      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         {['Privacy', 'Terms', 'Contact'].map(l => (
           <a key={l} href="#" style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>{l}</a>
         ))}
+        <Link href="/impressum" style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>Impressum</Link>
       </div>
     </footer>
   )
