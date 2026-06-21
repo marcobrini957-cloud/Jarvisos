@@ -124,36 +124,75 @@ function Counter({ target, prefix = '', suffix = '', decimals = 0 }: {
 const JARVIS_TEXT = "Your NAS100 trades show a 38% win rate — below breakeven. 6 of your 8 losses came in the first 30 minutes after NY open. You're trading against institutional order flow before direction is established. Consider a 30-minute wait rule. Your London-only NAS100 trades hit 71% win rate."
 
 function AnimatedDashboard() {
-  const TAB_NAMES   = ['Overview', 'Trading', 'Journal', 'Macro', 'Jarvis']
-  const TAB_ORDER   = [0, 1, 2, 4]  // Overview, Trading, Journal, Jarvis
-  const STEP_MS     = 4800
+  const TAB_NAMES    = ['Overview', 'Trading', 'Journal', 'Macro', 'Jarvis']
+  const TAB_ORDER    = [0, 1, 2, 4]   // Overview, Trading, Journal, Jarvis
+  const NEXT_TAB_IDX = [1, 2, 4, 0]   // which TAB_NAMES index to click next
+  const STEP_MS      = 5000
 
-  const [step,          setStep]          = useState(0)
-  const [visible,       setVisible]       = useState(true)
-  const [progress,      setProgress]      = useState(0)
-  const [jarvisChars,   setJarvisChars]   = useState(0)
-  const [cursorX,       setCursorX]       = useState(60)
-  const [cursorY,       setCursorY]       = useState(32)
+  const [step,           setStep]          = useState(0)
+  const [visible,        setVisible]       = useState(true)
+  const [progress,       setProgress]      = useState(0)
+  const [jarvisChars,    setJarvisChars]   = useState(0)
+  const [cursorX,        setCursorX]       = useState(0)  // pixels from container left
+  const [cursorY,        setCursorY]       = useState(0)  // pixels from container top
+  const [cursorEase,     setCursorEase]    = useState(900) // transition ms
   const [cursorClicking, setCursorClicking] = useState(false)
 
-  const activeTab = TAB_ORDER[step]
+  const activeTab    = TAB_ORDER[step]
+  const containerRef = useRef<HTMLDivElement>(null)
+  const tabPtsRef    = useRef<Array<{x:number, y:number}>>([]) // exact tab center positions in px
 
-  // Cursor waypoints: where the cursor rests while reading, and where it clicks next
-  // x,y as % of the demo container. Tabs are in the header at y≈5%.
-  // Tab x positions (approximate): Overview≈28%, Trading≈38%, Journal≈49%, Jarvis≈69%
-  const CURSOR_WP = [
-    { rest: [60, 34], click: [38,  5] }, // Overview → click Trading tab
-    { rest: [56, 48], click: [49,  5] }, // Trading  → click Journal tab
-    { rest: [32, 46], click: [69,  5] }, // Journal  → click Jarvis tab
-    { rest: [55, 66], click: [28,  5] }, // Jarvis   → click Overview tab
+  // Measure exact tab centers relative to container on mount + resize
+  useEffect(() => {
+    function measure() {
+      if (!containerRef.current) return
+      const box  = containerRef.current.getBoundingClientRect()
+      const tabs = containerRef.current.querySelectorAll<HTMLElement>('[data-tab]')
+      tabPtsRef.current = Array.from(tabs).map(el => {
+        const r = el.getBoundingClientRect()
+        return {
+          x: r.left - box.left + r.width  / 2,
+          y: r.top  - box.top  + r.height / 2,
+        }
+      })
+      // Init cursor position at content area for step 0 if not yet set
+      if (cursorX === 0 && box.width > 0) {
+        setCursorX(box.width  * 0.60)
+        setCursorY(box.height * 0.34)
+      }
+    }
+    const t = setTimeout(measure, 80)
+    window.addEventListener('resize', measure)
+    return () => { clearTimeout(t); window.removeEventListener('resize', measure) }
+  }, [])
+
+  // Where the cursor rests while the user "reads" each tab (fractions of W,H)
+  const CONTENT_FRAC = [
+    [0.60, 0.34], // Overview: right side, upper — hovering over metrics
+    [0.57, 0.50], // Trading:  center — hovering over equity chart
+    [0.30, 0.46], // Journal:  left   — hovering over calendar
+    [0.54, 0.67], // Jarvis:   center lower — hovering over chat response
   ] as const
 
-  // Drive the tab-switching loop + cursor movement
+  // Intermediate waypoints (fractions) — slightly off the direct path to tab
+  // Creates a natural curved arc rather than a perfectly straight line
+  const INTER_FRAC = [
+    [0.48, 0.20], // Overview → Trading:  drift up then left
+    [0.53, 0.22], // Trading  → Journal:  drift straight upward
+    [0.46, 0.18], // Journal  → Jarvis:   drift up then right
+    [0.42, 0.30], // Jarvis   → Overview: drift left and up
+  ] as const
+
+  // Main loop: progress bar + 3-phase cursor movement
   useEffect(() => {
-    const wp = CURSOR_WP[step]
-    // Cursor drifts from click position → content area when new tab appears
-    setCursorX(wp.rest[0])
-    setCursorY(wp.rest[1])
+    if (!containerRef.current) return
+    const { width: W, height: H } = containerRef.current.getBoundingClientRect()
+
+    // Phase 0: new tab just loaded — cursor drifts from tab area → content
+    const [fx, fy] = CONTENT_FRAC[step]
+    setCursorEase(900)
+    setCursorX(W * fx)
+    setCursorY(H * fy)
 
     let prog = 0
     const tick = 40
@@ -163,12 +202,32 @@ function AnimatedDashboard() {
       setProgress(prog)
     }, tick)
 
-    // Move cursor toward the next tab 1.5s before switch
-    const moveId    = setTimeout(() => { setCursorX(wp.click[0]); setCursorY(wp.click[1]) }, 3300)
-    // Click ripple
-    const clickOnId  = setTimeout(() => setCursorClicking(true),  3950)
-    const clickOffId = setTimeout(() => setCursorClicking(false), 4250)
+    // Phase 1 (t=3200): cursor moves toward an intermediate waypoint,
+    //   creating a slight curve instead of a straight shot to the tab
+    const interMoveId = setTimeout(() => {
+      if (!containerRef.current) return
+      const { width: W2, height: H2 } = containerRef.current.getBoundingClientRect()
+      const [ix, iy] = INTER_FRAC[step]
+      setCursorEase(620)
+      setCursorX(W2 * ix)
+      setCursorY(H2 * iy)
+    }, 3200)
 
+    // Phase 2 (t=3780): cursor arrives at the exact measured tab center
+    const tabMoveId = setTimeout(() => {
+      const tab = tabPtsRef.current[NEXT_TAB_IDX[step]]
+      if (tab) {
+        setCursorEase(380)
+        setCursorX(tab.x)
+        setCursorY(tab.y)
+      }
+    }, 3780)
+
+    // Phase 3 (t=4100): click ripple
+    const clickOnId  = setTimeout(() => setCursorClicking(true),  4100)
+    const clickOffId = setTimeout(() => setCursorClicking(false), 4420)
+
+    // Switch tab
     const switchId = setTimeout(() => {
       clearInterval(progId)
       setVisible(false)
@@ -179,9 +238,11 @@ function AnimatedDashboard() {
         setVisible(true)
       }, 380)
     }, STEP_MS)
+
     return () => {
       clearInterval(progId)
-      clearTimeout(moveId)
+      clearTimeout(interMoveId)
+      clearTimeout(tabMoveId)
       clearTimeout(clickOnId)
       clearTimeout(clickOffId)
       clearTimeout(switchId)
@@ -224,16 +285,16 @@ function AnimatedDashboard() {
         @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes cursor-click { 0%{transform:scale(0.2);opacity:1} 100%{transform:scale(2.2);opacity:0} }
       `}</style>
-      <div style={{ width: '100%', background: '#090D13', position: 'relative' }}>
+      <div ref={containerRef} style={{ width: '100%', background: '#090D13', position: 'relative' }}>
 
-        {/* Animated mouse cursor */}
+        {/* Animated mouse cursor — pixel-positioned for accuracy */}
         <div style={{
           position: 'absolute',
-          left: `${cursorX}%`,
-          top: `${cursorY}%`,
+          left: cursorX,
+          top: cursorY,
           zIndex: 60,
           pointerEvents: 'none',
-          transition: 'left 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94), top 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          transition: `left ${cursorEase}ms cubic-bezier(0.25, 0.46, 0.45, 0.94), top ${cursorEase}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`,
           filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))',
         }}>
           <svg width="13" height="17" viewBox="0 0 13 17" fill="none">
@@ -262,7 +323,7 @@ function AnimatedDashboard() {
           </div>
           <div style={{ display: 'flex', gap: '2px' }}>
             {TAB_NAMES.map((name, i) => (
-              <span key={name} style={{
+              <span key={name} data-tab={i} style={{
                 fontSize: '11px', padding: '3px 10px', borderRadius: '6px',
                 color: i === activeTab ? 'var(--ac)' : 'var(--t3)',
                 background: i === activeTab ? 'rgba(77,143,255,0.12)' : 'transparent',
