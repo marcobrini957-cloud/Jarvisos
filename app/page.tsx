@@ -128,15 +128,33 @@ function AnimatedDashboard() {
   const TAB_ORDER   = [0, 1, 2, 4]  // Overview, Trading, Journal, Jarvis
   const STEP_MS     = 4800
 
-  const [step,        setStep]        = useState(0)
-  const [visible,     setVisible]     = useState(true)
-  const [progress,    setProgress]    = useState(0)
-  const [jarvisChars, setJarvisChars] = useState(0)
+  const [step,          setStep]          = useState(0)
+  const [visible,       setVisible]       = useState(true)
+  const [progress,      setProgress]      = useState(0)
+  const [jarvisChars,   setJarvisChars]   = useState(0)
+  const [cursorX,       setCursorX]       = useState(60)
+  const [cursorY,       setCursorY]       = useState(32)
+  const [cursorClicking, setCursorClicking] = useState(false)
 
   const activeTab = TAB_ORDER[step]
 
-  // Drive the tab-switching loop
+  // Cursor waypoints: where the cursor rests while reading, and where it clicks next
+  // x,y as % of the demo container. Tabs are in the header at y≈5%.
+  // Tab x positions (approximate): Overview≈28%, Trading≈38%, Journal≈49%, Jarvis≈69%
+  const CURSOR_WP = [
+    { rest: [60, 34], click: [38,  5] }, // Overview → click Trading tab
+    { rest: [56, 48], click: [49,  5] }, // Trading  → click Journal tab
+    { rest: [32, 46], click: [69,  5] }, // Journal  → click Jarvis tab
+    { rest: [55, 66], click: [28,  5] }, // Jarvis   → click Overview tab
+  ] as const
+
+  // Drive the tab-switching loop + cursor movement
   useEffect(() => {
+    const wp = CURSOR_WP[step]
+    // Cursor drifts from click position → content area when new tab appears
+    setCursorX(wp.rest[0])
+    setCursorY(wp.rest[1])
+
     let prog = 0
     const tick = 40
     const inc  = 100 / (STEP_MS / tick)
@@ -144,6 +162,13 @@ function AnimatedDashboard() {
       prog = Math.min(prog + inc, 100)
       setProgress(prog)
     }, tick)
+
+    // Move cursor toward the next tab 1.5s before switch
+    const moveId    = setTimeout(() => { setCursorX(wp.click[0]); setCursorY(wp.click[1]) }, 3300)
+    // Click ripple
+    const clickOnId  = setTimeout(() => setCursorClicking(true),  3950)
+    const clickOffId = setTimeout(() => setCursorClicking(false), 4250)
+
     const switchId = setTimeout(() => {
       clearInterval(progId)
       setVisible(false)
@@ -154,7 +179,13 @@ function AnimatedDashboard() {
         setVisible(true)
       }, 380)
     }, STEP_MS)
-    return () => { clearInterval(progId); clearTimeout(switchId) }
+    return () => {
+      clearInterval(progId)
+      clearTimeout(moveId)
+      clearTimeout(clickOnId)
+      clearTimeout(clickOffId)
+      clearTimeout(switchId)
+    }
   }, [step])
 
   // Typewriter for Jarvis tab
@@ -189,8 +220,35 @@ function AnimatedDashboard() {
 
   return (
     <>
-      <style>{`@keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
-      <div style={{ width: '100%', background: '#090D13' }}>
+      <style>{`
+        @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        @keyframes cursor-click { 0%{transform:scale(0.2);opacity:1} 100%{transform:scale(2.2);opacity:0} }
+      `}</style>
+      <div style={{ width: '100%', background: '#090D13', position: 'relative' }}>
+
+        {/* Animated mouse cursor */}
+        <div style={{
+          position: 'absolute',
+          left: `${cursorX}%`,
+          top: `${cursorY}%`,
+          zIndex: 60,
+          pointerEvents: 'none',
+          transition: 'left 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94), top 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))',
+        }}>
+          <svg width="13" height="17" viewBox="0 0 13 17" fill="none">
+            <path d="M1 1 L1 13.5 L4.2 10.2 L6.5 16.5 L8.8 15.5 L6.5 9.2 L11.5 9.2 Z"
+              fill="white" stroke="rgba(0,0,0,0.55)" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round"/>
+          </svg>
+          {cursorClicking && (
+            <div style={{
+              position: 'absolute', top: '-4px', left: '-4px',
+              width: '21px', height: '21px', borderRadius: '50%',
+              border: '1.5px solid rgba(255,255,255,0.85)',
+              animation: 'cursor-click 0.38s ease-out forwards',
+            }} />
+          )}
+        </div>
 
         {/* Tab bar */}
         <div style={{
