@@ -37,7 +37,7 @@ export default function DashboardShell() {
 
   return (
     <UserProfileProvider>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflowX: 'hidden' }}>
         <Topbar />
 
         {/* Desktop tab bar — hidden on mobile */}
@@ -52,7 +52,7 @@ export default function DashboardShell() {
 
         {/* Main content — padded bottom on mobile for the nav bar */}
         <main
-          className="flex-1 overflow-y-auto dashboard-main sm:pb-0 pb-24"
+          className="flex-1 overflow-y-auto overflow-x-hidden dashboard-main sm:pb-0 pb-24"
           style={{ padding: 'clamp(16px, 2vw, 28px)' }}
         >
           {showSettings ? <SettingsTab /> : <ActiveTab />}
