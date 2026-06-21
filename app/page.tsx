@@ -120,7 +120,7 @@ function Counter({ target, prefix = '', suffix = '', decimals = 0 }: {
   return <span ref={ref}>{prefix}{val.toFixed(decimals)}{suffix}</span>
 }
 
-// ── Dashboard Mockup ──────────────────────────────────────────────────────────
+// ── Dashboard Mockup (inside the glowing screen frame) ───────────────────────
 function DashboardMockup() {
   const trades = [
     { symbol: 'XAUUSD', type: 'BUY',  pnl: +142.50 },
@@ -129,108 +129,124 @@ function DashboardMockup() {
     { symbol: 'NAS100', type: 'BUY',  pnl: +195.00 },
   ]
   const points = [30, 45, 38, 60, 52, 75, 65, 88, 78, 95, 85, 100]
-  const w = 280, h = 60
+  const w = 560, h = 80
   const xs = points.map((_, i) => (i / (points.length - 1)) * w)
   const ys = points.map(p => h - (p / 100) * h)
   const path = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${ys[i]}`).join(' ')
   const area = `${path} L${w},${h} L0,${h} Z`
 
   return (
-    <div style={{
-      width: '100%', maxWidth: '540px',
-      background: 'var(--s1)', border: '1px solid var(--bd)',
-      borderRadius: '16px', overflow: 'hidden',
-      boxShadow: '0 32px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)',
-    }}>
-      {/* Topbar */}
+    <div style={{ width: '100%', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+      {/* App topbar */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '11px 16px', borderBottom: '1px solid var(--bd)', background: 'var(--bg)',
+        padding: '10px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(255,255,255,0.02)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{
-            width: '22px', height: '22px',
+            width: '20px', height: '20px',
             background: 'linear-gradient(145deg, var(--go2), var(--go))',
-            borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px',
+            borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px',
           }}>⬡</div>
-          <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>Velquor</span>
+          <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 700 }}>Velquor</span>
         </div>
-        <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', gap: '2px' }}>
           {['Overview', 'Trading', 'Journal', 'Macro', 'Jarvis'].map(t => (
             <span key={t} style={{
-              fontSize: '10px', padding: '3px 8px', borderRadius: '5px',
+              fontSize: '11px', padding: '4px 10px', borderRadius: '6px',
               color: t === 'Overview' ? 'var(--ac)' : 'var(--t3)',
               background: t === 'Overview' ? 'rgba(77,143,255,0.12)' : 'transparent',
-              whiteSpace: 'nowrap',
+              fontWeight: t === 'Overview' ? 600 : 400,
             }}>{t}</span>
           ))}
         </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: 'var(--t2)' }}>€</div>
+          <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: 'linear-gradient(145deg, var(--ac), var(--pu))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: 'white' }}>M</div>
+        </div>
       </div>
 
-      <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {/* Metrics */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+      <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* Greeting */}
+        <div>
+          <p style={{ margin: 0, color: 'var(--t3)', fontSize: '11px' }}>Good morning, Marco</p>
+          <p style={{ margin: '2px 0 0', color: 'var(--t1)', fontSize: '15px', fontWeight: 700, letterSpacing: '-0.02em' }}>Your edge is working. Keep it clean today.</p>
+        </div>
+
+        {/* Metrics row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
           {[
-            { label: 'Today P&L', value: '+€408.70', color: 'var(--gr2)' },
-            { label: 'Win Rate',  value: '80%',      color: 'var(--ac)' },
-            { label: 'Balance',   value: '€12,408',  color: 'var(--t1)' },
+            { label: 'Today P&L',  value: '+€408.70', color: 'var(--gr2)', sub: '+3.4%' },
+            { label: 'Win Rate',   value: '80%',       color: 'var(--ac)',  sub: 'Last 30d' },
+            { label: 'Balance',    value: '€12,408',   color: 'var(--t1)', sub: 'MT5 live' },
+            { label: 'Open Trades',value: '2',         color: 'var(--am2)', sub: 'XAUUSD · NAS' },
           ].map(m => (
             <div key={m.label} style={{
-              background: 'var(--s2)', borderRadius: '8px', padding: '9px 11px', border: '1px solid var(--bd)',
+              background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '10px 12px',
+              border: '1px solid rgba(255,255,255,0.06)',
             }}>
               <p style={{ margin: 0, color: 'var(--t3)', fontSize: '9px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{m.label}</p>
-              <p style={{ margin: '3px 0 0', color: m.color, fontSize: '13px', fontWeight: 600 }}>{m.value}</p>
+              <p style={{ margin: '4px 0 2px', color: m.color, fontSize: '14px', fontWeight: 700, letterSpacing: '-0.02em' }}>{m.value}</p>
+              <p style={{ margin: 0, color: 'var(--t3)', fontSize: '9px' }}>{m.sub}</p>
             </div>
           ))}
         </div>
 
-        {/* Chart */}
-        <div style={{ background: 'var(--s2)', borderRadius: '8px', padding: '11px', border: '1px solid var(--bd)' }}>
-          <p style={{ margin: '0 0 6px', color: 'var(--t2)', fontSize: '10px', fontWeight: 500 }}>Weekly P&L</p>
-          <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: '44px', overflow: 'visible' }}>
-            <defs>
-              <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--ac)" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="var(--ac)" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d={area} fill="url(#cg)" />
-            <path d={path} fill="none" stroke="var(--ac)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+        {/* Chart + trades side by side */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          {/* Weekly equity chart */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <p style={{ margin: 0, color: 'var(--t2)', fontSize: '11px', fontWeight: 600 }}>Weekly P&L</p>
+              <p style={{ margin: 0, color: 'var(--gr2)', fontSize: '10px', fontWeight: 600 }}>+€1,243</p>
+            </div>
+            <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: '52px', overflow: 'visible' }}>
+              <defs>
+                <linearGradient id="hcg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--ac)" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="var(--ac)" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path d={area} fill="url(#hcg)" />
+              <path d={path} fill="none" stroke="var(--ac)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx={xs[xs.length-1]} cy={ys[ys.length-1]} r="3.5" fill="var(--ac)" />
+            </svg>
+          </div>
 
-        {/* Trades */}
-        <div style={{ background: 'var(--s2)', borderRadius: '8px', border: '1px solid var(--bd)', overflow: 'hidden' }}>
-          <p style={{ margin: 0, padding: '8px 11px', borderBottom: '1px solid var(--bd)', color: 'var(--t2)', fontSize: '9px', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recent Trades</p>
-          {trades.map((t, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '6px 11px', borderBottom: i < trades.length - 1 ? '1px solid var(--bd)' : 'none',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                <span style={{
-                  fontSize: '9px', padding: '2px 5px', borderRadius: '4px', fontWeight: 600,
-                  background: t.type === 'BUY' ? 'rgba(0,255,133,0.1)' : 'rgba(255,51,71,0.1)',
-                  color: t.type === 'BUY' ? 'var(--gr2)' : 'var(--re)',
-                }}>{t.type}</span>
-                <span style={{ color: 'var(--t1)', fontSize: '11px', fontWeight: 500 }}>{t.symbol}</span>
+          {/* Recent trades */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+            <p style={{ margin: 0, padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'var(--t2)', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recent Trades</p>
+            {trades.map((t, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '6px 12px', borderBottom: i < trades.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{
+                    fontSize: '8px', padding: '2px 5px', borderRadius: '4px', fontWeight: 700,
+                    background: t.type === 'BUY' ? 'rgba(0,255,133,0.12)' : 'rgba(255,51,71,0.12)',
+                    color: t.type === 'BUY' ? 'var(--gr2)' : 'var(--re)',
+                  }}>{t.type}</span>
+                  <span style={{ color: 'var(--t1)', fontSize: '11px', fontWeight: 500 }}>{t.symbol}</span>
+                </div>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: t.pnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
+                  {t.pnl >= 0 ? '+' : ''}€{Math.abs(t.pnl).toFixed(2)}
+                </span>
               </div>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: t.pnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
-                {t.pnl >= 0 ? '+' : ''}€{t.pnl.toFixed(2)}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Jarvis insight */}
         <div style={{
-          background: 'linear-gradient(135deg, rgba(77,143,255,0.07), rgba(168,126,255,0.07))',
-          border: '1px solid rgba(77,143,255,0.18)', borderRadius: '8px', padding: '10px 12px',
-          display: 'flex', gap: '8px', alignItems: 'flex-start',
+          background: 'linear-gradient(135deg, rgba(77,143,255,0.06), rgba(168,126,255,0.06))',
+          border: '1px solid rgba(77,143,255,0.15)', borderRadius: '10px', padding: '10px 14px',
+          display: 'flex', gap: '10px', alignItems: 'flex-start',
         }}>
-          <span style={{ fontSize: '13px' }}>⬡</span>
-          <p style={{ margin: 0, color: 'var(--t2)', fontSize: '11px', lineHeight: 1.5 }}>
-            <strong style={{ color: 'var(--ac)' }}>Jarvis:</strong> Your XAUUSD win rate is 83% — highest of any instrument. Consider scaling up on ICT Order Block setups during London session.
+          <div style={{ width: '20px', height: '20px', borderRadius: '6px', background: 'linear-gradient(145deg, var(--ac), var(--pu))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', flexShrink: 0 }}>⬡</div>
+          <p style={{ margin: 0, color: 'var(--t2)', fontSize: '11px', lineHeight: 1.6 }}>
+            <strong style={{ color: 'var(--ac)' }}>Jarvis:</strong> Your XAUUSD win rate is 83% — highest of any instrument. ICT Order Block setups during London session are your strongest edge.
           </p>
         </div>
       </div>
@@ -319,65 +335,126 @@ function Nav() {
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
-    <section style={{ padding: 'clamp(40px, 8vw, 80px) clamp(16px, 5vw, 48px)' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'clamp(32px, 5vw, 64px)' }}>
-        {/* Text */}
-        <div style={{ flex: '1 1 280px', maxWidth: '480px' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px',
-            padding: '4px 12px', borderRadius: '20px', marginBottom: '24px',
-            background: 'rgba(77,143,255,0.1)', border: '1px solid rgba(77,143,255,0.25)',
-          }}>
-            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--ac)', display: 'block' }} />
-            <span style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 500 }}>Built for serious MT5 traders</span>
-          </div>
+    <section style={{ position: 'relative', overflow: 'hidden', paddingBottom: '0' }}>
+      {/* Background ambient glows */}
+      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)',
+          width: '800px', height: '500px', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(77,143,255,0.10) 0%, transparent 65%)',
+        }} />
+        <div style={{
+          position: 'absolute', top: '5%', left: '15%',
+          width: '400px', height: '400px', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(200,133,26,0.07) 0%, transparent 65%)',
+        }} />
+        <div style={{
+          position: 'absolute', top: '5%', right: '10%',
+          width: '360px', height: '360px', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(168,126,255,0.06) 0%, transparent 65%)',
+        }} />
+      </div>
 
-          <h1 style={{
-            fontSize: 'clamp(36px, 8vw, 54px)', fontWeight: 800, lineHeight: 1.08,
-            letterSpacing: '-0.04em', margin: '0 0 20px', color: 'var(--t1)',
-          }}>
-            Your Trading<br />
-            <span style={{
-              background: 'linear-gradient(90deg, var(--go2) 0%, var(--ac) 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>Operating System</span>
-          </h1>
-
-          <p style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: 'var(--t2)', lineHeight: 1.7, margin: '0 0 32px' }}>
-            Most traders lose money without knowing why. They blame the market, tweak their entries,
-            and repeat the same mistakes. Connect your MT5 account and get the one thing they&apos;re
-            missing — a clear, data-driven picture of your real patterns, real edge, and real leaks.
-          </p>
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', marginBottom: '28px' }}>
-            <Link href="/login?mode=signup" style={{
-              background: 'var(--ac)', color: 'white', padding: '13px 24px', borderRadius: '10px',
-              fontSize: '14px', fontWeight: 600, textDecoration: 'none',
-              boxShadow: '0 8px 24px rgba(77,143,255,0.35)', whiteSpace: 'nowrap',
-            }}>Start free — no card needed →</Link>
-            <a href="#showcase" style={{ color: 'var(--t2)', fontSize: '14px', fontWeight: 500, textDecoration: 'none', padding: '13px 0' }}>
-              See inside ↓
-            </a>
-          </div>
-
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            {['Any MT5 Broker', 'Live & Demo Accounts', 'AI-Powered', 'Mobile PWA'].map(b => (
-              <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ color: 'var(--gr2)', fontSize: '11px' }}>✓</span>
-                <span style={{ color: 'var(--t3)', fontSize: '12px' }}>{b}</span>
-              </div>
-            ))}
-          </div>
+      {/* Centered text block */}
+      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: 'clamp(56px, 10vw, 100px) clamp(16px, 5vw, 48px) clamp(40px, 6vw, 60px)' }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          padding: '5px 14px', borderRadius: '20px', marginBottom: '28px',
+          background: 'rgba(77,143,255,0.1)', border: '1px solid rgba(77,143,255,0.2)',
+        }}>
+          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--ac)', display: 'block', boxShadow: '0 0 6px var(--ac)' }} />
+          <span style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 500 }}>Built for serious MT5 traders</span>
         </div>
 
-        {/* Mockup */}
-        <div style={{ flex: '1 1 280px', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', minWidth: 0 }}>
-          <div style={{
-            position: 'absolute', width: 'min(450px, 100%)', height: 'min(450px, 100%)',
-            background: 'radial-gradient(circle, rgba(77,143,255,0.1) 0%, transparent 70%)',
-            borderRadius: '50%', pointerEvents: 'none',
+        <h1 style={{
+          fontSize: 'clamp(38px, 7vw, 72px)', fontWeight: 800, lineHeight: 1.05,
+          letterSpacing: '-0.04em', margin: '0 0 20px', color: 'var(--t1)',
+        }}>
+          Your Trading<br />
+          <span style={{
+            background: 'linear-gradient(90deg, var(--go2) 0%, #FFD580 40%, var(--ac) 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          }}>Operating System</span>
+        </h1>
+
+        <p style={{ fontSize: 'clamp(15px, 2.5vw, 18px)', color: 'var(--t2)', lineHeight: 1.7, margin: '0 auto 36px', maxWidth: '560px' }}>
+          Connect your MT5 account and get a clear, data-driven picture of your real patterns,
+          real edge, and real leaks — the one thing most traders are missing.
+        </p>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+          <Link href="/login?mode=signup" style={{
+            background: 'var(--ac)', color: 'white', padding: '14px 28px', borderRadius: '10px',
+            fontSize: '15px', fontWeight: 600, textDecoration: 'none',
+            boxShadow: '0 8px 32px rgba(77,143,255,0.4)', whiteSpace: 'nowrap',
+          }}>Start free — no card needed →</Link>
+          <a href="#showcase" style={{ color: 'var(--t2)', fontSize: '14px', fontWeight: 500, textDecoration: 'none', padding: '14px 8px' }}>
+            See inside ↓
+          </a>
+        </div>
+
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {['Any MT5 Broker', 'Live & Demo Accounts', 'AI-Powered', 'Mobile PWA'].map(b => (
+            <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ color: 'var(--gr2)', fontSize: '11px' }}>✓</span>
+              <span style={{ color: 'var(--t3)', fontSize: '12px' }}>{b}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Glowing screen frame */}
+      <div style={{ position: 'relative', zIndex: 1, padding: '0 clamp(12px, 4vw, 48px)', paddingBottom: '0' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
+          {/* Glow underneath the screen */}
+          <div aria-hidden style={{
+            position: 'absolute', bottom: '-30px', left: '10%', right: '10%', height: '80px',
+            background: 'radial-gradient(ellipse, rgba(77,143,255,0.35) 0%, rgba(200,133,26,0.12) 50%, transparent 70%)',
+            filter: 'blur(20px)',
+            pointerEvents: 'none',
+            zIndex: 0,
           }} />
-          <div style={{ width: '100%', maxWidth: '480px' }}>
+
+          {/* The screen */}
+          <div style={{
+            position: 'relative', zIndex: 1,
+            borderRadius: '16px 16px 0 0',
+            border: '1px solid rgba(255,255,255,0.10)',
+            borderBottom: 'none',
+            overflow: 'hidden',
+            boxShadow: `
+              0 0 0 1px rgba(77,143,255,0.20),
+              0 -2px 40px rgba(77,143,255,0.15),
+              0 -8px 80px rgba(77,143,255,0.08),
+              inset 0 1px 0 rgba(255,255,255,0.08)
+            `,
+          }}>
+            {/* Fake browser chrome */}
+            <div style={{
+              background: 'rgba(10,14,20,0.98)',
+              padding: '10px 16px',
+              display: 'flex', alignItems: 'center', gap: '12px',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
+            }}>
+              {/* Traffic lights */}
+              <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                {['rgba(255,95,87,0.8)', 'rgba(255,189,46,0.8)', 'rgba(40,201,64,0.8)'].map((c, i) => (
+                  <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: c }} />
+                ))}
+              </div>
+              {/* URL bar */}
+              <div style={{
+                flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '6px', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px',
+                maxWidth: '320px', margin: '0 auto',
+              }}>
+                <span style={{ color: 'var(--gr2)', fontSize: '10px' }}>🔒</span>
+                <span style={{ color: 'var(--t3)', fontSize: '11px' }}>velquor.app/dashboard</span>
+              </div>
+              <div style={{ flexShrink: 0, width: '52px' }} />
+            </div>
+
+            {/* Dashboard mockup content */}
             <DashboardMockup />
           </div>
         </div>
