@@ -1,17 +1,28 @@
+'use client'
+
+import { useEffect } from 'react'
 import Link from 'next/link'
 
-export const metadata = {
-  title: 'Impressum – Velquor',
-}
-
 export default function ImpressumPage() {
+  // Root layout locks overflow:hidden for the dashboard — unlock it here
+  useEffect(() => {
+    document.body.style.overflow = 'auto'
+    document.documentElement.style.overflow = 'auto'
+    document.body.style.overflowX = 'hidden'
+    document.documentElement.style.overflowX = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+      document.body.style.overflowX = ''
+      document.documentElement.style.overflowX = ''
+    }
+  }, [])
+
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--t1)', minHeight: '100dvh', padding: 'clamp(40px, 8vw, 80px) clamp(16px, 5vw, 48px)' }}>
       <div style={{ maxWidth: '640px', margin: '0 auto' }}>
 
-        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--t3)', fontSize: '13px', textDecoration: 'none', marginBottom: '40px' }}
-          onMouseEnter={undefined}
-        >
+        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--t3)', fontSize: '13px', textDecoration: 'none', marginBottom: '40px' }}>
           ← Back
         </Link>
 
@@ -72,7 +83,8 @@ export default function ImpressumPage() {
 
         <div style={{ borderTop: '1px solid var(--bd)', marginTop: '48px', paddingTop: '24px' }}>
           <p style={{ color: 'var(--t3)', fontSize: '12px', margin: 0 }}>
-            © 2026 Velquor · <Link href="/" style={{ color: 'var(--t3)', textDecoration: 'none' }}>velquor.app</Link>
+            © 2026 Velquor ·{' '}
+            <Link href="/" style={{ color: 'var(--t3)', textDecoration: 'none' }}>velquor.app</Link>
           </p>
         </div>
 
