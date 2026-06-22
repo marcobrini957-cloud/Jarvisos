@@ -128,7 +128,25 @@ function AnimatedDashboard() {
   const TAB_NAMES    = ['Overview', 'Trading', 'Journal', 'Macro', 'VELQUOR']
   const TAB_ORDER    = [0, 1, 2, 4]
   const NEXT_TAB_IDX = [1, 2, 4, 0]
-  const STEP_MS      = 3800
+
+  const DRIFT_EASE = 520   // ms per drift transition
+  const DRIFT_INTV = 470   // ms between drift starts — less than DRIFT_EASE so next fires before current arrives
+
+  // Cursor never stops: 5 waypoints per tab the cursor drifts through naturally
+  const DRIFT_PATHS = [
+    [[0.64,0.28],[0.76,0.34],[0.55,0.42],[0.38,0.37],[0.60,0.45]], // Overview: metrics → chart → trades
+    [[0.60,0.42],[0.70,0.54],[0.48,0.62],[0.36,0.44],[0.64,0.58]], // Trading: chart → table
+    [[0.26,0.40],[0.18,0.48],[0.32,0.44],[0.70,0.54],[0.52,0.62]], // Journal: calendar → entry
+    [[0.58,0.50],[0.34,0.46],[0.66,0.64],[0.46,0.62],[0.56,0.72]], // VELQUOR: chips → chat
+  ] as const
+
+  const CONTENT_FRAC = [
+    [0.60,0.34],[0.57,0.50],[0.30,0.46],[0.54,0.67],
+  ] as const
+
+  const INTER_FRAC = [
+    [0.50,0.18],[0.55,0.20],[0.44,0.17],[0.40,0.28],
+  ] as const
 
   const [step,           setStep]          = useState(0)
   const [visible,        setVisible]       = useState(true)
@@ -136,8 +154,8 @@ function AnimatedDashboard() {
   const [velquorChars,   setVELQUORChars]  = useState(0)
   const [cursorX,        setCursorX]       = useState(0)
   const [cursorY,        setCursorY]       = useState(0)
-  const [cursorEase,     setCursorEase]    = useState(600)
-  const [cursorCubic,    setCursorCubic]   = useState('0.25,0.46,0.45,0.94')
+  const [cursorEase,     setCursorEase]    = useState(DRIFT_EASE)
+  const [cursorCubic,    setCursorCubic]   = useState('0.45,0,0.55,1')
   const [cursorClicking, setCursorClicking] = useState(false)
   const [cursorPhase,    setCursorPhase]   = useState<'idle'|'arcing'|'snapping'>('idle')
   const [cursorAngle,    setCursorAngle]   = useState(0)
@@ -167,91 +185,84 @@ function AnimatedDashboard() {
     return () => { clearTimeout(t); window.removeEventListener('resize', measure) }
   }, [])
 
-  const CONTENT_FRAC = [
-    [0.60, 0.34],
-    [0.57, 0.50],
-    [0.30, 0.46],
-    [0.54, 0.67],
-  ] as const
-
-  const INTER_FRAC = [
-    [0.50, 0.18],
-    [0.55, 0.20],
-    [0.44, 0.17],
-    [0.40, 0.28],
-  ] as const
-
   useEffect(() => {
     if (!containerRef.current) return
-    const { width: W, height: H } = containerRef.current.getBoundingClientRect()
 
-    const [fx, fy] = CONTENT_FRAC[step]
-    const cx = W * fx, cy = H * fy
-    setCursorEase(600); setCursorCubic('0.25,0.46,0.45,0.94')
-    setCursorPhase('idle'); setCursorAngle(0)
-    setCursorX(cx); setCursorY(cy)
-    cursorPosRef.current = { x: cx, y: cy }
+    const ids: ReturnType<typeof setTimeout>[] = []
 
-    let prog = 0
-    const tick = 40
-    const inc  = 100 / (STEP_MS / tick)
-    const progId = setInterval(() => {
-      prog = Math.min(prog + inc, 100)
-      setProgress(prog)
-    }, tick)
-
-    // Phase 1 — arc toward intermediate waypoint (t=2350)
-    const arcId = setTimeout(() => {
+    // Move cursor to a fractional position with given easing
+    const go = (fx: number, fy: number, ease: number, cubic: string, phase: 'idle'|'arcing'|'snapping') => {
       if (!containerRef.current) return
-      const { width: W2, height: H2 } = containerRef.current.getBoundingClientRect()
-      const [ix, iy] = INTER_FRAC[step]
-      const tx = W2 * ix, ty = H2 * iy
+      const { width: W, height: H } = containerRef.current.getBoundingClientRect()
+      if (!W) return
+      const tx = W * fx, ty = H * fy
       const dx = tx - cursorPosRef.current.x, dy = ty - cursorPosRef.current.y
-      setCursorAngle(Math.atan2(dy, dx) * (180 / Math.PI))
-      setCursorPhase('arcing')
-      setCursorEase(260); setCursorCubic('0.4,0,0.2,1')
+      if (Math.sqrt(dx * dx + dy * dy) > 8) setCursorAngle(Math.atan2(dy, dx) * (180 / Math.PI))
+      setCursorEase(ease); setCursorCubic(cubic); setCursorPhase(phase)
       setCursorX(tx); setCursorY(ty)
       cursorPosRef.current = { x: tx, y: ty }
-    }, 2350)
+    }
 
-    // Phase 2 — snap to tab (t=2750) — fast spring
-    const snapId = setTimeout(() => {
+    // 5 drifts — each starts before previous finishes, so cursor is always mid-motion
+    const drifts = DRIFT_PATHS[step]
+    drifts.forEach(([fx, fy], i) => {
+      ids.push(setTimeout(() => go(fx, fy, DRIFT_EASE, '0.45,0,0.55,1', 'idle'), i * DRIFT_INTV))
+    })
+
+    // Progress bar (fills over ~2900ms, snaps to 100% on switch)
+    let prog = 0
+    const progId = setInterval(() => {
+      prog = Math.min(prog + 100 / (2900 / 40), 100)
+      setProgress(prog)
+    }, 40)
+
+    // Arc toward nav (t=2150) — medium speed, sharp ease
+    ids.push(setTimeout(() => {
+      const [ix, iy] = INTER_FRAC[step]
+      go(ix, iy, 260, '0.4,0,0.2,1', 'arcing')
+    }, 2150))
+
+    // Snap to exact tab center (t=2440) — very fast spring
+    ids.push(setTimeout(() => {
       const tab = tabPtsRef.current[NEXT_TAB_IDX[step]]
-      if (tab) {
+      if (tab && containerRef.current) {
         const dx = tab.x - cursorPosRef.current.x, dy = tab.y - cursorPosRef.current.y
-        setCursorAngle(Math.atan2(dy, dx) * (180 / Math.PI))
-        setCursorPhase('snapping')
-        setCursorEase(110); setCursorCubic('0.16,1,0.3,1')
+        if (Math.sqrt(dx * dx + dy * dy) > 8) setCursorAngle(Math.atan2(dy, dx) * (180 / Math.PI))
+        setCursorEase(110); setCursorCubic('0.16,1,0.3,1'); setCursorPhase('snapping')
         setCursorX(tab.x); setCursorY(tab.y)
         cursorPosRef.current = { x: tab.x, y: tab.y }
       }
-    }, 2750)
+    }, 2440))
 
-    // Clear snap blur 140ms after snap starts
-    const clearSnapId = setTimeout(() => {
-      setCursorPhase('idle'); setCursorAngle(0)
-    }, 2900)
+    // Clear stretch (t=2570 — snap lands ~2550, give 20ms settle)
+    ids.push(setTimeout(() => { setCursorPhase('idle'); setCursorAngle(0) }, 2570))
 
-    // Click
-    const clickOnId  = setTimeout(() => setCursorClicking(true),  2980)
-    const clickOffId = setTimeout(() => setCursorClicking(false), 3220)
+    // Click ripple
+    ids.push(setTimeout(() => setCursorClicking(true),  2540))
+    ids.push(setTimeout(() => setCursorClicking(false), 2760))
 
-    // Switch tab
-    const switchId = setTimeout(() => {
+    // Immediately start moving toward NEXT tab's content — cursor never idles at the tab button
+    // Also triggers the content switch so the fade and cursor motion happen together
+    ids.push(setTimeout(() => {
+      const nextStep = (step + 1) % 4
+      const [nfx, nfy] = CONTENT_FRAC[nextStep]
+      go(nfx, nfy, 480, '0.25,0.46,0.45,0.94', 'idle')
+
       clearInterval(progId)
+      setProgress(100)
       setVisible(false)
       setVELQUORChars(0)
+
       setTimeout(() => {
         setStep(s => (s + 1) % 4)
         setProgress(0)
         setVisible(true)
-      }, 280)
-    }, STEP_MS)
+      }, 260)
+    }, 2640))
 
     return () => {
+      ids.forEach(clearTimeout)
       clearInterval(progId)
-      clearTimeout(arcId); clearTimeout(snapId); clearTimeout(clearSnapId)
-      clearTimeout(clickOnId); clearTimeout(clickOffId); clearTimeout(switchId)
     }
   }, [step])
 
