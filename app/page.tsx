@@ -887,7 +887,7 @@ function Hero() {
             {/* To revert: replace the <video> with <AnimatedDashboard /> */}
             <video
               ref={videoRef}
-              loop muted playsInline preload="auto"
+              loop autoPlay muted playsInline preload="auto"
               poster="/brand/product-demo-poster.jpg"
               src="/brand/product-demo.mp4"
               style={{ width: '100%', height: 'auto', aspectRatio: '16/9', display: 'block' }}
