@@ -752,7 +752,7 @@ function Nav() {
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
-    <section style={{ position: 'relative', overflow: 'hidden', paddingBottom: '0' }}>
+    <section style={{ position: 'relative', paddingBottom: '0' }}>
       {/* Background ambient glows */}
       <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
         <div style={{
@@ -874,9 +874,9 @@ function Hero() {
             {/* Product demo video — rendered from hf-compositions/product-demo */}
             {/* To revert: replace the <video> with <AnimatedDashboard /> */}
             <video
-              loop autoPlay muted playsInline
+              loop autoPlay muted playsInline preload="auto"
               src="/brand/product-demo.mp4"
-              style={{ width: '100%', display: 'block' }}
+              style={{ width: '100%', height: 'auto', aspectRatio: '16/9', display: 'block' }}
             />
           </div>
         </div>
