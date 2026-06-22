@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+[data-composition-id="product-demo"] {
+  width: 1920px;
+  height: 1080px;
+  background: #000000;
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow: hidden;
+  position: relative;
+  color: #F2F2F2;
+}
+
+/* ── Topbar ── */
+.topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 64px;
+  background: #0C0C0C;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center;
+  padding: 0 48px;
+  z-index: 20;
+}
+.logo-area {
+  display: flex; align-items: center; gap: 10px; width: 220px; flex-shrink: 0;
+}
+.logo-text { font-size: 15px; font-weight: 700; color: #F2F2F2; letter-spacing: -0.01em; }
+.tabs { display: flex; align-items: center; gap: 2px; }
+.tab {
+  padding: 10px 22px; border-radius: 8px;
+  font-size: 13px; font-weight: 400; color: #383838; white-space: nowrap;
+}
+.tab-ai { padding: 10px 26px; }
+.user-area { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.badge {
+  font-size: 11px; font-weight: 500; color: #505050;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 6px; padding: 5px 10px;
+}
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, #4D8FFF, #A87EFF);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: white;
+}
+
+/* ── Tab active slider ── */
+#tab-slider {
+  position: absolute;
+  top: 62px; height: 2px;
+  background: #4D8FFF;
+  border-radius: 2px 2px 0 0;
+  z-index: 21;
+}
+
+/* ── Scenes ── */
+.scene {
+  position: absolute;
+  top: 64px; left: 0; right: 0; bottom: 4px;
+  padding: 36px 56px;
+  opacity: 0;
+}
+#scene-overview { opacity: 1; }
+
+/* ── Cards ── */
+.card {
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 24px 28px;
+}
+
+/* ── Metric grid ── */
+.metric-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 24px;
+}
+.metric-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px; padding: 22px 26px;
+}
+.metric-label {
+  font-size: 11px; color: #505050; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px;
+}
+.metric-value { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+.metric-sub { font-size: 12px; color: #383838; margin-top: 6px; }
+
+/* ── Trade rows ── */
+.trade-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 9px;
+}
+.pair { font-size: 14px; font-weight: 600; color: #F2F2F2; }
+.badge-type {
+  font-size: 10px; font-weight: 600; padding: 3px 8px;
+  border-radius: 4px; margin-left: 10px; letter-spacing: 0.04em;
+}
+.badge-buy  { color: #4D8FFF; background: rgba(77,143,255,0.12); }
+.badge-sell { color: #FF3347; background: rgba(255,51,71,0.12);  }
+.pnl-pos { font-size: 15px; font-weight: 700; color: #00FF85; }
+.pnl-neg { font-size: 15px; font-weight: 700; color: #FF3347; }
+
+/* ── Table ── */
+.table-head {
+  display: grid;
+  grid-template-columns: 140px 90px 100px 1fr 130px 130px;
+  padding: 14px 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 11px; color: #383838; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.table-row {
+  display: grid;
+  grid-template-columns: 140px 90px 100px 1fr 130px 130px;
+  padding: 16px 28px; font-size: 13px;
+  border-bottom: 1px solid rgba(255,255,255,0.035);
+  align-items: center;
+}
+.table-row:last-child { border-bottom: none; }
+
+/* ── Journal ── */
+.mood-btn {
+  padding: 8px 18px; border-radius: 8px; font-size: 13px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04); color: #707070;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.mood-btn.active {
+  background: rgba(0,255,133,0.1); border-color: rgba(0,255,133,0.3); color: #00FF85;
+}
+.tag {
+  font-size: 11px; padding: 4px 10px; border-radius: 20px;
+  background: rgba(77,143,255,0.1); border: 1px solid rgba(77,143,255,0.2);
+  color: #4D8FFF; font-weight: 500;
+}
+
+/* ── Chat ── */
+.msg-user {
+  display: flex; justify-content: flex-end; margin-bottom: 16px;
+}
+.bubble-user {
+  background: #4D8FFF; color: white;
+  padding: 14px 18px; border-radius: 14px 14px 2px 14px;
+  font-size: 14px; max-width: 60%;
+}
+.msg-ai { display: flex; gap: 12px; align-items: flex-start; }
+.bubble-ai {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 16px 20px; border-radius: 2px 14px 14px 14px;
+  font-size: 13px; color: #D0D0D0; line-height: 1.75; flex: 1;
+}
+.cursor-blink {
+  display: inline-block; width: 2px; height: 14px;
+  background: #4D8FFF; margin-left: 1px; vertical-align: text-bottom;
+}
+
+/* ── Progress bar ── */
+#progress-bar {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 4px;
+  background: rgba(255,255,255,0.04); z-index: 20;
+}
+#progress-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #C9A84C, #FFB830);
+  border-radius: 0 2px 2px 0;
+}
+
+/* ── Cursor ── */
+#cursor { position: absolute; top: 0; left: 0; z-index: 100; pointer-events: none; }
+#cursor-ripple {
+  position: absolute; top: -6px; left: -6px;
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.9);
+  opacity: 0; transform: scale(0.3);
+}
+
+/* ── Ambient glow ── */
+.glow-orb {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  filter: blur(120px); opacity: 0.04;
+}
+</style>
+</head>
+<body>
+<div data-composition-id="product-demo" data-width="1920" data-height="1080" data-start="0" data-duration="16">
+
+  <!-- Ambient glows -->
+  <div class="glow-orb" style="width:600px;height:600px;background:#4D8FFF;top:-100px;left:-100px;"></div>
+  <div class="glow-orb" style="width:500px;height:500px;background:#A87EFF;bottom:-50px;right:200px;"></div>
+
+  <!-- ── TOPBAR ── -->
+  <div class="topbar">
+    <div class="logo-area">
+      <svg width="30" height="30" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" rx="72" fill="#0A0A0F"/>
+        <path d="M 40 110 L 126 292 L 212 110" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 202.7 192.3 A 74 74 0 1 1 236.8 244.8" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round"/>
+        <path d="M 126 294 L 363 100" fill="none" stroke="#C9A84C" stroke-width="26" stroke-linecap="round"/>
+      </svg>
+      <span class="logo-text">VELQUOR</span>
+    </div>
+
+    <div class="tabs">
+      <div id="tab-0" class="tab">Overview</div>
+      <div id="tab-1" class="tab">Trading</div>
+      <div id="tab-2" class="tab">Journal</div>
+      <div id="tab-3" class="tab">Macro</div>
+      <div id="tab-4" class="tab tab-ai">VELQUOR AI</div>
+    </div>
+
+    <div class="user-area">
+      <div class="badge">MT5 ● Live</div>
+      <div class="badge">€ EUR</div>
+      <div class="avatar">M</div>
+    </div>
+  </div>
+
+  <!-- Active tab underline slider -->
+  <div id="tab-slider"></div>
+
+  <!-- Progress bar -->
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+
+  <!-- ══════════════════════════════════════════════════
+       SCENE 1 — OVERVIEW
+  ══════════════════════════════════════════════════ -->
+  <div id="scene-overview" class="scene">
+
+    <div id="ov-greeting" style="margin-bottom:24px;">
+      <p style="font-size:13px;color:#383838;margin-bottom:5px;">Good morning, Marco ·&nbsp; Mon 22 Jun 2026</p>
+      <h1 style="font-size:24px;font-weight:700;letter-spacing:-0.025em;color:#F2F2F2;">Your edge is working today.</h1>
+    </div>
+
+    <div id="ov-metrics" class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">Today P&amp;L</div>
+        <div class="metric-value" style="color:#00FF85;">+€408.70</div>
+        <div class="metric-sub">↑ 3 wins, 0 losses</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Win Rate</div>
+        <div class="metric-value" style="color:#4D8FFF;">80%</div>
+        <div class="metric-sub">↑ from 71% last week</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Profit Factor</div>
+        <div class="metric-value" style="color:#F2F2F2;">2.1</div>
+        <div class="metric-sub">XAUUSD leading</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Open Positions</div>
+        <div class="metric-value" style="color:#A87EFF;">2</div>
+        <div class="metric-sub">XAUUSD +€124 running</div>
+      </div>
+    </div>
+
+    <div id="ov-body" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+
+      <!-- Weekly chart -->
+      <div class="card" id="ov-chart">
+        <p style="font-size:11px;color:#383838;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:18px;">Weekly P&amp;L</p>
+        <svg viewBox="0 0 420 90" style="width:100%;height:90px;">
+          <rect x="8"   y="54" width="44" height="28" rx="5" fill="rgba(0,255,133,0.12)" stroke="rgba(0,255,133,0.28)" stroke-width="1"/>
+          <rect x="68"  y="36" width="44" height="46" rx="5" fill="rgba(0,255,133,0.12)" stroke="rgba(0,255,133,0.28)" stroke-width="1"/>
+          <rect x="128" y="62" width="44" height="18" rx="5" fill="rgba(255,51,71,0.12)"  stroke="rgba(255,51,71,0.28)"  stroke-width="1"/>
+          <rect x="188" y="26" width="44" height="56" rx="5" fill="rgba(0,255,133,0.16)" stroke="rgba(0,255,133,0.36)" stroke-width="1"/>
+          <rect x="248" y="10" width="44" height="72" rx="5" fill="rgba(0,255,133,0.22)" stroke="rgba(0,255,133,0.55)" stroke-width="1.5"/>
+          <rect x="308" y="46" width="44" height="36" rx="5" fill="rgba(255,51,71,0.08)"  stroke="rgba(255,51,71,0.18)"  stroke-width="1"/>
+          <rect x="368" y="16" width="44" height="66" rx="5" fill="rgba(0,255,133,0.28)" stroke="rgba(0,255,133,0.7)"  stroke-width="1.5"/>
+          <text x="30"  y="87" fill="#383838" font-size="11" text-anchor="middle" font-family="Inter,system-ui">Mon</text>
+          <text x="90"  y="87" fill="#383838" font-size="11" text-anchor="middle" font-family="Inter,system-ui">Tue</text>
+          <text x="150" y="87" fill="#383838" font-size="11" text-anchor="middle" font-family="Inter,system-ui">Wed</text>
+          <text x="210" y="87" fill="#383838" font-size="11" text-anchor="middle" font-family="Inter,system-ui">Thu</text>
+          <text x="270" y="87" fill="#383838" font-size="11" text-anchor="middle" font-family="Inter,system-ui">Fri</text>
+          <text x="330" y="87" fill="#505050" font-size="11" text-anchor="middle" font-family="Inter,system-ui">Sat</text>
+          <text x="390" y="87" fill="#4D8FFF" font-size="11" text-anchor="middle" font-family="Inter,system-ui" font-weight="700">Sun</text>
+        </svg>
+      </div>
+
+      <!-- Trades -->
+      <div class="card" id="ov-trades">
+        <p style="font-size:11px;color:#383838;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:18px;">Recent Trades</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="trade-row">
+            <div><span class="pair">XAUUSD</span><span class="badge-type badge-buy">BUY</span></div>
+            <span class="pnl-pos">+€284.50</span>
+          </div>
+          <div class="trade-row">
+            <div><span class="pair">NAS100</span><span class="badge-type badge-sell">SELL</span></div>
+            <span class="pnl-neg">−€112.20</span>
+          </div>
+          <div class="trade-row">
+            <div><span class="pair">XAUUSD</span><span class="badge-type badge-buy">BUY</span></div>
+            <span class="pnl-pos">+€196.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       SCENE 2 — TRADING
+  ══════════════════════════════════════════════════ -->
+  <div id="scene-trading" class="scene">
+
+    <div id="tr-header" style="margin-bottom:22px;">
+      <p style="font-size:13px;color:#383838;margin-bottom:5px;">Performance Analytics · June 2026</p>
+      <h2 style="font-size:24px;font-weight:700;letter-spacing:-0.025em;">18 trades &nbsp;·&nbsp; <span style="color:#00FF85;">+€3,247.30</span></h2>
+    </div>
+
+    <div id="tr-metrics" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:22px;">
+      <div class="metric-card">
+        <div class="metric-label">Win Rate</div>
+        <div class="metric-value" style="color:#4D8FFF;">71.4%</div>
+        <div class="metric-sub">13 wins / 5 losses</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Profit Factor</div>
+        <div class="metric-value">2.08</div>
+        <div class="metric-sub">Avg winner: €249</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Best Instrument</div>
+        <div class="metric-value" style="color:#C9A84C;font-size:24px;">XAUUSD</div>
+        <div class="metric-sub">83% win rate</div>
+      </div>
+    </div>
+
+    <div id="tr-table" class="card" style="padding:0;overflow:hidden;">
+      <div class="table-head">
+        <span>PAIR</span><span>TYPE</span><span>DATE</span><span>SETUP</span><span>SESSION</span><span style="text-align:right;">P&amp;L</span>
+      </div>
+      <div class="table-row">
+        <span style="font-weight:600;">XAUUSD</span>
+        <span class="badge-type badge-buy" style="width:fit-content;">BUY</span>
+        <span style="color:#505050;">Jun 22</span>
+        <span style="color:#707070;">Order Block</span>
+        <span style="color:#505050;">London</span>
+        <span style="text-align:right;" class="pnl-pos">+€284.50</span>
+      </div>
+      <div class="table-row">
+        <span style="font-weight:600;">NAS100</span>
+        <span class="badge-type badge-sell" style="width:fit-content;">SELL</span>
+        <span style="color:#505050;">Jun 22</span>
+        <span style="color:#707070;">BOS / CHoCH</span>
+        <span style="color:#505050;">NY Open</span>
+        <span style="text-align:right;" class="pnl-neg">−€112.20</span>
+      </div>
+      <div class="table-row">
+        <span style="font-weight:600;">XAUUSD</span>
+        <span class="badge-type badge-buy" style="width:fit-content;">BUY</span>
+        <span style="color:#505050;">Jun 21</span>
+        <span style="color:#707070;">Fair Value Gap</span>
+        <span style="color:#505050;">London</span>
+        <span style="text-align:right;" class="pnl-pos">+€196.00</span>
+      </div>
+      <div class="table-row">
+        <span style="font-weight:600;">EURUSD</span>
+        <span class="badge-type badge-buy" style="width:fit-content;">BUY</span>
+        <span style="color:#505050;">Jun 21</span>
+        <span style="color:#707070;">S/R Flip</span>
+        <span style="color:#505050;">NY</span>
+        <span style="text-align:right;" class="pnl-pos">+€44.80</span>
+      </div>
+      <div class="table-row">
+        <span style="font-weight:600;">NAS100</span>
+        <span class="badge-type badge-buy" style="width:fit-content;">BUY</span>
+        <span style="color:#505050;">Jun 20</span>
+        <span style="color:#707070;">Order Block</span>
+        <span style="color:#505050;">NY Open</span>
+        <span style="text-align:right;" class="pnl-neg">−€88.40</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       SCENE 3 — JOURNAL
+  ══════════════════════════════════════════════════ -->
+  <div id="scene-journal" class="scene">
+
+    <div id="jn-header" style="margin-bottom:24px;">
+      <p style="font-size:13px;color:#383838;margin-bottom:5px;">Daily Journal</p>
+      <h2 style="font-size:24px;font-weight:700;letter-spacing:-0.025em;">Monday, 22 June 2026</h2>
+    </div>
+
+    <div id="jn-body" style="display:grid;grid-template-columns:1.1fr 1fr;gap:20px;">
+
+      <!-- Entry -->
+      <div class="card">
+        <p style="font-size:11px;color:#383838;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:18px;">Trade Notes</p>
+        <p style="font-size:13px;color:#707070;line-height:1.8;margin-bottom:20px;">
+          Took 2 XAUUSD longs off the London open Order Block confluence. Both hit TP. Stayed patient — didn't enter the first pullback which was a fake. NAS100 short was a mistake, took it before NY macro data. Will wait 30 min after open next time.
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span class="tag">Order Block</span>
+          <span class="tag">London session</span>
+          <span class="tag">ICT</span>
+          <span class="tag" style="color:#00FF85;background:rgba(0,255,133,0.1);border-color:rgba(0,255,133,0.25);">Disciplined</span>
+        </div>
+      </div>
+
+      <!-- Mood + score -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="card">
+          <p style="font-size:11px;color:#383838;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:16px;">Today's Mood</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div class="mood-btn active">😌 Calm</div>
+            <div class="mood-btn">😤 Frustrated</div>
+            <div class="mood-btn">🔥 Confident</div>
+            <div class="mood-btn">😰 Anxious</div>
+          </div>
+        </div>
+        <div class="card">
+          <p style="font-size:11px;color:#383838;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;margin-bottom:16px;">Self Grade</p>
+          <div style="display:flex;gap:8px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;">
+              <span style="font-size:11px;color:#505050;">Discipline</span>
+              <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;width:100%;overflow:hidden;">
+                <div style="width:85%;height:100%;background:#4D8FFF;border-radius:3px;"></div>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:#4D8FFF;">8.5</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;">
+              <span style="font-size:11px;color:#505050;">Patience</span>
+              <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;width:100%;overflow:hidden;">
+                <div style="width:70%;height:100%;background:#A87EFF;border-radius:3px;"></div>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:#A87EFF;">7.0</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;">
+              <span style="font-size:11px;color:#505050;">Execution</span>
+              <div style="height:6px;background:rgba(255,255,255,0.07);border-radius:3px;width:100%;overflow:hidden;">
+                <div style="width:90%;height:100%;background:#00FF85;border-radius:3px;"></div>
+              </div>
+              <span style="font-size:13px;font-weight:700;color:#00FF85;">9.0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       SCENE 4 — VELQUOR AI
+  ══════════════════════════════════════════════════ -->
+  <div id="scene-velquor" class="scene">
+
+    <div id="ai-header" style="display:flex;align-items:center;gap:14px;margin-bottom:28px;">
+      <svg width="36" height="36" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" rx="72" fill="#0A0A0F"/>
+        <path d="M 40 110 L 126 292 L 212 110" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 202.7 192.3 A 74 74 0 1 1 236.8 244.8" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round"/>
+        <path d="M 126 294 L 363 100" fill="none" stroke="#C9A84C" stroke-width="26" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h2 style="font-size:20px;font-weight:700;letter-spacing:-0.02em;">VELQUOR AI</h2>
+        <p style="font-size:12px;color:#00FF85;margin-top:2px;">● Online · analysing your 247 trades</p>
+      </div>
+    </div>
+
+    <div id="ai-chat" style="max-width:900px;">
+      <div class="msg-user" id="ai-q">
+        <div class="bubble-user">Why am I losing on Nasdaq?</div>
+      </div>
+
+      <div class="msg-ai" id="ai-a">
+        <svg width="28" height="28" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;margin-top:4px;">
+          <rect width="400" height="400" rx="72" fill="#0A0A0F"/>
+          <path d="M 40 110 L 126 292 L 212 110" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 202.7 192.3 A 74 74 0 1 1 236.8 244.8" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round"/>
+          <path d="M 126 294 L 363 100" fill="none" stroke="#C9A84C" stroke-width="26" stroke-linecap="round"/>
+        </svg>
+        <div class="bubble-ai">
+          <div id="ai-response"></div>
+          <div id="ai-cursor" class="cursor-blink"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       ANIMATED CURSOR
+  ══════════════════════════════════════════════════ -->
+  <div id="cursor">
+    <svg width="14" height="18" viewBox="0 0 14 18" fill="none">
+      <path d="M1 1 L1 14 L4.4 10.5 L6.8 17 L9.2 16 L6.8 9.5 L12.5 9.5 Z"
+        fill="white" stroke="rgba(0,0,0,0.6)" stroke-width="1.2"
+        stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>
+    <div id="cursor-ripple"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       TIMELINE
+  ══════════════════════════════════════════════════ -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+  window.__timelines = window.__timelines || {}
+
+  // ── Tab positions (x center, y center) in the 1920×1080 canvas
+  // Topbar is 64px tall. Tab centers are at y=32.
+  // Logo area: 48px left-padding + 220px = 268px. Tabs start at ~280px.
+  // Tab widths (approx at 13px Inter): Overview~110, Trading~100, Journal~100, Macro~90, VELQUOR AI~130
+  // Gaps: 2px between tabs
+  const TAB_X = [
+    340,  // Overview   center
+    454,  // Trading    center
+    558,  // Journal    center
+    652,  // Macro      center
+    788,  // VELQUOR AI center
+  ]
+  const TAB_Y = 32
+
+  // ── Content hover positions per scene (where cursor drifts while user "reads")
+  const HOVER = [
+    { x: 1100, y: 400 }, // Overview  — hovering over metric cards
+    { x: 980,  y: 600 }, // Trading   — hovering over trade table
+    { x: 480,  y: 500 }, // Journal   — hovering over entry
+    { x: 700,  y: 700 }, // VELQUOR AI — hovering over AI response
+  ]
+
+  // ── AI response text (split into char spans for deterministic typewriter)
+  const AI_TEXT = "Your NAS100 win rate is 38% — 6 of your 8 losses hit in the first 30 min after NY open. You're trading before institutional direction is set. Apply a 30-minute wait rule. Your London-only NAS100 trades hit 71% — stick to that window."
+
+  // Pre-render char spans
+  const responseEl = document.getElementById('ai-response')
+  AI_TEXT.split('').forEach(c => {
+    const span = document.createElement('span')
+    span.textContent = c === ' ' ? ' ' : c
+    span.style.opacity = '0'
+    responseEl.appendChild(span)
+  })
+  const charSpans = responseEl.querySelectorAll('span')
+
+  // ── Tab slider geometry (hardcoded widths matching CSS tab padding)
+  const TAB_SLIDER = [
+    { left: 280, width: 118 }, // Overview
+    { left: 400, width: 108 }, // Trading
+    { left: 510, width: 108 }, // Journal
+    { left: 620, width:  98 }, // Macro
+    { left: 720, width: 138 }, // VELQUOR AI
+  ]
+
+  // ── Ease of active tab text color
+  function activateTab(tl, tabIndex, t) {
+    const tabs = document.querySelectorAll('.tab')
+    tabs.forEach((el, i) => {
+      tl.to(el, {
+        color: i === tabIndex ? '#4D8FFF' : '#383838',
+        backgroundColor: i === tabIndex ? 'rgba(77,143,255,0.12)' : 'transparent',
+        fontWeight: i === tabIndex ? 600 : 400,
+        duration: 0.25, ease: 'power2.out'
+      }, t)
+    })
+    // Slide the underline
+    tl.to('#tab-slider', {
+      left: TAB_SLIDER[tabIndex].left,
+      width: TAB_SLIDER[tabIndex].width,
+      duration: 0.35, ease: 'power3.out'
+    }, t)
+  }
+
+  // ── Build timeline
+  const D = 4   // seconds per scene
+  const N = 4   // number of scenes
+
+  const tl = gsap.timeline({ paused: true })
+
+  // Init tab slider at Overview
+  tl.set('#tab-slider', { left: TAB_SLIDER[0].left, width: TAB_SLIDER[0].width, top: 62, height: 2 })
+
+  // Init cursor at Overview tab
+  tl.set('#cursor', { x: TAB_X[0], y: TAB_Y, filter: 'blur(0px)' })
+
+  // Activate Overview tab immediately
+  tl.set('#tab-0', { color: '#4D8FFF', backgroundColor: 'rgba(77,143,255,0.12)', fontWeight: 600 })
+
+  // ── Progress bar: fills over full 16s (repeat per scene)
+  // We animate it 0→100% per D seconds, repeated N times via stagger on timeline positions
+  for (let i = 0; i < N; i++) {
+    tl.fromTo('#progress-fill',
+      { width: '0%' },
+      { width: '100%', duration: D, ease: 'linear' },
+      i * D
+    )
+  }
+
+  // ── Scenes loop
+  const SCENE_IDS  = ['#scene-overview', '#scene-trading', '#scene-journal', '#scene-velquor']
+  const TAB_INDICES = [0, 1, 2, 4]  // which tab each scene highlights
+  const NEXT_TAB_IDX = [1, 2, 4, 0] // which TAB_X to move cursor to next
+
+  for (let i = 0; i < N; i++) {
+    const base     = i * D
+    const sceneEl  = SCENE_IDS[i]
+    const nextScene = SCENE_IDS[(i + 1) % N]
+    const nextTabI  = NEXT_TAB_IDX[i]         // 0,1,2,4 for VELQUOR AI
+    const nextTabX  = TAB_X[nextTabI]
+    const nextRealI = nextTabI                 // actual tab element index
+
+    // ── SCENE ENTRANCE (staggered from top)
+    const children = document.querySelectorAll(sceneEl + ' > *')
+    const childSelectors = Array.from(children).map((_, ci) => sceneEl + ' > *:nth-child(' + (ci+1) + ')')
+
+    // Fade scene in
+    tl.fromTo(sceneEl,
+      { opacity: 0, y: 10 },
+      { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' },
+      base + 0.05
+    )
+
+    // Stagger child entrances
+    if (children.length > 0) {
+      tl.from(childSelectors, {
+        y: 16, opacity: 0, duration: 0.45, ease: 'power2.out', stagger: 0.08,
+        overwrite: 'auto'
+      }, base + 0.1)
+    }
+
+    // AI typewriter (scene 3, i=3)
+    if (i === 3) {
+      tl.set(charSpans, { opacity: 0 }, base + 0.3)
+      tl.to(charSpans, {
+        opacity: 1, duration: 0, stagger: 0.024
+      }, base + 0.5)
+      // Hide cursor blink after text finishes
+      const textDur = charSpans.length * 0.024
+      tl.to('#ai-cursor', { opacity: 0, duration: 0.3, ease: 'power2.out' }, base + 0.5 + textDur + 0.2)
+    }
+
+    // ── CURSOR DRIFT into content area (from tab to hover zone)
+    tl.to('#cursor', {
+      x: HOVER[i].x, y: HOVER[i].y,
+      duration: 0.7, ease: 'power2.inOut'
+    }, base + 0.45)
+
+    // ── CURSOR MOVES TO NEXT TAB (at D-1.2s into phase)
+    const moveStart = base + D - 1.2
+
+    // Phase 1: drift toward intermediate waypoint (slightly above tab bar)
+    const midX = (HOVER[i].x + nextTabX) / 2
+    const midY = TAB_Y - 60  // above tab bar for arc
+    tl.to('#cursor', {
+      x: midX, y: midY,
+      duration: 0.45, ease: 'power1.in', overwrite: 'auto'
+    }, moveStart)
+
+    // Start blur as cursor accelerates
+    tl.to('#cursor', { filter: 'blur(3px)', duration: 0.2, ease: 'power2.in', overwrite: 'auto' }, moveStart + 0.1)
+
+    // Phase 2: snap to exact tab position
+    tl.to('#cursor', {
+      x: nextTabX, y: TAB_Y,
+      duration: 0.38, ease: 'power3.out', overwrite: 'auto'
+    }, moveStart + 0.45)
+
+    // Remove blur as cursor decelerates
+    tl.to('#cursor', { filter: 'blur(0px)', duration: 0.25, ease: 'power2.out', overwrite: 'auto' }, moveStart + 0.5)
+
+    // ── CLICK RIPPLE
+    const clickT = moveStart + 0.82
+    tl.fromTo('#cursor-ripple', { scale: 0.3, opacity: 1 }, { scale: 2.2, opacity: 0, duration: 0.38, ease: 'power2.out' }, clickT)
+
+    // ── TAB SWITCH (slightly before scene change)
+    activateTab(tl, nextRealI, clickT)
+
+    // ── SCENE EXIT & NEXT SCENE
+    const switchT = base + D - 0.25
+    tl.to(sceneEl, { opacity: 0, y: -8, duration: 0.3, ease: 'power2.in' }, switchT)
+    // (Next scene entrance is handled at the top of the next iteration at base+D)
+  }
+
+  // Final: re-activate Overview tab for loop
+  // (Already handled by i=3 which activates tab index 0 at the end)
+
+  window.__timelines['product-demo'] = tl
+  </script>
+</div>
+</body>
+</html>
