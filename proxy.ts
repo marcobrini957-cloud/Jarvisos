@@ -1,10 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Public paths — always allowed
   const isPublic =
     pathname === '/' ||
     pathname.startsWith('/login') ||
