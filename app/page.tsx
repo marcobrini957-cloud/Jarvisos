@@ -122,26 +122,31 @@ function Counter({ target, prefix = '', suffix = '', decimals = 0 }: {
 // ── Animated product demo ─────────────────────────────────────────────────────
 const VELQUOR_TEXT = "Your NAS100 trades show a 38% win rate — below breakeven. 6 of your 8 losses came in the first 30 minutes after NY open. You're trading against institutional order flow before direction is established. Consider a 30-minute wait rule. Your London-only NAS100 trades hit 71% win rate."
 
+const CURSOR_SVG_PATH = "M1 1 L1 13.5 L4.2 10.2 L6.5 16.5 L8.8 15.5 L6.5 9.2 L11.5 9.2 Z"
+
 function AnimatedDashboard() {
   const TAB_NAMES    = ['Overview', 'Trading', 'Journal', 'Macro', 'VELQUOR']
-  const TAB_ORDER    = [0, 1, 2, 4]   // Overview, Trading, Journal, VELQUOR
-  const NEXT_TAB_IDX = [1, 2, 4, 0]   // which TAB_NAMES index to click next
-  const STEP_MS      = 5000
+  const TAB_ORDER    = [0, 1, 2, 4]
+  const NEXT_TAB_IDX = [1, 2, 4, 0]
+  const STEP_MS      = 3800
 
   const [step,           setStep]          = useState(0)
   const [visible,        setVisible]       = useState(true)
   const [progress,       setProgress]      = useState(0)
-  const [velquorChars,    setVELQUORChars]   = useState(0)
-  const [cursorX,        setCursorX]       = useState(0)  // pixels from container left
-  const [cursorY,        setCursorY]       = useState(0)  // pixels from container top
-  const [cursorEase,     setCursorEase]    = useState(900) // transition ms
+  const [velquorChars,   setVELQUORChars]  = useState(0)
+  const [cursorX,        setCursorX]       = useState(0)
+  const [cursorY,        setCursorY]       = useState(0)
+  const [cursorEase,     setCursorEase]    = useState(600)
+  const [cursorCubic,    setCursorCubic]   = useState('0.25,0.46,0.45,0.94')
   const [cursorClicking, setCursorClicking] = useState(false)
+  const [cursorPhase,    setCursorPhase]   = useState<'idle'|'arcing'|'snapping'>('idle')
+  const [cursorAngle,    setCursorAngle]   = useState(0)
 
   const activeTab    = TAB_ORDER[step]
   const containerRef = useRef<HTMLDivElement>(null)
-  const tabPtsRef    = useRef<Array<{x:number, y:number}>>([]) // exact tab center positions in px
+  const tabPtsRef    = useRef<Array<{x:number,y:number}>>([])
+  const cursorPosRef = useRef({ x: 0, y: 0 })
 
-  // Measure exact tab centers relative to container on mount + resize
   useEffect(() => {
     function measure() {
       if (!containerRef.current) return
@@ -149,15 +154,12 @@ function AnimatedDashboard() {
       const tabs = containerRef.current.querySelectorAll<HTMLElement>('[data-tab]')
       tabPtsRef.current = Array.from(tabs).map(el => {
         const r = el.getBoundingClientRect()
-        return {
-          x: r.left - box.left + r.width  / 2,
-          y: r.top  - box.top  + r.height / 2,
-        }
+        return { x: r.left - box.left + r.width / 2, y: r.top - box.top + r.height / 2 }
       })
-      // Init cursor position at content area for step 0 if not yet set
-      if (cursorX === 0 && box.width > 0) {
-        setCursorX(box.width  * 0.60)
-        setCursorY(box.height * 0.34)
+      if (cursorPosRef.current.x === 0 && box.width > 0) {
+        const ix = box.width * 0.60, iy = box.height * 0.34
+        setCursorX(ix); setCursorY(iy)
+        cursorPosRef.current = { x: ix, y: iy }
       }
     }
     const t = setTimeout(measure, 80)
@@ -165,33 +167,30 @@ function AnimatedDashboard() {
     return () => { clearTimeout(t); window.removeEventListener('resize', measure) }
   }, [])
 
-  // Where the cursor rests while the user "reads" each tab (fractions of W,H)
   const CONTENT_FRAC = [
-    [0.60, 0.34], // Overview: right side, upper — hovering over metrics
-    [0.57, 0.50], // Trading:  center — hovering over equity chart
-    [0.30, 0.46], // Journal:  left   — hovering over calendar
-    [0.54, 0.67], // VELQUOR:   center lower — hovering over chat response
+    [0.60, 0.34],
+    [0.57, 0.50],
+    [0.30, 0.46],
+    [0.54, 0.67],
   ] as const
 
-  // Intermediate waypoints (fractions) — slightly off the direct path to tab
-  // Creates a natural curved arc rather than a perfectly straight line
   const INTER_FRAC = [
-    [0.48, 0.20], // Overview → Trading:  drift up then left
-    [0.53, 0.22], // Trading  → Journal:  drift straight upward
-    [0.46, 0.18], // Journal  → VELQUOR:   drift up then right
-    [0.42, 0.30], // VELQUOR   → Overview: drift left and up
+    [0.50, 0.18],
+    [0.55, 0.20],
+    [0.44, 0.17],
+    [0.40, 0.28],
   ] as const
 
-  // Main loop: progress bar + 3-phase cursor movement
   useEffect(() => {
     if (!containerRef.current) return
     const { width: W, height: H } = containerRef.current.getBoundingClientRect()
 
-    // Phase 0: new tab just loaded — cursor drifts from tab area → content
     const [fx, fy] = CONTENT_FRAC[step]
-    setCursorEase(900)
-    setCursorX(W * fx)
-    setCursorY(H * fy)
+    const cx = W * fx, cy = H * fy
+    setCursorEase(600); setCursorCubic('0.25,0.46,0.45,0.94')
+    setCursorPhase('idle'); setCursorAngle(0)
+    setCursorX(cx); setCursorY(cy)
+    cursorPosRef.current = { x: cx, y: cy }
 
     let prog = 0
     const tick = 40
@@ -201,30 +200,41 @@ function AnimatedDashboard() {
       setProgress(prog)
     }, tick)
 
-    // Phase 1 (t=3200): cursor moves toward an intermediate waypoint,
-    //   creating a slight curve instead of a straight shot to the tab
-    const interMoveId = setTimeout(() => {
+    // Phase 1 — arc toward intermediate waypoint (t=2350)
+    const arcId = setTimeout(() => {
       if (!containerRef.current) return
       const { width: W2, height: H2 } = containerRef.current.getBoundingClientRect()
       const [ix, iy] = INTER_FRAC[step]
-      setCursorEase(620)
-      setCursorX(W2 * ix)
-      setCursorY(H2 * iy)
-    }, 3200)
+      const tx = W2 * ix, ty = H2 * iy
+      const dx = tx - cursorPosRef.current.x, dy = ty - cursorPosRef.current.y
+      setCursorAngle(Math.atan2(dy, dx) * (180 / Math.PI))
+      setCursorPhase('arcing')
+      setCursorEase(260); setCursorCubic('0.4,0,0.2,1')
+      setCursorX(tx); setCursorY(ty)
+      cursorPosRef.current = { x: tx, y: ty }
+    }, 2350)
 
-    // Phase 2 (t=3780): cursor arrives at the exact measured tab center
-    const tabMoveId = setTimeout(() => {
+    // Phase 2 — snap to tab (t=2750) — fast spring
+    const snapId = setTimeout(() => {
       const tab = tabPtsRef.current[NEXT_TAB_IDX[step]]
       if (tab) {
-        setCursorEase(380)
-        setCursorX(tab.x)
-        setCursorY(tab.y)
+        const dx = tab.x - cursorPosRef.current.x, dy = tab.y - cursorPosRef.current.y
+        setCursorAngle(Math.atan2(dy, dx) * (180 / Math.PI))
+        setCursorPhase('snapping')
+        setCursorEase(110); setCursorCubic('0.16,1,0.3,1')
+        setCursorX(tab.x); setCursorY(tab.y)
+        cursorPosRef.current = { x: tab.x, y: tab.y }
       }
-    }, 3780)
+    }, 2750)
 
-    // Phase 3 (t=4100): click ripple
-    const clickOnId  = setTimeout(() => setCursorClicking(true),  4100)
-    const clickOffId = setTimeout(() => setCursorClicking(false), 4420)
+    // Clear snap blur 140ms after snap starts
+    const clearSnapId = setTimeout(() => {
+      setCursorPhase('idle'); setCursorAngle(0)
+    }, 2900)
+
+    // Click
+    const clickOnId  = setTimeout(() => setCursorClicking(true),  2980)
+    const clickOffId = setTimeout(() => setCursorClicking(false), 3220)
 
     // Switch tab
     const switchId = setTimeout(() => {
@@ -235,20 +245,16 @@ function AnimatedDashboard() {
         setStep(s => (s + 1) % 4)
         setProgress(0)
         setVisible(true)
-      }, 380)
+      }, 280)
     }, STEP_MS)
 
     return () => {
       clearInterval(progId)
-      clearTimeout(interMoveId)
-      clearTimeout(tabMoveId)
-      clearTimeout(clickOnId)
-      clearTimeout(clickOffId)
-      clearTimeout(switchId)
+      clearTimeout(arcId); clearTimeout(snapId); clearTimeout(clearSnapId)
+      clearTimeout(clickOnId); clearTimeout(clickOffId); clearTimeout(switchId)
     }
   }, [step])
 
-  // Typewriter for VELQUOR tab
   useEffect(() => {
     if (step !== 3 || !visible) return
     let i = 0
@@ -256,11 +262,15 @@ function AnimatedDashboard() {
       i++
       setVELQUORChars(i)
       if (i >= VELQUOR_TEXT.length) clearInterval(id)
-    }, 22)
+    }, 18)
     return () => clearInterval(id)
   }, [step, visible])
 
-  // Shared chart data
+  const isMoving = cursorPhase !== 'idle'
+  const snapScaleX = cursorPhase === 'snapping' ? 2.6 : cursorPhase === 'arcing' ? 1.6 : 1
+  const snapScaleY = cursorPhase === 'snapping' ? 0.45 : cursorPhase === 'arcing' ? 0.72 : 1
+  const snapBlur   = cursorPhase === 'snapping' ? 1.8 : cursorPhase === 'arcing' ? 0.6 : 0
+
   const pts = [28, 44, 36, 58, 50, 73, 63, 86, 76, 93, 83, 100]
   const CW = 500, CH = 60
   const xs = pts.map((_, i) => (i / (pts.length - 1)) * CW)
@@ -282,30 +292,67 @@ function AnimatedDashboard() {
     <>
       <style>{`
         @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
-        @keyframes cursor-click { 0%{transform:scale(0.2);opacity:1} 100%{transform:scale(2.2);opacity:0} }
+        @keyframes cursor-click { 0%{transform:scale(0.2);opacity:1} 100%{transform:scale(2.6);opacity:0} }
       `}</style>
       <div ref={containerRef} style={{ width: '100%', background: '#090D13', position: 'relative' }}>
 
-        {/* Animated mouse cursor — pixel-positioned for accuracy */}
+        {/* Ghost trail cursors — staggered delays create motion blur streak */}
+        {[
+          { extraMs: 85,  blur: 5,   opacity: 0.30, scale: 1.1 },
+          { extraMs: 170, blur: 9,   opacity: 0.16, scale: 1.25 },
+          { extraMs: 260, blur: 13,  opacity: 0.07, scale: 1.45 },
+        ].map((g, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            left: cursorX,
+            top: cursorY,
+            zIndex: 57 + i,
+            pointerEvents: 'none',
+            transform: `rotate(${cursorAngle}deg) scale(${g.scale})`,
+            transformOrigin: '6px 6px',
+            filter: `blur(${g.blur}px)`,
+            opacity: isMoving ? g.opacity : 0,
+            transition: [
+              `left ${cursorEase + g.extraMs}ms cubic-bezier(${cursorCubic})`,
+              `top ${cursorEase + g.extraMs}ms cubic-bezier(${cursorCubic})`,
+              'opacity 0.18s ease',
+              'transform 0.12s ease',
+            ].join(', '),
+          }}>
+            <svg width="13" height="17" viewBox="0 0 13 17" fill="none">
+              <path d={CURSOR_SVG_PATH} fill="white" stroke="rgba(0,0,0,0.3)" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round"/>
+            </svg>
+          </div>
+        ))}
+
+        {/* Real cursor */}
         <div style={{
           position: 'absolute',
           left: cursorX,
           top: cursorY,
           zIndex: 60,
           pointerEvents: 'none',
-          transition: `left ${cursorEase}ms cubic-bezier(0.25, 0.46, 0.45, 0.94), top ${cursorEase}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`,
-          filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))',
+          transform: `rotate(${cursorAngle}deg) scaleX(${snapScaleX}) scaleY(${snapScaleY})`,
+          transformOrigin: '6px 6px',
+          transition: [
+            `left ${cursorEase}ms cubic-bezier(${cursorCubic})`,
+            `top ${cursorEase}ms cubic-bezier(${cursorCubic})`,
+            'transform 0.1s ease',
+            'filter 0.1s ease',
+          ].join(', '),
+          filter: snapBlur > 0
+            ? `blur(${snapBlur}px) drop-shadow(0 0 5px rgba(255,255,255,0.35))`
+            : 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))',
         }}>
           <svg width="13" height="17" viewBox="0 0 13 17" fill="none">
-            <path d="M1 1 L1 13.5 L4.2 10.2 L6.5 16.5 L8.8 15.5 L6.5 9.2 L11.5 9.2 Z"
-              fill="white" stroke="rgba(0,0,0,0.55)" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round"/>
+            <path d={CURSOR_SVG_PATH} fill="white" stroke="rgba(0,0,0,0.55)" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round"/>
           </svg>
           {cursorClicking && (
             <div style={{
-              position: 'absolute', top: '-4px', left: '-4px',
-              width: '21px', height: '21px', borderRadius: '50%',
-              border: '1.5px solid rgba(255,255,255,0.85)',
-              animation: 'cursor-click 0.38s ease-out forwards',
+              position: 'absolute', top: '-5px', left: '-5px',
+              width: '23px', height: '23px', borderRadius: '50%',
+              border: '1.5px solid rgba(255,255,255,0.9)',
+              animation: 'cursor-click 0.36s ease-out forwards',
             }} />
           )}
         </div>
@@ -327,7 +374,7 @@ function AnimatedDashboard() {
                 color: i === activeTab ? 'var(--ac)' : 'var(--t3)',
                 background: i === activeTab ? 'rgba(77,143,255,0.12)' : 'transparent',
                 fontWeight: i === activeTab ? 600 : 400,
-                transition: 'all 0.4s ease',
+                transition: 'all 0.25s ease',
                 borderBottom: i === activeTab ? '1px solid rgba(77,143,255,0.4)' : '1px solid transparent',
               }}>{name}</span>
             ))}
@@ -342,8 +389,8 @@ function AnimatedDashboard() {
         <div style={{
           padding: '16px 18px 14px', minHeight: '280px',
           opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(8px)',
-          transition: 'opacity 0.38s ease, transform 0.38s ease',
+          transform: visible ? 'translateY(0)' : 'translateY(6px)',
+          transition: 'opacity 0.28s ease, transform 0.28s ease',
         }}>
 
           {/* ── OVERVIEW ── */}
