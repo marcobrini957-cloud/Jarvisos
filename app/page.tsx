@@ -871,8 +871,13 @@ function Hero() {
               <div style={{ flexShrink: 0, width: '52px' }} />
             </div>
 
-            {/* Animated product demo */}
-            <AnimatedDashboard />
+            {/* Product demo video — rendered from hf-compositions/product-demo */}
+            {/* To revert: replace the <video> with <AnimatedDashboard /> */}
+            <video
+              loop autoPlay muted playsInline
+              src="/brand/product-demo.mp4"
+              style={{ width: '100%', display: 'block' }}
+            />
           </div>
         </div>
       </div>
