@@ -751,18 +751,6 @@ function Nav() {
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
-  const videoRef = useRef<HTMLVideoElement>(null)
-
-  useEffect(() => {
-    const v = videoRef.current
-    if (!v) return
-    v.muted = true
-    v.play().catch(() => {
-      const tryPlay = () => { v.play().catch(() => {}); document.removeEventListener('pointerdown', tryPlay) }
-      document.addEventListener('pointerdown', tryPlay)
-    })
-  }, [])
-
   return (
     <section style={{ position: 'relative', paddingBottom: '0' }}>
       {/* Background ambient glows */}
@@ -883,15 +871,7 @@ function Hero() {
               <div style={{ flexShrink: 0, width: '52px' }} />
             </div>
 
-            {/* Product demo video — rendered from hf-compositions/product-demo */}
-            {/* To revert: replace the <video> with <AnimatedDashboard /> */}
-            <video
-              ref={videoRef}
-              loop autoPlay muted playsInline preload="auto"
-              poster="/brand/product-demo-poster.jpg"
-              src="/brand/product-demo.mp4"
-              style={{ width: '100%', height: 'auto', aspectRatio: '16/9', display: 'block' }}
-            />
+            <AnimatedDashboard />
           </div>
         </div>
       </div>
