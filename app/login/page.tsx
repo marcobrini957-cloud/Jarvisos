@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { LogoMark } from '@/components/ui/LogoMark'
 
 type Mode = 'signin' | 'signup' | 'reset'
 
@@ -154,16 +155,7 @@ export default function LoginPage() {
       }} className="login-left-panel">
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '36px', height: '36px',
-            background: 'linear-gradient(145deg, var(--go2) 0%, var(--go) 100%)',
-            borderRadius: '10px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '18px',
-            boxShadow: '0 4px 16px rgba(232,152,10,0.4)',
-          }}>
-            ⬡
-          </div>
+          <LogoMark size={36} />
           <div>
             <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '15px', letterSpacing: '-0.01em' }}>VELQUOR</span>
             <span style={{ color: 'var(--t3)', fontSize: '10px', fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', marginLeft: '5px' }}>OS</span>
@@ -238,16 +230,7 @@ export default function LoginPage() {
 
           {/* Logo + heading */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '48px', height: '48px',
-              background: 'linear-gradient(145deg, var(--go2) 0%, var(--go) 100%)',
-              borderRadius: '14px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '22px',
-              boxShadow: '0 4px 20px rgba(200,133,26,0.35)',
-            }}>
-              ⬡
-            </div>
+            <LogoMark size={48} />
             <div style={{ textAlign: 'center' }}>
               <h1 style={{ color: 'var(--t1)', fontSize: '20px', fontWeight: 700, letterSpacing: '-0.02em', margin: 0 }}>
                 Velquor

@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { LogoMark } from '@/components/ui/LogoMark'
 
 const STEPS = [
-  { n: 1, title: 'Welcome to Velquor',        icon: '⬡' },
+  { n: 1, title: 'Welcome to Velquor',        icon: '◆' },
   { n: 2, title: 'Connect your MT5 account', icon: '⚡' },
   { n: 3, title: 'Set your trading limits',  icon: '🛡' },
   { n: 4, title: 'Meet VELQUOR AI',           icon: '🧠' },
@@ -15,7 +16,7 @@ const STEPS = [
 function Step1({ userName, onNext }: { userName: string; onNext: () => void }) {
   const features = [
     { icon: '⚡', label: 'MT5 auto-sync', desc: 'Every trade pulled from MetaTrader 5 automatically' },
-    { icon: '⬡', label: 'VELQUOR AI',     desc: 'AI that analyses your specific trading patterns'      },
+    { icon: '◆', label: 'VELQUOR AI',     desc: 'AI that analyses your specific trading patterns'      },
     { icon: '📊', label: 'Full analytics', desc: 'Win rate, P&L, and performance by setup and session' },
     { icon: '🏆', label: 'Prop Firm mode', desc: 'Real-time tracking for any funded challenge'         },
   ]
@@ -23,12 +24,9 @@ function Step1({ userName, onNext }: { userName: string; onNext: () => void }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div>
-        <div style={{
-          width: '56px', height: '56px', borderRadius: '16px', marginBottom: '20px',
-          background: 'linear-gradient(145deg, var(--go2), var(--go))',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px',
-          boxShadow: '0 8px 24px rgba(232,152,10,0.35)',
-        }}>⬡</div>
+        <div style={{ marginBottom: '20px' }}>
+          <LogoMark size={56} />
+        </div>
         <h1 style={{ fontSize: '30px', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 10px', color: 'var(--t1)' }}>
           Welcome{userName ? `, ${userName}` : ''}
         </h1>
@@ -325,7 +323,7 @@ function Step4({ onFinish }: { onFinish: () => void }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <div style={{ fontSize: '32px', marginBottom: '14px' }}>⬡</div>
+        <div style={{ marginBottom: '14px' }}><LogoMark size={40} /></div>
         <h2 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.02em', margin: '0 0 8px', color: 'var(--t1)' }}>
           Meet VELQUOR AI
         </h2>
@@ -336,11 +334,7 @@ function Step4({ onFinish }: { onFinish: () => void }) {
 
       <div style={{ background: 'var(--s2)', border: '1px solid var(--bd)', borderRadius: '12px', overflow: 'hidden' }}>
         <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--bd)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            width: '22px', height: '22px', borderRadius: '6px',
-            background: 'linear-gradient(145deg, var(--ac), var(--pu))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px',
-          }}>⬡</div>
+          <LogoMark size={22} />
           <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>VELQUOR</span>
           <span style={{ color: 'var(--gr2)', fontSize: '10px', marginLeft: '2px' }}>● Online</span>
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { LogoMark } from '@/components/ui/LogoMark'
 
 // ── Intro splash ──────────────────────────────────────────────────────────────
 function IntroSplash({ onDone }: { onDone: () => void }) {
@@ -66,16 +67,14 @@ function IntroSplash({ onDone }: { onDone: () => void }) {
           animation: phase === 'in' ? 'splash-in 0.6s cubic-bezier(0.34,1.4,0.64,1) forwards' : 'none',
         }}>
           <div style={{
-            width: '96px', height: '96px',
-            background: 'linear-gradient(145deg, var(--go2), var(--go))',
-            borderRadius: '28px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '48px',
             boxShadow: phase === 'hold'
-              ? '0 0 0 1px rgba(255,184,48,0.25), 0 12px 60px rgba(232,152,10,0.55), 0 0 120px rgba(232,152,10,0.2)'
-              : '0 8px 40px rgba(232,152,10,0.4)',
+              ? '0 0 0 1px rgba(201,168,76,0.2), 0 12px 60px rgba(201,168,76,0.4), 0 0 120px rgba(201,168,76,0.15)'
+              : '0 8px 40px rgba(201,168,76,0.25)',
+            borderRadius: '17.28px',
             transition: 'box-shadow 0.5s ease',
-          }}>⬡</div>
+          }}>
+            <LogoMark size={96} />
+          </div>
 
           <div style={{ textAlign: 'center' }}>
             <div style={{ color: '#F2F2F2', fontWeight: 800, fontSize: '32px', letterSpacing: '-0.04em', lineHeight: 1 }}>
@@ -318,7 +317,7 @@ function AnimatedDashboard() {
           background: 'rgba(255,255,255,0.015)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-            <div style={{ width: '18px', height: '18px', background: 'linear-gradient(145deg,var(--go2),var(--go))', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px' }}>⬡</div>
+            <LogoMark size={18} />
             <span style={{ color: 'var(--t1)', fontSize: '11px', fontWeight: 700 }}>Velquor</span>
           </div>
           <div style={{ display: 'flex', gap: '2px' }}>
@@ -502,7 +501,7 @@ function AnimatedDashboard() {
           {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'linear-gradient(145deg,var(--ac),var(--pu))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>⬡</div>
+                <LogoMark size={28} />
                 <div>
                   <p style={{ margin: 0, color: 'var(--t1)', fontSize: '12px', fontWeight: 700 }}>VELQUOR AI</p>
                   <p style={{ margin: 0, color: 'var(--gr2)', fontSize: '10px' }}>● Online · analysing your 247 trades</p>
@@ -525,7 +524,7 @@ function AnimatedDashboard() {
                   </div>
                 </div>
                 <div style={{ padding: '12px 14px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-                  <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: 'rgba(77,143,255,0.12)', border: '1px solid rgba(77,143,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', flexShrink: 0 }}>⬡</div>
+                  <LogoMark size={24} />
                   <p style={{ margin: 0, color: 'var(--t2)', fontSize: '11px', lineHeight: 1.75 }}>
                     {VELQUOR_TEXT.slice(0, velquorChars)}
                     {velquorChars < VELQUOR_TEXT.length && (
@@ -571,11 +570,7 @@ function DashboardMockup() {
         background: 'rgba(255,255,255,0.02)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            width: '20px', height: '20px',
-            background: 'linear-gradient(145deg, var(--go2), var(--go))',
-            borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px',
-          }}>⬡</div>
+          <LogoMark size={20} />
           <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 700 }}>Velquor</span>
         </div>
         <div style={{ display: 'flex', gap: '2px' }}>
@@ -671,7 +666,7 @@ function DashboardMockup() {
           border: '1px solid rgba(77,143,255,0.15)', borderRadius: '10px', padding: '10px 14px',
           display: 'flex', gap: '10px', alignItems: 'flex-start',
         }}>
-          <div style={{ width: '20px', height: '20px', borderRadius: '6px', background: 'linear-gradient(145deg, var(--ac), var(--pu))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', flexShrink: 0 }}>⬡</div>
+          <LogoMark size={20} />
           <p style={{ margin: 0, color: 'var(--t2)', fontSize: '11px', lineHeight: 1.6 }}>
             <strong style={{ color: 'var(--ac)' }}>VELQUOR:</strong> Your XAUUSD win rate is 83% — highest of any instrument. ICT Order Block setups during London session are your strongest edge.
           </p>
@@ -722,12 +717,7 @@ function Nav() {
         }}
         style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
       >
-        <div style={{
-          width: '28px', height: '28px',
-          background: 'linear-gradient(145deg, var(--go2), var(--go))',
-          borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px',
-          boxShadow: '0 4px 12px rgba(232,152,10,0.4)',
-        }}>⬡</div>
+        <LogoMark size={28} />
         <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '14px', letterSpacing: '-0.01em' }}>
           Velquor
         </span>
@@ -1094,7 +1084,7 @@ function ShowcaseSection() {
 function Features() {
   const features = [
     { icon: '⚡', color: 'var(--go2)', title: 'MT5 Sync — Any Broker', desc: 'Enter your MT5 login, password, and broker server — your full trade history syncs in seconds. No CSV exports, no copy-paste, no manual data entry. Works with every MT5 broker worldwide.' },
-    { icon: '⬡', color: 'var(--ac)', title: 'VELQUOR AI Coach', desc: 'Ask "why am I losing on Nasdaq?" and get an answer built from your own numbers — not generic YouTube advice. VELQUOR reads every trade, every journal entry, and every emotion tag you\'ve ever logged.' },
+    { icon: '◆', color: 'var(--ac)', title: 'VELQUOR AI Coach', desc: 'Ask "why am I losing on Nasdaq?" and get an answer built from your own numbers — not generic YouTube advice. VELQUOR reads every trade, every journal entry, and every emotion tag you\'ve ever logged.' },
     { icon: '🌐', color: 'var(--pu)', title: 'Macro Intelligence', desc: 'Economic data, central bank decisions, and geopolitical events — explained plainly before each session. VELQUOR generates a daily directional bias for Gold, Nasdaq, and EUR/USD so you know what you\'re trading into.' },
     { icon: '🛡', color: 'var(--re)', title: 'Daily Loss Guard', desc: 'Set the maximum amount you\'re willing to lose in a single day. VELQUOR watches every closed trade and fires a warning before you hit your limit — the discipline rule most traders say they follow but don\'t.' },
     { icon: '🏆', color: 'var(--gr2)', title: 'Prop Firm Tracker', desc: 'Running an FTMO, TFT, or MyFundedFX challenge? Set your rules once. VELQUOR tracks your max daily loss, total drawdown, profit target, and minimum trading days in real time — so one bad session never ends your challenge.' },
@@ -1234,11 +1224,7 @@ function VelquorSection() {
           boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
         }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--bd)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '26px', height: '26px', borderRadius: '7px',
-              background: 'linear-gradient(145deg, var(--ac), var(--pu))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px',
-            }}>⬡</div>
+            <LogoMark size={26} />
             <div>
               <p style={{ margin: 0, color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>VELQUOR</p>
               <p style={{ margin: 0, color: 'var(--gr2)', fontSize: '10px' }}>● Online</p>
@@ -1252,11 +1238,7 @@ function VelquorSection() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: '9px', alignItems: 'flex-start' }}>
-              <div style={{
-                width: '26px', height: '26px', borderRadius: '7px', flexShrink: 0,
-                background: 'rgba(77,143,255,0.1)', border: '1px solid rgba(77,143,255,0.2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px',
-              }}>⬡</div>
+              <LogoMark size={26} />
               <div style={{
                 background: 'var(--s2)', border: '1px solid var(--bd)',
                 padding: '11px 13px', borderRadius: '2px 11px 11px 11px',
@@ -1529,11 +1511,7 @@ function Footer() {
       {/* Top row: logo + links */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            width: '20px', height: '20px', borderRadius: '5px',
-            background: 'linear-gradient(145deg, var(--go2), var(--go))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px',
-          }}>⬡</div>
+          <LogoMark size={20} />
           <span style={{ color: 'var(--t3)', fontSize: '12px' }}>Velquor © 2026</span>
         </div>
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>

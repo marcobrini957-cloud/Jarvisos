@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import MT5ConnectModal from './MT5ConnectModal'
+import { LogoMark } from '@/components/ui/LogoMark'
 import { useDisplayMode } from '@/context/DisplayModeContext'
 import { useUserProfile } from '@/context/UserProfileContext'
 import { createClient } from '@/lib/supabase/client'
@@ -186,16 +187,7 @@ export default function Topbar() {
       >
         {/* Logo */}
         <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-          <div style={{
-            width: '26px', height: '26px',
-            background: 'linear-gradient(145deg, var(--go2) 0%, var(--am) 100%)',
-            borderRadius: '8px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '12px',
-            boxShadow: '0 2px 8px rgba(200,133,26,0.35)',
-          }}>
-            ⬡
-          </div>
+          <LogoMark size={26} />
           <span className="topbar-brand-text" style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '13px', letterSpacing: '-0.01em' }}>
             Velquor
           </span>

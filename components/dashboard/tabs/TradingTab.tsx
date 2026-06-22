@@ -6,6 +6,7 @@ import { useAccountSnapshot } from '@/hooks/useAccountSnapshot'
 import { generateInsights }  from '@/lib/intelligence'
 import InsightCard           from '@/components/ui/InsightCard'
 import PeriodMetricCard, { type Period } from '@/components/ui/PeriodMetricCard'
+import { LogoMark } from '@/components/ui/LogoMark'
 import Panel                 from '@/components/ui/Panel'
 import Badge                 from '@/components/ui/Badge'
 import ScreenshotGallery     from '@/components/ui/ScreenshotGallery'
@@ -2335,15 +2336,7 @@ export default function TradingTab() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '20px', padding: '40px 20px', textAlign: 'center' }}>
         {/* Icon */}
-        <div style={{
-          width: '72px', height: '72px', borderRadius: '20px',
-          background: 'linear-gradient(145deg, var(--go2) 0%, var(--am) 100%)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '32px',
-          boxShadow: '0 8px 32px rgba(200,133,26,0.25)',
-        }}>
-          ⬡
-        </div>
+        <LogoMark size={72} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <p style={{ color: 'var(--t1)', fontSize: '18px', fontWeight: 600 }}>No trades yet</p>
           <p style={{ color: 'var(--t3)', fontSize: '13px', maxWidth: '320px', lineHeight: 1.6 }}>
