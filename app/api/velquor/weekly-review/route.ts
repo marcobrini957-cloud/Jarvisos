@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       `${j.entry_date}: mood=${j.mood ?? '?'}, energy=${j.energy_level ?? '?'}/10` + (j.body_text ? ` — "${j.body_text.slice(0, 80)}"` : '')
     ).join('\n')
 
-    const prompt = `You are Jarvis, Marco's AI trading analyst. Analyze his week and provide a deep, personalized review.
+    const prompt = `You are VELQUOR, Marco's AI trading analyst. Analyze his week and provide a deep, personalized review.
 
 WEEK: ${week}
 MARCO'S SELF-REPORT:
@@ -90,7 +90,7 @@ Be direct. Don't sugarcoat. This is for someone who wants to become a better tra
       headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' },
     })
   } catch (err) {
-    console.error('[jarvis/weekly-review]', err)
+    console.error('[velquor/weekly-review]', err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }

@@ -165,7 +165,7 @@ export default function LoginPage() {
             ⬡
           </div>
           <div>
-            <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '15px', letterSpacing: '-0.01em' }}>Jarvis</span>
+            <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '15px', letterSpacing: '-0.01em' }}>VELQUOR</span>
             <span style={{ color: 'var(--t3)', fontSize: '10px', fontWeight: 500, letterSpacing: '0.06em', textTransform: 'uppercase', marginLeft: '5px' }}>OS</span>
           </div>
         </div>

@@ -11,7 +11,7 @@ import PortfolioTab   from './tabs/PortfolioTab'
 import JournalTab     from './tabs/JournalTab'
 import MacroTab       from './tabs/MacroTab'
 import DisciplineTab  from './tabs/DisciplineTab'
-import JarvisTab      from './tabs/JarvisTab'
+import VelquorTab      from './tabs/VelquorTab'
 import SettingsTab    from './tabs/SettingsTab'
 
 const TAB_COMPONENTS = [
@@ -21,7 +21,7 @@ const TAB_COMPONENTS = [
   JournalTab,    // 3
   MacroTab,      // 4
   DisciplineTab, // 5
-  JarvisTab,     // 6
+  VelquorTab,     // 6
 ]
 
 export default function DashboardShell() {

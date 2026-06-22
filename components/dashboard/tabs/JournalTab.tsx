@@ -353,7 +353,7 @@ function WeeklyReviewSection() {
   async function handleGenerate() {
     setGenerating(true); setAiText('')
     try {
-      const res = await fetch('/api/jarvis/weekly-review', {
+      const res = await fetch('/api/velquor/weekly-review', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ wins, losses, lessons, goals, mood, energy, week: selectedWeek }),
       })
@@ -432,7 +432,7 @@ function WeeklyReviewSection() {
               </button>
               <button onClick={handleGenerate} disabled={generating} className="flex-1 py-2.5 rounded-md font-medium"
                 style={{ background: 'rgba(232,201,106,0.1)', border: '1px solid rgba(232,201,106,0.3)', color: 'var(--go2)', fontSize: '13px', cursor: 'pointer', opacity: generating ? 0.6 : 1 }}>
-                {generating ? '✨ Jarvis is thinking…' : '✨ Get Jarvis Analysis'}
+                {generating ? '✨ VELQUOR is thinking…' : '✨ Get VELQUOR Analysis'}
               </button>
             </div>
           </div>
@@ -450,9 +450,9 @@ function WeeklyReviewSection() {
                 </div>
               </div>
             </Panel>
-            <Panel title="✨ Jarvis Analysis">
+            <Panel title="✨ VELQUOR Analysis">
               {!aiText && !generating ? (
-                <p style={{ color: 'var(--t3)', fontSize: '12px', lineHeight: 1.6 }}>Fill in your review and click "Get Jarvis Analysis" for a personalised deep dive using your real trade data.</p>
+                <p style={{ color: 'var(--t3)', fontSize: '12px', lineHeight: 1.6 }}>Fill in your review and click "Get VELQUOR Analysis" for a personalised deep dive using your real trade data.</p>
               ) : generating ? (
                 <p style={{ color: 'var(--t1)', fontSize: '12px', lineHeight: '1.7', whiteSpace: 'pre-line' }}>{aiText}<span style={{ color: 'var(--go2)' }}>▌</span></p>
               ) : (
@@ -872,7 +872,7 @@ export default function JournalTab() {
                   const worstAvg = moodStats[worst].totalPnl / moodStats[worst].count
                   return (
                     <div className="rounded-lg p-3 mt-2" style={{ background: 'rgba(232,201,106,0.05)', border: '1px solid rgba(232,201,106,0.15)' }}>
-                      <p style={{ color: 'var(--go2)', fontSize: '11px', fontWeight: 500, marginBottom: '4px' }}>JARVIS INSIGHT</p>
+                      <p style={{ color: 'var(--go2)', fontSize: '11px', fontWeight: 500, marginBottom: '4px' }}>VELQUOR INSIGHT</p>
                       <p style={{ color: 'var(--t2)', fontSize: '12px', lineHeight: '1.6' }}>
                         You trade best when feeling <strong style={{ color: MOOD_COLOR[best as Mood] }}>{best}</strong> (avg {bestAvg >= 0 ? '+' : ''}€{Math.abs(bestAvg).toFixed(2)}/day).
                         {best !== worst && ` Avoid trading when <strong style="color:${MOOD_COLOR[worst as Mood]}">${worst}</strong> (avg ${worstAvg >= 0 ? '+' : ''}€${Math.abs(worstAvg).toFixed(2)}/day).`}

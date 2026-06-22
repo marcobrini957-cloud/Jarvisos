@@ -8,14 +8,14 @@ const STEPS = [
   { n: 1, title: 'Welcome to Velquor',        icon: '⬡' },
   { n: 2, title: 'Connect your MT5 account', icon: '⚡' },
   { n: 3, title: 'Set your trading limits',  icon: '🛡' },
-  { n: 4, title: 'Meet Jarvis AI',           icon: '🧠' },
+  { n: 4, title: 'Meet VELQUOR AI',           icon: '🧠' },
 ]
 
 // ── Step 1 ────────────────────────────────────────────────────────────────────
 function Step1({ userName, onNext }: { userName: string; onNext: () => void }) {
   const features = [
     { icon: '⚡', label: 'MT5 auto-sync', desc: 'Every trade pulled from MetaTrader 5 automatically' },
-    { icon: '⬡', label: 'Jarvis AI',     desc: 'AI that analyses your specific trading patterns'      },
+    { icon: '⬡', label: 'VELQUOR AI',     desc: 'AI that analyses your specific trading patterns'      },
     { icon: '📊', label: 'Full analytics', desc: 'Win rate, P&L, and performance by setup and session' },
     { icon: '🏆', label: 'Prop Firm mode', desc: 'Real-time tracking for any funded challenge'         },
   ]
@@ -251,7 +251,7 @@ function Step3({ onNext }: { onNext: () => void }) {
           onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
         />
         <p style={{ margin: '6px 0 0', color: 'var(--t3)', fontSize: '11px' }}>
-          Jarvis will warn you when you&apos;re approaching this limit during the trading day.
+          VELQUOR will warn you when you&apos;re approaching this limit during the trading day.
         </p>
       </div>
 
@@ -327,10 +327,10 @@ function Step4({ onFinish }: { onFinish: () => void }) {
       <div>
         <div style={{ fontSize: '32px', marginBottom: '14px' }}>⬡</div>
         <h2 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.02em', margin: '0 0 8px', color: 'var(--t1)' }}>
-          Meet Jarvis AI
+          Meet VELQUOR AI
         </h2>
         <p style={{ color: 'var(--t2)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-          Jarvis is your personal AI trading coach. It reads your trade history, journal entries, mood logs, and habits — and gives you analysis that&apos;s specific to your trading.
+          VELQUOR is your personal AI trading coach. It reads your trade history, journal entries, mood logs, and habits — and gives you analysis that&apos;s specific to your trading.
         </p>
       </div>
 
@@ -341,11 +341,11 @@ function Step4({ onFinish }: { onFinish: () => void }) {
             background: 'linear-gradient(145deg, var(--ac), var(--pu))',
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px',
           }}>⬡</div>
-          <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>Jarvis</span>
+          <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>VELQUOR</span>
           <span style={{ color: 'var(--gr2)', fontSize: '10px', marginLeft: '2px' }}>● Online</span>
         </div>
         <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <p style={{ margin: 0, color: 'var(--t2)', fontSize: '12px' }}>Try asking Jarvis:</p>
+          <p style={{ margin: 0, color: 'var(--t2)', fontSize: '12px' }}>Try asking VELQUOR:</p>
           {quickActions.map(q => (
             <div key={q} style={{
               padding: '9px 12px', borderRadius: '8px',
@@ -361,9 +361,9 @@ function Step4({ onFinish }: { onFinish: () => void }) {
         background: 'linear-gradient(135deg, rgba(77,143,255,0.06), rgba(168,126,255,0.06))',
         border: '1px solid rgba(77,143,255,0.15)',
       }}>
-        <p style={{ margin: '0 0 6px', color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>Jarvis gets smarter over time</p>
+        <p style={{ margin: '0 0 6px', color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>VELQUOR gets smarter over time</p>
         <p style={{ margin: 0, color: 'var(--t2)', fontSize: '12px', lineHeight: 1.5 }}>
-          The more you trade, journal, and log your mood — the more personalised and accurate Jarvis&apos;s analysis becomes. Start logging from day one.
+          The more you trade, journal, and log your mood — the more personalised and accurate VELQUOR&apos;s analysis becomes. Start logging from day one.
         </p>
       </div>
 

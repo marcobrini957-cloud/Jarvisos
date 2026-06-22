@@ -110,7 +110,7 @@ export default function WeeklyReviewTab() {
     setAiText('')
     try {
       const payload = { wins, losses, lessons, goals, mood, energy, week: selectedWeek }
-      const res = await fetch('/api/jarvis/weekly-review', {
+      const res = await fetch('/api/velquor/weekly-review', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload),
@@ -151,7 +151,7 @@ export default function WeeklyReviewTab() {
       <div className="flex items-center justify-between">
         <div>
           <h2 style={{ color: 'var(--t1)', fontSize: '16px', fontWeight: 500 }}>Weekly Review</h2>
-          <p style={{ color: 'var(--t2)', fontSize: '12px', marginTop: '2px' }}>Reflect, grade yourself, get Jarvis analysis</p>
+          <p style={{ color: 'var(--t2)', fontSize: '12px', marginTop: '2px' }}>Reflect, grade yourself, get VELQUOR analysis</p>
         </div>
         <select
           value={selectedWeek}
@@ -253,7 +253,7 @@ export default function WeeklyReviewTab() {
                 background: 'rgba(232,201,106,0.1)', border: '1px solid rgba(232,201,106,0.3)',
                 color: 'var(--go2)', fontSize: '13px', cursor: 'pointer', opacity: generating ? 0.6 : 1,
               }}>
-              {generating ? '✨ Jarvis is thinking…' : '✨ Generate Jarvis Analysis'}
+              {generating ? '✨ VELQUOR is thinking…' : '✨ Generate VELQUOR Analysis'}
             </button>
           </div>
         </div>
@@ -283,11 +283,11 @@ export default function WeeklyReviewTab() {
           </Panel>
 
           {/* AI Analysis */}
-          <Panel title="✨ Jarvis Analysis">
+          <Panel title="✨ VELQUOR Analysis">
             {!aiText && !generating ? (
               <div className="flex flex-col gap-2">
                 <p style={{ color: 'var(--t3)', fontSize: '12px', lineHeight: 1.6 }}>
-                  Fill in your review and click "Generate Jarvis Analysis". Jarvis will pull your actual trade data, journal entries, and habits from this week to give you a personalized deep dive.
+                  Fill in your review and click "Generate VELQUOR Analysis". VELQUOR will pull your actual trade data, journal entries, and habits from this week to give you a personalized deep dive.
                 </p>
                 <p style={{ color: 'var(--t3)', fontSize: '11px', marginTop: '4px' }}>
                   Powered by Claude AI · Uses your real Supabase data
@@ -296,7 +296,7 @@ export default function WeeklyReviewTab() {
             ) : generating ? (
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 mb-2">
-                  <span style={{ color: 'var(--go2)', fontSize: '11px', fontWeight: 500 }}>JARVIS</span>
+                  <span style={{ color: 'var(--go2)', fontSize: '11px', fontWeight: 500 }}>VELQUOR</span>
                   <span className="inline-block rounded-full"
                     style={{ width: '6px', height: '6px', background: 'var(--go2)', animation: 'pulse 1s ease-in-out infinite' }} />
                 </div>

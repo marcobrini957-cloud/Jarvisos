@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       .map(([e, vals]) => `${e}: avg €${(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(0)}`)
       .join(', ')
 
-    const prompt = `You are Jarvis, a direct trading coach. Analyze this trade and give exactly 2-3 sentences of feedback.
+    const prompt = `You are VELQUOR, a direct trading coach. Analyze this trade and give exactly 2-3 sentences of feedback.
 
 TRADE:
 - Instrument: ${body.symbol} ${body.type.toUpperCase()}

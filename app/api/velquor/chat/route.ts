@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
       hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Vienna',
     })
 
-    const systemPrompt = `You are Jarvis, Marco's personal trading coach and performance analyst.
+    const systemPrompt = `You are VELQUOR, Marco's personal trading coach and performance analyst.
 TODAY: ${todayStr}, ${timeStr} Vienna time
 
 ${context}
@@ -209,7 +209,7 @@ HOW TO RESPOND
       },
     })
   } catch (err) {
-    console.error('[jarvis/chat]', err)
+    console.error('[velquor/chat]', err)
     return NextResponse.json({ error: String(err) }, { status: 500 })
   }
 }

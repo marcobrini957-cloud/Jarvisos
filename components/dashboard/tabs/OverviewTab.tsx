@@ -909,10 +909,10 @@ export default function OverviewTab() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════
-          JARVIS INTELLIGENCE
+          VELQUOR INTELLIGENCE
       ══════════════════════════════════════════════════════════ */}
       <Panel
-        title="Jarvis Intelligence"
+        title="VELQUOR Intelligence"
         accent="var(--go2)"
         action={insights.length > 0 ? (
           <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '6px', background: 'rgba(255,176,48,0.1)', color: 'var(--go2)', fontWeight: 600, border: '1px solid rgba(255,176,48,0.2)' }}>

@@ -1,7 +1,7 @@
 import type { Trade, JournalEntry, Task } from '@/types'
 import type { HoldingWithPrice } from '@/hooks/usePortfolio'
 
-export interface JarvisInsight {
+export interface VelquorInsight {
   id:        string
   category:  'trading' | 'portfolio' | 'journal' | 'habits' | 'warning' | 'opportunity'
   priority:  'high' | 'medium' | 'low'
@@ -11,7 +11,7 @@ export interface JarvisInsight {
   action?:   string
 }
 
-export interface JarvisData {
+export interface VelquorData {
   trades:         Trade[]
   holdings:       HoldingWithPrice[]
   journal:        JournalEntry[]
@@ -49,9 +49,9 @@ function realTrades(trades: Trade[]): Trade[] {
   return trades.filter(t => t.symbol !== 'BALANCE' && !!t.symbol && (t.lot_size ?? 0) > 0)
 }
 
-export function generateInsights(data: JarvisData): JarvisInsight[] {
-  const insights: JarvisInsight[] = []
-  const push = (i: Omit<JarvisInsight, 'id'>) =>
+export function generateInsights(data: VelquorData): VelquorInsight[] {
+  const insights: VelquorInsight[] = []
+  const push = (i: Omit<VelquorInsight, 'id'>) =>
     insights.push({ ...i, id: `${i.category}-${insights.length}` })
 
   const closed = realTrades(data.trades).filter(t => t.net_profit !== null)

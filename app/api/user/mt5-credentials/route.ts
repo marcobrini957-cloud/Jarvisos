@@ -20,7 +20,7 @@ async function getUserId(): Promise<string | null> {
 
 // POST /api/user/mt5-credentials
 // Body: { login, password, server }
-// 1. Provisions (or updates) user's MT5 account under Jarvis's MetaAPI subscription
+// 1. Provisions (or updates) user's MT5 account under VELQUOR's MetaAPI subscription
 // 2. Stores the resulting MetaAPI account UUID in user_profiles
 export async function POST(req: NextRequest) {
   try {
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!metaAccountId) {
-      // Provision a new MT5 account under Jarvis's MetaAPI subscription
+      // Provision a new MT5 account under VELQUOR's MetaAPI subscription
       const provRes = await fetch(`${PROVISION_BASE}/users/current/accounts`, {
         method: 'POST',
         headers: { 'auth-token': token, 'Content-Type': 'application/json' },

@@ -17,7 +17,7 @@ const QUICK_ACTIONS = [
   "How does my energy level affect my trading?",
 ]
 
-export default function JarvisTab() {
+export default function VelquorTab() {
   const [messages,   setMessages]   = useState<Message[]>([])
   const [input,      setInput]      = useState('')
   const [streaming,  setStreaming]  = useState(false)
@@ -40,7 +40,7 @@ export default function JarvisTab() {
     setMessages(prev => [...prev, { role: 'assistant', content: '' }])
 
     try {
-      const res = await fetch('/api/jarvis/chat', {
+      const res = await fetch('/api/velquor/chat', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
@@ -52,7 +52,7 @@ export default function JarvisTab() {
       if (!res.ok || !res.body) {
         setMessages(prev => {
           const copy = [...prev]
-          copy[copy.length - 1] = { role: 'assistant', content: 'Error reaching Jarvis. Check that GROQ_API_KEY is set in environment variables.' }
+          copy[copy.length - 1] = { role: 'assistant', content: 'Error reaching VELQUOR. Check that GROQ_API_KEY is set in environment variables.' }
           return copy
         })
         return
@@ -99,9 +99,9 @@ export default function JarvisTab() {
             <span style={{ fontSize: '24px' }}>🤖</span>
           </div>
           <div>
-            <h2 style={{ color: 'var(--go2)', fontSize: '18px', fontWeight: 600 }}>Jarvis AI</h2>
+            <h2 style={{ color: 'var(--go2)', fontSize: '18px', fontWeight: 600 }}>VELQUOR AI</h2>
             <p style={{ color: 'var(--t2)', fontSize: '13px', marginTop: '3px', lineHeight: 1.5 }}>
-              Your personal trading coach. Jarvis analyses your trade history, journal entries, and portfolio data to give you real, specific insights about your performance, habits, and psychology.
+              Your personal trading coach. VELQUOR analyses your trade history, journal entries, and portfolio data to give you real, specific insights about your performance, habits, and psychology.
             </p>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function JarvisTab() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Chat */}
         <div className="lg:col-span-2">
-          <Panel title="Ask Jarvis" noPadding>
+          <Panel title="Ask VELQUOR" noPadding>
             {/* Messages */}
             <div style={{ minHeight: '300px', maxHeight: '500px', overflowY: 'auto', padding: '16px' }}>
               {!hasLoaded && messages.length === 0 && (
@@ -173,7 +173,7 @@ export default function JarvisTab() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
-                placeholder="Ask Jarvis about your trading, performance, or anything…"
+                placeholder="Ask VELQUOR about your trading, performance, or anything…"
                 disabled={streaming}
                 className="flex-1 px-3 py-2.5 rounded-md outline-none"
                 style={{
@@ -197,7 +197,7 @@ export default function JarvisTab() {
 
         {/* Right — info + quick actions */}
         <div className="flex flex-col gap-4">
-          <Panel title="What Jarvis Knows">
+          <Panel title="What VELQUOR Knows">
             <div className="flex flex-col gap-3">
               {[
                 { icon: '📊', label: 'All your MT5 trades', sub: 'P&L, win rate, sessions, setups' },

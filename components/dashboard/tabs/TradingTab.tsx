@@ -74,7 +74,7 @@ function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose: () =>
       setSaved(true)
       // Fetch AI feedback (non-blocking)
       setAiFetching(true)
-      fetch('/api/jarvis/trade-feedback', {
+      fetch('/api/velquor/trade-feedback', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
@@ -278,7 +278,7 @@ function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose: () =>
             background: 'rgba(77,143,255,0.07)', border: '1px solid rgba(77,143,255,0.2)',
           }}>
             <p style={{ fontSize: '10px', color: 'var(--ac)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
-              Jarvis Feedback
+              VELQUOR Feedback
             </p>
             {aiFetching ? (
               <p style={{ fontSize: '12px', color: 'var(--t3)' }}>Analyzing trade…</p>
@@ -438,11 +438,11 @@ function heatColor(wr: number, count: number) {
   return              { bg: 'rgba(226,75,74,0.20)',  color: 'var(--re)' }
 }
 
-// ── Jarvis AI Chat ────────────────────────────────────────────────────────────
+// ── VELQUOR AI Chat ────────────────────────────────────────────────────────────
 
 interface ChatMsg { role: 'user' | 'assistant'; text: string }
 
-function JarvisChat({ trades }: { trades: Trade[] }) {
+function VelquorChat({ trades }: { trades: Trade[] }) {
   const [msgs,    setMsgs]    = useState<ChatMsg[]>([])
   const [input,   setInput]   = useState('')
   const [loading, setLoading] = useState(false)
@@ -579,14 +579,14 @@ function JarvisChat({ trades }: { trades: Trade[] }) {
   ]
 
   return (
-    <Panel title="Ask Jarvis">
+    <Panel title="Ask VELQUOR">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
         {/* Chat messages */}
         {msgs.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <p style={{ color: 'var(--t3)', fontSize: '12px', marginBottom: '4px' }}>
-              Ask anything about your trading data. Jarvis has full context of your {closed.length} trades.
+              Ask anything about your trading data. VELQUOR has full context of your {closed.length} trades.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {SUGGESTIONS.map(s => (
@@ -619,7 +619,7 @@ function JarvisChat({ trades }: { trades: Trade[] }) {
                 }}>
                   {m.role === 'assistant' && (
                     <span style={{ fontSize: '10px', color: 'var(--t3)', display: 'block', marginBottom: '4px', letterSpacing: '0.05em' }}>
-                      JARVIS
+                      VELQUOR
                     </span>
                   )}
                   {m.text}
@@ -633,7 +633,7 @@ function JarvisChat({ trades }: { trades: Trade[] }) {
                   background: 'var(--s2)', border: '1px solid var(--bd2)',
                   fontSize: '13px', color: 'var(--t3)',
                 }}>
-                  <span style={{ fontSize: '10px', color: 'var(--t3)', display: 'block', marginBottom: '4px' }}>JARVIS</span>
+                  <span style={{ fontSize: '10px', color: 'var(--t3)', display: 'block', marginBottom: '4px' }}>VELQUOR</span>
                   Thinking...
                 </div>
               </div>
@@ -2347,7 +2347,7 @@ export default function TradingTab() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <p style={{ color: 'var(--t1)', fontSize: '18px', fontWeight: 600 }}>No trades yet</p>
           <p style={{ color: 'var(--t3)', fontSize: '13px', maxWidth: '320px', lineHeight: 1.6 }}>
-            Connect your MT5 account to start syncing trades automatically. Jarvis will analyse your performance in real time.
+            Connect your MT5 account to start syncing trades automatically. VELQUOR will analyse your performance in real time.
           </p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '280px' }}>
@@ -2851,7 +2851,7 @@ export default function TradingTab() {
 
       {/* Statistical Analysis — full analytics panel */}
       <TradingInsights trades={trades} allRows={allRows} />
-      <JarvisChat trades={trades} />
+      <VelquorChat trades={trades} />
 
       {/* Session Heatmap — kept for visual quick reference */}
       <Panel title="Session Heatmap — Win Rate (from your real trades)">

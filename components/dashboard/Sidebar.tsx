@@ -125,10 +125,10 @@ export default function Sidebar({ activeTab, onTabChange, showSettings, onSettin
 
       <div className="flex-1" />
 
-      {/* Jarvis AI (gold) */}
+      {/* VELQUOR AI (gold) */}
       <IconBtn
         icon={IconRobot}
-        label="Jarvis AI"
+        label="VELQUOR AI"
         isActive={!showSettings && activeTab === 8}
         isGold
         onClick={() => onTabChange(8)}

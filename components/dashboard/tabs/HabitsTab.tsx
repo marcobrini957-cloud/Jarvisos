@@ -311,10 +311,10 @@ export default function HabitsTab() {
           </Panel>
 
           <div className="rounded-lg p-4" style={{ background: 'rgba(232,201,106,0.05)', border: '1px solid rgba(232,201,106,0.15)' }}>
-            <p style={{ color: 'var(--go2)', fontSize: '11px', fontWeight: 500, marginBottom: '6px' }}>💡 JARVIS TIP</p>
+            <p style={{ color: 'var(--go2)', fontSize: '11px', fontWeight: 500, marginBottom: '6px' }}>💡 VELQUOR TIP</p>
             <p style={{ color: 'var(--t2)', fontSize: '12px', lineHeight: 1.6 }}>
               Research shows that traders who maintain consistent daily habits — especially journaling and pre-trade checklists — have 23% higher win rates on average.
-              Track your habits for 30 days and Jarvis will correlate them with your P&L.
+              Track your habits for 30 days and VELQUOR will correlate them with your P&L.
             </p>
           </div>
         </div>

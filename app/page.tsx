@@ -121,18 +121,18 @@ function Counter({ target, prefix = '', suffix = '', decimals = 0 }: {
 }
 
 // ── Animated product demo ─────────────────────────────────────────────────────
-const JARVIS_TEXT = "Your NAS100 trades show a 38% win rate — below breakeven. 6 of your 8 losses came in the first 30 minutes after NY open. You're trading against institutional order flow before direction is established. Consider a 30-minute wait rule. Your London-only NAS100 trades hit 71% win rate."
+const VELQUOR_TEXT = "Your NAS100 trades show a 38% win rate — below breakeven. 6 of your 8 losses came in the first 30 minutes after NY open. You're trading against institutional order flow before direction is established. Consider a 30-minute wait rule. Your London-only NAS100 trades hit 71% win rate."
 
 function AnimatedDashboard() {
-  const TAB_NAMES    = ['Overview', 'Trading', 'Journal', 'Macro', 'Jarvis']
-  const TAB_ORDER    = [0, 1, 2, 4]   // Overview, Trading, Journal, Jarvis
+  const TAB_NAMES    = ['Overview', 'Trading', 'Journal', 'Macro', 'VELQUOR']
+  const TAB_ORDER    = [0, 1, 2, 4]   // Overview, Trading, Journal, VELQUOR
   const NEXT_TAB_IDX = [1, 2, 4, 0]   // which TAB_NAMES index to click next
   const STEP_MS      = 5000
 
   const [step,           setStep]          = useState(0)
   const [visible,        setVisible]       = useState(true)
   const [progress,       setProgress]      = useState(0)
-  const [jarvisChars,    setJarvisChars]   = useState(0)
+  const [velquorChars,    setVELQUORChars]   = useState(0)
   const [cursorX,        setCursorX]       = useState(0)  // pixels from container left
   const [cursorY,        setCursorY]       = useState(0)  // pixels from container top
   const [cursorEase,     setCursorEase]    = useState(900) // transition ms
@@ -171,7 +171,7 @@ function AnimatedDashboard() {
     [0.60, 0.34], // Overview: right side, upper — hovering over metrics
     [0.57, 0.50], // Trading:  center — hovering over equity chart
     [0.30, 0.46], // Journal:  left   — hovering over calendar
-    [0.54, 0.67], // Jarvis:   center lower — hovering over chat response
+    [0.54, 0.67], // VELQUOR:   center lower — hovering over chat response
   ] as const
 
   // Intermediate waypoints (fractions) — slightly off the direct path to tab
@@ -179,8 +179,8 @@ function AnimatedDashboard() {
   const INTER_FRAC = [
     [0.48, 0.20], // Overview → Trading:  drift up then left
     [0.53, 0.22], // Trading  → Journal:  drift straight upward
-    [0.46, 0.18], // Journal  → Jarvis:   drift up then right
-    [0.42, 0.30], // Jarvis   → Overview: drift left and up
+    [0.46, 0.18], // Journal  → VELQUOR:   drift up then right
+    [0.42, 0.30], // VELQUOR   → Overview: drift left and up
   ] as const
 
   // Main loop: progress bar + 3-phase cursor movement
@@ -231,7 +231,7 @@ function AnimatedDashboard() {
     const switchId = setTimeout(() => {
       clearInterval(progId)
       setVisible(false)
-      setJarvisChars(0)
+      setVELQUORChars(0)
       setTimeout(() => {
         setStep(s => (s + 1) % 4)
         setProgress(0)
@@ -249,14 +249,14 @@ function AnimatedDashboard() {
     }
   }, [step])
 
-  // Typewriter for Jarvis tab
+  // Typewriter for VELQUOR tab
   useEffect(() => {
     if (step !== 3 || !visible) return
     let i = 0
     const id = setInterval(() => {
       i++
-      setJarvisChars(i)
-      if (i >= JARVIS_TEXT.length) clearInterval(id)
+      setVELQUORChars(i)
+      if (i >= VELQUOR_TEXT.length) clearInterval(id)
     }, 22)
     return () => clearInterval(id)
   }, [step, visible])
@@ -498,13 +498,13 @@ function AnimatedDashboard() {
             </div>
           )}
 
-          {/* ── JARVIS ── */}
+          {/* ── VELQUOR ── */}
           {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'linear-gradient(145deg,var(--ac),var(--pu))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>⬡</div>
                 <div>
-                  <p style={{ margin: 0, color: 'var(--t1)', fontSize: '12px', fontWeight: 700 }}>Jarvis AI</p>
+                  <p style={{ margin: 0, color: 'var(--t1)', fontSize: '12px', fontWeight: 700 }}>VELQUOR AI</p>
                   <p style={{ margin: 0, color: 'var(--gr2)', fontSize: '10px' }}>● Online · analysing your 247 trades</p>
                 </div>
               </div>
@@ -527,8 +527,8 @@ function AnimatedDashboard() {
                 <div style={{ padding: '12px 14px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                   <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: 'rgba(77,143,255,0.12)', border: '1px solid rgba(77,143,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', flexShrink: 0 }}>⬡</div>
                   <p style={{ margin: 0, color: 'var(--t2)', fontSize: '11px', lineHeight: 1.75 }}>
-                    {JARVIS_TEXT.slice(0, jarvisChars)}
-                    {jarvisChars < JARVIS_TEXT.length && (
+                    {VELQUOR_TEXT.slice(0, velquorChars)}
+                    {velquorChars < VELQUOR_TEXT.length && (
                       <span style={{ display: 'inline-block', width: '2px', height: '12px', background: 'var(--ac)', marginLeft: '1px', animation: 'cursor-blink 0.7s step-end infinite', verticalAlign: 'text-bottom' }} />
                     )}
                   </p>
@@ -579,7 +579,7 @@ function DashboardMockup() {
           <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 700 }}>Velquor</span>
         </div>
         <div style={{ display: 'flex', gap: '2px' }}>
-          {['Overview', 'Trading', 'Journal', 'Macro', 'Jarvis'].map(t => (
+          {['Overview', 'Trading', 'Journal', 'Macro', 'VELQUOR'].map(t => (
             <span key={t} style={{
               fontSize: '11px', padding: '4px 10px', borderRadius: '6px',
               color: t === 'Overview' ? 'var(--ac)' : 'var(--t3)',
@@ -665,7 +665,7 @@ function DashboardMockup() {
           </div>
         </div>
 
-        {/* Jarvis insight */}
+        {/* VELQUOR insight */}
         <div style={{
           background: 'linear-gradient(135deg, rgba(77,143,255,0.06), rgba(168,126,255,0.06))',
           border: '1px solid rgba(77,143,255,0.15)', borderRadius: '10px', padding: '10px 14px',
@@ -673,7 +673,7 @@ function DashboardMockup() {
         }}>
           <div style={{ width: '20px', height: '20px', borderRadius: '6px', background: 'linear-gradient(145deg, var(--ac), var(--pu))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', flexShrink: 0 }}>⬡</div>
           <p style={{ margin: 0, color: 'var(--t2)', fontSize: '11px', lineHeight: 1.6 }}>
-            <strong style={{ color: 'var(--ac)' }}>Jarvis:</strong> Your XAUUSD win rate is 83% — highest of any instrument. ICT Order Block setups during London session are your strongest edge.
+            <strong style={{ color: 'var(--ac)' }}>VELQUOR:</strong> Your XAUUSD win rate is 83% — highest of any instrument. ICT Order Block setups during London session are your strongest edge.
           </p>
         </div>
       </div>
@@ -950,7 +950,7 @@ function TradingTabMockup() {
         gap: '8px',
       }}>
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap', overflow: 'hidden' }}>
-          {['Overview', 'Trading', 'Journal', 'Macro', 'Jarvis'].map(t => (
+          {['Overview', 'Trading', 'Journal', 'Macro', 'VELQUOR'].map(t => (
             <span key={t} style={{
               fontSize: '10px', padding: '3px 7px', borderRadius: '5px',
               color: t === 'Trading' ? 'var(--ac)' : 'var(--t3)',
@@ -1094,10 +1094,10 @@ function ShowcaseSection() {
 function Features() {
   const features = [
     { icon: '⚡', color: 'var(--go2)', title: 'MT5 Sync — Any Broker', desc: 'Enter your MT5 login, password, and broker server — your full trade history syncs in seconds. No CSV exports, no copy-paste, no manual data entry. Works with every MT5 broker worldwide.' },
-    { icon: '⬡', color: 'var(--ac)', title: 'Jarvis AI Coach', desc: 'Ask "why am I losing on Nasdaq?" and get an answer built from your own numbers — not generic YouTube advice. Jarvis reads every trade, every journal entry, and every emotion tag you\'ve ever logged.' },
-    { icon: '🌐', color: 'var(--pu)', title: 'Macro Intelligence', desc: 'Economic data, central bank decisions, and geopolitical events — explained plainly before each session. Jarvis generates a daily directional bias for Gold, Nasdaq, and EUR/USD so you know what you\'re trading into.' },
-    { icon: '🛡', color: 'var(--re)', title: 'Daily Loss Guard', desc: 'Set the maximum amount you\'re willing to lose in a single day. Jarvis watches every closed trade and fires a warning before you hit your limit — the discipline rule most traders say they follow but don\'t.' },
-    { icon: '🏆', color: 'var(--gr2)', title: 'Prop Firm Tracker', desc: 'Running an FTMO, TFT, or MyFundedFX challenge? Set your rules once. Jarvis tracks your max daily loss, total drawdown, profit target, and minimum trading days in real time — so one bad session never ends your challenge.' },
+    { icon: '⬡', color: 'var(--ac)', title: 'VELQUOR AI Coach', desc: 'Ask "why am I losing on Nasdaq?" and get an answer built from your own numbers — not generic YouTube advice. VELQUOR reads every trade, every journal entry, and every emotion tag you\'ve ever logged.' },
+    { icon: '🌐', color: 'var(--pu)', title: 'Macro Intelligence', desc: 'Economic data, central bank decisions, and geopolitical events — explained plainly before each session. VELQUOR generates a daily directional bias for Gold, Nasdaq, and EUR/USD so you know what you\'re trading into.' },
+    { icon: '🛡', color: 'var(--re)', title: 'Daily Loss Guard', desc: 'Set the maximum amount you\'re willing to lose in a single day. VELQUOR watches every closed trade and fires a warning before you hit your limit — the discipline rule most traders say they follow but don\'t.' },
+    { icon: '🏆', color: 'var(--gr2)', title: 'Prop Firm Tracker', desc: 'Running an FTMO, TFT, or MyFundedFX challenge? Set your rules once. VELQUOR tracks your max daily loss, total drawdown, profit target, and minimum trading days in real time — so one bad session never ends your challenge.' },
     { icon: '📓', color: 'var(--am2)', title: 'Trading Journal', desc: 'Tag every trade with your setup type, pre-trade emotion, and mistake labels. After 30 days you\'ll see the exact emotional states and patterns that produce your best — and worst — results.' },
     { icon: '📊', color: 'var(--cy)', title: 'Deep Performance Analytics', desc: 'A full breakdown of your win rate, profit factor, expectancy, and avg P&L — sliced by instrument, session, day of week, setup type, and emotion. Stop guessing where your edge is. The data tells you.' },
     { icon: '🔄', color: 'var(--pu2)', title: 'Weekly Reviews', desc: 'Every Sunday, grade your trading week from A to F, log what worked, and note what to fix. Over months, you build a compound record of your growth — and a clear signal when you\'re drifting from your process.' },
@@ -1144,8 +1144,8 @@ function HowItWorks() {
   const steps = [
     { n: '01', title: 'Create your free account', desc: 'Sign up with email or Google in under 30 seconds. No credit card, no commitment.', detail: 'Your data is fully private and isolated — secured with row-level encryption from day one.' },
     { n: '02', title: 'Connect your MT5 account', desc: 'Enter your MT5 login number, investor password, and broker server name. That\'s it — your entire trade history syncs automatically.', detail: 'Works with every MT5 broker worldwide — IC Markets, Blueberry, Pepperstone, FTMO live accounts, and more.' },
-    { n: '03', title: 'See your real numbers', desc: 'Your dashboard fills instantly. Win rate, profit factor, P&L by instrument, session, and day of week — all calculated from your actual trades.', detail: 'Jarvis AI immediately surfaces your biggest patterns and the areas costing you the most money.' },
-    { n: '04', title: 'Build a consistent process', desc: 'Journal every trade, track your daily habits, run weekly reviews. Over time, Jarvis correlates your routine with your results.', detail: 'Most traders identify their biggest leak within the first week of using the journal and analytics together.' },
+    { n: '03', title: 'See your real numbers', desc: 'Your dashboard fills instantly. Win rate, profit factor, P&L by instrument, session, and day of week — all calculated from your actual trades.', detail: 'VELQUOR AI immediately surfaces your biggest patterns and the areas costing you the most money.' },
+    { n: '04', title: 'Build a consistent process', desc: 'Journal every trade, track your daily habits, run weekly reviews. Over time, VELQUOR correlates your routine with your results.', detail: 'Most traders identify their biggest leak within the first week of using the journal and analytics together.' },
   ]
 
   return (
@@ -1189,8 +1189,8 @@ function HowItWorks() {
   )
 }
 
-// ── Jarvis AI section ─────────────────────────────────────────────────────────
-function JarvisSection() {
+// ── VELQUOR AI section ─────────────────────────────────────────────────────────
+function VelquorSection() {
   const [active, setActive] = useState(0)
   const qa = [
     { q: 'Why am I losing on Nasdaq?', a: 'Your NAS100 trades show a 38% win rate — below breakeven. 6 of your 8 losses came in the first 30 minutes after NY open. You\'re likely trading against institutional order flow before direction is established. Consider a 30-minute wait rule after 15:30 CET.' },
@@ -1203,12 +1203,12 @@ function JarvisSection() {
     <section style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px)', maxWidth: '1200px', margin: '0 auto' }}>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'clamp(32px, 6vw, 72px)', alignItems: 'center' }}>
         <div>
-          <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>Jarvis AI</p>
+          <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>VELQUOR AI</p>
           <h2 style={{ fontSize: 'clamp(26px, 5vw, 38px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 16px', color: 'var(--t1)', lineHeight: 1.15 }}>
             An AI that actually knows your trading
           </h2>
           <p style={{ color: 'var(--t2)', fontSize: '15px', lineHeight: 1.7, margin: '0 0 28px' }}>
-            Jarvis has access to every trade, every journal entry, every mood log.
+            VELQUOR has access to every trade, every journal entry, every mood log.
             It doesn&apos;t give generic advice — it analyses <em>your</em> data and tells you
             exactly what&apos;s holding you back.
           </p>
@@ -1240,7 +1240,7 @@ function JarvisSection() {
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px',
             }}>⬡</div>
             <div>
-              <p style={{ margin: 0, color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>Jarvis</p>
+              <p style={{ margin: 0, color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>VELQUOR</p>
               <p style={{ margin: 0, color: 'var(--gr2)', fontSize: '10px' }}>● Online</p>
             </div>
           </div>
@@ -1272,7 +1272,7 @@ function JarvisSection() {
               display: 'flex', gap: '8px', alignItems: 'center',
               background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '9px', padding: '9px 13px',
             }}>
-              <span style={{ color: 'var(--t3)', fontSize: '12px', flex: 1 }}>Ask Jarvis anything…</span>
+              <span style={{ color: 'var(--t3)', fontSize: '12px', flex: 1 }}>Ask VELQUOR anything…</span>
               <span style={{ background: 'var(--ac)', color: 'white', fontSize: '10px', padding: '3px 9px', borderRadius: '5px', fontWeight: 500 }}>Send</span>
             </div>
           </div>
@@ -1304,7 +1304,7 @@ function PropFirmSection() {
               Also running a prop firm challenge?
             </h2>
             <p style={{ color: 'var(--t2)', fontSize: '14px', lineHeight: 1.7, margin: '0 0 22px' }}>
-              Activate Prop Firm Mode and Jarvis monitors every rule of your challenge in real time —
+              Activate Prop Firm Mode and VELQUOR monitors every rule of your challenge in real time —
               max daily loss, total drawdown, profit target, minimum trading days. One wrong day won&apos;t
               catch you off guard again.
             </p>
@@ -1368,7 +1368,7 @@ function Pricing() {
         'Basic P&L, win rate & stats',
         'Trade journal',
         'Habits tracker',
-        '20 Jarvis AI questions / month',
+        '20 VELQUOR AI questions / month',
         'Mobile PWA',
       ],
     },
@@ -1389,7 +1389,7 @@ function Pricing() {
         'Macro intelligence + AI daily bias',
         'Weekly reviews & grading',
         'Performance report exports (CSV / PDF)',
-        '300 Jarvis AI questions / month',
+        '300 VELQUOR AI questions / month',
         'Priority sync — every 30 seconds',
       ],
     },
@@ -1406,7 +1406,7 @@ function Pricing() {
         'Everything in Pro',
         'Prop firm challenge tracker (FTMO, TFT, MFF…)',
         'Custom daily loss limits & drawdown alerts',
-        'Unlimited Jarvis AI — no monthly cap',
+        'Unlimited VELQUOR AI — no monthly cap',
         'Multi-account P&L overview',
         'Priority support',
       ],
@@ -1600,7 +1600,7 @@ export default function LandingPage() {
         <ShowcaseSection />
         <Features />
         <HowItWorks />
-        <JarvisSection />
+        <VelquorSection />
         <PropFirmSection />
         <Pricing />
         <Footer />

@@ -381,11 +381,11 @@ export default function MobileOverviewTab() {
         </div>
       )}
 
-      {/* ── Jarvis Insights (top 2) ────────────────────────────── */}
+      {/* ── VELQUOR Insights (top 2) ────────────────────────────── */}
       {insights.length > 0 && (
         <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid rgba(255,176,48,0.15)' }}>
           <span style={{ fontSize: '10px', color: 'var(--go2)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>
-            Jarvis · {insights.length} insight{insights.length !== 1 ? 's' : ''}
+            VELQUOR · {insights.length} insight{insights.length !== 1 ? 's' : ''}
           </span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {insights.slice(0, 2).map(i => <InsightCard key={i.id} insight={i} compact />)}

@@ -13,7 +13,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Velquor',
-  description: 'Your trading operating system — powered by Jarvis AI',
+  description: 'Your trading operating system — powered by VELQUOR AI',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

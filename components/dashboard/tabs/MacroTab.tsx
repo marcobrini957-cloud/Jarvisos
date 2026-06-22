@@ -267,7 +267,7 @@ export default function MacroTab() {
         <MetricCard title="High-Impact Today"  value={`${todayEvents.length}`}   change="Red folders only"          changePositive={null} barColor="var(--re)" />
         <MetricCard title="High-Impact Week"   value={`${calendar.length}`}      change="Forex Factory"             changePositive={null} barColor="var(--am)" />
         <MetricCard title="Live Headlines"     value={`${news.length}`}          change="Financial Juice · live"    changePositive={null} barColor="var(--ac)" />
-        <MetricCard title="Last Briefing"      value={briefing ? new Date(briefing.created_at).toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Vienna'}) : '—'} change="Jarvis · Haiku" changePositive={null} barColor="var(--go2)" />
+        <MetricCard title="Last Briefing"      value={briefing ? new Date(briefing.created_at).toLocaleTimeString('de-AT',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Vienna'}) : '—'} change="VELQUOR · Haiku" changePositive={null} barColor="var(--go2)" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -381,8 +381,8 @@ export default function MacroTab() {
             )}
           </Panel>
 
-          {/* Jarvis briefing */}
-          <Panel title="Jarvis NY Open Briefing" action={
+          {/* VELQUOR briefing */}
+          <Panel title="VELQUOR NY Open Briefing" action={
             <div className="flex items-center gap-2">
               <button onClick={generateBriefing} disabled={generating}
                 style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '6px', cursor: generating ? 'not-allowed' : 'pointer',
@@ -394,7 +394,7 @@ export default function MacroTab() {
             {generating && !briefingText ? (
               <div className="flex items-center gap-2">
                 <span className="rounded-full" style={{ width: '6px', height: '6px', background: 'var(--go2)', display: 'inline-block', animation: 'pulse 1s ease-in-out infinite' }} />
-                <span style={{ color: 'var(--t2)', fontSize: '13px' }}>Jarvis is analysing markets…</span>
+                <span style={{ color: 'var(--t2)', fontSize: '13px' }}>VELQUOR is analysing markets…</span>
               </div>
             ) : briefingText ? (
               <div>
@@ -407,7 +407,7 @@ export default function MacroTab() {
                 </button>
               </div>
             ) : (
-              <p style={{ color: 'var(--t3)', fontSize: '12px' }}>Click Generate to get today's comprehensive Gold, Nasdaq & world macro briefing from Jarvis.</p>
+              <p style={{ color: 'var(--t3)', fontSize: '12px' }}>Click Generate to get today's comprehensive Gold, Nasdaq & world macro briefing from VELQUOR.</p>
             )}
           </Panel>
         </div>

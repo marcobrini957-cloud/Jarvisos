@@ -9,7 +9,7 @@ const TABS: { id: number; label: string; isGold?: boolean }[] = [
   { id: 3, label: 'Journal'    },
   { id: 4, label: 'Macro'      },
   { id: 5, label: 'Discipline' },
-  { id: 6, label: 'Jarvis AI', isGold: true },
+  { id: 6, label: 'VELQUOR AI', isGold: true },
 ]
 
 interface TabBarProps {

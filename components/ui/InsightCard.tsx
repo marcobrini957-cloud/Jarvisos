@@ -1,4 +1,4 @@
-import type { JarvisInsight } from '@/lib/intelligence'
+import type { VelquorInsight } from '@/lib/intelligence'
 
 const BORDER: Record<string, string> = {
   warning:     'var(--re)',
@@ -28,7 +28,7 @@ const LABEL: Record<string, string> = {
 }
 
 interface Props {
-  insight:  JarvisInsight
+  insight:  VelquorInsight
   compact?: boolean
 }
 
@@ -51,7 +51,7 @@ export default function InsightCard({ insight, compact }: Props) {
           fontSize: '10px', fontWeight: 600, letterSpacing: '0.08em',
           color: border, textTransform: 'uppercase',
         }}>
-          JARVIS · {LABEL[insight.category]}
+          VELQUOR · {LABEL[insight.category]}
         </span>
         <span style={{
           fontSize: '10px', padding: '1px 6px', borderRadius: '4px',
