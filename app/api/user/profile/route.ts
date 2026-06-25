@@ -4,7 +4,7 @@ import { NextResponse }  from 'next/server'
 const DEFAULT_PROFILE = {
   display_name:  'Trader',
   avatar_color:  'var(--ac)',
-  avatar_emoji:  null as string | null,
+  avatar_url:    null as string | null,
   timezone:      'Europe/Vienna',
   currency:      'EUR',
 }
@@ -18,18 +18,31 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('user_profiles')
-      .select('display_name, avatar_color, avatar_emoji, timezone, currency')
+      .select('display_name, avatar_color, avatar_url, timezone, currency')
       .eq('id', user.id)
       .single()
 
-    if (error || !data) {
-      // Return defaults when no profile row exists yet
-      return NextResponse.json(DEFAULT_PROFILE)
-    }
+    // Fallback name from Google/OAuth metadata when DB still has default
+    const metaName: string =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.display_name ||
+      user.user_metadata?.name ||
+      ''
 
-    return NextResponse.json(data)
+    const display_name =
+      data?.display_name && data.display_name !== 'Trader'
+        ? data.display_name
+        : metaName || data?.display_name || DEFAULT_PROFILE.display_name
+
+    return NextResponse.json({
+      display_name,
+      avatar_color: data?.avatar_color ?? DEFAULT_PROFILE.avatar_color,
+      avatar_url:   data?.avatar_url   ?? null,
+      timezone:     data?.timezone     ?? DEFAULT_PROFILE.timezone,
+      currency:     data?.currency     ?? DEFAULT_PROFILE.currency,
+    })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
@@ -47,12 +60,11 @@ export async function PATCH(request: Request) {
     const body = await request.json() as Partial<{
       display_name:  string
       avatar_color:  string
-      avatar_emoji:  string | null
       timezone:      string
       currency:      string
     }>
 
-    const allowed = ['display_name', 'avatar_color', 'avatar_emoji', 'timezone', 'currency'] as const
+    const allowed = ['display_name', 'avatar_color', 'timezone', 'currency'] as const
     const update: Record<string, string> = { id: user.id, updated_at: new Date().toISOString() }
     for (const key of allowed) {
       if (body[key] !== undefined) update[key] = body[key] as string
@@ -61,7 +73,7 @@ export async function PATCH(request: Request) {
     const { data, error } = await supabase
       .from('user_profiles')
       .upsert(update, { onConflict: 'id' })
-      .select('display_name, avatar_color, avatar_emoji, timezone, currency')
+      .select('display_name, avatar_color, avatar_url, timezone, currency')
       .single()
 
     if (error) {

@@ -5,7 +5,7 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 export interface UserProfile {
   display_name:  string
   avatar_color:  string
-  avatar_emoji:  string | null
+  avatar_url:    string | null
   timezone:      string
   currency:      string
 }
@@ -13,7 +13,7 @@ export interface UserProfile {
 const DEFAULT_PROFILE: UserProfile = {
   display_name:  'Trader',
   avatar_color:  'var(--ac)',
-  avatar_emoji:  null,
+  avatar_url:    null,
   timezone:      'Europe/Vienna',
   currency:      'EUR',
 }
@@ -40,7 +40,7 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
       .then((data: UserProfile) => {
         if (data && data.display_name) setProfile(data)
       })
-      .catch(() => { /* use defaults on error */ })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
 
@@ -56,7 +56,7 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
       const data = await res.json() as UserProfile
       if (res.ok && data.display_name) setProfile(data)
     } catch {
-      // Keep optimistic update; silently fail
+      // Keep optimistic update
     }
   }, [profile])
 
