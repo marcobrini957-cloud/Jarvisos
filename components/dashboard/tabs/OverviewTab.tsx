@@ -28,10 +28,6 @@ import { formatValue }        from '@/lib/utils/formatting'
 import InsightCard            from '@/components/ui/InsightCard'
 import Panel                  from '@/components/ui/Panel'
 import SessionClock           from '@/components/ui/SessionClock'
-import DailyMaxLoss           from '@/components/ui/DailyMaxLoss'
-import PreMarketChecklist     from '@/components/ui/PreMarketChecklist'
-import ConsistencyScore       from '@/components/ui/ConsistencyScore'
-import GoalTracker            from '@/components/ui/GoalTracker'
 import type { Trade }         from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -123,79 +119,6 @@ function MarketStrip() {
   )
 }
 
-// ── Net Worth Sparkline ───────────────────────────────────────────────────────
-
-function NetWorthSparkline({ allRows }: { allRows: Trade[] }) {
-  const points = useMemo(() => {
-    const realTrades = allRows.filter(t => t.close_time && t.symbol !== 'BALANCE')
-    if (realTrades.length === 0) return []
-
-    const earliest   = realTrades.reduce((min, t) => t.close_time! < min ? t.close_time! : min, realTrades[0].close_time!)
-    const startDate  = new Date(earliest)
-    const now        = new Date()
-
-    const months: { month: number; year: number; pnl: number }[] = []
-    let y = startDate.getFullYear(), m = startDate.getMonth()
-    while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth())) {
-      const yCopy = y, mCopy = m
-      const pnl = realTrades
-        .filter(t => { const d = new Date(t.close_time!); return d.getFullYear() === yCopy && d.getMonth() === mCopy })
-        .reduce((s, t) => s + (t.net_profit ?? 0), 0)
-      months.push({ month: m, year: y, pnl })
-      m++; if (m > 11) { m = 0; y++ }
-    }
-
-    let cum = 0
-    return months.map(mo => { cum += mo.pnl; return { month: mo.month, year: mo.year, value: cum } })
-  }, [allRows])
-
-  if (points.length === 0) return null
-
-  const values = points.map(p => p.value)
-  const minVal = Math.min(0, ...values)
-  const maxVal = Math.max(0, ...values)
-  const range  = maxVal - minVal || 1
-  const VW = 800, VH = 160, PAD = 8
-  const GOLD = '#FFB030'
-
-  const toY = (v: number) => PAD + (1 - (v - minVal) / range) * (VH - PAD * 2)
-  const toX = (i: number) => (i / Math.max(1, points.length - 1)) * VW
-
-  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(2)},${toY(p.value).toFixed(2)}`).join(' ')
-  const zeroY = toY(0)
-  const fillD = `${pathD} L${VW},${zeroY} L0,${zeroY} Z`
-  const endX  = toX(points.length - 1)
-  const endY  = toY(values[values.length - 1])
-
-  return (
-    <div style={{ width: '100%' }}>
-      <svg
-        viewBox={`0 0 ${VW} ${VH}`}
-        width="100%"
-        height="56"
-        preserveAspectRatio="none"
-        style={{ display: 'block', shapeRendering: 'geometricPrecision' }}
-      >
-        <defs>
-          <linearGradient id="goldSparkGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor={GOLD} stopOpacity="0.45" />
-            <stop offset="100%" stopColor={GOLD} stopOpacity="0.02" />
-          </linearGradient>
-          <filter id="dotGlow" x="-100%" y="-100%" width="300%" height="300%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-        </defs>
-        <line x1="0" y1={zeroY} x2={VW} y2={zeroY} stroke="rgba(255,255,255,0.07)" strokeWidth="1.5" strokeDasharray="6 4" />
-        <path d={fillD} fill="url(#goldSparkGrad)" />
-        <path d={pathD} fill="none" stroke={GOLD} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        <circle cx={endX} cy={endY} r="5" fill={GOLD} filter="url(#dotGlow)" />
-        <circle cx={endX} cy={endY} r="3.5" fill={GOLD} />
-      </svg>
-    </div>
-  )
-}
-
 // ── Win Rate Ring ─────────────────────────────────────────────────────────────
 
 function WinRing({ wr }: { wr: number }) {
@@ -209,62 +132,6 @@ function WinRing({ wr }: { wr: number }) {
       <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: `conic-gradient(${color} ${deg}deg, var(--s3) ${deg}deg)`, boxShadow: `0 0 14px ${glow}` }} />
       <div style={{ position: 'absolute', inset: '7px', borderRadius: '50%', background: 'var(--s1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ color, fontSize: '13px', fontWeight: 700 }}>{pct.toFixed(0)}%</span>
-      </div>
-    </div>
-  )
-}
-
-// ── Weekly Chart ──────────────────────────────────────────────────────────────
-
-function WeeklyChart({ weeklyPnl }: { weeklyPnl: number[] }) {
-  const maxAbs = Math.max(1, ...weeklyPnl.map(Math.abs))
-  const now = new Date()
-  const mon = new Date(now)
-  mon.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1))
-  mon.setHours(0, 0, 0, 0)
-  const labels = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(mon)
-    d.setDate(d.getDate() - (6 - i) * 7)
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  })
-  const totalPnl = weeklyPnl.reduce((s, v) => s + v, 0)
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.07em', textTransform: 'uppercase', fontWeight: 600 }}>Last 7 Weeks</span>
-        <span style={{ fontSize: '12px', fontWeight: 700, color: totalPnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
-          {totalPnl >= 0 ? '+' : ''}€{totalPnl.toFixed(0)}
-        </span>
-      </div>
-      <div style={{ position: 'relative', height: '60px' }}>
-        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'var(--bd2)' }} />
-        <div style={{ display: 'flex', gap: '4px', height: '100%' }}>
-          {weeklyPnl.map((pnl, i) => {
-            const h   = Math.max(4, (Math.abs(pnl) / maxAbs) * 26)
-            const pos = pnl >= 0
-            const cur = i === 6
-            const col = pos ? 'var(--gr2)' : 'var(--re)'
-            return (
-              <div key={i} title={`${labels[i]}: ${pnl >= 0 ? '+' : ''}€${pnl.toFixed(2)}`}
-                style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ height: '28px', display: 'flex', alignItems: 'flex-end', width: '100%' }}>
-                  {pos && <div style={{ width: '100%', height: `${h}px`, background: col, borderRadius: '3px 3px 0 0', opacity: cur ? 1 : 0.35, boxShadow: cur ? `0 -3px 8px ${col}66` : 'none' }} />}
-                </div>
-                <div style={{ height: '28px', display: 'flex', alignItems: 'flex-start', width: '100%' }}>
-                  {!pos && <div style={{ width: '100%', height: `${h}px`, background: col, borderRadius: '0 0 3px 3px', opacity: cur ? 1 : 0.35, boxShadow: cur ? `0 3px 8px ${col}66` : 'none' }} />}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: '4px' }}>
-        {labels.map((lbl, i) => (
-          <div key={i} style={{ flex: 1, textAlign: 'center' }}>
-            <span style={{ fontSize: '9px', color: i === 6 ? 'var(--t2)' : 'var(--t3)', fontWeight: i === 6 ? 600 : 400, whiteSpace: 'nowrap' }}>{lbl}</span>
-          </div>
-        ))}
       </div>
     </div>
   )
@@ -679,24 +546,10 @@ function StreakBadge({ trades }: { trades: Trade[] }) {
 
 export default function OverviewTab() {
   const today = new Date().toISOString().split('T')[0]
-  const [dailyLimit, setDailyLimit] = useState(200)
-
-  useEffect(() => {
-    const stored = localStorage.getItem('velquor-daily-limit')
-    if (stored) setDailyLimit(parseFloat(stored) || 200)
-    // Listen for storage changes (e.g. if DailyMaxLoss updates it)
-    const handler = () => {
-      const v = localStorage.getItem('velquor-daily-limit')
-      if (v) setDailyLimit(parseFloat(v) || 200)
-    }
-    window.addEventListener('storage', handler)
-    return () => window.removeEventListener('storage', handler)
-  }, [])
-
   const { trades, allRows, stats, loading: tradesLoading } = useTrades(500)
   const { tasks }       = useTasks()
   const { snapshot }    = useAccountSnapshot()
-  const { holdings, totalValueEur, totalPnlEur, totalPnlPct } = usePortfolio()
+  const { holdings, totalValueEur } = usePortfolio()
   const { entries }     = useJournalEntries()
   const { habits, isCompleted, todayCompleted, todayTotal, calcStreak } = useHabits()
   const { displayMode } = useDisplayMode()
@@ -704,16 +557,13 @@ export default function OverviewTab() {
 
   if (isMobile) return <MobileOverviewTab />
 
-  const balance  = snapshot?.balance ?? 0
-  const equity   = snapshot?.equity  ?? 0
-  const netWorth = balance + totalValueEur
+  const balance = snapshot?.balance ?? 0
+  const equity  = snapshot?.equity  ?? 0
 
   const todayPnl = useMemo(() =>
     allRows.filter(t => t.close_time?.startsWith(today) && t.symbol !== 'BALANCE')
       .reduce((s, t) => s + (t.net_profit ?? 0), 0),
   [allRows, today])
-
-  const todayLossAmt = Math.max(0, -todayPnl) // positive amount if losing today
 
   const monthStart  = useMemo(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1), [])
   const monthTrades = useMemo(() => trades.filter(t => t.close_time && new Date(t.close_time) >= monthStart), [trades, monthStart])
@@ -753,7 +603,6 @@ export default function OverviewTab() {
   const journaledToday = entries.some(e => e.entry_date === today)
   const monthPnl       = stats?.monthPnl ?? 0
   const monthPnlPct    = balance > 0 ? (monthPnl / balance) * 100 : 0
-  const weeklyPnl      = stats?.weeklyPnl ?? Array(7).fill(0)
   const bestInstrument = (stats?.xauWinRate ?? 0) >= (stats?.nasWinRate ?? 0)
     ? { label: 'XAUUSD', wr: stats?.xauWinRate ?? 0 }
     : { label: 'NAS100', wr: stats?.nasWinRate ?? 0 }
@@ -833,7 +682,7 @@ export default function OverviewTab() {
           </div>
 
           {/* Row 4: Metric grid */}
-          <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', minWidth: 0 }}>
+          <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', minWidth: 0 }}>
 
             {/* Balance */}
             <div className="metric-card" style={{ padding: '16px', background: 'rgba(255,255,255,0.025)', borderRadius: '12px', border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '5px', minWidth: 0 }}>
@@ -867,25 +716,6 @@ export default function OverviewTab() {
                   <span style={{ fontSize: '11px', color: 'var(--t3)' }}>Best: {bestInstrument.label} · {bestInstrument.wr.toFixed(0)}%</span>
                 </div>
               </div>
-            </div>
-
-            {/* Net Worth */}
-            <div className="metric-card" style={{ padding: '14px 16px', background: 'rgba(255,176,48,0.06)', borderRadius: '12px', border: '1px solid rgba(255,176,48,0.15)', display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, overflow: 'hidden' }}>
-              {/* Left: text */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-                <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>Net Worth</span>
-                <span className="net-worth-value" style={{ fontSize: 'clamp(14px, 2.2vw, 20px)', fontWeight: 700, color: 'var(--go2)', letterSpacing: '-0.03em', lineHeight: 1 }}>{fmtEur(netWorth, 0)}</span>
-                <span style={{ fontSize: '10px', color: 'var(--t3)' }}>MT5 + portfolio</span>
-              </div>
-              {/* Right: sparkline fills remaining space */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <NetWorthSparkline allRows={allRows} />
-              </div>
-            </div>
-
-            {/* Weekly chart */}
-            <div style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.025)', borderRadius: '12px', border: '1px solid var(--bd2)' }}>
-              <WeeklyChart weeklyPnl={weeklyPnl} />
             </div>
 
           </div>
@@ -986,34 +816,6 @@ export default function OverviewTab() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════
-          TRADING TOOLS ROW (Daily Limit · Checklist · Consistency · Goal)
-      ══════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-
-        <Panel title="Pre-Market & Daily Risk" accent="var(--re)">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <DailyMaxLoss allRows={allRows} />
-            <div style={{ height: '1px', background: 'var(--bd)' }} />
-            <PreMarketChecklist />
-          </div>
-        </Panel>
-
-        <Panel title="Performance & Goals" accent="var(--ac)">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <GoalTracker monthPnl={stats?.monthPnl ?? 0} />
-            <div style={{ height: '1px', background: 'var(--bd)' }} />
-            <ConsistencyScore
-              trades={trades}
-              entries={entries}
-              dailyLoss={todayLossAmt}
-              dailyLimit={dailyLimit}
-            />
-          </div>
-        </Panel>
-
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════
           VELQUOR INTELLIGENCE
       ══════════════════════════════════════════════════════════ */}
       <Panel
@@ -1027,7 +829,7 @@ export default function OverviewTab() {
       >
         {insights.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {insights.slice(0, 4).map(i => <InsightCard key={i.id} insight={i} compact />)}
+            {insights.slice(0, 3).map(i => <InsightCard key={i.id} insight={i} compact />)}
           </div>
         ) : (
           <p style={{ color: 'var(--t3)', fontSize: '13px' }}>
