@@ -166,7 +166,7 @@ export default function WelcomeGreeting() {
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(232,201,106,0.18)' }}
           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(232,201,106,0.1)' }}
         >
-          Let&apos;s trade
+          Let&apos;s win
         </button>
 
         <p style={{ color: 'var(--t3)', fontSize: '10px', marginTop: '14px' }}>
