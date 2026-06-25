@@ -401,8 +401,9 @@ function TradeCalendar({ allRows }: { allRows: Trade[] }) {
 
   const maxAbs     = Math.max(1, ...Array.from(dailyPnl.values()).map(Math.abs))
   const totalPnl   = Array.from(dailyPnl.values()).reduce((s, v) => s + v, 0)
-  const profitDays = Array.from(dailyPnl.values()).filter(v => v > 0).length
-  const lossDays   = Array.from(dailyPnl.values()).filter(v => v < 0).length
+  const profitDays = Array.from(dailyPnl.values()).filter(v => v >  BE_THRESHOLD).length
+  const lossDays   = Array.from(dailyPnl.values()).filter(v => v < -BE_THRESHOLD).length
+  const beDays     = Array.from(dailyPnl.values()).filter(v => v >= -BE_THRESHOLD && v <= BE_THRESHOLD).length
 
   const selectedTrades = selectedDate ? (dailyTrades.get(selectedDate) ?? []) : []
 
@@ -433,14 +434,20 @@ function TradeCalendar({ allRows }: { allRows: Trade[] }) {
 
       {/* Summary bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-        <div style={{ display: 'flex', gap: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'rgba(0,232,122,0.7)', display: 'inline-block', boxShadow: '0 0 6px rgba(0,232,122,0.55)' }} />
-            <span style={{ fontSize: '12px', color: 'var(--t2)' }}>{profitDays} green days</span>
+            <span style={{ fontSize: '11px', color: 'var(--t2)' }}>{profitDays} green</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {beDays > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'rgba(232,201,106,0.7)', display: 'inline-block', boxShadow: '0 0 6px rgba(232,201,106,0.45)' }} />
+              <span style={{ fontSize: '11px', color: 'var(--go2)' }}>{beDays} BE</span>
+            </div>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'rgba(255,61,80,0.7)', display: 'inline-block', boxShadow: '0 0 6px rgba(255,61,80,0.55)' }} />
-            <span style={{ fontSize: '12px', color: 'var(--t2)' }}>{lossDays} red days</span>
+            <span style={{ fontSize: '11px', color: 'var(--t2)' }}>{lossDays} red</span>
           </div>
         </div>
         <span style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.025em', color: totalPnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
@@ -468,12 +475,21 @@ function TradeCalendar({ allRows }: { allRows: Trade[] }) {
           const has      = pnl !== undefined
           const intensity = has ? Math.min(1, Math.abs(pnl!) / maxAbs) : 0
 
+          const isBreakEven = has && pnl! >= -BE_THRESHOLD && pnl! <= BE_THRESHOLD
+          const isWinDay    = has && pnl! >  BE_THRESHOLD
+          const isLossDay   = has && pnl! < -BE_THRESHOLD
+
           let bg: string, txtCol: string, border: string, shadow = 'none'
           if (!has) {
             bg     = isFuture ? 'transparent' : 'rgba(255,255,255,0.02)'
             txtCol = isFuture ? 'var(--bd3)' : 'var(--t3)'
             border = 'transparent'
-          } else if (pnl! >= 0) {
+          } else if (isBreakEven) {
+            bg     = 'rgba(232,201,106,0.1)'
+            txtCol = 'var(--go2)'
+            border = 'rgba(232,201,106,0.28)'
+            shadow = 'none'
+          } else if (isWinDay) {
             bg     = `rgba(0,232,122,${0.08 + intensity * 0.28})`
             txtCol = 'var(--gr2)'
             border = `rgba(0,232,122,${0.15 + intensity * 0.2})`
@@ -541,59 +557,88 @@ function TradeCalendar({ allRows }: { allRows: Trade[] }) {
 // ── Streak Card ───────────────────────────────────────────────────────────────
 
 function StreakCard({ trades, journalStreak, habitStreak }: { trades: Trade[]; journalStreak: number; habitStreak: number }) {
-  const winStreak = useMemo(() => {
-    let wins = 0
+  // Wins + break-evens in a row — only a real loss (< -BE_THRESHOLD) resets
+  const tradeStreak = useMemo(() => {
+    let streak = 0
     for (const t of [...trades].reverse()) {
-      if ((t.net_profit ?? 0) > BE_THRESHOLD) wins++
-      else if ((t.net_profit ?? 0) < -BE_THRESHOLD) break
+      if ((t.net_profit ?? 0) < -BE_THRESHOLD) break
+      streak++
     }
-    return wins
+    return streak
   }, [trades])
 
   const lossStreak = useMemo(() => {
-    let losses = 0
+    let streak = 0
     for (const t of [...trades].reverse()) {
-      if ((t.net_profit ?? 0) < -BE_THRESHOLD) losses++
-      else if ((t.net_profit ?? 0) > BE_THRESHOLD) break
+      if ((t.net_profit ?? 0) < -BE_THRESHOLD) streak++
+      else break
     }
-    return losses
+    return streak
   }, [trades])
 
-  const rows = [
+  const isLosing = lossStreak > 0 && tradeStreak === 0
+
+  const items = [
     {
-      icon: winStreak >= 2 ? '🔥' : lossStreak >= 2 ? '⚠️' : '📈',
-      label: winStreak >= 2 ? 'Win streak' : lossStreak >= 2 ? 'Loss streak' : 'Trading',
-      value: winStreak >= 2 ? `${winStreak} in a row` : lossStreak >= 2 ? `${lossStreak} in a row` : 'No streak',
-      color: winStreak >= 2 ? 'var(--gr2)' : lossStreak >= 2 ? 'var(--re)' : 'var(--t3)',
+      label:   isLosing ? 'Loss run' : 'Trade streak',
+      value:   isLosing ? lossStreak : tradeStreak,
+      unit:    isLosing ? 'losses in a row' : 'trades without a loss',
+      icon:    isLosing ? '⚠️' : tradeStreak >= 5 ? '🔥' : '📈',
+      bg:      isLosing ? 'rgba(255,61,80,0.08)'      : tradeStreak >= 3 ? 'rgba(0,232,122,0.07)'     : 'rgba(255,255,255,0.03)',
+      border:  isLosing ? 'rgba(255,61,80,0.2)'       : tradeStreak >= 3 ? 'rgba(0,232,122,0.18)'     : 'var(--bd2)',
+      numCol:  isLosing ? 'var(--re)'                 : tradeStreak >= 3 ? 'var(--gr2)'               : 'var(--t2)',
     },
     {
-      icon: '✍',
-      label: 'Journal streak',
-      value: journalStreak > 0 ? `${journalStreak} day${journalStreak !== 1 ? 's' : ''}` : 'Not started',
-      color: journalStreak >= 7 ? 'var(--go2)' : journalStreak >= 3 ? 'var(--gr2)' : journalStreak > 0 ? 'var(--t2)' : 'var(--t3)',
+      label:   'Journal streak',
+      value:   journalStreak,
+      unit:    journalStreak === 1 ? 'day in a row' : 'days in a row',
+      icon:    journalStreak >= 7 ? '🔥' : '✍',
+      bg:      journalStreak >= 7 ? 'rgba(232,201,106,0.08)' : journalStreak >= 3 ? 'rgba(0,232,122,0.06)' : 'rgba(255,255,255,0.03)',
+      border:  journalStreak >= 7 ? 'rgba(232,201,106,0.25)' : journalStreak >= 3 ? 'rgba(0,232,122,0.15)' : 'var(--bd2)',
+      numCol:  journalStreak >= 7 ? 'var(--go2)' : journalStreak >= 3 ? 'var(--gr2)' : 'var(--t2)',
     },
     {
-      icon: '💪',
-      label: 'Best habit',
-      value: habitStreak > 0 ? `${habitStreak} day${habitStreak !== 1 ? 's' : ''}` : 'Not started',
-      color: habitStreak >= 7 ? 'var(--go2)' : habitStreak >= 3 ? 'var(--pu)' : habitStreak > 0 ? 'var(--t2)' : 'var(--t3)',
+      label:   'Habit streak',
+      value:   habitStreak,
+      unit:    habitStreak === 1 ? 'day in a row' : 'days in a row',
+      icon:    habitStreak >= 7 ? '🔥' : '💪',
+      bg:      habitStreak >= 7 ? 'rgba(232,201,106,0.08)' : habitStreak >= 3 ? 'rgba(160,100,255,0.07)' : 'rgba(255,255,255,0.03)',
+      border:  habitStreak >= 7 ? 'rgba(232,201,106,0.25)' : habitStreak >= 3 ? 'rgba(160,100,255,0.2)'  : 'var(--bd2)',
+      numCol:  habitStreak >= 7 ? 'var(--go2)' : habitStreak >= 3 ? 'var(--pu)' : 'var(--t2)',
     },
   ]
 
   return (
-    <Panel title="Streaks">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {rows.map(row => (
-          <div key={row.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div style={{
+      borderRadius: '12px', padding: '16px 18px',
+      background: 'rgba(232,201,106,0.04)',
+      border: '1px solid rgba(232,201,106,0.14)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '14px' }}>
+        <span style={{ fontSize: '16px', lineHeight: 1 }}>🔥</span>
+        <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--go2)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Streaks</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {items.map(item => (
+          <div key={item.label} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '10px 12px', borderRadius: '9px',
+            background: item.bg, border: `1px solid ${item.border}`,
+          }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '15px', lineHeight: 1 }}>{row.icon}</span>
-              <span style={{ fontSize: '12px', color: 'var(--t3)' }}>{row.label}</span>
+              <span style={{ fontSize: '16px', lineHeight: 1 }}>{item.icon}</span>
+              <div>
+                <p style={{ fontSize: '11px', color: 'var(--t3)', lineHeight: 1, marginBottom: '2px' }}>{item.label}</p>
+                <p style={{ fontSize: '10px', color: 'var(--t3)', lineHeight: 1 }}>{item.unit}</p>
+              </div>
             </div>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: row.color }}>{row.value}</span>
+            <span style={{ fontSize: '26px', fontWeight: 800, color: item.numCol, letterSpacing: '-0.04em', lineHeight: 1 }}>
+              {item.value}
+            </span>
           </div>
         ))}
       </div>
-    </Panel>
+    </div>
   )
 }
 
@@ -859,6 +904,7 @@ export default function OverviewTab() {
         </div>
 
         <div className="lg:col-span-1 flex flex-col gap-5">
+          <StreakCard trades={trades} journalStreak={journalStreak} habitStreak={bestHabitStreak} />
           <Panel title="Today's Focus" accent="var(--am2)">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
@@ -936,8 +982,6 @@ export default function OverviewTab() {
               )}
             </div>
           </Panel>
-
-          <StreakCard trades={trades} journalStreak={journalStreak} habitStreak={bestHabitStreak} />
         </div>
       </div>
 
