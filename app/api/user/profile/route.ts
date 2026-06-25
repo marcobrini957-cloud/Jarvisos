@@ -2,10 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse }  from 'next/server'
 
 const DEFAULT_PROFILE = {
-  display_name: 'Trader',
-  avatar_color: 'var(--ac)',
-  timezone:     'Europe/Vienna',
-  currency:     'EUR',
+  display_name:  'Trader',
+  avatar_color:  'var(--ac)',
+  avatar_emoji:  null as string | null,
+  timezone:      'Europe/Vienna',
+  currency:      'EUR',
 }
 
 export async function GET() {
@@ -19,7 +20,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('display_name, avatar_color, timezone, currency')
+      .select('display_name, avatar_color, avatar_emoji, timezone, currency')
       .eq('id', user.id)
       .single()
 
@@ -44,13 +45,14 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json() as Partial<{
-      display_name: string
+      display_name:  string
       avatar_color:  string
+      avatar_emoji:  string | null
       timezone:      string
       currency:      string
     }>
 
-    const allowed = ['display_name', 'avatar_color', 'timezone', 'currency'] as const
+    const allowed = ['display_name', 'avatar_color', 'avatar_emoji', 'timezone', 'currency'] as const
     const update: Record<string, string> = { id: user.id, updated_at: new Date().toISOString() }
     for (const key of allowed) {
       if (body[key] !== undefined) update[key] = body[key] as string
@@ -59,7 +61,7 @@ export async function PATCH(request: Request) {
     const { data, error } = await supabase
       .from('user_profiles')
       .upsert(update, { onConflict: 'id' })
-      .select('display_name, avatar_color, timezone, currency')
+      .select('display_name, avatar_color, avatar_emoji, timezone, currency')
       .single()
 
     if (error) {

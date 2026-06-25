@@ -3,17 +3,19 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 
 export interface UserProfile {
-  display_name: string
-  avatar_color: string
-  timezone:     string
-  currency:     string
+  display_name:  string
+  avatar_color:  string
+  avatar_emoji:  string | null
+  timezone:      string
+  currency:      string
 }
 
 const DEFAULT_PROFILE: UserProfile = {
-  display_name: 'Trader',
-  avatar_color: 'var(--ac)',
-  timezone:     'Europe/Vienna',
-  currency:     'EUR',
+  display_name:  'Trader',
+  avatar_color:  'var(--ac)',
+  avatar_emoji:  null,
+  timezone:      'Europe/Vienna',
+  currency:      'EUR',
 }
 
 interface UserProfileContextValue {
