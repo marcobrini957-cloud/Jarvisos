@@ -580,7 +580,7 @@ function StreakCard({ trades, journalStreak, habitStreak }: { trades: Trade[]; j
 
   const items = [
     {
-      label:   isLosing ? 'Loss run' : 'Trade streak',
+      label:   isLosing ? 'Loss run' : 'Win streak',
       value:   isLosing ? lossStreak : tradeStreak,
       unit:    isLosing ? 'losses in a row' : 'trades without a loss',
       icon:    isLosing ? '⚠️' : tradeStreak >= 5 ? '🔥' : '📈',
