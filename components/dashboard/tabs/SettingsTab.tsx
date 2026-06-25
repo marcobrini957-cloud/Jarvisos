@@ -1,8 +1,54 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Panel from '@/components/ui/Panel'
 
+const KEY_ENABLED = 'vq_greeting_enabled'
+const KEY_DATE    = 'vq_greeting_date'
+
+function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      onClick={() => onChange(!value)}
+      style={{
+        width: '40px', height: '22px',
+        borderRadius: '11px',
+        background: value ? 'rgba(232,201,106,0.8)' : 'var(--s3)',
+        border: `1px solid ${value ? 'rgba(232,201,106,0.5)' : 'var(--bd2)'}`,
+        cursor: 'pointer', padding: '0', position: 'relative',
+        transition: 'background 0.2s ease, border-color 0.2s ease',
+        flexShrink: 0,
+      }}
+      aria-checked={value}
+      role="switch"
+    >
+      <span style={{
+        position: 'absolute', top: '2px',
+        left: value ? '20px' : '2px',
+        width: '16px', height: '16px',
+        borderRadius: '50%',
+        background: value ? '#000' : 'var(--t3)',
+        transition: 'left 0.2s cubic-bezier(0.16,1,0.3,1)',
+        display: 'block',
+      }} />
+    </button>
+  )
+}
+
 export default function SettingsTab() {
+  const [greetingEnabled, setGreetingEnabled] = useState(true)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(KEY_ENABLED)
+    setGreetingEnabled(stored !== 'false')
+  }, [])
+
+  function toggleGreeting(val: boolean) {
+    setGreetingEnabled(val)
+    localStorage.setItem(KEY_ENABLED, String(val))
+    if (val) localStorage.removeItem(KEY_DATE)
+  }
+
   const row = (label: string, value: string, color = 'var(--t2)') => (
     <div key={label} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--bd)' }}>
       <span style={{ color: 'var(--t2)', fontSize: '12px' }}>{label}</span>
@@ -14,8 +60,23 @@ export default function SettingsTab() {
     <div className="flex flex-col gap-4 max-w-2xl">
       <div>
         <h1 style={{ color: 'var(--t1)', fontSize: '18px', fontWeight: 600 }}>Settings</h1>
-        <p style={{ color: 'var(--t2)', fontSize: '12px', marginTop: '4px' }}>Integrations and connected services</p>
+        <p style={{ color: 'var(--t2)', fontSize: '12px', marginTop: '4px' }}>Integrations and preferences</p>
       </div>
+
+      {/* ── Personalization ── */}
+      <Panel title="Personalization">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p style={{ color: 'var(--t1)', fontSize: '13px', fontWeight: 500 }}>Daily greeting &amp; affirmation</p>
+              <p style={{ color: 'var(--t3)', fontSize: '11px', marginTop: '2px' }}>
+                Shows a motivational message when you open the app each day
+              </p>
+            </div>
+            <Toggle value={greetingEnabled} onChange={toggleGreeting} />
+          </div>
+        </div>
+      </Panel>
 
       {/* ── Connected Services ── */}
       <Panel title="Connected Services">

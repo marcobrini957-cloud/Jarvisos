@@ -13,6 +13,7 @@ import MacroTab       from './tabs/MacroTab'
 import DisciplineTab  from './tabs/DisciplineTab'
 import VelquorTab      from './tabs/VelquorTab'
 import SettingsTab    from './tabs/SettingsTab'
+import WelcomeGreeting from './WelcomeGreeting'
 
 const TAB_COMPONENTS = [
   OverviewTab,   // 0
@@ -37,6 +38,7 @@ export default function DashboardShell() {
 
   return (
     <UserProfileProvider>
+      <WelcomeGreeting />
       <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflowX: 'hidden' }}>
         <Topbar />
 
