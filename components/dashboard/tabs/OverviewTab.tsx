@@ -538,6 +538,65 @@ function TradeCalendar({ allRows }: { allRows: Trade[] }) {
   )
 }
 
+// ── Streak Card ───────────────────────────────────────────────────────────────
+
+function StreakCard({ trades, journalStreak, habitStreak }: { trades: Trade[]; journalStreak: number; habitStreak: number }) {
+  const winStreak = useMemo(() => {
+    let wins = 0
+    for (const t of [...trades].reverse()) {
+      if ((t.net_profit ?? 0) > BE_THRESHOLD) wins++
+      else if ((t.net_profit ?? 0) < -BE_THRESHOLD) break
+    }
+    return wins
+  }, [trades])
+
+  const lossStreak = useMemo(() => {
+    let losses = 0
+    for (const t of [...trades].reverse()) {
+      if ((t.net_profit ?? 0) < -BE_THRESHOLD) losses++
+      else if ((t.net_profit ?? 0) > BE_THRESHOLD) break
+    }
+    return losses
+  }, [trades])
+
+  const rows = [
+    {
+      icon: winStreak >= 2 ? '🔥' : lossStreak >= 2 ? '⚠️' : '📈',
+      label: winStreak >= 2 ? 'Win streak' : lossStreak >= 2 ? 'Loss streak' : 'Trading',
+      value: winStreak >= 2 ? `${winStreak} in a row` : lossStreak >= 2 ? `${lossStreak} in a row` : 'No streak',
+      color: winStreak >= 2 ? 'var(--gr2)' : lossStreak >= 2 ? 'var(--re)' : 'var(--t3)',
+    },
+    {
+      icon: '✍',
+      label: 'Journal streak',
+      value: journalStreak > 0 ? `${journalStreak} day${journalStreak !== 1 ? 's' : ''}` : 'Not started',
+      color: journalStreak >= 7 ? 'var(--go2)' : journalStreak >= 3 ? 'var(--gr2)' : journalStreak > 0 ? 'var(--t2)' : 'var(--t3)',
+    },
+    {
+      icon: '💪',
+      label: 'Best habit',
+      value: habitStreak > 0 ? `${habitStreak} day${habitStreak !== 1 ? 's' : ''}` : 'Not started',
+      color: habitStreak >= 7 ? 'var(--go2)' : habitStreak >= 3 ? 'var(--pu)' : habitStreak > 0 ? 'var(--t2)' : 'var(--t3)',
+    },
+  ]
+
+  return (
+    <Panel title="Streaks">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {rows.map(row => (
+          <div key={row.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '15px', lineHeight: 1 }}>{row.icon}</span>
+              <span style={{ fontSize: '12px', color: 'var(--t3)' }}>{row.label}</span>
+            </div>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: row.color }}>{row.value}</span>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  )
+}
+
 // ── Streak Badge ──────────────────────────────────────────────────────────────
 
 function StreakBadge({ trades }: { trades: Trade[] }) {
@@ -799,7 +858,7 @@ export default function OverviewTab() {
           </Panel>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 flex flex-col gap-5">
           <Panel title="Today's Focus" accent="var(--am2)">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
@@ -877,6 +936,8 @@ export default function OverviewTab() {
               )}
             </div>
           </Panel>
+
+          <StreakCard trades={trades} journalStreak={journalStreak} habitStreak={bestHabitStreak} />
         </div>
       </div>
 

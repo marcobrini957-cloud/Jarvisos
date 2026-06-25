@@ -3,13 +3,14 @@
 import { IconSettings } from '@tabler/icons-react'
 
 const TABS: { id: number; label: string; isGold?: boolean }[] = [
-  { id: 0, label: 'Overview'   },
-  { id: 1, label: 'Trading'    },
-  { id: 2, label: 'Portfolio'  },
-  { id: 3, label: 'Journal'    },
-  { id: 4, label: 'Macro'      },
-  { id: 5, label: 'Discipline' },
-  { id: 6, label: 'VELQUOR AI', isGold: true },
+  { id: 0, label: 'Overview'    },
+  { id: 1, label: 'Trading'     },
+  { id: 2, label: 'Portfolio'   },
+  { id: 3, label: 'Journal'     },
+  { id: 4, label: 'Macro'       },
+  { id: 5, label: 'Discipline'  },
+  { id: 7, label: 'Tasks'       },
+  { id: 6, label: 'Ask VELQUOR', isGold: true },
 ]
 
 interface TabBarProps {

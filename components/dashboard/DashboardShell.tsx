@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import Topbar from './Topbar'
 import { UserProfileProvider } from '@/context/UserProfileContext'
 import TabBar from './TabBar'
@@ -11,25 +11,27 @@ import PortfolioTab   from './tabs/PortfolioTab'
 import JournalTab     from './tabs/JournalTab'
 import MacroTab       from './tabs/MacroTab'
 import DisciplineTab  from './tabs/DisciplineTab'
-import VelquorTab      from './tabs/VelquorTab'
+import VelquorTab     from './tabs/VelquorTab'
+import TasksTab       from './tabs/TasksTab'
 import SettingsTab    from './tabs/SettingsTab'
 import WelcomeGreeting from './WelcomeGreeting'
 
-const TAB_COMPONENTS = [
-  OverviewTab,   // 0
-  TradingTab,    // 1
-  PortfolioTab,  // 2
-  JournalTab,    // 3
-  MacroTab,      // 4
-  DisciplineTab, // 5
-  VelquorTab,     // 6
-]
+const TAB_COMPONENTS: Record<number, React.ComponentType> = {
+  0: OverviewTab,
+  1: TradingTab,
+  2: PortfolioTab,
+  3: JournalTab,
+  4: MacroTab,
+  5: DisciplineTab,
+  6: VelquorTab,
+  7: TasksTab,
+}
 
 export default function DashboardShell() {
   const [activeTab,    setActiveTab]    = useState(0)
   const [showSettings, setShowSettings] = useState(false)
 
-  const ActiveTab = TAB_COMPONENTS[activeTab]
+  const ActiveTab = TAB_COMPONENTS[activeTab] ?? TAB_COMPONENTS[0]
 
   function handleTabChange(id: number) {
     setActiveTab(id)
