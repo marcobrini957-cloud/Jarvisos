@@ -439,3 +439,8 @@ input, textarea, select { font: inherit; }
   }
 
 }
+
+@keyframes vq-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(232,201,106,0.3); }
+  50%       { box-shadow: 0 0 18px rgba(232,201,106,0.65); }
+}

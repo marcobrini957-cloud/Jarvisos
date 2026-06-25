@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Panel from '@/components/ui/Panel'
+import { useSpeech } from '@/hooks/useSpeech'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -23,6 +24,7 @@ export default function VelquorTab() {
   const [streaming,  setStreaming]  = useState(false)
   const [hasLoaded,  setHasLoaded]  = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const { speak, stop, speakingIdx } = useSpeech()
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -135,7 +137,14 @@ export default function VelquorTab() {
                   {msg.role === 'assistant' && (
                     <div className="flex-shrink-0 mr-2 flex items-start">
                       <div className="flex items-center justify-center rounded-lg"
-                        style={{ width: '28px', height: '28px', background: 'rgba(232,201,106,0.15)', border: '1px solid rgba(232,201,106,0.2)', fontSize: '14px' }}>
+                        style={{
+                          width: '28px', height: '28px', fontSize: '14px',
+                          background: speakingIdx === i ? 'rgba(232,201,106,0.28)' : 'rgba(232,201,106,0.15)',
+                          border: `1px solid ${speakingIdx === i ? 'rgba(232,201,106,0.6)' : 'rgba(232,201,106,0.2)'}`,
+                          boxShadow: speakingIdx === i ? '0 0 10px rgba(232,201,106,0.35)' : 'none',
+                          transition: 'all 0.3s ease',
+                          animation: speakingIdx === i ? 'vq-pulse 1.2s ease-in-out infinite' : 'none',
+                        }}>
                         🤖
                       </div>
                     </div>
@@ -146,20 +155,72 @@ export default function VelquorTab() {
                     border:     msg.role === 'user' ? '1px solid rgba(55,138,221,0.25)' : '1px solid rgba(232,201,106,0.15)',
                     borderRadius: msg.role === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
                     padding: '10px 14px',
+                    position: 'relative',
                   }}>
                     {msg.role === 'assistant' && msg.content === '' && streaming ? (
                       <span style={{ color: 'var(--go2)' }}>▌</span>
                     ) : (
-                      <p style={{
-                        color:      msg.role === 'user' ? 'var(--t1)' : 'var(--t1)',
-                        fontSize:   '13px', lineHeight: '1.7',
-                        whiteSpace: 'pre-line',
-                      }}>
-                        {msg.content}
-                        {msg.role === 'assistant' && streaming && i === messages.length - 1 && (
-                          <span style={{ color: 'var(--go2)' }}>▌</span>
+                      <>
+                        <p style={{
+                          color:      'var(--t1)',
+                          fontSize:   '13px', lineHeight: '1.7',
+                          whiteSpace: 'pre-line',
+                          paddingBottom: msg.role === 'assistant' && msg.content ? '28px' : '0',
+                        }}>
+                          {msg.content}
+                          {msg.role === 'assistant' && streaming && i === messages.length - 1 && (
+                            <span style={{ color: 'var(--go2)' }}>▌</span>
+                          )}
+                        </p>
+                        {msg.role === 'assistant' && msg.content && !streaming && (
+                          <button
+                            onClick={() => speak(msg.content, i)}
+                            title={speakingIdx === i ? 'Stop reading' : 'Read aloud'}
+                            style={{
+                              position: 'absolute', bottom: '8px', right: '10px',
+                              background: speakingIdx === i ? 'rgba(232,201,106,0.2)' : 'transparent',
+                              border: `1px solid ${speakingIdx === i ? 'rgba(232,201,106,0.45)' : 'rgba(232,201,106,0.2)'}`,
+                              borderRadius: '6px',
+                              padding: '3px 8px',
+                              cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', gap: '4px',
+                              transition: 'all 0.2s ease',
+                              color: speakingIdx === i ? 'var(--go2)' : 'var(--t3)',
+                              fontSize: '11px',
+                            }}
+                            onMouseEnter={e => {
+                              if (speakingIdx !== i) {
+                                e.currentTarget.style.borderColor = 'rgba(232,201,106,0.45)'
+                                e.currentTarget.style.color = 'var(--go2)'
+                              }
+                            }}
+                            onMouseLeave={e => {
+                              if (speakingIdx !== i) {
+                                e.currentTarget.style.borderColor = 'rgba(232,201,106,0.2)'
+                                e.currentTarget.style.color = 'var(--t3)'
+                              }
+                            }}
+                          >
+                            {speakingIdx === i ? (
+                              <>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                                  <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+                                </svg>
+                                Stop
+                              </>
+                            ) : (
+                              <>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                                </svg>
+                                Read
+                              </>
+                            )}
+                          </button>
                         )}
-                      </p>
+                      </>
                     )}
                   </div>
                 </div>
