@@ -4,6 +4,45 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { LogoMark } from '@/components/ui/LogoMark'
 
+// ── Aurora data-stream bars ───────────────────────────────────────────────────
+function Aurora() {
+  const bars = Array.from({ length: 52 }, (_, i) => {
+    const colors = ['#FF2D9A', '#E040FB', '#7B61FF', '#4BC0FF', '#FF6B9D', '#A78BFA']
+    return {
+      left: `${(i / 52) * 100}%`,
+      height: `${32 + Math.abs(Math.sin(i * 1.71)) * 72}px`,
+      width: `${i % 3 === 0 ? 2.5 : i % 3 === 1 ? 1.5 : 1}px`,
+      color: colors[i % colors.length],
+      delay: `${((i * 0.09) % 2.8).toFixed(2)}s`,
+      duration: `${(1.6 + (i * 0.17) % 1.8).toFixed(2)}s`,
+      anim: i % 2 === 0 ? 'aurora-a' : 'aurora-b',
+    }
+  })
+
+  return (
+    <>
+      <style>{`
+        @keyframes aurora-a { 0%,100%{opacity:.65;transform:scaleY(1)} 50%{opacity:.06;transform:scaleY(.45)} }
+        @keyframes aurora-b { 0%,100%{opacity:.35;transform:scaleY(.75)} 50%{opacity:.08;transform:scaleY(.35)} }
+      `}</style>
+      <div aria-hidden style={{
+        position: 'absolute', top: 0, left: 0, right: 0,
+        height: '110px', zIndex: 1, pointerEvents: 'none', overflow: 'hidden',
+      }}>
+        {bars.map((b, i) => (
+          <div key={i} style={{
+            position: 'absolute', top: 0,
+            left: b.left, width: b.width, height: b.height,
+            background: `linear-gradient(180deg,${b.color} 0%,transparent 100%)`,
+            animation: `${b.anim} ${b.duration} ease-in-out ${b.delay} infinite`,
+            borderRadius: '0 0 2px 2px',
+          }} />
+        ))}
+      </div>
+    </>
+  )
+}
+
 // ── Intro splash ──────────────────────────────────────────────────────────────
 function IntroSplash({ onDone }: { onDone: () => void }) {
   const [phase, setPhase] = useState<'in' | 'hold' | 'zoom'>('in')
@@ -810,126 +849,140 @@ function Nav() {
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
-    <section style={{ position: 'relative', paddingBottom: '0' }}>
-      {/* Background ambient glows */}
+    <section style={{ position: 'relative', paddingBottom: '0', background: '#000', overflow: 'hidden' }}>
+      {/* Aurora bars at very top */}
+      <Aurora />
+
+      {/* Deep space background glows */}
       <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        {/* Central blue-indigo glow */}
         <div style={{
-          position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)',
-          width: '800px', height: '500px', borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(77,143,255,0.10) 0%, transparent 65%)',
+          position: 'absolute', top: '-15%', left: '50%', transform: 'translateX(-50%)',
+          width: '90vw', height: '70vh', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(55,90,180,0.22) 0%, rgba(30,50,120,0.08) 45%, transparent 70%)',
         }} />
+        {/* Left blue orb */}
         <div style={{
-          position: 'absolute', top: '5%', left: '15%',
-          width: '400px', height: '400px', borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(200,133,26,0.07) 0%, transparent 65%)',
+          position: 'absolute', top: '20%', left: '-8%',
+          width: '50vw', height: '50vw', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(33,110,210,0.10) 0%, transparent 65%)',
         }} />
+        {/* Right purple orb */}
         <div style={{
-          position: 'absolute', top: '5%', right: '10%',
-          width: '360px', height: '360px', borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(168,126,255,0.06) 0%, transparent 65%)',
+          position: 'absolute', top: '15%', right: '-8%',
+          width: '45vw', height: '45vw', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(140,60,220,0.10) 0%, transparent 65%)',
         }} />
       </div>
 
       {/* Centered text block */}
-      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: 'clamp(56px, 10vw, 100px) clamp(16px, 5vw, 48px) clamp(40px, 6vw, 60px)' }}>
+      <div style={{
+        position: 'relative', zIndex: 2,
+        textAlign: 'center',
+        padding: 'clamp(72px, 11vw, 120px) clamp(16px, 5vw, 48px) clamp(48px, 7vw, 72px)',
+      }}>
+        {/* Badge */}
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
-          padding: '5px 14px', borderRadius: '20px', marginBottom: '28px',
-          background: 'rgba(77,143,255,0.1)', border: '1px solid rgba(77,143,255,0.2)',
+          padding: '5px 14px', borderRadius: '20px', marginBottom: '32px',
+          background: 'rgba(77,143,255,0.1)', border: '1px solid rgba(77,143,255,0.22)',
         }}>
-          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--ac)', display: 'block', boxShadow: '0 0 6px var(--ac)' }} />
-          <span style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 500 }}>Built for serious MT5 traders</span>
+          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#4B8FFF', display: 'block', boxShadow: '0 0 6px #4B8FFF' }} />
+          <span style={{ color: '#4B8FFF', fontSize: '12px', fontWeight: 500 }}>Built for serious MT5 traders</span>
         </div>
 
+        {/* Headline */}
         <h1 style={{
-          fontSize: 'clamp(38px, 7vw, 72px)', fontWeight: 800, lineHeight: 1.05,
-          letterSpacing: '-0.04em', margin: '0 0 20px', color: 'var(--t1)',
+          fontSize: 'clamp(44px, 8.5vw, 96px)', fontWeight: 900, lineHeight: 0.97,
+          letterSpacing: '-0.04em', margin: '0 0 28px', color: '#fff',
         }}>
-          Your Trading<br />
-          <span style={{
-            background: 'linear-gradient(90deg, var(--go2) 0%, #FFD580 40%, var(--ac) 100%)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>Operating System</span>
+          See the truth<span style={{ color: 'rgba(255,255,255,0.3)' }}> /</span><br />
+          Trade the edge.
         </h1>
 
-        <p style={{ fontSize: 'clamp(15px, 2.5vw, 18px)', color: 'var(--t2)', lineHeight: 1.7, margin: '0 auto 36px', maxWidth: '560px' }}>
-          Connect your MT5 account and get a clear, data-driven picture of your real patterns,
-          real edge, and real leaks — the one thing most traders are missing.
+        {/* Subtitle */}
+        <p style={{
+          fontSize: 'clamp(15px, 2.2vw, 19px)', color: 'rgba(255,255,255,0.52)',
+          lineHeight: 1.65, margin: '0 auto 40px', maxWidth: '520px', fontWeight: 400,
+        }}>
+          Connect your MT5 account and instantly see what&apos;s working, what&apos;s not,
+          and exactly where you&apos;re leaking money.
         </p>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+        {/* CTAs */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'center', marginBottom: '28px' }}>
           <Link href="/login?mode=signup" style={{
-            background: 'var(--ac)', color: 'white', padding: '14px 28px', borderRadius: '10px',
-            fontSize: '15px', fontWeight: 600, textDecoration: 'none',
-            boxShadow: '0 8px 32px rgba(77,143,255,0.4)', whiteSpace: 'nowrap',
-          }}>Start free — no card needed →</Link>
-          <a href="#showcase" style={{ color: 'var(--t2)', fontSize: '14px', fontWeight: 500, textDecoration: 'none', padding: '14px 8px' }}>
-            See inside ↓
-          </a>
+            background: '#fff', color: '#000', padding: '14px 30px', borderRadius: '8px',
+            fontSize: '15px', fontWeight: 700, textDecoration: 'none',
+            boxShadow: '0 4px 24px rgba(255,255,255,0.15)', whiteSpace: 'nowrap',
+          }}>Start free — no card needed</Link>
+          <a href="#showcase" style={{
+            color: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: 500,
+            textDecoration: 'none', padding: '14px 8px',
+          }}>See inside ↓</a>
         </div>
 
+        {/* Trust bullets */}
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
           {['Any MT5 Broker', 'Live & Demo Accounts', 'AI-Powered', 'Mobile PWA'].map(b => (
             <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ color: 'var(--gr2)', fontSize: '11px' }}>✓</span>
-              <span style={{ color: 'var(--t3)', fontSize: '12px' }}>{b}</span>
+              <span style={{ color: '#00FF85', fontSize: '11px' }}>✓</span>
+              <span style={{ color: 'rgba(255,255,255,0.38)', fontSize: '12px' }}>{b}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Glowing screen frame */}
-      <div style={{ position: 'relative', zIndex: 1, padding: '0 clamp(12px, 4vw, 48px)', paddingBottom: '0' }}>
+      {/* Dashboard frame with gradient border */}
+      <div style={{ position: 'relative', zIndex: 2, padding: '0 clamp(12px, 4vw, 48px)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
-          {/* Glow underneath the screen */}
+          {/* Nebula glow behind the frame */}
           <div aria-hidden style={{
-            position: 'absolute', bottom: '-30px', left: '10%', right: '10%', height: '80px',
-            background: 'radial-gradient(ellipse, rgba(77,143,255,0.35) 0%, rgba(200,133,26,0.12) 50%, transparent 70%)',
-            filter: 'blur(20px)',
-            pointerEvents: 'none',
-            zIndex: 0,
+            position: 'absolute', inset: '-40px -60px 0',
+            background: [
+              'radial-gradient(ellipse at 20% 60%, rgba(33,110,243,0.28) 0%, transparent 55%)',
+              'radial-gradient(ellipse at 80% 60%, rgba(196,50,220,0.22) 0%, transparent 55%)',
+            ].join(', '),
+            filter: 'blur(40px)',
+            pointerEvents: 'none', zIndex: 0,
           }} />
 
-          {/* The screen */}
+          {/* Gradient border wrapper */}
           <div style={{
             position: 'relative', zIndex: 1,
-            borderRadius: '16px 16px 0 0',
-            border: '1px solid rgba(255,255,255,0.10)',
-            borderBottom: 'none',
-            overflow: 'hidden',
-            boxShadow: `
-              0 0 0 1px rgba(77,143,255,0.20),
-              0 -2px 40px rgba(77,143,255,0.15),
-              0 -8px 80px rgba(77,143,255,0.08),
-              inset 0 1px 0 rgba(255,255,255,0.08)
-            `,
+            background: 'linear-gradient(90deg, #2196F3 0%, #7B2FBF 50%, #E040FB 100%)',
+            padding: '1.5px',
+            borderRadius: '14px 14px 0 0',
+            boxShadow: [
+              '0 0 60px rgba(33,150,243,0.22)',
+              '0 0 120px rgba(224,64,251,0.14)',
+              '0 -10px 60px rgba(33,100,200,0.12)',
+            ].join(', '),
           }}>
-            {/* Fake browser chrome */}
-            <div style={{
-              background: 'rgba(10,14,20,0.98)',
-              padding: '10px 16px',
-              display: 'flex', alignItems: 'center', gap: '12px',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
-            }}>
-              {/* Traffic lights */}
-              <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                {['rgba(255,95,87,0.8)', 'rgba(255,189,46,0.8)', 'rgba(40,201,64,0.8)'].map((c, i) => (
-                  <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: c }} />
-                ))}
-              </div>
-              {/* URL bar */}
+            <div style={{ background: '#090D13', borderRadius: '12px 12px 0 0', overflow: 'hidden' }}>
+              {/* Browser chrome */}
               <div style={{
-                flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '6px', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px',
-                maxWidth: '320px', margin: '0 auto',
+                background: 'rgba(10,14,20,0.98)', padding: '10px 16px',
+                display: 'flex', alignItems: 'center', gap: '12px',
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
               }}>
-                <span style={{ color: 'var(--gr2)', fontSize: '10px' }}>🔒</span>
-                <span style={{ color: 'var(--t3)', fontSize: '11px' }}>velquor.app/dashboard</span>
+                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                  {['rgba(255,95,87,0.8)', 'rgba(255,189,46,0.8)', 'rgba(40,201,64,0.8)'].map((c, i) => (
+                    <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: c }} />
+                  ))}
+                </div>
+                <div style={{
+                  flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '6px', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px',
+                  maxWidth: '320px', margin: '0 auto',
+                }}>
+                  <span style={{ color: '#00FF85', fontSize: '10px' }}>🔒</span>
+                  <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px' }}>velquor.app/dashboard</span>
+                </div>
+                <div style={{ flexShrink: 0, width: '52px' }} />
               </div>
-              <div style={{ flexShrink: 0, width: '52px' }} />
+              <AnimatedDashboard />
             </div>
-
-            <AnimatedDashboard />
           </div>
         </div>
       </div>
@@ -1104,34 +1157,69 @@ function TradingTabMockup() {
 
 function ShowcaseSection() {
   return (
-    <section id="showcase" style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px)', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>Inside the dashboard</p>
-        <h2 style={{ fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)' }}>
-          This is what your trading actually looks like
-        </h2>
-        <p style={{ color: 'var(--t2)', fontSize: '16px', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
-          Every trade annotated. Setup type, emotion, tags. An equity curve that shows your real growth.
-          The data most traders never see about themselves.
-        </p>
+    <section id="showcase" style={{
+      position: 'relative', overflow: 'hidden',
+      background: '#000',
+      padding: 'clamp(60px, 10vw, 110px) clamp(16px, 5vw, 48px)',
+    }}>
+      {/* Nebula glow orbs */}
+      <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+        <div style={{
+          position: 'absolute', bottom: '5%', left: '-8%',
+          width: '45vw', height: '45vw', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(33,110,243,0.22) 0%, transparent 65%)',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '0%', right: '-8%',
+          width: '45vw', height: '45vw', borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(196,50,220,0.18) 0%, transparent 65%)',
+        }} />
+        {/* Top center subtle glow */}
+        <div style={{
+          position: 'absolute', top: '0', left: '50%', transform: 'translateX(-50%)',
+          width: '60vw', height: '30vh',
+          background: 'radial-gradient(ellipse, rgba(55,80,160,0.12) 0%, transparent 70%)',
+        }} />
       </div>
 
-      <TradingTabMockup />
+      <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <p style={{ color: '#4B8FFF', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>Inside the dashboard</p>
+          <h2 style={{ fontSize: 'clamp(28px, 6vw, 48px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 16px', color: '#fff', lineHeight: 1.05 }}>
+            This is what your trading<br />actually looks like
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '16px', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
+            Every trade annotated. Setup type, emotion, tags. An equity curve that shows your real growth.
+            The data most traders never see about themselves.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: '16px', marginTop: '24px' }}>
-        {[
-          { icon: '📎', title: 'Annotate every trade', desc: 'Tag each trade with setup type, pre-trade emotion, and mistake labels. The pattern becomes obvious fast.' },
-          { icon: '📈', title: 'Real equity curve', desc: 'Not just a P&L number — a visual equity curve that shows exactly when you\'re growing and when you\'re giving it back.' },
-          { icon: '🔍', title: 'Filter by anything', desc: 'Slice your performance by instrument, session, setup, or emotion. Find what\'s actually working for you specifically.' },
-        ].map(c => (
-          <div key={c.title} style={{
-            background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '12px', padding: '20px',
-          }}>
-            <div style={{ fontSize: '20px', marginBottom: '10px' }}>{c.icon}</div>
-            <h3 style={{ margin: '0 0 6px', color: 'var(--t1)', fontSize: '13px', fontWeight: 600 }}>{c.title}</h3>
-            <p style={{ margin: 0, color: 'var(--t2)', fontSize: '12px', lineHeight: 1.6 }}>{c.desc}</p>
+        {/* Gradient border wrapper around mockup */}
+        <div style={{
+          background: 'linear-gradient(90deg, #2196F3 0%, #7B2FBF 50%, #E040FB 100%)',
+          padding: '1.5px', borderRadius: '16px',
+          boxShadow: '0 0 80px rgba(33,150,243,0.18), 0 0 140px rgba(224,64,251,0.12)',
+        }}>
+          <div style={{ background: '#0a0e14', borderRadius: '14px', overflow: 'hidden' }}>
+            <TradingTabMockup />
           </div>
-        ))}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: '16px', marginTop: '28px' }}>
+          {[
+            { icon: '📎', title: 'Annotate every trade', desc: 'Tag each trade with setup type, pre-trade emotion, and mistake labels. The pattern becomes obvious fast.' },
+            { icon: '📈', title: 'Real equity curve', desc: 'Not just a P&L number — a visual equity curve that shows exactly when you\'re growing and when you\'re giving it back.' },
+            { icon: '🔍', title: 'Filter by anything', desc: 'Slice your performance by instrument, session, setup, or emotion. Find what\'s actually working for you specifically.' },
+          ].map(c => (
+            <div key={c.title} style={{
+              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px',
+            }}>
+              <div style={{ fontSize: '20px', marginBottom: '10px' }}>{c.icon}</div>
+              <h3 style={{ margin: '0 0 6px', color: '#fff', fontSize: '13px', fontWeight: 600 }}>{c.title}</h3>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.45)', fontSize: '12px', lineHeight: 1.6 }}>{c.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -1557,6 +1645,32 @@ function Pricing() {
   )
 }
 
+// ── Footer tagline ────────────────────────────────────────────────────────────
+function FooterTagline() {
+  return (
+    <div style={{
+      background: '#000',
+      borderTop: '1px solid rgba(255,255,255,0.06)',
+      padding: 'clamp(40px, 7vw, 72px) clamp(16px, 4vw, 40px)',
+      overflow: 'hidden',
+    }}>
+      <p style={{
+        fontSize: 'clamp(36px, 7.5vw, 96px)',
+        fontWeight: 900,
+        letterSpacing: '-0.04em',
+        lineHeight: 0.92,
+        color: '#fff',
+        margin: 0,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'clip',
+      }}>
+        KNOW EVERY TRADE<span style={{ color: 'rgba(255,255,255,0.25)' }}> /</span> OWN YOUR EDGE.
+      </p>
+    </div>
+  )
+}
+
 // ── Footer ────────────────────────────────────────────────────────────────────
 function Footer() {
   return (
@@ -1638,6 +1752,7 @@ export default function LandingPage() {
         <VelquorSection />
         <PropFirmSection />
         <Pricing />
+        <FooterTagline />
         <Footer />
       </div>
     </>
