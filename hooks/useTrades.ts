@@ -106,13 +106,6 @@ export function useTrades(limit = 50) {
     return () => window.removeEventListener('mt5-synced', handler)
   }, [load])
 
-  // Self-contained poll — guarantees fresh data even when tab was unmounted
-  // during a Topbar background sync and missed the mt5-synced event
-  useEffect(() => {
-    const id = setInterval(() => load(), 30_000)
-    return () => clearInterval(id)
-  }, [load])
-
   return { trades, allRows, openPositions, stats, loading, error, reload: load }
 }
 

@@ -38,6 +38,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Fetch context data in parallel
     const [calendarEvents, tradesResult, portfolioResult] = await Promise.all([

@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
 
     // Get current user for the trader name in the report
     const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Fetch trades in the date window (closed, real trades only)
     const { data: trades, error } = await supabase

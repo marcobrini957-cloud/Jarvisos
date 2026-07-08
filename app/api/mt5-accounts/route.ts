@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
-// Temporary route to list MetaAPI accounts and find the UUID
 export async function GET() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const token = process.env.METAAPI_TOKEN
   if (!token) return NextResponse.json({ error: 'No token' }, { status: 400 })
 

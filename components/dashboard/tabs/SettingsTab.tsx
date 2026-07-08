@@ -35,12 +35,39 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
   )
 }
 
+type HealthData = Record<string, boolean | string>
+
+function StatusDot({ ok }: { ok: boolean | null }) {
+  const color = ok === null ? 'var(--t3)' : ok ? 'var(--gr2)' : '#ef4444'
+  return <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />
+}
+
+function statusLabel(val: boolean | string | undefined): { text: string; ok: boolean } {
+  if (val === undefined) return { text: 'Checking…', ok: false }
+  if (typeof val === 'boolean') return { text: val ? 'Configured' : 'Missing', ok: val }
+  if (val === 'OK') return { text: 'Connected', ok: true }
+  if (val.startsWith('OK')) return { text: val.replace('OK — ', ''), ok: true }
+  if (val.startsWith('ERROR') || val.startsWith('EXCEPTION')) return { text: 'Error', ok: false }
+  return { text: val, ok: false }
+}
+
 export default function SettingsTab() {
   const [greetingEnabled, setGreetingEnabled] = useState(true)
+  const [health, setHealth] = useState<HealthData | null>(null)
+  const [checking, setChecking] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem(KEY_ENABLED)
     setGreetingEnabled(stored !== 'false')
+  }, [])
+
+  useEffect(() => {
+    setChecking(true)
+    fetch('/api/health')
+      .then(r => r.json())
+      .then(d => setHealth(d))
+      .catch(() => setHealth({}))
+      .finally(() => setChecking(false))
   }, [])
 
   function toggleGreeting(val: boolean) {
@@ -49,12 +76,31 @@ export default function SettingsTab() {
     if (val) localStorage.removeItem(KEY_DATE)
   }
 
-  const row = (label: string, value: string, color = 'var(--t2)') => (
-    <div key={label} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--bd)' }}>
-      <span style={{ color: 'var(--t2)', fontSize: '12px' }}>{label}</span>
-      <span style={{ color, fontSize: '12px', fontWeight: 500 }}>{value}</span>
-    </div>
-  )
+  const row = (label: string, healthKey: string | null, staticOk?: boolean, staticText?: string) => {
+    let text: string
+    let ok: boolean | null = null
+
+    if (healthKey && health) {
+      const r = statusLabel(health[healthKey])
+      text = r.text
+      ok = r.ok
+    } else if (staticText !== undefined && staticOk !== undefined) {
+      text = staticText
+      ok = staticOk
+    } else {
+      text = checking ? 'Checking…' : '—'
+    }
+
+    return (
+      <div key={label} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--bd)' }}>
+        <span style={{ color: 'var(--t2)', fontSize: '12px' }}>{label}</span>
+        <div className="flex items-center gap-2">
+          <StatusDot ok={ok} />
+          <span style={{ color: ok ? 'var(--gr2)' : ok === false ? '#ef4444' : 'var(--t3)', fontSize: '12px', fontWeight: 500 }}>{text}</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
@@ -79,15 +125,14 @@ export default function SettingsTab() {
       </Panel>
 
       {/* ── Connected Services ── */}
-      <Panel title="Connected Services">
+      <Panel title={checking ? 'Connected Services (checking…)' : 'Connected Services'}>
         <div className="flex flex-col">
-          {row('Supabase (database)',       'Connected',  'var(--gr2)')}
-          {row('Anthropic Claude',          'Active',     'var(--gr2)')}
-          {row('MetaAPI (MT5 sync)',         'Configured', 'var(--ac)')}
-          {row('Yahoo Finance (portfolio)', 'Active',     'var(--gr2)')}
-          {row('gold-api.com (metals)',     'Active',     'var(--gr2)')}
-          {row('open.er-api.com (FX)',      'Active',     'var(--gr2)')}
-          {row('Forex Factory (calendar)',  'Active',     'var(--gr2)')}
+          {row('Supabase (database)',        'supabase_connection')}
+          {row('Groq AI (VELQUOR brain)',    'GROQ_API_KEY')}
+          {row('MetaAPI (MT5 sync)',         'METAAPI_TOKEN')}
+          {row('Yahoo Finance (portfolio)',  null, true, 'Active')}
+          {row('Yahoo Finance (metals)',     null, true, 'Active')}
+          {row('Forex Factory (calendar)',   null, true, 'Active')}
         </div>
       </Panel>
 
@@ -95,7 +140,7 @@ export default function SettingsTab() {
       <Panel title="Screenshot Storage">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--gr2)', display: 'inline-block' }} />
+            <StatusDot ok={health ? health['supabase_connection'] === 'OK' : null} />
             <span style={{ color: 'var(--t2)', fontSize: '12px' }}>
               Supabase Storage — bucket: <code style={{ color: 'var(--ac)', fontSize: '11px' }}>trade-screenshots</code>
             </span>

@@ -99,6 +99,10 @@ export function useHabits() {
     )
     let streak = 0
     const d = new Date()
+    // If today isn't done yet, start counting from yesterday so a live streak isn't broken
+    if (!dates.has(d.toISOString().split('T')[0])) {
+      d.setDate(d.getDate() - 1)
+    }
     while (true) {
       const dateStr = d.toISOString().split('T')[0]
       if (!dates.has(dateStr)) break
