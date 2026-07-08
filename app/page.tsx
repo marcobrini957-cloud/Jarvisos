@@ -196,8 +196,6 @@ function AnimatedDashboard() {
   const [cursorEase,     setCursorEase]    = useState(DRIFT_EASE)
   const [cursorCubic,    setCursorCubic]   = useState('0.45,0,0.55,1')
   const [cursorClicking, setCursorClicking] = useState(false)
-  const [cursorPhase,    setCursorPhase]   = useState<'idle'|'arcing'|'snapping'>('idle')
-  const [cursorAngle,    setCursorAngle]   = useState(0)
 
   const activeTab    = TAB_ORDER[step]
   const containerRef = useRef<HTMLDivElement>(null)
@@ -230,14 +228,12 @@ function AnimatedDashboard() {
     const ids: ReturnType<typeof setTimeout>[] = []
 
     // Move cursor to a fractional position with given easing
-    const go = (fx: number, fy: number, ease: number, cubic: string, phase: 'idle'|'arcing'|'snapping') => {
+    const go = (fx: number, fy: number, ease: number, cubic: string) => {
       if (!containerRef.current) return
       const { width: W, height: H } = containerRef.current.getBoundingClientRect()
       if (!W) return
       const tx = W * fx, ty = H * fy
-      const dx = tx - cursorPosRef.current.x, dy = ty - cursorPosRef.current.y
-      if (Math.sqrt(dx * dx + dy * dy) > 8) setCursorAngle(Math.atan2(dy, dx) * (180 / Math.PI))
-      setCursorEase(ease); setCursorCubic(cubic); setCursorPhase(phase)
+      setCursorEase(ease); setCursorCubic(cubic)
       setCursorX(tx); setCursorY(ty)
       cursorPosRef.current = { x: tx, y: ty }
     }
@@ -245,7 +241,7 @@ function AnimatedDashboard() {
     // 5 drifts — each starts before previous finishes, so cursor is always mid-motion
     const drifts = DRIFT_PATHS[step]
     drifts.forEach(([fx, fy], i) => {
-      ids.push(setTimeout(() => go(fx, fy, DRIFT_EASE, '0.45,0,0.55,1', 'idle'), i * DRIFT_INTV))
+      ids.push(setTimeout(() => go(fx, fy, DRIFT_EASE, '0.45,0,0.55,1'), i * DRIFT_INTV))
     })
 
     // Progress bar (fills over ~2900ms, snaps to 100% on switch)
@@ -255,37 +251,31 @@ function AnimatedDashboard() {
       setProgress(prog)
     }, 40)
 
-    // Arc toward nav (t=2150) — medium speed, sharp ease
+    // Move toward nav
     ids.push(setTimeout(() => {
       const [ix, iy] = INTER_FRAC[step]
-      go(ix, iy, 260, '0.4,0,0.2,1', 'arcing')
+      go(ix, iy, 260, '0.4,0,0.2,1')
     }, 2150))
 
-    // Snap to exact tab center (t=2440) — very fast spring
+    // Snap to tab
     ids.push(setTimeout(() => {
       const tab = tabPtsRef.current[NEXT_TAB_IDX[step]]
       if (tab && containerRef.current) {
-        const dx = tab.x - cursorPosRef.current.x, dy = tab.y - cursorPosRef.current.y
-        if (Math.sqrt(dx * dx + dy * dy) > 8) setCursorAngle(Math.atan2(dy, dx) * (180 / Math.PI))
-        setCursorEase(110); setCursorCubic('0.16,1,0.3,1'); setCursorPhase('snapping')
+        setCursorEase(110); setCursorCubic('0.16,1,0.3,1')
         setCursorX(tab.x); setCursorY(tab.y)
         cursorPosRef.current = { x: tab.x, y: tab.y }
       }
     }, 2440))
 
-    // Clear stretch (t=2570 — snap lands ~2550, give 20ms settle)
-    ids.push(setTimeout(() => { setCursorPhase('idle'); setCursorAngle(0) }, 2570))
-
     // Click ripple
     ids.push(setTimeout(() => setCursorClicking(true),  2540))
     ids.push(setTimeout(() => setCursorClicking(false), 2760))
 
-    // Immediately start moving toward NEXT tab's content — cursor never idles at the tab button
-    // Also triggers the content switch so the fade and cursor motion happen together
+    // Move toward next tab content
     ids.push(setTimeout(() => {
       const nextStep = (step + 1) % 4
       const [nfx, nfy] = CONTENT_FRAC[nextStep]
-      go(nfx, nfy, 480, '0.25,0.46,0.45,0.94', 'idle')
+      go(nfx, nfy, 480, '0.25,0.46,0.45,0.94')
 
       clearInterval(progId)
       setProgress(100)
@@ -316,11 +306,6 @@ function AnimatedDashboard() {
     return () => clearInterval(id)
   }, [step, visible])
 
-  const isMoving = cursorPhase !== 'idle'
-  const snapScaleX = cursorPhase === 'snapping' ? 2.6 : cursorPhase === 'arcing' ? 1.6 : 1
-  const snapScaleY = cursorPhase === 'snapping' ? 0.45 : cursorPhase === 'arcing' ? 0.72 : 1
-  const snapBlur   = cursorPhase === 'snapping' ? 1.8 : cursorPhase === 'arcing' ? 0.6 : 0
-
   const pts = [28, 44, 36, 58, 50, 73, 63, 86, 76, 93, 83, 100]
   const CW = 500, CH = 60
   const xs = pts.map((_, i) => (i / (pts.length - 1)) * CW)
@@ -346,53 +331,18 @@ function AnimatedDashboard() {
       `}</style>
       <div ref={containerRef} style={{ width: '100%', background: '#090D13', position: 'relative' }}>
 
-        {/* Ghost trail cursors — staggered delays create motion blur streak */}
-        {[
-          { extraMs: 85,  blur: 5,   opacity: 0.30, scale: 1.1 },
-          { extraMs: 170, blur: 9,   opacity: 0.16, scale: 1.25 },
-          { extraMs: 260, blur: 13,  opacity: 0.07, scale: 1.45 },
-        ].map((g, i) => (
-          <div key={i} style={{
-            position: 'absolute',
-            left: cursorX,
-            top: cursorY,
-            zIndex: 57 + i,
-            pointerEvents: 'none',
-            transform: `rotate(${cursorAngle}deg) scale(${g.scale})`,
-            transformOrigin: '6px 6px',
-            filter: `blur(${g.blur}px)`,
-            opacity: isMoving ? g.opacity : 0,
-            transition: [
-              `left ${cursorEase + g.extraMs}ms cubic-bezier(${cursorCubic})`,
-              `top ${cursorEase + g.extraMs}ms cubic-bezier(${cursorCubic})`,
-              'opacity 0.18s ease',
-              'transform 0.12s ease',
-            ].join(', '),
-          }}>
-            <svg width="13" height="17" viewBox="0 0 13 17" fill="none">
-              <path d={CURSOR_SVG_PATH} fill="white" stroke="rgba(0,0,0,0.3)" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round"/>
-            </svg>
-          </div>
-        ))}
-
-        {/* Real cursor */}
+        {/* Cursor — plain, upright, no rotation or stretch */}
         <div style={{
           position: 'absolute',
           left: cursorX,
           top: cursorY,
           zIndex: 60,
           pointerEvents: 'none',
-          transform: `rotate(${cursorAngle}deg) scaleX(${snapScaleX}) scaleY(${snapScaleY})`,
-          transformOrigin: '6px 6px',
+          filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))',
           transition: [
             `left ${cursorEase}ms cubic-bezier(${cursorCubic})`,
             `top ${cursorEase}ms cubic-bezier(${cursorCubic})`,
-            'transform 0.1s ease',
-            'filter 0.1s ease',
           ].join(', '),
-          filter: snapBlur > 0
-            ? `blur(${snapBlur}px) drop-shadow(0 0 5px rgba(255,255,255,0.35))`
-            : 'drop-shadow(0 1px 4px rgba(0,0,0,0.9))',
         }}>
           <svg width="13" height="17" viewBox="0 0 13 17" fill="none">
             <path d={CURSOR_SVG_PATH} fill="white" stroke="rgba(0,0,0,0.55)" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round"/>
@@ -1155,6 +1105,251 @@ function TradingTabMockup() {
   )
 }
 
+// ── Insights Mockup ───────────────────────────────────────────────────────────
+function InsightsMockup() {
+  const [aiChars, setAiChars] = useState(0)
+  const AI_TEXT = "Your New York session has a 31% win rate — well below your London average of 74%. 6 of your last 8 NY losses came within the first 30 minutes after open. This is classic institutional stop-hunting before direction establishes. Consider a strict 30-minute wait rule after 15:30 CET."
+
+  useEffect(() => {
+    setAiChars(0)
+    let i = 0
+    const id = setInterval(() => {
+      i++
+      setAiChars(i)
+      if (i >= AI_TEXT.length) clearInterval(id)
+    }, 22)
+    return () => clearInterval(id)
+  }, [])
+
+  // Equity curve
+  const eq = [10000, 10220, 10180, 10440, 10390, 10680, 10590, 10890, 10760, 11080, 10980, 11340, 11280, 11620, 11540, 11847]
+  const W = 400, H = 72
+  const mn = Math.min(...eq), mx = Math.max(...eq)
+  const xs = eq.map((_, i) => (i / (eq.length - 1)) * W)
+  const ys = eq.map(v => H - ((v - mn) / (mx - mn)) * (H * 0.82) - H * 0.09)
+  const lp = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${ys[i]}`).join(' ')
+  const ap = `${lp} L${W},${H} L0,${H} Z`
+
+  const sessions = [
+    { name: 'London', wr: 74, trades: 38, pnl: '+€1,847', color: '#00FF85' },
+    { name: 'New York', wr: 31, trades: 29, pnl: '−€340', color: '#FF3347' },
+    { name: 'Asian', wr: 58, trades: 14, pnl: '+€204', color: '#4B8FFF' },
+  ]
+
+  const emotions = [
+    { mood: 'Confident', avg: '+€89', count: 42, color: '#00FF85' },
+    { mood: 'Neutral',   avg: '+€18', count: 28, color: '#4B8FFF' },
+    { mood: 'Anxious',   avg: '−€47', count: 16, color: '#FF9500' },
+    { mood: 'Tired',     avg: '−€91', count: 8,  color: '#FF3347' },
+  ]
+
+  const setups = [
+    { name: 'ICT Order Block', wr: 78, avg: '+€142', session: 'London' },
+    { name: 'Fair Value Gap',  wr: 65, avg: '+€88',  session: 'London' },
+    { name: 'BOS / CHoCH',    wr: 44, avg: '+€34',  session: 'NY' },
+    { name: 'Trend Follow',   wr: 38, avg: '−€22',  session: 'NY' },
+  ]
+
+  return (
+    <div style={{ background: '#0a0e14', borderRadius: '14px', overflow: 'hidden' }}>
+      {/* Topbar */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(255,255,255,0.015)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <LogoMark size={16} />
+          <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '11px', fontWeight: 700 }}>Velquor</span>
+        </div>
+        <div style={{ display: 'flex', gap: '2px' }}>
+          {['Overview','Trading','Journal','Analytics','VELQUOR'].map(t => (
+            <span key={t} style={{
+              fontSize: '10px', padding: '3px 9px', borderRadius: '5px',
+              color: t === 'Analytics' ? '#4B8FFF' : 'rgba(255,255,255,0.3)',
+              background: t === 'Analytics' ? 'rgba(75,143,255,0.12)' : 'transparent',
+              fontWeight: t === 'Analytics' ? 600 : 400,
+              borderBottom: t === 'Analytics' ? '1px solid rgba(75,143,255,0.4)' : '1px solid transparent',
+            }}>{t}</span>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <div style={{ width: '18px', height: '18px', borderRadius: '5px', background: 'linear-gradient(135deg,#4B8FFF,#7B2FBF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: 'white' }}>M</div>
+        </div>
+      </div>
+
+      {/* Main grid */}
+      <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+        {/* Row 1: Session | Equity | AI */}
+        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 220px', gap: '10px' }}>
+
+          {/* Session performance */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <p style={{ margin: '0 0 10px', color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Session Win Rate</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {sessions.map(s => (
+                <div key={s.name}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '10px', fontWeight: 500 }}>{s.name}</span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <span style={{ color: s.color, fontSize: '10px', fontWeight: 700 }}>{s.wr}%</span>
+                      <span style={{ color: s.pnl.startsWith('+') ? '#00FF85' : '#FF3347', fontSize: '10px', fontWeight: 600 }}>{s.pnl}</span>
+                    </div>
+                  </div>
+                  <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${s.wr}%`, background: s.color, borderRadius: '2px', opacity: 0.8 }} />
+                  </div>
+                  <p style={{ margin: '3px 0 0', color: 'rgba(255,255,255,0.25)', fontSize: '8px' }}>{s.trades} trades</p>
+                </div>
+              ))}
+            </div>
+            <div style={{
+              marginTop: '10px', padding: '6px 8px', borderRadius: '6px',
+              background: 'rgba(255,51,71,0.07)', border: '1px solid rgba(255,51,71,0.15)',
+            }}>
+              <p style={{ margin: 0, color: '#FF3347', fontSize: '9px', lineHeight: 1.5 }}>
+                ⚠ NY session is costing you €340/month
+              </p>
+            </div>
+          </div>
+
+          {/* Equity curve */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+              <div>
+                <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Equity Curve — This Month</p>
+                <p style={{ margin: '3px 0 0', color: '#00FF85', fontSize: '15px', fontWeight: 800, letterSpacing: '-0.03em' }}>+€1,847</p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ margin: 0, color: 'rgba(255,255,255,0.35)', fontSize: '9px' }}>Started</p>
+                <p style={{ margin: '2px 0 0', color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: 600 }}>€10,000</p>
+              </div>
+            </div>
+            <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: '68px', overflow: 'visible' }}>
+              <defs>
+                <linearGradient id="ig" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#00FF85" stopOpacity="0.18"/>
+                  <stop offset="100%" stopColor="#00FF85" stopOpacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d={ap} fill="url(#ig)"/>
+              <path d={lp} fill="none" stroke="#00FF85" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx={xs[xs.length-1]} cy={ys[ys.length-1]} r="3" fill="#00FF85"/>
+              {/* Annotation callout */}
+              <line x1={xs[5]} y1={ys[5]} x2={xs[5]} y2={H} stroke="rgba(0,255,133,0.2)" strokeWidth="1" strokeDasharray="2,2"/>
+              <rect x={xs[5]-22} y={ys[5]-16} width="44" height="13" rx="3" fill="rgba(0,255,133,0.12)" stroke="rgba(0,255,133,0.25)" strokeWidth="0.8"/>
+              <text x={xs[5]} y={ys[5]-6} textAnchor="middle" fill="#00FF85" fontSize="7" fontWeight="600">Best week</text>
+            </svg>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
+              {[
+                { label: 'Win Rate', val: '61%', color: '#4B8FFF' },
+                { label: 'Profit Factor', val: '2.4x', color: '#FFB800' },
+                { label: 'Best Week', val: '+€812', color: '#00FF85' },
+                { label: 'Max DD', val: '3.1%', color: '#FF9500' },
+              ].map(m => (
+                <div key={m.label}>
+                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.3)', fontSize: '8px' }}>{m.label}</p>
+                  <p style={{ margin: '2px 0 0', color: m.color, fontSize: '11px', fontWeight: 700 }}>{m.val}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* VELQUOR AI insight */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '9px 11px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '7px' }}>
+              <LogoMark size={18} />
+              <div>
+                <p style={{ margin: 0, color: 'rgba(255,255,255,0.9)', fontSize: '10px', fontWeight: 600 }}>VELQUOR AI</p>
+                <p style={{ margin: 0, color: '#00FF85', fontSize: '8px' }}>● Analysing 81 trades</p>
+              </div>
+            </div>
+            <div style={{ flex: 1, padding: '10px 11px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {/* User message */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ background: '#4B8FFF', color: 'white', padding: '6px 10px', borderRadius: '9px 9px 2px 9px', fontSize: '10px', maxWidth: '90%', lineHeight: 1.4 }}>
+                  Where am I losing most?
+                </div>
+              </div>
+              {/* AI response */}
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
+                <LogoMark size={18} />
+                <div style={{
+                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
+                  padding: '7px 9px', borderRadius: '2px 9px 9px 9px',
+                  fontSize: '10px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.6,
+                }}>
+                  {AI_TEXT.slice(0, aiChars)}
+                  {aiChars < AI_TEXT.length && (
+                    <span style={{ display: 'inline-block', width: '1.5px', height: '11px', background: '#4B8FFF', marginLeft: '1px', animation: 'cursor-blink 0.7s step-end infinite', verticalAlign: 'text-bottom' }} />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Emotion | Setups */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+
+          {/* Emotion vs P&L */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <p style={{ margin: '0 0 10px', color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Mood → Avg P&L per Trade</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+              {emotions.map(e => (
+                <div key={e.mood} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '64px', color: 'rgba(255,255,255,0.55)', fontSize: '9px', flexShrink: 0 }}>{e.mood}</div>
+                  <div style={{ flex: 1, height: '5px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', borderRadius: '3px', background: e.color,
+                      width: `${Math.abs(parseInt(e.avg.replace(/[^0-9-]/g,'')))/91*100}%`,
+                      opacity: 0.85,
+                    }} />
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px', width: '72px', justifyContent: 'flex-end', flexShrink: 0 }}>
+                    <span style={{ color: e.color, fontSize: '10px', fontWeight: 700 }}>{e.avg}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px' }}>{e.count}x</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{
+              marginTop: '10px', padding: '6px 8px', borderRadius: '6px',
+              background: 'rgba(75,143,255,0.07)', border: '1px solid rgba(75,143,255,0.15)',
+            }}>
+              <p style={{ margin: 0, color: '#4B8FFF', fontSize: '9px', lineHeight: 1.4 }}>
+                💡 Trading confident days only would increase your avg P&L by €136/trade
+              </p>
+            </div>
+          </div>
+
+          {/* Setup performance */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+            <div style={{ padding: '9px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'grid', gridTemplateColumns: '1fr 44px 52px 52px', gap: '4px' }}>
+              {['Setup', 'WR', 'Avg P&L', 'Session'].map(h => (
+                <span key={h} style={{ color: 'rgba(255,255,255,0.3)', fontSize: '8px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</span>
+              ))}
+            </div>
+            {setups.map((s, i) => (
+              <div key={s.name} style={{
+                padding: '7px 12px', display: 'grid', gridTemplateColumns: '1fr 44px 52px 52px', gap: '4px',
+                alignItems: 'center', background: i === 0 ? 'rgba(0,255,133,0.04)' : 'transparent',
+                borderBottom: i < setups.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none',
+              }}>
+                <span style={{ color: i < 2 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: i < 2 ? 500 : 400 }}>{s.name}</span>
+                <span style={{ color: s.wr >= 60 ? '#00FF85' : s.wr >= 45 ? '#FFB800' : '#FF3347', fontSize: '10px', fontWeight: 700 }}>{s.wr}%</span>
+                <span style={{ color: s.avg.startsWith('+') ? '#00FF85' : '#FF3347', fontSize: '10px', fontWeight: 600 }}>{s.avg}</span>
+                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px' }}>{s.session}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ShowcaseSection() {
   return (
     <section id="showcase" style={{
@@ -1184,32 +1379,29 @@ function ShowcaseSection() {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <p style={{ color: '#4B8FFF', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>Inside the dashboard</p>
+          <p style={{ color: '#4B8FFF', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>What VELQUOR finds for you</p>
           <h2 style={{ fontSize: 'clamp(28px, 6vw, 48px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 16px', color: '#fff', lineHeight: 1.05 }}>
-            This is what your trading<br />actually looks like
+            See exactly where you win.<br />See exactly where you leak.
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '16px', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
-            Every trade annotated. Setup type, emotion, tags. An equity curve that shows your real growth.
-            The data most traders never see about themselves.
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '16px', maxWidth: '540px', margin: '0 auto', lineHeight: 1.6 }}>
+            VELQUOR analyses every trade, session, emotion, and setup — then tells you the truth about your performance in plain language.
           </p>
         </div>
 
-        {/* Gradient border wrapper around mockup */}
+        {/* Gradient border wrapper around insights mockup */}
         <div style={{
           background: 'linear-gradient(90deg, #2196F3 0%, #7B2FBF 50%, #E040FB 100%)',
           padding: '1.5px', borderRadius: '16px',
           boxShadow: '0 0 80px rgba(33,150,243,0.18), 0 0 140px rgba(224,64,251,0.12)',
         }}>
-          <div style={{ background: '#0a0e14', borderRadius: '14px', overflow: 'hidden' }}>
-            <TradingTabMockup />
-          </div>
+          <InsightsMockup />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: '16px', marginTop: '28px' }}>
           {[
-            { icon: '📎', title: 'Annotate every trade', desc: 'Tag each trade with setup type, pre-trade emotion, and mistake labels. The pattern becomes obvious fast.' },
-            { icon: '📈', title: 'Real equity curve', desc: 'Not just a P&L number — a visual equity curve that shows exactly when you\'re growing and when you\'re giving it back.' },
-            { icon: '🔍', title: 'Filter by anything', desc: 'Slice your performance by instrument, session, setup, or emotion. Find what\'s actually working for you specifically.' },
+            { icon: '📊', title: 'Session breakdown', desc: 'Instantly see your win rate and P&L by London, New York, and Asian session. Know which session is your edge — and which is draining you.' },
+            { icon: '🧠', title: 'Emotion vs P&L', desc: 'VELQUOR correlates every mood log with your trading results. You\'ll see exactly how much your mental state costs you in real euros.' },
+            { icon: '◆', title: 'AI coaching — your data', desc: 'Ask "Where am I losing most?" and get a specific answer built from your own numbers, not generic advice. VELQUOR knows your trades.' },
           ].map(c => (
             <div key={c.title} style={{
               background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px',
