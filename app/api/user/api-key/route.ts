@@ -31,15 +31,26 @@ export async function GET() {
     .eq('id', user.id)
     .maybeSingle()
 
-  if (error || !data) {
+  // Column may not exist yet if the bridge SQL migration hasn't been run
+  if (error) {
+    if (error.message?.includes('velquor_api_key') || error.code === '42703') {
+      return NextResponse.json({
+        api_key:      null,
+        ea_connected: false,
+        ea_last_seen: null,
+        ea_version:   null,
+        ea_broker:    null,
+        _setup_pending: true,
+      })
+    }
     return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
   }
 
   return NextResponse.json({
-    api_key:      data.velquor_api_key,
-    ea_connected: data.ea_connected   ?? false,
-    ea_last_seen: data.ea_last_seen   ?? null,
-    ea_version:   data.ea_version     ?? null,
-    ea_broker:    data.ea_broker      ?? null,
+    api_key:      data?.velquor_api_key ?? null,
+    ea_connected: data?.ea_connected    ?? false,
+    ea_last_seen: data?.ea_last_seen    ?? null,
+    ea_version:   data?.ea_version      ?? null,
+    ea_broker:    data?.ea_broker       ?? null,
   })
 }

@@ -1,0 +1,50 @@
+<!-- @dsCard group="Typography" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg:#000; --s1:#0C0C0C; --bd:rgba(255,255,255,0.06); --bd2:rgba(255,255,255,0.10);
+    --t1:#F2F2F2; --t2:#707070; --t3:#505050;
+    --ac:#4D8FFF; --gr2:#00FF85; --re:#FF3347; --go2:#FFB830; --am2:#F5B040;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--t1); font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; padding: 24px; }
+  .row { padding: 14px 0; border-bottom: 1px solid var(--bd); display: flex; align-items: baseline; gap: 24px; }
+  .meta { width: 130px; flex-shrink: 0; font-size: 10px; color: var(--t3); font-family: monospace; }
+  .divider { height: 1px; background: var(--bd2); margin: 20px 0; }
+  .label-caps { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--t3); }
+  .num { font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+  .gradient-gold { background: linear-gradient(135deg, #FFB830, #F5B040); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .gradient-green { background: linear-gradient(135deg, #00FF85, #00FF99); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .glow-green { text-shadow: 0 0 12px rgba(0,232,122,0.6); color: #00FF85; }
+  .glow-red { text-shadow: 0 0 12px rgba(255,61,80,0.6); color: #FF3347; }
+  .glow-gold { text-shadow: 0 0 12px rgba(255,176,48,0.6); color: #FFB830; }
+  .glow-blue { text-shadow: 0 0 12px rgba(77,143,255,0.6); color: #4D8FFF; }
+</style>
+</head>
+<body>
+  <div class="row"><div class="meta">32px / 700</div><span style="font-size:32px;font-weight:700;letter-spacing:-0.03em">Dashboard</span></div>
+  <div class="row"><div class="meta">24px / 700</div><span style="font-size:24px;font-weight:700;letter-spacing:-0.02em">Net Worth</span></div>
+  <div class="row"><div class="meta">18px / 600</div><span style="font-size:18px;font-weight:600">Section Title</span></div>
+  <div class="row"><div class="meta">13px / 600</div><span style="font-size:13px;font-weight:600">Panel Header</span></div>
+  <div class="row"><div class="meta">13px / 400</div><span style="font-size:13px">Body text, default weight</span></div>
+  <div class="row"><div class="meta">12px / 400</div><span style="font-size:12px;color:var(--t2)">Secondary label</span></div>
+  <div class="row"><div class="meta">11px / 400</div><span style="font-size:11px;color:var(--t3)">Metadata / timestamps</span></div>
+  <div class="row"><div class="meta">label-caps</div><span class="label-caps">TRADING OVERVIEW</span></div>
+
+  <div class="divider"></div>
+
+  <div class="row"><div class="meta">num — tabular</div><span class="num" style="font-size:28px;font-weight:700">+$12,450.00</span></div>
+  <div class="row"><div class="meta">gradient-gold</div><span class="gradient-gold" style="font-size:22px;font-weight:700">€ 148,200</span></div>
+  <div class="row"><div class="meta">gradient-green</div><span class="gradient-green" style="font-size:22px;font-weight:700">+$2,340</span></div>
+
+  <div class="divider"></div>
+
+  <div class="row"><div class="meta">glow-green</div><span class="glow-green" style="font-size:16px;font-weight:600">+$840.00</span></div>
+  <div class="row"><div class="meta">glow-red</div><span class="glow-red" style="font-size:16px;font-weight:600">-$320.00</span></div>
+  <div class="row"><div class="meta">glow-gold</div><span class="glow-gold" style="font-size:16px;font-weight:600">EURUSD</span></div>
+  <div class="row"><div class="meta">glow-blue</div><span class="glow-blue" style="font-size:16px;font-weight:600">London Session</span></div>
+</body>
+</html>

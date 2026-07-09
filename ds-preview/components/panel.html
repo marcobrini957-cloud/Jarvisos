@@ -1,0 +1,71 @@
+<!-- @dsCard group="Components" -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg:#000; --s1:#0C0C0C; --bd:rgba(255,255,255,0.06); --bd2:rgba(255,255,255,0.10);
+    --t1:#F2F2F2; --t2:#707070; --t3:#505050;
+    --ac:#4D8FFF; --gr2:#00FF85; --re:#FF3347; --am2:#F5B040; --pu:#A87EFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--t1); font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+  .panel {
+    background: var(--s1);
+    border: 1px solid var(--bd2);
+    border-radius: 12px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.025), 0 2px 16px rgba(0,0,0,0.5);
+    overflow: hidden;
+    position: relative;
+  }
+  .panel-header {
+    padding: 13px 18px 12px;
+    border-bottom: 1px solid var(--bd);
+    background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel-title { font-size: 13px; font-weight: 600; letter-spacing: -0.005em; }
+  .panel-action { font-size: 11px; color: var(--t3); cursor: pointer; }
+  .panel-body { padding: 16px; font-size: 12px; color: var(--t2); }
+  .shimmer { position: absolute; top: 0; left: 0; right: 0; height: 1px; }
+</style>
+</head>
+<body>
+  <!-- Default Panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Positions</span>
+      <span class="panel-action">View all →</span>
+    </div>
+    <div class="panel-body">No open positions</div>
+  </div>
+
+  <!-- Blue accent panel -->
+  <div class="panel" style="border-left: 3px solid #4D8FFF; box-shadow: 0 0 0 1px rgba(255,255,255,0.025), 0 2px 20px rgba(0,0,0,0.55), 0 0 40px rgba(77,143,255,0.06)">
+    <div class="shimmer" style="background: linear-gradient(90deg, transparent 0%, rgba(77,143,255,0.33) 30%, rgba(77,143,255,0.53) 50%, rgba(77,143,255,0.33) 70%, transparent 100%)"></div>
+    <div class="panel-header">
+      <span class="panel-title" style="color:#4D8FFF">Market Overview</span>
+    </div>
+    <div class="panel-body">Live market data panel</div>
+  </div>
+
+  <!-- Green accent panel -->
+  <div class="panel" style="border-left: 3px solid #00FF85; box-shadow: 0 0 0 1px rgba(255,255,255,0.025), 0 2px 20px rgba(0,0,0,0.55), 0 0 40px rgba(0,255,133,0.06)">
+    <div class="shimmer" style="background: linear-gradient(90deg, transparent 0%, rgba(0,255,133,0.33) 30%, rgba(0,255,133,0.53) 50%, rgba(0,255,133,0.33) 70%, transparent 100%)"></div>
+    <div class="panel-header">
+      <span class="panel-title" style="color:#00FF85">Portfolio Performance</span>
+    </div>
+    <div class="panel-body">+12.4% YTD</div>
+  </div>
+
+  <!-- Gold accent panel -->
+  <div class="panel" style="border-left: 3px solid #FFB830; box-shadow: 0 0 0 1px rgba(255,255,255,0.025), 0 2px 20px rgba(0,0,0,0.55), 0 0 40px rgba(255,184,48,0.06)">
+    <div class="shimmer" style="background: linear-gradient(90deg, transparent 0%, rgba(255,184,48,0.33) 30%, rgba(255,184,48,0.53) 50%, rgba(255,184,48,0.33) 70%, transparent 100%)"></div>
+    <div class="panel-header">
+      <span class="panel-title" style="color:#FFB830">Weekly Review</span>
+    </div>
+    <div class="panel-body">3 of 5 goals met</div>
+  </div>
+</body>
+</html>

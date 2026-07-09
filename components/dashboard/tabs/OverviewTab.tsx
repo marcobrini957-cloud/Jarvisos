@@ -28,6 +28,8 @@ import { formatValue }        from '@/lib/utils/formatting'
 import InsightCard            from '@/components/ui/InsightCard'
 import Panel                  from '@/components/ui/Panel'
 import SessionClock           from '@/components/ui/SessionClock'
+import EquityCurveChart       from '@/components/ui/EquityCurveChart'
+import DailyPnLChart          from '@/components/ui/DailyPnLChart'
 import type { Trade }         from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -719,6 +721,22 @@ export default function OverviewTab() {
             </div>
 
           </div>
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════
+          CHARTS — Equity Curve + Daily P&L
+      ══════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-3">
+          <Panel title="Equity Curve" accent="var(--gr2)">
+            <EquityCurveChart days={60} height={160} />
+          </Panel>
+        </div>
+        <div className="lg:col-span-2">
+          <Panel title="Daily P&L — 30 Days" accent="var(--ac)">
+            <DailyPnLChart days={30} height={160} />
+          </Panel>
         </div>
       </div>
 

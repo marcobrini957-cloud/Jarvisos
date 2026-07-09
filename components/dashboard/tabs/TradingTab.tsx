@@ -9,7 +9,8 @@ import PeriodMetricCard, { type Period } from '@/components/ui/PeriodMetricCard'
 import { LogoMark } from '@/components/ui/LogoMark'
 import Panel                 from '@/components/ui/Panel'
 import Badge                 from '@/components/ui/Badge'
-import ScreenshotGallery     from '@/components/ui/ScreenshotGallery'
+import ScreenshotGallery         from '@/components/ui/ScreenshotGallery'
+import SessionAnalyticsChart     from '@/components/ui/SessionAnalyticsChart'
 import type { Trade } from '@/types'
 
 // ── Trade Annotation Modal ─────────────────────────────────────────────────────
@@ -2847,6 +2848,11 @@ export default function TradingTab() {
       <VelquorChat trades={trades} />
 
       {/* Session Heatmap — kept for visual quick reference */}
+      {/* Analytics — session / symbol / direction breakdown */}
+      <Panel title="Analytics Breakdown" accent="var(--ac)">
+        <SessionAnalyticsChart />
+      </Panel>
+
       <Panel title="Session Heatmap — Win Rate (from your real trades)">
         <div className="flex flex-col gap-2">
           {['London','Overlap','NY'].map(session => (

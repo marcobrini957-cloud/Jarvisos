@@ -936,13 +936,13 @@ function Nav() {
           </button>
 
           {/* Pricing */}
-          <a href="#pricing" style={{ ...navLinkStyle, padding: '6px 10px', borderRadius: '7px', display: 'flex', alignItems: 'center', gap: '7px' }}
+          <Link href="/pricing" style={{ ...navLinkStyle, padding: '6px 10px', borderRadius: '7px', display: 'flex', alignItems: 'center', gap: '7px', textDecoration: 'none', color: 'rgba(255,255,255,0.65)' }}
             onMouseEnter={e => (e.currentTarget.style.color = '#F2F2F2')}
             onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.65)')}
           >
             Pricing
             <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,184,48,0.15)', color: '#FFB830', border: '1px solid rgba(255,184,48,0.25)', letterSpacing: '0.03em' }}>FREE</span>
-          </a>
+          </Link>
 
           {/* Trailer */}
           <Link href="/trailer" style={{ ...navLinkStyle, padding: '6px 10px', borderRadius: '7px', display: 'flex', alignItems: 'center', gap: '7px', color: 'rgba(255,255,255,0.65)', textDecoration: 'none' }}
