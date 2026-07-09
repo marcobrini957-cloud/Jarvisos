@@ -1,9 +1,15 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { LogoMark } from '@/components/ui/LogoMark'
 import { useLocale } from '@/hooks/useLocale'
+
+const VelquorTrailerEmbed = dynamic(
+  () => import('@/components/trailer/VelquorTrailer'),
+  { ssr: false, loading: () => <div style={{ width: '100%', height: '100%', background: '#000' }} /> }
+)
 
 // ── Aurora data-stream bars ───────────────────────────────────────────────────
 function Aurora() {
@@ -1897,6 +1903,47 @@ function Pricing() {
   )
 }
 
+// ── Trailer section ───────────────────────────────────────────────────────────
+function TrailerSection() {
+  return (
+    <section style={{
+      padding: 'clamp(60px, 8vw, 96px) clamp(16px, 4vw, 48px)',
+      background: '#000',
+      borderTop: '1px solid rgba(255,255,255,0.06)',
+    }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        {/* heading */}
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <p style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#FFB830', marginBottom: '10px' }}>Product trailer</p>
+          <h2 style={{ fontSize: 'clamp(26px, 5vw, 40px)', fontWeight: 800, letterSpacing: '-0.03em', color: '#F2F2F2', margin: 0 }}>
+            See VELQUOR in action
+          </h2>
+        </div>
+
+        {/* player container — 16:9 aspect ratio */}
+        <div style={{
+          position: 'relative',
+          width: '100%',
+          paddingTop: '56.25%',
+          borderRadius: '14px',
+          overflow: 'hidden',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
+        }}>
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <VelquorTrailerEmbed />
+          </div>
+        </div>
+
+        {/* sub-label */}
+        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '12px', marginTop: '18px', letterSpacing: '0.02em' }}>
+          20 seconds · 6 scenes · no sign-up required
+        </p>
+      </div>
+    </section>
+  )
+}
+
 // ── Footer tagline ────────────────────────────────────────────────────────────
 function FooterTagline() {
   return (
@@ -1993,6 +2040,7 @@ export default function LandingPage() {
       <div style={{ background: 'var(--bg)', color: 'var(--t1)', overflowX: 'hidden' }}>
         <Nav />
         <Hero />
+        <TrailerSection />
         <StatsBar />
         <ShowcaseSection />
         <Features />
