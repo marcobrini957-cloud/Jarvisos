@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { LogoMark } from '@/components/ui/LogoMark'
+import { useLocale } from '@/hooks/useLocale'
 
 // ── Aurora data-stream bars ───────────────────────────────────────────────────
 function Aurora() {
@@ -725,8 +726,10 @@ function DashboardMockup() {
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
 function Nav() {
-  const [scrolled, setScrolled] = useState(false)
-  const [loggedIn, setLoggedIn] = useState(false)
+  const { t } = useLocale()
+  const [scrolled,  setScrolled]  = useState(false)
+  const [loggedIn,  setLoggedIn]  = useState(false)
+  const [menuOpen,  setMenuOpen]  = useState(false)
 
   useEffect(() => {
     const h = () => setScrolled(window.scrollY > 40)
@@ -742,62 +745,166 @@ function Nav() {
     })
   }, [])
 
+  // Close menu when user scrolls (UX: don't keep drawer open mid-scroll)
+  useEffect(() => {
+    if (!menuOpen) return
+    const h = () => setMenuOpen(false)
+    window.addEventListener('scroll', h, { passive: true })
+    return () => window.removeEventListener('scroll', h)
+  }, [menuOpen])
+
+  const navLinks: [string, string][] = [
+    [t.nav.features, '#features'],
+    [t.nav.howItWorks, '#how'],
+    [t.nav.pricing, '#pricing'],
+  ]
+
   return (
-    <nav style={{
-      position: 'sticky', top: 0, zIndex: 100,
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      height: '56px',
-      background: scrolled ? 'rgba(0,0,0,0.88)' : 'transparent',
-      backdropFilter: scrolled ? 'blur(16px)' : 'none',
-      borderBottom: scrolled ? '1px solid var(--bd)' : '1px solid transparent',
-      transition: 'all 0.25s',
-      padding: '0 16px',
-    }}>
-      {/* Logo */}
-      <button
-        onClick={() => {
-          if (loggedIn) {
-            window.location.href = '/dashboard'
-          } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-          }
+    <>
+      {/* Mobile backdrop */}
+      {menuOpen && (
+        <div
+          onClick={() => setMenuOpen(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}
+        />
+      )}
+
+      {/* Mobile slide-down menu */}
+      <div
+        className="sm:hidden"
+        style={{
+          position: 'fixed', top: '56px', left: 0, right: 0, zIndex: 99,
+          background: 'rgba(5,5,8,0.97)',
+          backdropFilter: 'blur(24px)',
+          border: '1px solid var(--bd)', borderTop: 'none',
+          borderRadius: '0 0 20px 20px',
+          transform: menuOpen ? 'translateY(0)' : 'translateY(calc(-100% - 56px))',
+          transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1)',
+          padding: '8px 20px 28px',
+          display: 'flex', flexDirection: 'column', gap: '2px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
         }}
-        style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
       >
-        <LogoMark size={28} />
-        <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '14px', letterSpacing: '-0.01em' }}>
-          Velquor
-        </span>
-      </button>
-
-      {/* Desktop nav links — hidden on mobile */}
-      <div className="hidden sm:flex" style={{ alignItems: 'center', gap: '28px' }}>
-        {[['Features', '#features'], ['How it works', '#how'], ['Pricing', '#pricing']].map(([l, h]) => (
-          <a key={l} href={h} style={{ color: 'var(--t2)', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'var(--t1)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--t2)')}
-          >{l}</a>
+        {navLinks.map(([label, href]) => (
+          <a
+            key={label}
+            href={href}
+            onClick={() => setMenuOpen(false)}
+            style={{
+              color: 'var(--t1)', fontSize: '18px', fontWeight: 500,
+              textDecoration: 'none', padding: '14px 4px',
+              borderBottom: '1px solid var(--bd)',
+              display: 'block',
+            }}
+          >{label}</a>
         ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
+          <Link
+            href="/login"
+            onClick={() => setMenuOpen(false)}
+            style={{
+              color: 'var(--t1)', fontSize: '15px', fontWeight: 500,
+              textDecoration: 'none', padding: '13px 18px', borderRadius: '10px',
+              border: '1px solid var(--bd2)', textAlign: 'center',
+            }}
+          >{t.nav.signIn}</Link>
+          <Link
+            href="/login?mode=signup"
+            onClick={() => setMenuOpen(false)}
+            style={{
+              background: 'var(--ac)', color: 'white', fontSize: '15px', fontWeight: 700,
+              textDecoration: 'none', padding: '14px 18px', borderRadius: '10px',
+              textAlign: 'center', boxShadow: '0 4px 20px rgba(77,143,255,0.35)',
+            }}
+          >{t.nav.getStarted}</Link>
+        </div>
       </div>
 
-      {/* Right side */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-        <Link href="/login" style={{ color: 'var(--t2)', fontSize: '13px', fontWeight: 500, textDecoration: 'none', padding: '8px 10px' }}>
-          Sign in
-        </Link>
-        <Link href="/login?mode=signup" style={{
-          background: 'var(--ac)', color: 'white', fontSize: '12px', fontWeight: 600,
-          textDecoration: 'none', padding: '8px 14px', borderRadius: '8px',
-          boxShadow: '0 4px 16px rgba(77,143,255,0.3)',
-          whiteSpace: 'nowrap',
-        }}>Get Started</Link>
-      </div>
-    </nav>
+      <nav style={{
+        position: 'sticky', top: 0, zIndex: 100,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        height: '56px',
+        background: scrolled || menuOpen ? 'rgba(0,0,0,0.92)' : 'transparent',
+        backdropFilter: scrolled || menuOpen ? 'blur(16px)' : 'none',
+        borderBottom: scrolled || menuOpen ? '1px solid var(--bd)' : '1px solid transparent',
+        transition: 'all 0.25s',
+        padding: '0 16px',
+      }}>
+        {/* Logo */}
+        <button
+          onClick={() => {
+            setMenuOpen(false)
+            if (loggedIn) window.location.href = '/dashboard'
+            else window.scrollTo({ top: 0, behavior: 'smooth' })
+          }}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+        >
+          <LogoMark size={28} />
+          <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '14px', letterSpacing: '-0.01em' }}>Velquor</span>
+        </button>
+
+        {/* Desktop nav links */}
+        <div className="hidden sm:flex" style={{ alignItems: 'center', gap: '28px' }}>
+          {navLinks.map(([label, href]) => (
+            <a key={label} href={href} style={{ color: 'var(--t2)', fontSize: '13px', fontWeight: 500, textDecoration: 'none' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'var(--t1)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'var(--t2)')}
+            >{label}</a>
+          ))}
+        </div>
+
+        {/* Right side */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          {/* Desktop CTAs */}
+          <div className="hidden sm:flex" style={{ alignItems: 'center', gap: '8px' }}>
+            <Link href="/login" style={{ color: 'var(--t2)', fontSize: '13px', fontWeight: 500, textDecoration: 'none', padding: '8px 10px' }}>
+              {t.nav.signIn}
+            </Link>
+            <Link href="/login?mode=signup" style={{
+              background: 'var(--ac)', color: 'white', fontSize: '12px', fontWeight: 600,
+              textDecoration: 'none', padding: '8px 14px', borderRadius: '8px',
+              boxShadow: '0 4px 16px rgba(77,143,255,0.3)', whiteSpace: 'nowrap',
+            }}>{t.nav.getStarted}</Link>
+          </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className="sm:hidden"
+            onClick={() => setMenuOpen(v => !v)}
+            aria-label="Menu"
+            style={{
+              width: '36px', height: '36px', borderRadius: '9px',
+              background: menuOpen ? 'var(--s3)' : 'rgba(255,255,255,0.05)',
+              border: '1px solid var(--bd2)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              gap: menuOpen ? '0px' : '5px',
+              cursor: 'pointer', padding: 0,
+              transition: 'all 0.2s',
+            }}
+          >
+            <span style={{
+              display: 'block', width: '16px', height: '1.5px',
+              background: 'var(--t1)', borderRadius: '2px',
+              transform: menuOpen ? 'rotate(45deg) translateY(0.75px)' : 'none',
+              transition: 'transform 0.22s',
+            }} />
+            <span style={{
+              display: 'block', width: '16px', height: '1.5px',
+              background: 'var(--t1)', borderRadius: '2px',
+              transform: menuOpen ? 'rotate(-45deg) translateY(-0.75px)' : 'none',
+              transition: 'transform 0.22s',
+            }} />
+          </button>
+        </div>
+      </nav>
+    </>
   )
 }
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
+  const { t } = useLocale()
+
   return (
     <section style={{ position: 'relative', paddingBottom: '0', background: '#000', overflow: 'hidden' }}>
       {/* Aurora bars at very top */}
@@ -805,19 +912,16 @@ function Hero() {
 
       {/* Deep space background glows */}
       <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
-        {/* Central blue-indigo glow */}
         <div style={{
           position: 'absolute', top: '-15%', left: '50%', transform: 'translateX(-50%)',
           width: '90vw', height: '70vh', borderRadius: '50%',
           background: 'radial-gradient(ellipse, rgba(55,90,180,0.22) 0%, rgba(30,50,120,0.08) 45%, transparent 70%)',
         }} />
-        {/* Left blue orb */}
         <div style={{
           position: 'absolute', top: '20%', left: '-8%',
           width: '50vw', height: '50vw', borderRadius: '50%',
           background: 'radial-gradient(ellipse, rgba(33,110,210,0.10) 0%, transparent 65%)',
         }} />
-        {/* Right purple orb */}
         <div style={{
           position: 'absolute', top: '15%', right: '-8%',
           width: '45vw', height: '45vw', borderRadius: '50%',
@@ -838,7 +942,7 @@ function Hero() {
           background: 'rgba(77,143,255,0.1)', border: '1px solid rgba(77,143,255,0.22)',
         }}>
           <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#4B8FFF', display: 'block', boxShadow: '0 0 6px #4B8FFF' }} />
-          <span style={{ color: '#4B8FFF', fontSize: '12px', fontWeight: 500 }}>Built for serious MT5 traders</span>
+          <span style={{ color: '#4B8FFF', fontSize: '12px', fontWeight: 500 }}>{t.hero.badge}</span>
         </div>
 
         {/* Headline */}
@@ -846,8 +950,8 @@ function Hero() {
           fontSize: 'clamp(44px, 8.5vw, 96px)', fontWeight: 900, lineHeight: 0.97,
           letterSpacing: '-0.04em', margin: '0 0 28px', color: '#fff',
         }}>
-          See the truth<span style={{ color: 'rgba(255,255,255,0.3)' }}> /</span><br />
-          Trade the edge.
+          {t.hero.h1a}<span style={{ color: 'rgba(255,255,255,0.3)' }}> /</span><br />
+          {t.hero.h1b}
         </h1>
 
         {/* Subtitle */}
@@ -855,8 +959,7 @@ function Hero() {
           fontSize: 'clamp(15px, 2.2vw, 19px)', color: 'rgba(255,255,255,0.52)',
           lineHeight: 1.65, margin: '0 auto 40px', maxWidth: '520px', fontWeight: 400,
         }}>
-          Connect your MT5 account and instantly see what&apos;s working, what&apos;s not,
-          and exactly where you&apos;re leaking money.
+          {t.hero.subtitle}
         </p>
 
         {/* CTAs */}
@@ -865,16 +968,26 @@ function Hero() {
             background: '#fff', color: '#000', padding: '14px 30px', borderRadius: '8px',
             fontSize: '15px', fontWeight: 700, textDecoration: 'none',
             boxShadow: '0 4px 24px rgba(255,255,255,0.15)', whiteSpace: 'nowrap',
-          }}>Start free — no card needed</Link>
+          }}>{t.hero.cta}</Link>
           <a href="#showcase" style={{
             color: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: 500,
             textDecoration: 'none', padding: '14px 8px',
-          }}>See inside ↓</a>
+          }}>{t.hero.ctaSub}</a>
+          <Link href="/trailer" style={{
+            display: 'flex', alignItems: 'center', gap: '7px',
+            color: 'rgba(255,255,255,0.6)', fontSize: '14px', fontWeight: 500,
+            textDecoration: 'none', padding: '14px 8px',
+          }}>
+            <span style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.35)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: '6px solid rgba(255,255,255,0.7)', marginLeft: '2px' }} />
+            </span>
+            Watch trailer
+          </Link>
         </div>
 
         {/* Trust bullets */}
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          {['Any MT5 Broker', 'Live & Demo Accounts', 'AI-Powered', 'Mobile PWA'].map(b => (
+          {t.hero.trust.map(b => (
             <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
               <span style={{ color: '#00FF85', fontSize: '11px' }}>✓</span>
               <span style={{ color: 'rgba(255,255,255,0.38)', fontSize: '12px' }}>{b}</span>
@@ -942,6 +1055,13 @@ function Hero() {
 
 // ── Stats bar ─────────────────────────────────────────────────────────────────
 function StatsBar() {
+  const { t } = useLocale()
+  const values = [
+    { value: 50000, suffix: '+' },
+    { value: 23,    suffix: '%', prefix: '+' },
+    { value: 1.2,   suffix: 's', decimals: 1 },
+    { value: 12,    suffix: '' },
+  ]
   return (
     <div style={{ borderTop: '1px solid var(--bd)', borderBottom: '1px solid var(--bd)', background: 'var(--s1)' }}>
       <div className="grid grid-cols-2 sm:grid-cols-4" style={{
@@ -949,15 +1069,10 @@ function StatsBar() {
         padding: 'clamp(24px, 5vw, 32px) clamp(16px, 5vw, 48px)',
         gap: '24px',
       }}>
-        {[
-          { label: 'Trades tracked', value: 50000, suffix: '+' },
-          { label: 'Avg win rate uplift', value: 23, suffix: '%', prefix: '+' },
-          { label: 'MT5 sync time', value: 1.2, suffix: 's', decimals: 1 },
-          { label: 'AI insights per week', value: 12, suffix: '' },
-        ].map(s => (
+        {t.stats.map((s, i) => (
           <div key={s.label} style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 'clamp(26px, 6vw, 34px)', fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.03em', lineHeight: 1 }}>
-              <Counter target={s.value} prefix={s.prefix ?? ''} suffix={s.suffix} decimals={s.decimals ?? 0} />
+              <Counter target={values[i].value} prefix={values[i].prefix ?? ''} suffix={values[i].suffix} decimals={values[i].decimals ?? 0} />
             </div>
             <div style={{ color: 'var(--t3)', fontSize: '12px', marginTop: '6px' }}>{s.label}</div>
           </div>
@@ -1105,244 +1220,255 @@ function TradingTabMockup() {
   )
 }
 
-// ── Insights Mockup ───────────────────────────────────────────────────────────
-function InsightsMockup() {
+// ── Before / After Mockup ─────────────────────────────────────────────────────
+function BeforeAfterMockup() {
+  const { t } = useLocale()
+  const sc = t.showcase
   const [aiChars, setAiChars] = useState(0)
-  const AI_TEXT = "Your New York session has a 31% win rate — well below your London average of 74%. 6 of your last 8 NY losses came within the first 30 minutes after open. This is classic institutional stop-hunting before direction establishes. Consider a strict 30-minute wait rule after 15:30 CET."
+  const AI_TEXT = "ICT Order Block setups during London (08:00–11:00 CET) are your strongest edge — 78% win rate, avg +€142. Your NY open trades (15:30–16:00 CET) show a 28% win rate. Avoid NY open entirely and focus on London. Projected monthly uplift: +€680."
 
   useEffect(() => {
-    setAiChars(0)
-    let i = 0
     const id = setInterval(() => {
-      i++
-      setAiChars(i)
-      if (i >= AI_TEXT.length) clearInterval(id)
-    }, 22)
+      setAiChars(c => {
+        if (c >= AI_TEXT.length) { clearInterval(id); return c }
+        return c + 1
+      })
+    }, 24)
     return () => clearInterval(id)
   }, [])
 
-  // Equity curve
-  const eq = [10000, 10220, 10180, 10440, 10390, 10680, 10590, 10890, 10760, 11080, 10980, 11340, 11280, 11620, 11540, 11847]
-  const W = 400, H = 72
-  const mn = Math.min(...eq), mx = Math.max(...eq)
-  const xs = eq.map((_, i) => (i / (eq.length - 1)) * W)
-  const ys = eq.map(v => H - ((v - mn) / (mx - mn)) * (H * 0.82) - H * 0.09)
-  const lp = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${ys[i]}`).join(' ')
-  const ap = `${lp} L${W},${H} L0,${H} Z`
+  // BEFORE: choppy declining curve (starts high, trends down with big swings)
+  const BW = 260, BH = 64
+  const bPts = [10000, 9820, 10050, 9740, 9910, 9600, 9780, 9490, 9650, 9380, 9520, 9270]
+  const bMin = Math.min(...bPts), bMax = Math.max(...bPts)
+  const bXs = bPts.map((_, i) => (i / (bPts.length - 1)) * BW)
+  const bYs = bPts.map(v => BH - ((v - bMin) / (bMax - bMin)) * (BH * 0.78) - BH * 0.11)
+  const bLp = bXs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${bYs[i]}`).join(' ')
+  const bAp = `${bLp} L${BW},${BH} L0,${BH} Z`
 
-  const sessions = [
-    { name: 'London', wr: 74, trades: 38, pnl: '+€1,847', color: '#00FF85' },
-    { name: 'New York', wr: 31, trades: 29, pnl: '−€340', color: '#FF3347' },
-    { name: 'Asian', wr: 58, trades: 14, pnl: '+€204', color: '#4B8FFF' },
+  // AFTER: smooth rising curve
+  const aPts = [10000, 10180, 10140, 10360, 10310, 10560, 10490, 10740, 10680, 10960, 10880, 11200]
+  const aMin = Math.min(...aPts), aMax = Math.max(...aPts)
+  const aXs = aPts.map((_, i) => (i / (aPts.length - 1)) * BW)
+  const aYs = aPts.map(v => BH - ((v - aMin) / (aMax - aMin)) * (BH * 0.78) - BH * 0.11)
+  const aLp = aXs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${aYs[i]}`).join(' ')
+  const aAp = `${aLp} L${BW},${BH} L0,${BH} Z`
+
+  const beforeTrades = [
+    { sym: 'NAS100', side: 'SELL', pnl: -188 },
+    { sym: 'XAUUSD', side: 'BUY',  pnl: +44  },
+    { sym: 'NAS100', side: 'BUY',  pnl: -211 },
+    { sym: 'XAUUSD', side: 'SELL', pnl: -97  },
   ]
 
-  const emotions = [
-    { mood: 'Confident', avg: '+€89', count: 42, color: '#00FF85' },
-    { mood: 'Neutral',   avg: '+€18', count: 28, color: '#4B8FFF' },
-    { mood: 'Anxious',   avg: '−€47', count: 16, color: '#FF9500' },
-    { mood: 'Tired',     avg: '−€91', count: 8,  color: '#FF3347' },
+  const afterTrades = [
+    { sym: 'XAUUSD', side: 'BUY',  setup: 'ICT Order Block', emotion: 'confident', pnl: +284, auto: true },
+    { sym: 'XAUUSD', side: 'BUY',  setup: 'Fair Value Gap',  emotion: 'confident', pnl: +196, auto: true },
+    { sym: 'NAS100', side: 'SELL', setup: 'BOS / CHoCH',     emotion: 'neutral',   pnl: -112, auto: true },
+    { sym: 'EURUSD', side: 'BUY',  setup: 'Support / Res',   emotion: 'neutral',   pnl: +88,  auto: true },
   ]
 
-  const setups = [
-    { name: 'ICT Order Block', wr: 78, avg: '+€142', session: 'London' },
-    { name: 'Fair Value Gap',  wr: 65, avg: '+€88',  session: 'London' },
-    { name: 'BOS / CHoCH',    wr: 44, avg: '+€34',  session: 'NY' },
-    { name: 'Trend Follow',   wr: 38, avg: '−€22',  session: 'NY' },
-  ]
+  const card = (style: React.CSSProperties, children: React.ReactNode) => (
+    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', padding: '10px', ...style }}>
+      {children}
+    </div>
+  )
 
   return (
-    <div style={{ background: '#0a0e14', borderRadius: '14px', overflow: 'hidden' }}>
-      {/* Topbar */}
+    <div style={{ background: '#090D13', borderRadius: '14px', overflow: 'hidden' }}>
+      {/* Shared topbar */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '9px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)',
         background: 'rgba(255,255,255,0.015)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <LogoMark size={16} />
-          <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '11px', fontWeight: 700 }}>Velquor</span>
+          <LogoMark size={15} />
+          <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '10px', fontWeight: 700 }}>VELQUOR</span>
         </div>
         <div style={{ display: 'flex', gap: '2px' }}>
-          {['Overview','Trading','Journal','Analytics','VELQUOR'].map(t => (
+          {['Overview','Trading','Journal','Macro','VELQUOR AI'].map(t => (
             <span key={t} style={{
-              fontSize: '10px', padding: '3px 9px', borderRadius: '5px',
-              color: t === 'Analytics' ? '#4B8FFF' : 'rgba(255,255,255,0.3)',
-              background: t === 'Analytics' ? 'rgba(75,143,255,0.12)' : 'transparent',
-              fontWeight: t === 'Analytics' ? 600 : 400,
-              borderBottom: t === 'Analytics' ? '1px solid rgba(75,143,255,0.4)' : '1px solid transparent',
+              fontSize: '9px', padding: '3px 8px', borderRadius: '5px',
+              color: t === 'Trading' ? '#4B8FFF' : 'rgba(255,255,255,0.28)',
+              background: t === 'Trading' ? 'rgba(75,143,255,0.1)' : 'transparent',
+              fontWeight: t === 'Trading' ? 600 : 400,
             }}>{t}</span>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <div style={{ width: '18px', height: '18px', borderRadius: '5px', background: 'linear-gradient(135deg,#4B8FFF,#7B2FBF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: 'white' }}>M</div>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 9px', borderRadius: '20px',
+          background: 'rgba(0,255,133,0.08)', border: '1px solid rgba(0,255,133,0.2)',
+        }}>
+          <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#00FF85', display: 'block' }} />
+          <span style={{ color: '#00FF85', fontSize: '9px', fontWeight: 500 }}>MT5 Live Sync</span>
         </div>
       </div>
 
-      {/* Main grid */}
-      <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Two-panel grid — stacks to column on mobile */}
+      <style>{`
+        @media (max-width: 639px) {
+          .ba-grid { grid-template-columns: 1fr !important; }
+          .ba-divider-v { display: none !important; }
+          .ba-divider-h { display: block !important; }
+        }
+      `}</style>
+      <div className="ba-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1px 1fr', minHeight: '340px' }}>
 
-        {/* Row 1: Session | Equity | AI */}
-        <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 220px', gap: '10px' }}>
-
-          {/* Session performance */}
-          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <p style={{ margin: '0 0 10px', color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Session Win Rate</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {sessions.map(s => (
-                <div key={s.name}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '10px', fontWeight: 500 }}>{s.name}</span>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <span style={{ color: s.color, fontSize: '10px', fontWeight: 700 }}>{s.wr}%</span>
-                      <span style={{ color: s.pnl.startsWith('+') ? '#00FF85' : '#FF3347', fontSize: '10px', fontWeight: 600 }}>{s.pnl}</span>
-                    </div>
-                  </div>
-                  <div style={{ height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${s.wr}%`, background: s.color, borderRadius: '2px', opacity: 0.8 }} />
-                  </div>
-                  <p style={{ margin: '3px 0 0', color: 'rgba(255,255,255,0.25)', fontSize: '8px' }}>{s.trades} trades</p>
-                </div>
-              ))}
+        {/* ── BEFORE panel ── */}
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {/* Label */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ padding: '3px 10px', borderRadius: '20px', background: 'rgba(255,51,71,0.1)', border: '1px solid rgba(255,51,71,0.25)' }}>
+              <span style={{ color: '#FF3347', fontSize: '10px', fontWeight: 700 }}>{sc.beforeLabel}</span>
             </div>
-            <div style={{
-              marginTop: '10px', padding: '6px 8px', borderRadius: '6px',
-              background: 'rgba(255,51,71,0.07)', border: '1px solid rgba(255,51,71,0.15)',
-            }}>
-              <p style={{ margin: 0, color: '#FF3347', fontSize: '9px', lineHeight: 1.5 }}>
-                ⚠ NY session is costing you €340/month
-              </p>
-            </div>
+            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px' }}>{sc.beforeSub}</span>
           </div>
 
-          {/* Equity curve */}
-          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-              <div>
-                <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Equity Curve — This Month</p>
-                <p style={{ margin: '3px 0 0', color: '#00FF85', fontSize: '15px', fontWeight: 800, letterSpacing: '-0.03em' }}>+€1,847</p>
+          {/* Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '6px' }}>
+            {[
+              { l: 'Win Rate', v: '29%', c: '#FF3347' },
+              { l: 'Profit Factor', v: '0.72', c: '#FF9500' },
+              { l: 'Monthly P&L', v: '−€730', c: '#FF3347' },
+            ].map(m => (
+              <div key={m.l} style={{ background: 'rgba(255,51,71,0.04)', borderRadius: '7px', padding: '7px 8px', border: '1px solid rgba(255,51,71,0.1)' }}>
+                <p style={{ margin: 0, color: 'rgba(255,255,255,0.3)', fontSize: '8px' }}>{m.l}</p>
+                <p style={{ margin: '2px 0 0', color: m.c, fontSize: '13px', fontWeight: 800, letterSpacing: '-0.02em' }}>{m.v}</p>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ margin: 0, color: 'rgba(255,255,255,0.35)', fontSize: '9px' }}>Started</p>
-                <p style={{ margin: '2px 0 0', color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: 600 }}>€10,000</p>
-              </div>
+            ))}
+          </div>
+
+          {/* Declining equity curve */}
+          {card({}, <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: 500 }}>Equity Curve</span>
+              <span style={{ color: '#FF3347', fontSize: '9px', fontWeight: 700 }}>−€730 this month</span>
             </div>
-            <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: '68px', overflow: 'visible' }}>
+            <svg viewBox={`0 0 ${BW} ${BH}`} style={{ width: '100%', height: '56px', overflow: 'visible' }}>
               <defs>
-                <linearGradient id="ig" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00FF85" stopOpacity="0.18"/>
+                <linearGradient id="bg-b" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#FF3347" stopOpacity="0.14"/>
+                  <stop offset="100%" stopColor="#FF3347" stopOpacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d={bAp} fill="url(#bg-b)"/>
+              <path d={bLp} fill="none" stroke="#FF3347" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx={bXs[bXs.length-1]} cy={bYs[bYs.length-1]} r="2.5" fill="#FF3347"/>
+            </svg>
+          </>)}
+
+          {/* Trade list — no context, just raw */}
+          {card({}, <>
+            <p style={{ margin: '0 0 7px', color: 'rgba(255,255,255,0.3)', fontSize: '8px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Trades — no context tracked</p>
+            {beforeTrades.map((t, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 0', borderBottom: i < beforeTrades.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '8px', padding: '1px 4px', borderRadius: '3px', fontWeight: 700, background: t.side==='BUY'?'rgba(0,255,133,0.08)':'rgba(255,51,71,0.08)', color: t.side==='BUY'?'#00FF85':'#FF3347' }}>{t.side}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '9px', fontWeight: 500 }}>{t.sym}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: '8px' }}>— no setup, no notes</span>
+                </div>
+                <span style={{ fontSize: '9px', fontWeight: 700, color: t.pnl >= 0 ? '#00FF85' : '#FF3347' }}>{t.pnl >= 0 ? '+' : ''}€{Math.abs(t.pnl)}</span>
+              </div>
+            ))}
+          </>)}
+        </div>
+
+        {/* Vertical divider (desktop) */}
+        <div className="ba-divider-v" style={{ background: 'rgba(255,255,255,0.07)', position: 'relative' }}>
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+            background: '#090D13', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '20px',
+            padding: '4px 8px', whiteSpace: 'nowrap',
+            color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.04em',
+          }}>VS</div>
+        </div>
+        {/* Horizontal divider (mobile) */}
+        <div className="ba-divider-h" style={{ display: 'none', height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 16px', position: 'relative' }}>
+          <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: '#090D13', padding: '2px 10px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 700 }}>VS</span>
+        </div>
+
+        {/* ── AFTER panel ── */}
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {/* Label */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ padding: '3px 10px', borderRadius: '20px', background: 'rgba(0,255,133,0.1)', border: '1px solid rgba(0,255,133,0.25)' }}>
+              <span style={{ color: '#00FF85', fontSize: '10px', fontWeight: 700 }}>{sc.afterLabel}</span>
+            </div>
+            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px' }}>{sc.afterSub}</span>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '6px' }}>
+            {[
+              { l: 'Win Rate', v: '67%', c: '#00FF85' },
+              { l: 'Profit Factor', v: '2.4x', c: '#FFB800' },
+              { l: 'Monthly P&L', v: '+€1,847', c: '#00FF85' },
+            ].map(m => (
+              <div key={m.l} style={{ background: 'rgba(0,255,133,0.04)', borderRadius: '7px', padding: '7px 8px', border: '1px solid rgba(0,255,133,0.12)' }}>
+                <p style={{ margin: 0, color: 'rgba(255,255,255,0.3)', fontSize: '8px' }}>{m.l}</p>
+                <p style={{ margin: '2px 0 0', color: m.c, fontSize: '13px', fontWeight: 800, letterSpacing: '-0.02em' }}>{m.v}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Rising equity curve */}
+          {card({}, <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: 500 }}>Equity Curve</span>
+              <span style={{ color: '#00FF85', fontSize: '9px', fontWeight: 700 }}>+€1,847 this month</span>
+            </div>
+            <svg viewBox={`0 0 ${BW} ${BH}`} style={{ width: '100%', height: '56px', overflow: 'visible' }}>
+              <defs>
+                <linearGradient id="bg-a" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#00FF85" stopOpacity="0.16"/>
                   <stop offset="100%" stopColor="#00FF85" stopOpacity="0"/>
                 </linearGradient>
               </defs>
-              <path d={ap} fill="url(#ig)"/>
-              <path d={lp} fill="none" stroke="#00FF85" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx={xs[xs.length-1]} cy={ys[ys.length-1]} r="3" fill="#00FF85"/>
-              {/* Annotation callout */}
-              <line x1={xs[5]} y1={ys[5]} x2={xs[5]} y2={H} stroke="rgba(0,255,133,0.2)" strokeWidth="1" strokeDasharray="2,2"/>
-              <rect x={xs[5]-22} y={ys[5]-16} width="44" height="13" rx="3" fill="rgba(0,255,133,0.12)" stroke="rgba(0,255,133,0.25)" strokeWidth="0.8"/>
-              <text x={xs[5]} y={ys[5]-6} textAnchor="middle" fill="#00FF85" fontSize="7" fontWeight="600">Best week</text>
+              <path d={aAp} fill="url(#bg-a)"/>
+              <path d={aLp} fill="none" stroke="#00FF85" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx={aXs[aXs.length-1]} cy={aYs[aYs.length-1]} r="2.5" fill="#00FF85"/>
             </svg>
-            <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
-              {[
-                { label: 'Win Rate', val: '61%', color: '#4B8FFF' },
-                { label: 'Profit Factor', val: '2.4x', color: '#FFB800' },
-                { label: 'Best Week', val: '+€812', color: '#00FF85' },
-                { label: 'Max DD', val: '3.1%', color: '#FF9500' },
-              ].map(m => (
-                <div key={m.label}>
-                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.3)', fontSize: '8px' }}>{m.label}</p>
-                  <p style={{ margin: '2px 0 0', color: m.color, fontSize: '11px', fontWeight: 700 }}>{m.val}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          </>)}
 
-          {/* VELQUOR AI insight */}
-          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '9px 11px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <LogoMark size={18} />
-              <div>
-                <p style={{ margin: 0, color: 'rgba(255,255,255,0.9)', fontSize: '10px', fontWeight: 600 }}>VELQUOR AI</p>
-                <p style={{ margin: 0, color: '#00FF85', fontSize: '8px' }}>● Analysing 81 trades</p>
+          {/* Auto-logged trades */}
+          {card({}, <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '7px' }}>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.3)', fontSize: '8px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Auto-journaled from MT5</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#00FF85', display: 'block' }} />
+                <span style={{ color: '#00FF85', fontSize: '8px' }}>Live sync</span>
               </div>
             </div>
-            <div style={{ flex: 1, padding: '10px 11px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {/* User message */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <div style={{ background: '#4B8FFF', color: 'white', padding: '6px 10px', borderRadius: '9px 9px 2px 9px', fontSize: '10px', maxWidth: '90%', lineHeight: 1.4 }}>
-                  Where am I losing most?
+            {afterTrades.map((t, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0', borderBottom: i < afterTrades.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '7px', padding: '1px 4px', borderRadius: '3px', fontWeight: 700, background: t.side==='BUY'?'rgba(0,255,133,0.1)':'rgba(255,51,71,0.1)', color: t.side==='BUY'?'#00FF85':'#FF3347' }}>{t.side}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '9px', fontWeight: 500 }}>{t.sym}</span>
+                  <span style={{ color: '#4B8FFF', fontSize: '8px' }}>{t.setup}</span>
+                  <span style={{ color: t.emotion === 'confident' ? '#00FF85' : 'rgba(255,255,255,0.35)', fontSize: '8px' }}>{t.emotion}</span>
                 </div>
-              </div>
-              {/* AI response */}
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start' }}>
-                <LogoMark size={18} />
-                <div style={{
-                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)',
-                  padding: '7px 9px', borderRadius: '2px 9px 9px 9px',
-                  fontSize: '10px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.6,
-                }}>
-                  {AI_TEXT.slice(0, aiChars)}
-                  {aiChars < AI_TEXT.length && (
-                    <span style={{ display: 'inline-block', width: '1.5px', height: '11px', background: '#4B8FFF', marginLeft: '1px', animation: 'cursor-blink 0.7s step-end infinite', verticalAlign: 'text-bottom' }} />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Row 2: Emotion | Setups */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-
-          {/* Emotion vs P&L */}
-          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <p style={{ margin: '0 0 10px', color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Mood → Avg P&L per Trade</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-              {emotions.map(e => (
-                <div key={e.mood} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '64px', color: 'rgba(255,255,255,0.55)', fontSize: '9px', flexShrink: 0 }}>{e.mood}</div>
-                  <div style={{ flex: 1, height: '5px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', borderRadius: '3px', background: e.color,
-                      width: `${Math.abs(parseInt(e.avg.replace(/[^0-9-]/g,'')))/91*100}%`,
-                      opacity: 0.85,
-                    }} />
-                  </div>
-                  <div style={{ display: 'flex', gap: '6px', width: '72px', justifyContent: 'flex-end', flexShrink: 0 }}>
-                    <span style={{ color: e.color, fontSize: '10px', fontWeight: 700 }}>{e.avg}</span>
-                    <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px' }}>{e.count}x</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{
-              marginTop: '10px', padding: '6px 8px', borderRadius: '6px',
-              background: 'rgba(75,143,255,0.07)', border: '1px solid rgba(75,143,255,0.15)',
-            }}>
-              <p style={{ margin: 0, color: '#4B8FFF', fontSize: '9px', lineHeight: 1.4 }}>
-                💡 Trading confident days only would increase your avg P&L by €136/trade
-              </p>
-            </div>
-          </div>
-
-          {/* Setup performance */}
-          <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-            <div style={{ padding: '9px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', display: 'grid', gridTemplateColumns: '1fr 44px 52px 52px', gap: '4px' }}>
-              {['Setup', 'WR', 'Avg P&L', 'Session'].map(h => (
-                <span key={h} style={{ color: 'rgba(255,255,255,0.3)', fontSize: '8px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</span>
-              ))}
-            </div>
-            {setups.map((s, i) => (
-              <div key={s.name} style={{
-                padding: '7px 12px', display: 'grid', gridTemplateColumns: '1fr 44px 52px 52px', gap: '4px',
-                alignItems: 'center', background: i === 0 ? 'rgba(0,255,133,0.04)' : 'transparent',
-                borderBottom: i < setups.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none',
-              }}>
-                <span style={{ color: i < 2 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: i < 2 ? 500 : 400 }}>{s.name}</span>
-                <span style={{ color: s.wr >= 60 ? '#00FF85' : s.wr >= 45 ? '#FFB800' : '#FF3347', fontSize: '10px', fontWeight: 700 }}>{s.wr}%</span>
-                <span style={{ color: s.avg.startsWith('+') ? '#00FF85' : '#FF3347', fontSize: '10px', fontWeight: 600 }}>{s.avg}</span>
-                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px' }}>{s.session}</span>
+                <span style={{ fontSize: '9px', fontWeight: 700, color: t.pnl >= 0 ? '#00FF85' : '#FF3347', flexShrink: 0 }}>{t.pnl >= 0 ? '+' : ''}€{Math.abs(t.pnl)}</span>
               </div>
             ))}
+          </>)}
+
+          {/* VELQUOR AI insight strip */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(75,143,255,0.07), rgba(123,47,191,0.07))',
+            border: '1px solid rgba(75,143,255,0.18)', borderRadius: '8px', padding: '8px 10px',
+            display: 'flex', gap: '8px', alignItems: 'flex-start',
+          }}>
+            <LogoMark size={18} />
+            <div>
+              <p style={{ margin: '0 0 2px', color: '#4B8FFF', fontSize: '8px', fontWeight: 600 }}>VELQUOR found a pattern</p>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.6)', fontSize: '9px', lineHeight: 1.5 }}>
+                {AI_TEXT.slice(0, aiChars)}
+                {aiChars < AI_TEXT.length && (
+                  <span style={{ display: 'inline-block', width: '1.5px', height: '10px', background: '#4B8FFF', marginLeft: '1px', animation: 'cursor-blink 0.7s step-end infinite', verticalAlign: 'text-bottom' }} />
+                )}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -1351,61 +1477,42 @@ function InsightsMockup() {
 }
 
 function ShowcaseSection() {
+  const { t } = useLocale()
+  const sc = t.showcase
   return (
     <section id="showcase" style={{
       position: 'relative', overflow: 'hidden',
       background: '#000',
       padding: 'clamp(60px, 10vw, 110px) clamp(16px, 5vw, 48px)',
     }}>
-      {/* Nebula glow orbs */}
       <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        <div style={{
-          position: 'absolute', bottom: '5%', left: '-8%',
-          width: '45vw', height: '45vw', borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(33,110,243,0.22) 0%, transparent 65%)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '0%', right: '-8%',
-          width: '45vw', height: '45vw', borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(196,50,220,0.18) 0%, transparent 65%)',
-        }} />
-        {/* Top center subtle glow */}
-        <div style={{
-          position: 'absolute', top: '0', left: '50%', transform: 'translateX(-50%)',
-          width: '60vw', height: '30vh',
-          background: 'radial-gradient(ellipse, rgba(55,80,160,0.12) 0%, transparent 70%)',
-        }} />
+        <div style={{ position: 'absolute', bottom: '5%', left: '-8%', width: '45vw', height: '45vw', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(33,110,243,0.22) 0%, transparent 65%)' }} />
+        <div style={{ position: 'absolute', bottom: '0%', right: '-8%', width: '45vw', height: '45vw', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(196,50,220,0.18) 0%, transparent 65%)' }} />
+        <div style={{ position: 'absolute', top: '0', left: '50%', transform: 'translateX(-50%)', width: '60vw', height: '30vh', background: 'radial-gradient(ellipse, rgba(55,80,160,0.12) 0%, transparent 70%)' }} />
       </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <p style={{ color: '#4B8FFF', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>What VELQUOR finds for you</p>
+          <p style={{ color: '#4B8FFF', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>{sc.eyebrow}</p>
           <h2 style={{ fontSize: 'clamp(28px, 6vw, 48px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 16px', color: '#fff', lineHeight: 1.05 }}>
-            See exactly where you win.<br />See exactly where you leak.
+            {sc.h2a}<br />{sc.h2b}
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '16px', maxWidth: '540px', margin: '0 auto', lineHeight: 1.6 }}>
-            VELQUOR analyses every trade, session, emotion, and setup — then tells you the truth about your performance in plain language.
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 'clamp(14px, 2vw, 16px)', maxWidth: '560px', margin: '0 auto', lineHeight: 1.6 }}>
+            {sc.subtitle}
           </p>
         </div>
 
-        {/* Gradient border wrapper around insights mockup */}
         <div style={{
-          background: 'linear-gradient(90deg, #2196F3 0%, #7B2FBF 50%, #E040FB 100%)',
+          background: 'linear-gradient(90deg, #FF3347 0%, #7B2FBF 50%, #00FF85 100%)',
           padding: '1.5px', borderRadius: '16px',
-          boxShadow: '0 0 80px rgba(33,150,243,0.18), 0 0 140px rgba(224,64,251,0.12)',
+          boxShadow: '0 0 60px rgba(255,51,71,0.12), 0 0 100px rgba(0,255,133,0.10)',
         }}>
-          <InsightsMockup />
+          <BeforeAfterMockup />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: '16px', marginTop: '28px' }}>
-          {[
-            { icon: '📊', title: 'Session breakdown', desc: 'Instantly see your win rate and P&L by London, New York, and Asian session. Know which session is your edge — and which is draining you.' },
-            { icon: '🧠', title: 'Emotion vs P&L', desc: 'VELQUOR correlates every mood log with your trading results. You\'ll see exactly how much your mental state costs you in real euros.' },
-            { icon: '◆', title: 'AI coaching — your data', desc: 'Ask "Where am I losing most?" and get a specific answer built from your own numbers, not generic advice. VELQUOR knows your trades.' },
-          ].map(c => (
-            <div key={c.title} style={{
-              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px',
-            }}>
+          {sc.cards.map(c => (
+            <div key={c.title} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px' }}>
               <div style={{ fontSize: '20px', marginBottom: '10px' }}>{c.icon}</div>
               <h3 style={{ margin: '0 0 6px', color: '#fff', fontSize: '13px', fontWeight: 600 }}>{c.title}</h3>
               <p style={{ margin: 0, color: 'rgba(255,255,255,0.45)', fontSize: '12px', lineHeight: 1.6 }}>{c.desc}</p>
@@ -1419,30 +1526,21 @@ function ShowcaseSection() {
 
 // ── Features ──────────────────────────────────────────────────────────────────
 function Features() {
-  const features = [
-    { icon: '⚡', color: 'var(--go2)', title: 'MT5 Sync — Any Broker', desc: 'Enter your MT5 login, password, and broker server — your full trade history syncs in seconds. No CSV exports, no copy-paste, no manual data entry. Works with every MT5 broker worldwide.' },
-    { icon: '◆', color: 'var(--ac)', title: 'VELQUOR AI Coach', desc: 'Ask "why am I losing on Nasdaq?" and get an answer built from your own numbers — not generic YouTube advice. VELQUOR reads every trade, every journal entry, and every emotion tag you\'ve ever logged.' },
-    { icon: '🌐', color: 'var(--pu)', title: 'Macro Intelligence', desc: 'Economic data, central bank decisions, and geopolitical events — explained plainly before each session. VELQUOR generates a daily directional bias for Gold, Nasdaq, and EUR/USD so you know what you\'re trading into.' },
-    { icon: '🛡', color: 'var(--re)', title: 'Daily Loss Guard', desc: 'Set the maximum amount you\'re willing to lose in a single day. VELQUOR watches every closed trade and fires a warning before you hit your limit — the discipline rule most traders say they follow but don\'t.' },
-    { icon: '🏆', color: 'var(--gr2)', title: 'Prop Firm Tracker', desc: 'Running an FTMO, TFT, or MyFundedFX challenge? Set your rules once. VELQUOR tracks your max daily loss, total drawdown, profit target, and minimum trading days in real time — so one bad session never ends your challenge.' },
-    { icon: '📓', color: 'var(--am2)', title: 'Trading Journal', desc: 'Tag every trade with your setup type, pre-trade emotion, and mistake labels. After 30 days you\'ll see the exact emotional states and patterns that produce your best — and worst — results.' },
-    { icon: '📊', color: 'var(--cy)', title: 'Deep Performance Analytics', desc: 'A full breakdown of your win rate, profit factor, expectancy, and avg P&L — sliced by instrument, session, day of week, setup type, and emotion. Stop guessing where your edge is. The data tells you.' },
-    { icon: '🔄', color: 'var(--pu2)', title: 'Weekly Reviews', desc: 'Every Sunday, grade your trading week from A to F, log what worked, and note what to fix. Over months, you build a compound record of your growth — and a clear signal when you\'re drifting from your process.' },
-    { icon: '✅', color: 'var(--gr)', title: 'Habits & Discipline Score', desc: 'The best traders don\'t just have good setups — they have consistent daily routines. Track your pre-market checklist, journaling streak, and risk limits. Your Discipline Score makes process visible before P&L does.' },
-  ]
+  const { t } = useLocale()
+  const ft = t.features
+  const icons = ['⚡', '◆', '📊', '📓', '🏆', '📑']
+  const colors = ['var(--go2)', 'var(--ac)', 'var(--cy)', 'var(--am2)', 'var(--gr2)', 'var(--pu)']
 
   return (
     <section id="features" style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px)', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-        <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>Everything in one place</p>
-        <h2 style={{ fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)' }}>Every tool a serious trader needs</h2>
-        <p style={{ color: 'var(--t2)', fontSize: '16px', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>
-          Whether you trade Gold, indices, or forex — on a live account or a prop firm challenge — everything here is built around one question: why are you winning, and where are you leaking?
-        </p>
+        <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>{ft.eyebrow}</p>
+        <h2 style={{ fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)' }}>{ft.h2}</h2>
+        <p style={{ color: 'var(--t2)', fontSize: '16px', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>{ft.subtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: '14px' }}>
-        {features.map(f => (
+        {ft.items.map((f, i) => (
           <div key={f.title} style={{
             background: 'var(--s1)', border: '1px solid var(--bd)',
             borderRadius: '14px', padding: '22px', cursor: 'default',
@@ -1454,9 +1552,9 @@ function Features() {
             <div style={{
               width: '38px', height: '38px', borderRadius: '10px', marginBottom: '14px',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px',
-              background: `color-mix(in srgb, ${f.color} 15%, transparent)`,
-              border: `1px solid color-mix(in srgb, ${f.color} 30%, transparent)`,
-            }}>{f.icon}</div>
+              background: `color-mix(in srgb, ${colors[i]} 15%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${colors[i]} 30%, transparent)`,
+            }}>{icons[i]}</div>
             <h3 style={{ margin: '0 0 7px', color: 'var(--t1)', fontSize: '14px', fontWeight: 600 }}>{f.title}</h3>
             <p style={{ margin: 0, color: 'var(--t2)', fontSize: '12px', lineHeight: 1.6 }}>{f.desc}</p>
           </div>
@@ -1468,12 +1566,9 @@ function Features() {
 
 // ── How it works ──────────────────────────────────────────────────────────────
 function HowItWorks() {
-  const steps = [
-    { n: '01', title: 'Create your free account', desc: 'Sign up with email or Google in under 30 seconds. No credit card, no commitment.', detail: 'Your data is fully private and isolated — secured with row-level encryption from day one.' },
-    { n: '02', title: 'Connect your MT5 account', desc: 'Enter your MT5 login number, investor password, and broker server name. That\'s it — your entire trade history syncs automatically.', detail: 'Works with every MT5 broker worldwide — IC Markets, Blueberry, Pepperstone, FTMO live accounts, and more.' },
-    { n: '03', title: 'See your real numbers', desc: 'Your dashboard fills instantly. Win rate, profit factor, P&L by instrument, session, and day of week — all calculated from your actual trades.', detail: 'VELQUOR AI immediately surfaces your biggest patterns and the areas costing you the most money.' },
-    { n: '04', title: 'Build a consistent process', desc: 'Journal every trade, track your daily habits, run weekly reviews. Over time, VELQUOR correlates your routine with your results.', detail: 'Most traders identify their biggest leak within the first week of using the journal and analytics together.' },
-  ]
+  const { t } = useLocale()
+  const hw = t.howItWorks
+  const nums = ['01', '02', '03', '04']
 
   return (
     <section id="how" style={{
@@ -1482,21 +1577,21 @@ function HowItWorks() {
     }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>How it works</p>
-          <h2 style={{ fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)' }}>Up and running in under 2 minutes</h2>
-          <p style={{ color: 'var(--t2)', fontSize: '16px', maxWidth: '400px', margin: '0 auto' }}>No spreadsheets. No CSV exports. No manual data entry. Just connect your MT5 and trade.</p>
+          <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>{hw.eyebrow}</p>
+          <h2 style={{ fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)' }}>{hw.h2}</h2>
+          <p style={{ color: 'var(--t2)', fontSize: '16px', maxWidth: '400px', margin: '0 auto' }}>{hw.subtitle}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: '24px', position: 'relative' }}>
-          {steps.map(s => (
-            <div key={s.n}>
+          {hw.steps.map((s, i) => (
+            <div key={nums[i]}>
               <div style={{
                 width: '42px', height: '42px', borderRadius: '12px', marginBottom: '18px',
                 background: 'var(--bg)', border: '1px solid var(--bd2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: 700, fontSize: '12px', color: 'var(--ac)',
                 position: 'relative', zIndex: 1,
-              }}>{s.n}</div>
+              }}>{nums[i]}</div>
               <h3 style={{ margin: '0 0 7px', color: 'var(--t1)', fontSize: '14px', fontWeight: 600 }}>{s.title}</h3>
               <p style={{ margin: '0 0 7px', color: 'var(--t2)', fontSize: '12px', lineHeight: 1.6 }}>{s.desc}</p>
               <p style={{ margin: 0, color: 'var(--t3)', fontSize: '11px', lineHeight: 1.5 }}>{s.detail}</p>
@@ -1509,7 +1604,7 @@ function HowItWorks() {
             background: 'var(--ac)', color: 'white', padding: '13px 30px', borderRadius: '10px',
             fontSize: '14px', fontWeight: 600, textDecoration: 'none', display: 'inline-block',
             boxShadow: '0 8px 24px rgba(77,143,255,0.3)',
-          }}>Start your free account →</Link>
+          }}>{hw.cta}</Link>
         </div>
       </div>
     </section>
@@ -1518,29 +1613,19 @@ function HowItWorks() {
 
 // ── VELQUOR AI section ─────────────────────────────────────────────────────────
 function VelquorSection() {
+  const { t } = useLocale()
+  const ai = t.velquorAI
   const [active, setActive] = useState(0)
-  const qa = [
-    { q: 'Why am I losing on Nasdaq?', a: 'Your NAS100 trades show a 38% win rate — below breakeven. 6 of your 8 losses came in the first 30 minutes after NY open. You\'re likely trading against institutional order flow before direction is established. Consider a 30-minute wait rule after 15:30 CET.' },
-    { q: "What's my best setup?", a: 'ICT Order Block setups on XAUUSD are your strongest edge — 78% win rate, avg +€142 per trade. They perform best during London session between 08:00–11:00 CET. This is where you should be focused.' },
-    { q: 'Am I overtrading?', a: 'Yes — your Friday trade count is 2.3x your daily average, with a win rate of 31% vs 67% Mon–Thu. Friday P&L is –€340 this month alone. Consider a strict Friday morning-only rule, max 2 trades.' },
-    { q: 'How does mood affect my P&L?', a: "When you log mood as 'confident', avg P&L is +€89/trade. When 'anxious' or 'tired', it drops to –€47. Your 3 worst losing streaks all started on low-energy days. Your energy score is a leading indicator of your performance." },
-  ]
 
   return (
     <section style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px)', maxWidth: '1200px', margin: '0 auto' }}>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'clamp(32px, 6vw, 72px)', alignItems: 'center' }}>
         <div>
-          <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>VELQUOR AI</p>
-          <h2 style={{ fontSize: 'clamp(26px, 5vw, 38px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 16px', color: 'var(--t1)', lineHeight: 1.15 }}>
-            An AI that actually knows your trading
-          </h2>
-          <p style={{ color: 'var(--t2)', fontSize: '15px', lineHeight: 1.7, margin: '0 0 28px' }}>
-            VELQUOR has access to every trade, every journal entry, every mood log.
-            It doesn&apos;t give generic advice — it analyses <em>your</em> data and tells you
-            exactly what&apos;s holding you back.
-          </p>
+          <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>{ai.eyebrow}</p>
+          <h2 style={{ fontSize: 'clamp(26px, 5vw, 38px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 16px', color: 'var(--t1)', lineHeight: 1.15 }}>{ai.h2}</h2>
+          <p style={{ color: 'var(--t2)', fontSize: '15px', lineHeight: 1.7, margin: '0 0 28px' }}>{ai.subtitle}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {qa.map((item, i) => (
+            {ai.qa.map((item, i) => (
               <button key={i} onClick={() => setActive(i)} style={{
                 textAlign: 'left', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer',
                 background: active === i ? 'rgba(77,143,255,0.1)' : 'transparent',
@@ -1554,44 +1639,32 @@ function VelquorSection() {
           </div>
         </div>
 
-        {/* Chat mockup */}
-        <div style={{
-          background: 'var(--s1)', border: '1px solid var(--bd)',
-          borderRadius: '16px', overflow: 'hidden',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-        }}>
+        <div style={{ background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--bd)', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <LogoMark size={26} />
             <div>
               <p style={{ margin: 0, color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>VELQUOR</p>
-              <p style={{ margin: 0, color: 'var(--gr2)', fontSize: '10px' }}>● Online</p>
+              <p style={{ margin: 0, color: 'var(--gr2)', fontSize: '10px' }}>● {ai.online}</p>
             </div>
           </div>
 
           <div style={{ padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: '220px' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <div style={{ background: 'var(--ac)', color: 'white', padding: '9px 13px', borderRadius: '11px 11px 2px 11px', fontSize: '13px', maxWidth: '80%' }}>
-                {qa[active].q}
+                {ai.qa[active].q}
               </div>
             </div>
             <div style={{ display: 'flex', gap: '9px', alignItems: 'flex-start' }}>
               <LogoMark size={26} />
-              <div style={{
-                background: 'var(--s2)', border: '1px solid var(--bd)',
-                padding: '11px 13px', borderRadius: '2px 11px 11px 11px',
-                fontSize: '12px', color: 'var(--t2)', lineHeight: 1.65, maxWidth: '85%',
-              }}>
-                {qa[active].a}
+              <div style={{ background: 'var(--s2)', border: '1px solid var(--bd)', padding: '11px 13px', borderRadius: '2px 11px 11px 11px', fontSize: '12px', color: 'var(--t2)', lineHeight: 1.65, maxWidth: '85%' }}>
+                {ai.qa[active].a}
               </div>
             </div>
           </div>
 
           <div style={{ padding: '11px 14px', borderTop: '1px solid var(--bd)' }}>
-            <div style={{
-              display: 'flex', gap: '8px', alignItems: 'center',
-              background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '9px', padding: '9px 13px',
-            }}>
-              <span style={{ color: 'var(--t3)', fontSize: '12px', flex: 1 }}>Ask VELQUOR anything…</span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '9px', padding: '9px 13px' }}>
+              <span style={{ color: 'var(--t3)', fontSize: '12px', flex: 1 }}>{ai.placeholder}</span>
               <span style={{ background: 'var(--ac)', color: 'white', fontSize: '10px', padding: '3px 9px', borderRadius: '5px', fontWeight: 500 }}>Send</span>
             </div>
           </div>
@@ -1603,6 +1676,9 @@ function VelquorSection() {
 
 // ── Prop Firm section ─────────────────────────────────────────────────────────
 function PropFirmSection() {
+  const { t } = useLocale()
+  const pf = t.propFirm
+
   return (
     <section style={{ padding: '0 clamp(16px, 5vw, 48px) clamp(60px, 10vw, 100px)', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{
@@ -1612,22 +1688,12 @@ function PropFirmSection() {
       }}>
         <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'clamp(32px, 5vw, 60px)', alignItems: 'center' }}>
           <div>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px',
-              borderRadius: '20px', marginBottom: '20px',
-              background: 'rgba(0,255,133,0.1)', border: '1px solid rgba(0,255,133,0.25)',
-            }}>
-              <span style={{ color: 'var(--gr2)', fontSize: '12px', fontWeight: 500 }}>🏆 Prop Firm Mode</span>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', marginBottom: '20px', background: 'rgba(0,255,133,0.1)', border: '1px solid rgba(0,255,133,0.25)' }}>
+              <span style={{ color: 'var(--gr2)', fontSize: '12px', fontWeight: 500 }}>{pf.badge}</span>
             </div>
-            <h2 style={{ fontSize: 'clamp(24px, 5vw, 34px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)', lineHeight: 1.2 }}>
-              Also running a prop firm challenge?
-            </h2>
-            <p style={{ color: 'var(--t2)', fontSize: '14px', lineHeight: 1.7, margin: '0 0 22px' }}>
-              Activate Prop Firm Mode and VELQUOR monitors every rule of your challenge in real time —
-              max daily loss, total drawdown, profit target, minimum trading days. One wrong day won&apos;t
-              catch you off guard again.
-            </p>
-            {['FTMO', 'The Funded Trader', 'MyFundedFX', 'E8 Funding', 'Any custom rules'].map(f => (
+            <h2 style={{ fontSize: 'clamp(24px, 5vw, 34px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)', lineHeight: 1.2 }}>{pf.h2}</h2>
+            <p style={{ color: 'var(--t2)', fontSize: '14px', lineHeight: 1.7, margin: '0 0 22px' }}>{pf.subtitle}</p>
+            {pf.firms.map(f => (
               <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ color: 'var(--gr2)', fontSize: '11px' }}>✓</span>
                 <span style={{ color: 'var(--t2)', fontSize: '13px' }}>{f}</span>
@@ -1638,10 +1704,10 @@ function PropFirmSection() {
           <div style={{ background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '14px', padding: '22px' }}>
             <p style={{ margin: '0 0 18px', color: 'var(--t1)', fontSize: '13px', fontWeight: 600 }}>FTMO Challenge — Phase 1</p>
             {[
-              { label: 'Profit Target',   current: 6.8, max: 10,  color: 'var(--gr2)', unit: '%' },
-              { label: 'Max Daily Loss',  current: 1.2, max: 5,   color: 'var(--go2)', unit: '%' },
-              { label: 'Max Drawdown',    current: 2.1, max: 10,  color: 'var(--ac)',  unit: '%' },
-              { label: 'Trading Days',    current: 7,   max: 10,  color: 'var(--pu)',  unit: ' days' },
+              { label: 'Profit Target',  current: 6.8, max: 10, color: 'var(--gr2)', unit: '%' },
+              { label: 'Max Daily Loss', current: 1.2, max: 5,  color: 'var(--go2)', unit: '%' },
+              { label: 'Max Drawdown',   current: 2.1, max: 10, color: 'var(--ac)',  unit: '%' },
+              { label: 'Trading Days',   current: 7,   max: 10, color: 'var(--pu)',  unit: ' days' },
             ].map(r => (
               <div key={r.label} style={{ marginBottom: '14px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
@@ -1653,13 +1719,9 @@ function PropFirmSection() {
                 </div>
               </div>
             ))}
-            <div style={{
-              marginTop: '16px', padding: '9px 12px', borderRadius: '8px',
-              background: 'rgba(0,255,133,0.07)', border: '1px solid rgba(0,255,133,0.18)',
-              display: 'flex', alignItems: 'center', gap: '7px',
-            }}>
+            <div style={{ marginTop: '16px', padding: '9px 12px', borderRadius: '8px', background: 'rgba(0,255,133,0.07)', border: '1px solid rgba(0,255,133,0.18)', display: 'flex', alignItems: 'center', gap: '7px' }}>
               <span style={{ color: 'var(--gr2)', fontSize: '13px' }}>●</span>
-              <span style={{ color: 'var(--gr2)', fontSize: '11px', fontWeight: 500 }}>On track — 3 days to target at current pace</span>
+              <span style={{ color: 'var(--gr2)', fontSize: '11px', fontWeight: 500 }}>{pf.trackNote}</span>
             </div>
           </div>
         </div>
@@ -1670,156 +1732,59 @@ function PropFirmSection() {
 
 // ── Pricing ───────────────────────────────────────────────────────────────────
 function Pricing() {
-  const [annual, setAnnual] = useState(false)
-
-  const tiers = [
-    {
-      name: 'Starter',
-      price: { monthly: 0, annual: 0 },
-      tagline: 'Get started with the basics',
-      cta: 'Start free',
-      ctaHref: '/login?mode=signup',
-      accent: 'var(--bd2)',
-      highlighted: false,
-      features: [
-        '1 MT5 account',
-        'Last 90 days of trade history',
-        'Basic P&L, win rate & stats',
-        'Trade journal',
-        'Habits tracker',
-        '20 VELQUOR AI questions / month',
-        'Mobile PWA',
-      ],
-    },
-    {
-      name: 'Pro',
-      price: { monthly: 19, annual: 14 },
-      tagline: 'For traders who are serious about improving',
-      cta: 'Start Pro free for 7 days',
-      ctaHref: '/login?mode=signup',
-      accent: 'var(--ac)',
-      highlighted: true,
-      badge: 'Most popular',
-      features: [
-        '1 MT5 account',
-        'Full trade history — unlimited',
-        'All analytics (emotion, setup, session, radar)',
-        'Equity curve + drawdown tracking',
-        'Macro intelligence + AI daily bias',
-        'Weekly reviews & grading',
-        'Performance report exports (CSV / PDF)',
-        '300 VELQUOR AI questions / month',
-        'Priority sync — every 30 seconds',
-      ],
-    },
-    {
-      name: 'Elite',
-      price: { monthly: 39, annual: 29 },
-      tagline: 'For funded traders and full-time professionals',
-      cta: 'Get Elite',
-      ctaHref: '/login?mode=signup',
-      accent: 'var(--go2)',
-      highlighted: false,
-      features: [
-        'Up to 3 MT5 accounts',
-        'Everything in Pro',
-        'Prop firm challenge tracker (FTMO, TFT, MFF…)',
-        'Custom daily loss limits & drawdown alerts',
-        'Unlimited VELQUOR AI — no monthly cap',
-        'Multi-account P&L overview',
-        'Priority support',
-      ],
-    },
-  ]
+  const { t } = useLocale()
+  const pr = t.pricing
 
   return (
     <section id="pricing" style={{
       padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px)',
       borderTop: '1px solid var(--bd)', background: 'var(--s1)',
     }}>
-      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '860px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>Pricing</p>
-          <h2 style={{ fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)' }}>
-            Simple, transparent pricing
-          </h2>
-          <p style={{ color: 'var(--t2)', fontSize: '15px', lineHeight: 1.6, margin: '0 auto 28px', maxWidth: '460px' }}>
-            Start free. Upgrade when you need more. No hidden fees, no usage surprises — just one flat monthly rate.
-          </p>
-
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '4px', borderRadius: '10px', background: 'var(--s2)', border: '1px solid var(--bd)' }}>
-            <button
-              onClick={() => setAnnual(false)}
-              style={{
-                padding: '6px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 500,
-                background: !annual ? 'var(--bg)' : 'transparent',
-                color: !annual ? 'var(--t1)' : 'var(--t3)',
-                boxShadow: !annual ? '0 1px 4px rgba(0,0,0,0.3)' : 'none',
-              }}>Monthly</button>
-            <button
-              onClick={() => setAnnual(true)}
-              style={{
-                padding: '6px 16px', borderRadius: '7px', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 500,
-                background: annual ? 'var(--bg)' : 'transparent',
-                color: annual ? 'var(--t1)' : 'var(--t3)',
-                boxShadow: annual ? '0 1px 4px rgba(0,0,0,0.3)' : 'none',
-              }}>Annual <span style={{ color: 'var(--gr2)', fontSize: '11px', fontWeight: 600 }}>save ~30%</span></button>
-          </div>
+          <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>{pr.eyebrow}</p>
+          <h2 style={{ fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)' }}>{pr.h2}</h2>
+          <p style={{ color: 'var(--t2)', fontSize: '15px', lineHeight: 1.6, margin: '0 auto', maxWidth: '400px' }}>{pr.subtitle}</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: '16px', alignItems: 'start' }}>
-          {tiers.map(tier => {
-            const price = annual ? tier.price.annual : tier.price.monthly
+        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: '16px', alignItems: 'start' }}>
+          {pr.tiers.map((tier, i) => {
+            const isHighlighted = i === 1
             return (
-              <div
-                key={tier.name}
-                style={{
-                  background: tier.highlighted ? 'linear-gradient(160deg, rgba(77,143,255,0.07) 0%, var(--s1) 60%)' : 'var(--s1)',
-                  border: `1px solid ${tier.highlighted ? 'rgba(77,143,255,0.35)' : 'var(--bd)'}`,
-                  borderRadius: '16px',
-                  padding: '28px',
-                  position: 'relative',
-                  boxShadow: tier.highlighted ? '0 0 0 1px rgba(77,143,255,0.12), 0 24px 60px rgba(0,0,0,0.3)' : 'none',
-                }}>
-
-                {tier.badge && (
+              <div key={tier.name} style={{
+                background: isHighlighted ? 'linear-gradient(160deg, rgba(77,143,255,0.07) 0%, var(--s1) 60%)' : 'var(--s1)',
+                border: `1px solid ${isHighlighted ? 'rgba(77,143,255,0.35)' : 'var(--bd)'}`,
+                borderRadius: '16px', padding: '28px', position: 'relative',
+                boxShadow: isHighlighted ? '0 0 0 1px rgba(77,143,255,0.12), 0 24px 60px rgba(0,0,0,0.3)' : 'none',
+              }}>
+                {isHighlighted && (
                   <div style={{
                     position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)',
                     background: 'var(--ac)', color: 'white', fontSize: '11px', fontWeight: 600,
                     padding: '3px 14px', borderRadius: '20px', whiteSpace: 'nowrap',
                     boxShadow: '0 4px 12px rgba(77,143,255,0.4)',
-                  }}>{tier.badge}</div>
+                  }}>Most popular</div>
                 )}
-
                 <p style={{ color: 'var(--t3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 8px' }}>{tier.name}</p>
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', margin: '0 0 6px' }}>
-                  <span style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--t1)', lineHeight: 1 }}>
-                    {price === 0 ? 'Free' : `€${price}`}
-                  </span>
-                  {price > 0 && (
-                    <span style={{ color: 'var(--t3)', fontSize: '13px', paddingBottom: '6px' }}>/ month</span>
-                  )}
+                  <span style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--t1)', lineHeight: 1 }}>{tier.price}</span>
+                  <span style={{ color: 'var(--t3)', fontSize: '13px', paddingBottom: '6px' }}>{tier.period}</span>
                 </div>
-                {price > 0 && annual && (
-                  <p style={{ color: 'var(--t3)', fontSize: '11px', margin: '0 0 10px' }}>billed €{price * 12} / year</p>
-                )}
                 <p style={{ color: 'var(--t3)', fontSize: '12px', margin: '0 0 24px', lineHeight: 1.5 }}>{tier.tagline}</p>
 
-                <Link href={tier.ctaHref} style={{
-                  display: 'block', textAlign: 'center',
-                  padding: '11px', borderRadius: '9px',
-                  fontSize: '13px', fontWeight: 600, textDecoration: 'none',
-                  background: tier.highlighted ? 'var(--ac)' : 'var(--s2)',
-                  color: tier.highlighted ? 'white' : 'var(--t1)',
-                  border: tier.highlighted ? 'none' : '1px solid var(--bd2)',
-                  marginBottom: '22px',
-                  boxShadow: tier.highlighted ? '0 4px 16px rgba(77,143,255,0.3)' : 'none',
+                <Link href="/login?mode=signup" style={{
+                  display: 'block', textAlign: 'center', padding: '11px', borderRadius: '9px',
+                  fontSize: '13px', fontWeight: 600, textDecoration: 'none', marginBottom: '22px',
+                  background: isHighlighted ? 'var(--ac)' : 'var(--s2)',
+                  color: isHighlighted ? 'white' : 'var(--t1)',
+                  border: isHighlighted ? 'none' : '1px solid var(--bd2)',
+                  boxShadow: isHighlighted ? '0 4px 16px rgba(77,143,255,0.3)' : 'none',
                 }}>{tier.cta}</Link>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
                   {tier.features.map(f => (
                     <div key={f} style={{ display: 'flex', gap: '9px', alignItems: 'flex-start' }}>
-                      <span style={{ color: tier.highlighted ? 'var(--ac)' : 'var(--gr2)', fontSize: '12px', flexShrink: 0, marginTop: '1px' }}>✓</span>
+                      <span style={{ color: isHighlighted ? 'var(--ac)' : 'var(--gr2)', fontSize: '12px', flexShrink: 0, marginTop: '1px' }}>✓</span>
                       <span style={{ color: 'var(--t2)', fontSize: '12px', lineHeight: 1.5 }}>{f}</span>
                     </div>
                   ))}
@@ -1829,9 +1794,7 @@ function Pricing() {
           })}
         </div>
 
-        <p style={{ textAlign: 'center', color: 'var(--t3)', fontSize: '12px', marginTop: '28px', lineHeight: 1.6 }}>
-          All plans include a 7-day free trial. Cancel any time — no questions asked. Prices in EUR, VAT may apply.
-        </p>
+        <p style={{ textAlign: 'center', color: 'var(--t3)', fontSize: '12px', marginTop: '28px', lineHeight: 1.6 }}>{pr.footer}</p>
       </div>
     </section>
   )
@@ -1865,34 +1828,30 @@ function FooterTagline() {
 
 // ── Footer ────────────────────────────────────────────────────────────────────
 function Footer() {
+  const { t } = useLocale()
+  const fo = t.footer
+
   return (
     <footer style={{
       borderTop: '1px solid var(--bd)',
       padding: 'clamp(24px, 4vw, 36px) clamp(16px, 5vw, 48px)',
       display: 'flex', flexDirection: 'column', gap: '20px',
     }}>
-      {/* Top row: logo + links */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <LogoMark size={20} />
-          <span style={{ color: 'var(--t3)', fontSize: '12px' }}>Velquor © 2026</span>
+          <span style={{ color: 'var(--t3)', fontSize: '12px' }}>{fo.copyright}</span>
         </div>
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-          {['Privacy', 'Terms', 'Contact'].map(l => (
+          {fo.links.map(l => (
             <a key={l} href="#" style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>{l}</a>
           ))}
         </div>
       </div>
 
       {/* Impressum — legally required in Austria (§ 25 MedienG / § 5 ECG) */}
-      <div style={{
-        borderTop: '1px solid var(--bd)',
-        paddingTop: '16px',
-        color: 'var(--t3)',
-        fontSize: '11px',
-        lineHeight: 1.8,
-      }}>
-        <p style={{ margin: '0 0 2px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '10px' }}>Impressum</p>
+      <div style={{ borderTop: '1px solid var(--bd)', paddingTop: '16px', color: 'var(--t3)', fontSize: '11px', lineHeight: 1.8 }}>
+        <p style={{ margin: '0 0 2px', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: '10px' }}>{fo.impressumLabel}</p>
         <p style={{ margin: 0 }}>
           Medieninhaber &amp; Herausgeber: Marco Brini · Ägydygasse 14, 8020 Graz, Austria · E-Mail:{' '}
           <a href="mailto:support@velquor.app" style={{ color: 'var(--t3)', textDecoration: 'none' }}>support@velquor.app</a>
