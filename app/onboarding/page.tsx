@@ -63,43 +63,52 @@ function Step1({ userName, onNext }: { userName: string; onNext: () => void }) {
 
 // ── Step 2 ────────────────────────────────────────────────────────────────────
 function Step2({ onNext }: { onNext: () => void }) {
-  const [login,    setLogin]    = useState('')
-  const [password, setPassword] = useState('')
-  const [server,   setServer]   = useState('')
-  const [saving,   setSaving]   = useState(false)
-  const [saved,    setSaved]    = useState(false)
-  const [error,    setError]    = useState('')
+  const [apiKey,       setApiKey]       = useState('')
+  const [eaConnected,  setEaConnected]  = useState(false)
+  const [eaBroker,     setEaBroker]     = useState('')
+  const [loading,      setLoading]      = useState(true)
+  const [copied,       setCopied]       = useState(false)
 
-  async function handleConnect() {
-    if (!login.trim() || !password.trim() || !server.trim()) return
-    setSaving(true)
-    setError('')
-    try {
-      const res = await fetch('/api/user/mt5-credentials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login: login.trim(), password: password.trim(), server: server.trim() }),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        setError(json.error ?? 'Could not connect. Check your login, password, and server name.')
-      } else {
-        setSaved(true)
-      }
-    } catch {
-      setError('Network error. Please try again.')
-    } finally {
-      setSaving(false)
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>
+    async function poll() {
+      try {
+        const res = await fetch('/api/user/api-key')
+        if (!res.ok) return
+        const json = await res.json()
+        setApiKey(json.api_key ?? '')
+        setEaConnected(json.ea_connected ?? false)
+        setEaBroker(json.ea_broker ?? '')
+        setLoading(false)
+      } catch { /* network hiccup, retry */ }
     }
+    poll()
+    // poll every 5s so the page lights up as soon as the EA connects
+    interval = setInterval(poll, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  function copyKey() {
+    navigator.clipboard.writeText(apiKey).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)',
-    borderRadius: '9px', padding: '11px 13px', color: 'var(--t1)', fontSize: '13px',
-    outline: 'none', boxSizing: 'border-box',
+  const stepRowStyle: React.CSSProperties = {
+    display: 'flex', gap: '12px', alignItems: 'flex-start',
   }
-  const labelStyle: React.CSSProperties = {
-    display: 'block', color: 'var(--t2)', fontSize: '12px', marginBottom: '5px', fontWeight: 500,
+  const numStyle: React.CSSProperties = {
+    minWidth: '22px', height: '22px', borderRadius: '50%',
+    background: 'var(--ac)', color: 'white', fontSize: '11px', fontWeight: 700,
+    display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '1px',
+  }
+  const stepTextStyle: React.CSSProperties = {
+    color: 'var(--t2)', fontSize: '13px', lineHeight: 1.55,
+  }
+  const monoStyle: React.CSSProperties = {
+    fontFamily: 'monospace', background: 'var(--s3)', borderRadius: '4px',
+    padding: '1px 5px', fontSize: '12px', color: 'var(--t1)',
   }
 
   return (
@@ -107,88 +116,107 @@ function Step2({ onNext }: { onNext: () => void }) {
       <div>
         <div style={{ fontSize: '32px', marginBottom: '14px' }}>⚡</div>
         <h2 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.02em', margin: '0 0 8px', color: 'var(--t1)' }}>
-          Connect your MT5 account
+          Install the VELQUOR EA
         </h2>
         <p style={{ color: 'var(--t2)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-          Just enter your MT5 login details. We handle the connection — no third-party accounts needed.
+          A small Expert Advisor runs inside MT5 and sends your data directly to VELQUOR — no third-party cloud access to your account.
         </p>
       </div>
 
-      {saved ? (
+      {/* API Key box */}
+      <div>
+        <p style={{ margin: '0 0 8px', color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Your VELQUOR API Key</p>
         <div style={{
-          padding: '24px', borderRadius: '12px', textAlign: 'center',
-          background: 'rgba(0,255,133,0.07)', border: '1px solid rgba(0,255,133,0.2)',
+          display: 'flex', alignItems: 'center', gap: '8px',
+          background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '10px', padding: '10px 12px',
         }}>
-          <div style={{ fontSize: '28px', marginBottom: '8px' }}>✓</div>
-          <p style={{ margin: 0, color: 'var(--gr2)', fontWeight: 600, fontSize: '14px' }}>MT5 account connected!</p>
-          <p style={{ margin: '4px 0 0', color: 'var(--t2)', fontSize: '12px' }}>Your trades will start syncing automatically.</p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div>
-            <label style={labelStyle}>MT5 Login Number</label>
-            <input
-              type="text" value={login} onChange={e => setLogin(e.target.value)}
-              placeholder="e.g. 1234567"
-              style={inputStyle}
-              onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-              onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Investor Password <span style={{ color: 'var(--t3)', fontWeight: 400 }}>(read-only)</span></label>
-            <input
-              type="password" value={password} onChange={e => setPassword(e.target.value)}
-              placeholder="Your read-only investor password"
-              style={inputStyle}
-              onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-              onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
-            />
-            <p style={{ margin: '5px 0 0', color: 'var(--t3)', fontSize: '11px' }}>
-              In MT5: Tools → Options → Server → Change investor password
-            </p>
-          </div>
-          <div>
-            <label style={labelStyle}>Broker Server</label>
-            <input
-              type="text" value={server} onChange={e => setServer(e.target.value)}
-              placeholder="e.g. BlueberryMarkets-Live"
-              style={inputStyle}
-              onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-              onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
-            />
-            <p style={{ margin: '5px 0 0', color: 'var(--t3)', fontSize: '11px' }}>
-              MT5: File → Open Account — the server name next to your account
-            </p>
-          </div>
-          {error && (
-            <p style={{ margin: 0, color: 'var(--re)', fontSize: '12px', background: 'rgba(255,51,71,0.08)', border: '1px solid rgba(255,51,71,0.2)', borderRadius: '8px', padding: '10px 12px' }}>
-              {error}
-            </p>
-          )}
+          <code style={{ flex: 1, fontFamily: 'monospace', fontSize: '13px', color: 'var(--t1)', wordBreak: 'break-all' }}>
+            {loading ? '…' : apiKey}
+          </code>
           <button
-            onClick={handleConnect}
-            disabled={saving || !login.trim() || !password.trim() || !server.trim()}
+            onClick={copyKey}
+            disabled={loading || !apiKey}
             style={{
-              width: '100%', padding: '13px', borderRadius: '9px', border: 'none',
-              background: saving || !login.trim() || !password.trim() || !server.trim() ? 'var(--s3)' : 'var(--ac)',
-              color: saving || !login.trim() || !password.trim() || !server.trim() ? 'var(--t3)' : 'white',
-              fontSize: '14px', fontWeight: 600, cursor: saving ? 'default' : 'pointer',
+              padding: '5px 12px', borderRadius: '6px', border: 'none',
+              background: copied ? 'rgba(0,255,133,0.15)' : 'var(--s3)',
+              color: copied ? 'var(--gr2)' : 'var(--t2)',
+              fontSize: '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
             }}
           >
-            {saving ? 'Connecting…' : 'Connect MT5 →'}
+            {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
-      )}
+        <p style={{ margin: '6px 0 0', color: 'var(--t3)', fontSize: '11px' }}>
+          Keep this private — it gives write access to your VELQUOR account.
+        </p>
+      </div>
+
+      {/* Steps */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={stepRowStyle}>
+          <div style={numStyle}>1</div>
+          <p style={stepTextStyle}>
+            <a href="/ea/VelquorBridge.mq5" download style={{ color: 'var(--ac)', fontWeight: 600, textDecoration: 'none' }}>
+              Download VelquorBridge.mq5
+            </a>
+            {' '}and copy it into your MT5{' '}
+            <span style={monoStyle}>MQL5/Experts/</span> folder.
+          </p>
+        </div>
+        <div style={stepRowStyle}>
+          <div style={numStyle}>2</div>
+          <p style={stepTextStyle}>
+            In MT5: <strong style={{ color: 'var(--t1)' }}>Tools → Options → Expert Advisors</strong> — tick &ldquo;Allow WebRequest&rdquo; and add{' '}
+            <span style={monoStyle}>https://bridge.velquor.app</span>
+          </p>
+        </div>
+        <div style={stepRowStyle}>
+          <div style={numStyle}>3</div>
+          <p style={stepTextStyle}>
+            Drag <strong style={{ color: 'var(--t1)' }}>VelquorBridge</strong> onto any chart. In the inputs, paste your API key above and click OK.
+          </p>
+        </div>
+        <div style={stepRowStyle}>
+          <div style={numStyle}>4</div>
+          <p style={stepTextStyle}>
+            Enable <strong style={{ color: 'var(--t1)' }}>Auto Trading</strong> in MT5 (the green button in the toolbar). The smiley face on the chart confirms the EA is running.
+          </p>
+        </div>
+      </div>
+
+      {/* Live status */}
+      <div style={{
+        padding: '14px 16px', borderRadius: '10px',
+        background: eaConnected ? 'rgba(0,255,133,0.07)' : 'var(--s2)',
+        border: `1px solid ${eaConnected ? 'rgba(0,255,133,0.25)' : 'var(--bd2)'}`,
+        display: 'flex', alignItems: 'center', gap: '10px',
+      }}>
+        <div style={{
+          width: '8px', height: '8px', borderRadius: '50%',
+          background: eaConnected ? 'var(--gr2)' : 'var(--t3)',
+          boxShadow: eaConnected ? '0 0 6px var(--gr2)' : 'none',
+          flexShrink: 0,
+        }} />
+        <div>
+          <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: eaConnected ? 'var(--gr2)' : 'var(--t2)' }}>
+            {eaConnected ? `EA connected${eaBroker ? ` · ${eaBroker}` : ''}` : 'Waiting for EA connection…'}
+          </p>
+          {!eaConnected && (
+            <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--t3)' }}>
+              This updates automatically — no need to refresh.
+            </p>
+          )}
+        </div>
+      </div>
 
       <button onClick={onNext} style={{
         width: '100%', padding: '12px', borderRadius: '9px',
-        background: saved ? 'var(--ac)' : 'transparent',
-        border: saved ? 'none' : '1px solid var(--bd2)',
-        color: saved ? 'white' : 'var(--t2)',
+        background: eaConnected ? 'var(--ac)' : 'transparent',
+        border: eaConnected ? 'none' : '1px solid var(--bd2)',
+        color: eaConnected ? 'white' : 'var(--t2)',
         fontSize: '13px', fontWeight: 600, cursor: 'pointer',
       }}>
-        {saved ? 'Continue →' : 'Skip for now'}
+        {eaConnected ? 'Continue →' : 'Skip for now'}
       </button>
     </div>
   )
