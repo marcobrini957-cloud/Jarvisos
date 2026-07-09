@@ -346,14 +346,17 @@ export function PlaybackBar({ time, duration, playing, onPlayPause, onReset, onS
 // ── Stage ────────────────────────────────────────────────────────────────────
 export function Stage({
   width = 1280, height = 720, duration = 10, background = '#f6f4ef',
-  fps = 60, loop = true, autoplay = true, persistKey = 'animstage', children,
+  fps = 60, loop = true, autoplay = true, persistKey = 'animstage',
+  controls = true, children,
 }) {
   width = +width || 1280; height = +height || 720;
   duration = +duration || 10; fps = +fps || 60;
   if (typeof loop === 'string') loop = loop !== 'false';
   if (typeof autoplay === 'string') autoplay = autoplay !== 'false';
+  if (typeof controls === 'string') controls = controls !== 'false';
 
   const [time, setTime] = React.useState(() => {
+    if (!controls) return 0;
     try {
       const v = parseFloat(localStorage.getItem(persistKey + ':t') || '0');
       return isFinite(v) ? clamp(v, 0, duration) : 0;
@@ -368,14 +371,15 @@ export function Stage({
   const lastTsRef = React.useRef(null);
 
   React.useEffect(() => {
+    if (!controls) return;
     try { localStorage.setItem(persistKey + ':t', String(time)); } catch {}
-  }, [time, persistKey]);
+  }, [time, persistKey, controls]);
 
   React.useEffect(() => {
     if (!stageRef.current) return;
     const el = stageRef.current;
     const measure = () => {
-      const barH = 44;
+      const barH = controls ? 44 : 0;
       const s = Math.min(el.clientWidth / width, (el.clientHeight - barH) / height);
       setScale(Math.max(0.05, s));
     };
@@ -383,7 +387,7 @@ export function Stage({
     const ro = new ResizeObserver(measure);
     ro.observe(el); window.addEventListener('resize', measure);
     return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
-  }, [width, height]);
+  }, [width, height, controls]);
 
   React.useEffect(() => {
     if (!playing) { lastTsRef.current = null; return; }
@@ -406,6 +410,7 @@ export function Stage({
   }, [playing, duration, loop]);
 
   React.useEffect(() => {
+    if (!controls) return;
     const onKey = (e) => {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
       if (e.code === 'Space') { e.preventDefault(); setPlaying(p => !p); }
@@ -415,15 +420,16 @@ export function Stage({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [duration]);
+  }, [duration, controls]);
 
   React.useEffect(() => {
+    if (!controls) return;
     const el = canvasRef.current;
     if (!el) return;
     const onSeek = (e) => { setPlaying(false); setTime(clamp(e.detail.time, 0, duration)); };
     el.addEventListener('data-om-seek-to-time-frame', onSeek);
     return () => el.removeEventListener('data-om-seek-to-time-frame', onSeek);
-  }, [duration]);
+  }, [duration, controls]);
 
   useInlineFontsInto(canvasRef);
 
@@ -436,12 +442,13 @@ export function Stage({
   return (
     <div ref={stageRef} style={{
       position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-      alignItems: 'center', background: '#0a0a0a', fontFamily: 'Inter, system-ui, sans-serif',
+      alignItems: 'center', background: controls ? '#0a0a0a' : '#000',
+      fontFamily: 'Inter, system-ui, sans-serif',
     }}>
       <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', minHeight: 0 }}>
         <svg ref={canvasRef} width={width} height={height}
           data-om-exportable-video-with-duration-secs={duration}
-          style={{ transform: `scale(${scale})`, transformOrigin: 'center', flexShrink: 0, boxShadow: '0 20px 60px rgba(0,0,0,0.4)', display: 'block' }}>
+          style={{ transform: `scale(${scale})`, transformOrigin: 'center', flexShrink: 0, boxShadow: controls ? '0 20px 60px rgba(0,0,0,0.4)' : 'none', display: 'block' }}>
           <foreignObject x="0" y="0" width="100%" height="100%">
             <div xmlns="http://www.w3.org/1999/xhtml"
               style={{ width, height, background, position: 'relative', overflow: 'hidden' }}>
@@ -452,13 +459,15 @@ export function Stage({
           </foreignObject>
         </svg>
       </div>
-      <PlaybackBar
-        time={displayTime} actualTime={time} duration={duration} playing={playing}
-        onPlayPause={() => setPlaying(p => !p)}
-        onReset={() => setTime(0)}
-        onSeek={(t) => setTime(t)}
-        onHover={(t) => setHoverTime(t)}
-      />
+      {controls && (
+        <PlaybackBar
+          time={displayTime} actualTime={time} duration={duration} playing={playing}
+          onPlayPause={() => setPlaying(p => !p)}
+          onReset={() => setTime(0)}
+          onSeek={(t) => setTime(t)}
+          onHover={(t) => setHoverTime(t)}
+        />
+      )}
     </div>
   );
 }

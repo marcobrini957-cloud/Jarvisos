@@ -381,9 +381,13 @@ function TimeLabel({ children }) {
   return <div data-screen-label={`t=${Math.floor(time)}s`} style={{ position: 'absolute', inset: 0 }}>{children}</div>;
 }
 
-export default function VelquorTrailer() {
+export default function VelquorTrailer({ controls = true, loop: loopProp = false }) {
   return (
-    <Stage width={1280} height={720} duration={20.3} background="#000000" loop={false} autoplay={true} persistKey="velquor-trailer-v2">
+    <Stage
+      width={1280} height={720} duration={20.3} background="#000000"
+      loop={loopProp} autoplay={true} controls={controls}
+      persistKey={controls ? 'velquor-trailer-v2' : 'velquor-trailer-bg'}
+    >
       <TimeLabel>
         <Sprite start={0} end={2.3}><Scene1 /></Sprite>
         <Sprite start={2.0} end={5.9}><Scene2 /></Sprite>
