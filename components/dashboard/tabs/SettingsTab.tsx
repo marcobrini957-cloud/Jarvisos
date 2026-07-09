@@ -107,10 +107,10 @@ function MT5AccountsPanel() {
                 {status === null
                   ? 'Checking…'
                   : connected
-                    ? `Connected${status.ea_broker ? ` · ${status.ea_broker}` : ''}`
+                    ? `Connected${status?.ea_broker ? ` · ${status.ea_broker}` : ''}`
                     : 'EA not connected'}
               </p>
-              {connected && (status.ea_version || lastSeenTs) && (
+              {connected && status && (status.ea_version || lastSeenTs) && (
                 <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--t3)' }}>
                   {[status.ea_version ? `v${status.ea_version}` : null, lastSeenTs ? `last sync ${lastSeenTs}` : null]
                     .filter(Boolean).join(' · ')}
