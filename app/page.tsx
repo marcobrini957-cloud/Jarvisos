@@ -1099,8 +1099,17 @@ function Hero() {
         </div>
       </div>
 
+      {/* Trailer — full bleed, no controls, loops */}
+      <div style={{ position: 'relative', zIndex: 2, width: '100%' }}>
+        <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+          <div style={{ position: 'absolute', inset: 0 }}>
+            <VelquorTrailerEmbed controls={false} loop={true} />
+          </div>
+        </div>
+      </div>
+
       {/* Dashboard frame with gradient border */}
-      <div style={{ position: 'relative', zIndex: 2, padding: '0 clamp(12px, 4vw, 48px)' }}>
+      <div style={{ position: 'relative', zIndex: 2, padding: '0 clamp(12px, 4vw, 48px)', marginTop: 'clamp(48px, 7vw, 80px)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
           {/* Nebula glow behind the frame */}
           <div aria-hidden style={{
@@ -1903,20 +1912,6 @@ function Pricing() {
   )
 }
 
-// ── Trailer section ───────────────────────────────────────────────────────────
-function TrailerSection() {
-  return (
-    <section style={{ background: '#000', width: '100%' }}>
-      {/* 16:9 aspect-ratio container, full bleed */}
-      <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <VelquorTrailerEmbed controls={false} loop={true} />
-        </div>
-      </div>
-    </section>
-  )
-}
-
 // ── Footer tagline ────────────────────────────────────────────────────────────
 function FooterTagline() {
   return (
@@ -2012,7 +2007,6 @@ export default function LandingPage() {
       {showSplash && <IntroSplash onDone={handleSplashDone} />}
       <div style={{ background: 'var(--bg)', color: 'var(--t1)', overflowX: 'hidden' }}>
         <Nav />
-        <TrailerSection />
         <Hero />
         <StatsBar />
         <ShowcaseSection />
