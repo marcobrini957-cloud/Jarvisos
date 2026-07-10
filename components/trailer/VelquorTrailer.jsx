@@ -47,9 +47,10 @@ function VMark({ size = 72, glow = 0.5 }) {
         src="/brand/vq-logo-new.png"
         alt="VELQUOR"
         style={{
-          width: '135%', height: '135%',
-          marginLeft: '-17.5%', marginTop: '-17.5%',
+          width: '100%', height: '100%',
           display: 'block', objectFit: 'cover',
+          transformOrigin: '45% 45%',
+          transform: 'scale(1.38)',
         }}
       />
     </div>

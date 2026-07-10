@@ -814,13 +814,6 @@ function Nav() {
             borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'block',
           }}>{label}</a>
         ))}
-        <Link href="/trailer" onClick={() => setMenuOpen(false)} style={{
-          color: '#FFB830', fontSize: '17px', fontWeight: 500,
-          textDecoration: 'none', padding: '14px 4px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '8px',
-        }}>
-          <span style={{ fontSize: '11px' }}>▶</span> Watch Trailer
-        </Link>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '16px' }}>
           <Link href="/login" onClick={() => setMenuOpen(false)} style={{
             color: 'var(--t1)', fontSize: '15px', fontWeight: 500,
@@ -944,16 +937,6 @@ function Nav() {
             <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,184,48,0.15)', color: '#FFB830', border: '1px solid rgba(255,184,48,0.25)', letterSpacing: '0.03em' }}>FREE</span>
           </Link>
 
-          {/* Trailer */}
-          <Link href="/trailer" style={{ ...navLinkStyle, padding: '6px 10px', borderRadius: '7px', display: 'flex', alignItems: 'center', gap: '7px', color: 'rgba(255,255,255,0.65)', textDecoration: 'none' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#F2F2F2')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.65)')}
-          >
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ opacity: 0.7 }}>
-              <path d="M3 2.5l7 4-7 4V2.5z" fill="currentColor"/>
-            </svg>
-            Trailer
-          </Link>
         </div>
 
         {/* Right side */}
@@ -1076,16 +1059,6 @@ function Hero() {
             color: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: 500,
             textDecoration: 'none', padding: '14px 8px',
           }}>{t.hero.ctaSub}</a>
-          <Link href="/trailer" style={{
-            display: 'flex', alignItems: 'center', gap: '7px',
-            color: 'rgba(255,255,255,0.6)', fontSize: '14px', fontWeight: 500,
-            textDecoration: 'none', padding: '14px 8px',
-          }}>
-            <span style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.35)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <span style={{ width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: '6px solid rgba(255,255,255,0.7)', marginLeft: '2px' }} />
-            </span>
-            Watch trailer
-          </Link>
         </div>
 
         {/* Trust bullets */}
@@ -1099,21 +1072,37 @@ function Hero() {
         </div>
       </div>
 
-      {/* Trailer — centered 70%, with nebula glow */}
+      {/* Trailer — centered 70%, gradient border + cyber glow */}
       <div style={{ position: 'relative', zIndex: 2, width: '100%', display: 'flex', justifyContent: 'center', padding: '0 clamp(12px, 4vw, 48px)' }}>
         <div style={{ position: 'relative', width: '70%', maxWidth: '860px' }}>
+          {/* Nebula glow */}
           <div aria-hidden style={{
-            position: 'absolute', inset: '-40px -60px',
+            position: 'absolute', inset: '-50px -70px',
             background: [
-              'radial-gradient(ellipse at 25% 60%, rgba(33,110,243,0.25) 0%, transparent 55%)',
-              'radial-gradient(ellipse at 75% 60%, rgba(196,50,220,0.20) 0%, transparent 55%)',
+              'radial-gradient(ellipse at 20% 60%, rgba(33,110,243,0.30) 0%, transparent 55%)',
+              'radial-gradient(ellipse at 80% 60%, rgba(196,50,220,0.24) 0%, transparent 55%)',
             ].join(', '),
-            filter: 'blur(40px)',
+            filter: 'blur(45px)',
             pointerEvents: 'none', zIndex: 0,
           }} />
-          <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', zIndex: 1, borderRadius: '10px', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', inset: 0 }}>
-              <VelquorTrailerEmbed controls={false} loop={true} />
+          {/* Gradient border wrapper */}
+          <div style={{
+            position: 'relative', zIndex: 1,
+            background: 'linear-gradient(90deg, #2196F3 0%, #7B2FBF 50%, #E040FB 100%)',
+            padding: '1.5px',
+            borderRadius: '14px',
+            boxShadow: [
+              '0 0 60px rgba(33,150,243,0.24)',
+              '0 0 120px rgba(224,64,251,0.16)',
+              '0 4px 40px rgba(33,100,200,0.20)',
+            ].join(', '),
+          }}>
+            <div style={{ background: '#000', borderRadius: '12px', overflow: 'hidden' }}>
+              <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
+                <div style={{ position: 'absolute', inset: 0 }}>
+                  <VelquorTrailerEmbed controls={false} loop={true} />
+                </div>
+              </div>
             </div>
           </div>
         </div>
