@@ -39,12 +39,20 @@ function SceneFade({ children, noIn, noOut, fadeDur = 0.3 }) {
 function VMark({ size = 72, glow = 0.5 }) {
   return (
     <div style={{
-      width: size, height: size, borderRadius: size * 0.28,
-      background: `linear-gradient(135deg, ${C.go}, ${C.go2})`,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.46, fontWeight: 800, color: '#000', fontFamily: FONT,
-      boxShadow: `0 0 ${size * 0.9}px rgba(255,184,48,${glow}), 0 0 ${size * 0.35}px rgba(255,184,48,${glow * 0.6})`,
-    }}>V</div>
+      width: size, height: size, borderRadius: size * 0.18,
+      overflow: 'hidden', flexShrink: 0,
+      boxShadow: `0 0 ${size * 0.9}px rgba(255,255,255,${glow * 0.55}), 0 0 ${size * 0.35}px rgba(255,255,255,${glow * 0.35})`,
+    }}>
+      <img
+        src="/brand/vq-logo-new.png"
+        alt="VELQUOR"
+        style={{
+          width: '135%', height: '135%',
+          marginLeft: '-17.5%', marginTop: '-17.5%',
+          display: 'block', objectFit: 'cover',
+        }}
+      />
+    </div>
   );
 }
 

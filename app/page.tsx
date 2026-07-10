@@ -1099,11 +1099,22 @@ function Hero() {
         </div>
       </div>
 
-      {/* Trailer — full bleed, no controls, loops */}
-      <div style={{ position: 'relative', zIndex: 2, width: '100%' }}>
-        <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
-          <div style={{ position: 'absolute', inset: 0 }}>
-            <VelquorTrailerEmbed controls={false} loop={true} />
+      {/* Trailer — centered 70%, with nebula glow */}
+      <div style={{ position: 'relative', zIndex: 2, width: '100%', display: 'flex', justifyContent: 'center', padding: '0 clamp(12px, 4vw, 48px)' }}>
+        <div style={{ position: 'relative', width: '70%', maxWidth: '860px' }}>
+          <div aria-hidden style={{
+            position: 'absolute', inset: '-40px -60px',
+            background: [
+              'radial-gradient(ellipse at 25% 60%, rgba(33,110,243,0.25) 0%, transparent 55%)',
+              'radial-gradient(ellipse at 75% 60%, rgba(196,50,220,0.20) 0%, transparent 55%)',
+            ].join(', '),
+            filter: 'blur(40px)',
+            pointerEvents: 'none', zIndex: 0,
+          }} />
+          <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', zIndex: 1, borderRadius: '10px', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', inset: 0 }}>
+              <VelquorTrailerEmbed controls={false} loop={true} />
+            </div>
           </div>
         </div>
       </div>
