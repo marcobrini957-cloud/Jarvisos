@@ -27,7 +27,17 @@ const limiter = rateLimit({
 });
 app.use('/sync', limiter);
 
-// ─── Helpers — match logic in app/api/mt5-sync/route.ts ──────────────────────
+// Tighter limiter for copy signal (60 / 15 min)
+const copyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: parseInt(process.env.COPY_RATE_LIMIT_MAX || '60', 10),
+  keyGenerator: (req) => req.headers['x-api-key'] || req.ip,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/copy/signal', copyLimiter);
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 function detectSession(openTimeMs) {
   const d = new Date(openTimeMs);
   const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
@@ -49,7 +59,7 @@ function calcPips(symbol, openPrice, closePrice, tradeType) {
   return parseFloat((diff / 0.0001).toFixed(2));
 }
 
-// ─── Auth helper ─────────────────────────────────────────────────────────────
+// ─── Auth helpers ─────────────────────────────────────────────────────────────
 async function resolveUser(apiKey) {
   if (!apiKey || !apiKey.startsWith('vq_')) return null;
   const { data, error } = await supabase
@@ -61,8 +71,23 @@ async function resolveUser(apiKey) {
   return data.id;
 }
 
+// Resolve the copy_accounts row for this request
+// Reads X-Copy-Group + X-Mt5-Login headers + user_id derived from API key
+async function resolveCopyAccount(userId, groupId, mt5Login, role) {
+  if (!userId || !groupId || !mt5Login) return null;
+  const { data, error } = await supabase
+    .from('copy_accounts')
+    .select('id, status')
+    .eq('group_id', groupId)
+    .eq('user_id', userId)
+    .eq('role', role)
+    .eq('mt5_login', String(mt5Login))
+    .maybeSingle();
+  if (error || !data) return null;
+  return data;
+}
+
 // ─── POST /sync ───────────────────────────────────────────────────────────────
-// Payload sent by the MQL5 EA every heartbeat interval
 app.post('/sync', async (req, res) => {
   const apiKey = req.headers['x-api-key'];
   const userId = await resolveUser(apiKey);
@@ -156,17 +181,180 @@ app.post('/sync', async (req, res) => {
 
   // ── 4. update EA heartbeat on user_profiles ───────────────────────────────
   await supabase.from('user_profiles').update({
-    ea_connected:  true,
-    ea_last_seen:  new Date().toISOString(),
-    ea_version:    body.ea_version  ?? null,
-    ea_broker:     body.broker      ?? null,
+    ea_connected: true,
+    ea_last_seen: new Date().toISOString(),
+    ea_version:   body.ea_version ?? null,
+    ea_broker:    body.broker     ?? null,
   }).eq('id', userId);
 
   return res.json({ ok: true, ts: Date.now() });
 });
 
+// ─── POST /copy/signal — master broadcasts a new trade signal ─────────────────
+app.post('/copy/signal', async (req, res) => {
+  const apiKey   = req.headers['x-api-key'];
+  const groupId  = req.headers['x-copy-group'];
+  const mt5Login = req.headers['x-mt5-login'];
+
+  const userId = await resolveUser(apiKey);
+  if (!userId) return res.status(401).json({ error: 'invalid_api_key' });
+  if (!groupId) return res.status(400).json({ error: 'missing_x_copy_group' });
+  if (!mt5Login) return res.status(400).json({ error: 'missing_x_mt5_login' });
+
+  // Find this account as master in the group
+  const masterAcc = await resolveCopyAccount(userId, groupId, mt5Login, 'master');
+  if (!masterAcc) return res.status(403).json({ error: 'not_master_in_group' });
+
+  // Verify group is active
+  const { data: group } = await supabase
+    .from('copy_groups')
+    .select('id, active, lot_mode, lot_fixed, lot_multiplier, max_lot')
+    .eq('id', groupId)
+    .eq('user_id', userId)
+    .eq('active', true)
+    .maybeSingle();
+
+  if (!group) return res.status(403).json({ error: 'group_inactive_or_not_found' });
+
+  const { signal } = req.body;
+  if (!signal || !signal.type || !signal.ticket || !signal.symbol) {
+    return res.status(400).json({ error: 'missing_signal_fields' });
+  }
+
+  // Insert the copy signal
+  const { data: sig, error: sigErr } = await supabase
+    .from('copy_signals')
+    .insert({
+      group_id:          groupId,
+      master_account_id: masterAcc.id,
+      signal_type:       signal.type,
+      master_ticket:     Number(signal.ticket),
+      symbol:            signal.symbol,
+      trade_type:        signal.trade_type,
+      lot_size:          signal.lot_size   ?? null,
+      open_price:        signal.open_price ?? null,
+      stop_loss:         signal.stop_loss  ?? 0,
+      take_profit:       signal.take_profit ?? 0,
+      close_price:       signal.close_price ?? null,
+    })
+    .select('id')
+    .single();
+
+  if (sigErr || !sig) return res.status(500).json({ error: 'signal_insert_failed', detail: sigErr?.message });
+
+  // Create pending copy_log entries for all active slaves in this group
+  const { data: slaves } = await supabase
+    .from('copy_accounts')
+    .select('id')
+    .eq('group_id', groupId)
+    .eq('role', 'slave')
+    .eq('status', 'active');
+
+  if (slaves && slaves.length > 0) {
+    await supabase.from('copy_log').insert(
+      slaves.map(s => ({
+        signal_id:        sig.id,
+        slave_account_id: s.id,
+        status:           'pending',
+      }))
+    );
+  }
+
+  return res.json({ ok: true, signal_id: sig.id, slaves_notified: slaves?.length ?? 0 });
+});
+
+// ─── GET /copy/poll — slave polls for pending trade signals ───────────────────
+app.get('/copy/poll', async (req, res) => {
+  const apiKey   = req.headers['x-api-key'];
+  const groupId  = req.headers['x-copy-group'];
+  const mt5Login = req.headers['x-mt5-login'];
+
+  const userId = await resolveUser(apiKey);
+  if (!userId) return res.status(401).json({ error: 'invalid_api_key' });
+  if (!groupId || !mt5Login) return res.status(400).json({ error: 'missing_headers' });
+
+  // Find this account as slave
+  const slaveAcc = await resolveCopyAccount(userId, groupId, mt5Login, 'slave');
+  if (!slaveAcc) return res.status(403).json({ error: 'not_slave_in_group' });
+
+  // Mark slave as active + update last_seen_at
+  await supabase
+    .from('copy_accounts')
+    .update({ status: 'active', last_seen_at: new Date().toISOString() })
+    .eq('id', slaveAcc.id);
+
+  // Fetch pending copy_log entries with full signal + group lot config
+  const { data: pending } = await supabase
+    .from('copy_log')
+    .select(`
+      id,
+      copy_signals(
+        id, signal_type, master_ticket, symbol, trade_type, lot_size,
+        open_price, stop_loss, take_profit, close_price,
+        copy_groups(lot_mode, lot_fixed, lot_multiplier, max_lot)
+      )
+    `)
+    .eq('slave_account_id', slaveAcc.id)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+    .limit(10);
+
+  const signals = (pending || []).map(p => {
+    const s  = p.copy_signals;
+    const cg = s?.copy_groups;
+    return {
+      log_id:        p.id,
+      signal_type:   s?.signal_type,
+      master_ticket: s?.master_ticket,
+      symbol:        s?.symbol,
+      trade_type:    s?.trade_type,
+      master_lots:   s?.lot_size,
+      open_price:    s?.open_price,
+      stop_loss:     s?.stop_loss,
+      take_profit:   s?.take_profit,
+      close_price:   s?.close_price,
+      lot_mode:      cg?.lot_mode,
+      lot_fixed:     cg?.lot_fixed,
+      lot_multiplier: cg?.lot_multiplier,
+      max_lot:       cg?.max_lot,
+    };
+  });
+
+  return res.json({ signals });
+});
+
+// ─── POST /copy/ack — slave reports execution result ─────────────────────────
+app.post('/copy/ack', async (req, res) => {
+  const apiKey = req.headers['x-api-key'];
+  const userId = await resolveUser(apiKey);
+  if (!userId) return res.status(401).json({ error: 'invalid_api_key' });
+
+  const { log_id, status, slave_ticket, slave_lots, error_message } = req.body;
+  if (!log_id || !status) return res.status(400).json({ error: 'missing_fields' });
+
+  // Verify log entry belongs to a slave account owned by this user
+  const { data: logEntry } = await supabase
+    .from('copy_log')
+    .select('id, slave_account_id, copy_accounts!inner(user_id)')
+    .eq('id', log_id)
+    .maybeSingle();
+
+  if (!logEntry || logEntry.copy_accounts?.user_id !== userId) {
+    return res.status(403).json({ error: 'unauthorized_log_entry' });
+  }
+
+  await supabase.from('copy_log').update({
+    status:        status,
+    slave_ticket:  slave_ticket  ?? null,
+    slave_lots:    slave_lots    ?? null,
+    error_message: error_message ?? null,
+    executed_at:   new Date().toISOString(),
+  }).eq('id', log_id);
+
+  return res.json({ ok: true });
+});
+
 // ─── POST /disconnect ─────────────────────────────────────────────────────────
-// EA sends this on OnDeinit so the dashboard shows "offline" immediately
 app.post('/disconnect', async (req, res) => {
   const apiKey = req.headers['x-api-key'];
   const userId = await resolveUser(apiKey);

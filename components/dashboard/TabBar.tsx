@@ -10,6 +10,7 @@ const TABS: { id: number; label: string; isGold?: boolean }[] = [
   { id: 4, label: 'Macro'       },
   { id: 5, label: 'Discipline'  },
   { id: 7, label: 'Tasks'       },
+  { id: 8, label: 'Copy'        },
   { id: 6, label: 'Ask VELQUOR', isGold: true },
 ]
 

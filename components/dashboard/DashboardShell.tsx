@@ -12,8 +12,9 @@ import JournalTab     from './tabs/JournalTab'
 import MacroTab       from './tabs/MacroTab'
 import DisciplineTab  from './tabs/DisciplineTab'
 import VelquorTab     from './tabs/VelquorTab'
-import TasksTab       from './tabs/TasksTab'
-import SettingsTab    from './tabs/SettingsTab'
+import TasksTab        from './tabs/TasksTab'
+import CopyTradingTab  from './tabs/CopyTradingTab'
+import SettingsTab     from './tabs/SettingsTab'
 import WelcomeGreeting from './WelcomeGreeting'
 
 const TAB_COMPONENTS: Record<number, React.ComponentType> = {
@@ -25,6 +26,7 @@ const TAB_COMPONENTS: Record<number, React.ComponentType> = {
   5: DisciplineTab,
   6: VelquorTab,
   7: TasksTab,
+  8: CopyTradingTab,
 }
 
 export default function DashboardShell() {
