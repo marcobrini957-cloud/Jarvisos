@@ -12,9 +12,9 @@ type Todo = {
   created_at: string
 }
 
-const CATEGORIES = ['general', 'billing', 'copy-trading', 'email', 'infra', 'legal', 'growth'] as const
+const CATEGORIES = ['urgent', 'general', 'billing', 'copy-trading', 'email', 'infra', 'legal', 'growth'] as const
 const CAT_COLOR: Record<string, string> = {
-  billing: '#FFB830', 'copy-trading': '#A87EFF', email: '#4B8FFF',
+  urgent: '#FF3347', billing: '#FFB830', 'copy-trading': '#A87EFF', email: '#4B8FFF',
   infra: '#00EEFF', legal: '#FF9500', growth: '#00FF85', general: 'rgba(255,255,255,0.35)',
 }
 
