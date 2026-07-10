@@ -1512,21 +1512,15 @@ function ShowcaseSection() {
         </div>
 
         {/* Column labels above the card */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr', marginBottom: '14px', padding: '0 2px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#FF3347', fontSize: '18px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Before</span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(255,51,71,0.12)', border: '1px solid rgba(255,51,71,0.3)', color: '#FF3347', fontSize: '10px', fontWeight: 700, lineHeight: 1 }}>✕</span>
-            </div>
-            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>No structure. No patterns. Just losses.</span>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 40px 1fr', marginBottom: '18px', padding: '0 2px', alignItems: 'end' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <span style={{ color: '#FF3347', fontSize: 'clamp(38px, 7vw, 64px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, textTransform: 'uppercase' }}>Before</span>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>No structure. No patterns. Just losses.</span>
           </div>
           <div />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'flex-end', textAlign: 'right' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(0,255,133,0.12)', border: '1px solid rgba(0,255,133,0.3)', color: '#00FF85', fontSize: '10px', fontWeight: 700, lineHeight: 1 }}>✓</span>
-              <span style={{ color: '#00FF85', fontSize: '18px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>After</span>
-            </div>
-            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>Every trade tracked. AI finds your edge.</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', alignItems: 'flex-end', textAlign: 'right' }}>
+            <span style={{ color: '#00FF85', fontSize: 'clamp(38px, 7vw, 64px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1, textTransform: 'uppercase' }}>After</span>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>Every trade tracked. AI finds your edge.</span>
           </div>
         </div>
 

@@ -103,9 +103,9 @@ const en: LandingT = {
     { label: 'AI insights per week' },
   ],
   showcase: {
-    eyebrow: 'The transformation',
-    h2a: 'Before VELQUOR.',
-    h2b: 'After VELQUOR.',
+    eyebrow: 'The VELQUOR difference',
+    h2a: 'See what\'s working.',
+    h2b: 'Cut what\'s not.',
     subtitle: 'Your trades sync automatically from MT5. Entry, SL, TP, open/close time, P&L — all captured instantly. You don\'t type a single number. You just add what the data can\'t capture: how you felt and what setup it was.',
     beforeLabel: 'BEFORE VELQUOR',
     beforeSub: 'Flying blind',
