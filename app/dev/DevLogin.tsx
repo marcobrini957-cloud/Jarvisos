@@ -27,6 +27,7 @@ export default function DevLogin({ onSuccess }: { onSuccess: () => void }) {
       position: 'fixed', inset: 0, background: '#030508',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+      overflowY: 'auto',
     }}>
       {/* Grid lines background */}
       <div aria-hidden style={{

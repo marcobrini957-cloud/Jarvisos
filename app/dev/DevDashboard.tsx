@@ -291,7 +291,7 @@ export default function DevDashboard() {
   const dateStr = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
-    <div style={{ minHeight: '100vh', background: '#030508', color: '#fff', fontFamily: MONO }}>
+    <div style={{ minHeight: '100vh', background: '#030508', color: '#fff', fontFamily: MONO, overflowY: 'auto' }}>
       {/* Topbar */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
