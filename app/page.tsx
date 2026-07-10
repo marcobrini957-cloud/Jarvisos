@@ -965,10 +965,11 @@ function Hero() {
             fontSize: '15px', fontWeight: 700, textDecoration: 'none',
             boxShadow: '0 4px 24px rgba(255,255,255,0.15)', whiteSpace: 'nowrap',
           }}>{t.hero.cta}</Link>
-          <a href="#hero-trailer" style={{
-            color: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: 500,
-            textDecoration: 'none', padding: '14px 8px',
-          }}>{t.hero.ctaSub}</a>
+          <a
+            href="#"
+            onClick={(e) => { e.preventDefault(); document.getElementById('hero-trailer')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
+            style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: 500, textDecoration: 'none', padding: '14px 8px', cursor: 'pointer' }}
+          >{t.hero.ctaSub}</a>
         </div>
 
         {/* Trust bullets */}
@@ -1339,14 +1340,6 @@ function BeforeAfterMockup() {
 
         {/* ── BEFORE panel ── */}
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* Title */}
-          <div style={{ borderLeft: '3px solid #FF3347', paddingLeft: '10px', marginBottom: '2px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-              <span style={{ color: '#FF3347', fontSize: '13px', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Before</span>
-              <span style={{ color: 'rgba(255,51,71,0.5)', fontSize: '11px' }}>✕</span>
-            </div>
-            <p style={{ margin: 0, color: 'rgba(255,255,255,0.35)', fontSize: '10px', lineHeight: 1.4 }}>Trading blind — no structure, no pattern tracking, no edge.</p>
-          </div>
 
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '6px' }}>
@@ -1413,14 +1406,6 @@ function BeforeAfterMockup() {
 
         {/* ── AFTER panel ── */}
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* Title */}
-          <div style={{ borderLeft: '3px solid #00FF85', paddingLeft: '10px', marginBottom: '2px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-              <span style={{ color: '#00FF85', fontSize: '13px', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}>After</span>
-              <span style={{ color: 'rgba(0,255,133,0.6)', fontSize: '11px' }}>✓</span>
-            </div>
-            <p style={{ margin: 0, color: 'rgba(255,255,255,0.35)', fontSize: '10px', lineHeight: 1.4 }}>Every trade auto-logged from MT5. AI finds your edge and tells you exactly where to focus.</p>
-          </div>
 
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '6px' }}>
@@ -1524,6 +1509,25 @@ function ShowcaseSection() {
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 'clamp(14px, 2vw, 16px)', maxWidth: '560px', margin: '0 auto', lineHeight: 1.6 }}>
             {sc.subtitle}
           </p>
+        </div>
+
+        {/* Column labels above the card */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 28px 1fr', marginBottom: '14px', padding: '0 2px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#FF3347', fontSize: '18px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>Before</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(255,51,71,0.12)', border: '1px solid rgba(255,51,71,0.3)', color: '#FF3347', fontSize: '10px', fontWeight: 700, lineHeight: 1 }}>✕</span>
+            </div>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>No structure. No patterns. Just losses.</span>
+          </div>
+          <div />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'flex-end', textAlign: 'right' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '50%', background: 'rgba(0,255,133,0.12)', border: '1px solid rgba(0,255,133,0.3)', color: '#00FF85', fontSize: '10px', fontWeight: 700, lineHeight: 1 }}>✓</span>
+              <span style={{ color: '#00FF85', fontSize: '18px', fontWeight: 900, letterSpacing: '-0.02em', textTransform: 'uppercase' }}>After</span>
+            </div>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>Every trade tracked. AI finds your edge.</span>
+          </div>
         </div>
 
         <div style={{
