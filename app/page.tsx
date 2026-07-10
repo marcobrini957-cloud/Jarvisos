@@ -50,96 +50,6 @@ function Aurora() {
   )
 }
 
-// ── Intro splash ──────────────────────────────────────────────────────────────
-function IntroSplash({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState<'in' | 'hold' | 'zoom'>('in')
-
-  useEffect(() => {
-    const t1 = setTimeout(() => setPhase('hold'), 600)
-    const t2 = setTimeout(() => setPhase('zoom'), 1400)
-    const t3 = setTimeout(() => onDone(),         2000)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
-  }, [onDone])
-
-  return (
-    <>
-      <style>{`
-        @keyframes splash-in {
-          0%   { opacity: 0; transform: scale(0.7); }
-          60%  { opacity: 1; transform: scale(1.04); }
-          100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes splash-zoom {
-          0%   { opacity: 1; transform: scale(1); }
-          100% { opacity: 0; transform: scale(14); }
-        }
-        @keyframes glow-pulse {
-          0%, 100% { opacity: 0.5; transform: scale(1); }
-          50%      { opacity: 1;   transform: scale(1.12); }
-        }
-        @keyframes tagline-in {
-          from { opacity: 0; transform: translateY(6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 999,
-        background: '#000',
-        opacity: phase === 'zoom' ? 0 : 1,
-        transition: phase === 'zoom' ? 'opacity 0.55s ease 0.1s' : 'none',
-        pointerEvents: phase === 'zoom' ? 'none' : 'all',
-      }} />
-
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexDirection: 'column',
-        pointerEvents: 'none',
-        animation: phase === 'zoom' ? 'splash-zoom 0.6s cubic-bezier(0.55,0,1,0.45) forwards' : 'none',
-      }}>
-        {phase === 'hold' && (
-          <div style={{
-            position: 'absolute',
-            width: '320px', height: '320px', borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(232,152,10,0.22) 0%, transparent 68%)',
-            animation: 'glow-pulse 1.2s ease-in-out infinite',
-            pointerEvents: 'none',
-          }} />
-        )}
-
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '22px',
-          animation: phase === 'in' ? 'splash-in 0.6s cubic-bezier(0.34,1.4,0.64,1) forwards' : 'none',
-        }}>
-          <div style={{
-            boxShadow: phase === 'hold'
-              ? '0 0 0 1px rgba(201,168,76,0.2), 0 12px 60px rgba(201,168,76,0.4), 0 0 120px rgba(201,168,76,0.15)'
-              : '0 8px 40px rgba(201,168,76,0.25)',
-            borderRadius: '17.28px',
-            transition: 'box-shadow 0.5s ease',
-          }}>
-            <LogoMark size={96} />
-          </div>
-
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ color: '#F2F2F2', fontWeight: 800, fontSize: '32px', letterSpacing: '-0.04em', lineHeight: 1 }}>
-              Velquor
-            </div>
-            <div style={{
-              color: '#505050', fontSize: '11px', marginTop: '10px',
-              letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 500,
-              opacity: phase === 'hold' ? 1 : 0,
-              animation: phase === 'hold' ? 'tagline-in 0.4s ease forwards' : 'none',
-            }}>
-              Your Trading Operating System
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  )
-}
 
 // ── Animated counter ──────────────────────────────────────────────────────────
 function Counter({ target, prefix = '', suffix = '', decimals = 0 }: {
@@ -1055,7 +965,7 @@ function Hero() {
             fontSize: '15px', fontWeight: 700, textDecoration: 'none',
             boxShadow: '0 4px 24px rgba(255,255,255,0.15)', whiteSpace: 'nowrap',
           }}>{t.hero.cta}</Link>
-          <a href="#showcase" style={{
+          <a href="#hero-trailer" style={{
             color: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: 500,
             textDecoration: 'none', padding: '14px 8px',
           }}>{t.hero.ctaSub}</a>
@@ -1073,7 +983,7 @@ function Hero() {
       </div>
 
       {/* Trailer — centered 70%, gradient border + cyber glow */}
-      <div style={{ position: 'relative', zIndex: 2, width: '100%', display: 'flex', justifyContent: 'center', padding: '0 clamp(12px, 4vw, 48px)' }}>
+      <div id="hero-trailer" style={{ position: 'relative', zIndex: 2, width: '100%', display: 'flex', justifyContent: 'center', padding: '0 clamp(12px, 4vw, 48px)' }}>
         <div style={{ position: 'relative', width: '70%', maxWidth: '860px' }}>
           {/* Nebula glow */}
           <div aria-hidden style={{
@@ -1429,12 +1339,13 @@ function BeforeAfterMockup() {
 
         {/* ── BEFORE panel ── */}
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* Label */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ padding: '3px 10px', borderRadius: '20px', background: 'rgba(255,51,71,0.1)', border: '1px solid rgba(255,51,71,0.25)' }}>
-              <span style={{ color: '#FF3347', fontSize: '10px', fontWeight: 700 }}>{sc.beforeLabel}</span>
+          {/* Title */}
+          <div style={{ borderLeft: '3px solid #FF3347', paddingLeft: '10px', marginBottom: '2px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+              <span style={{ color: '#FF3347', fontSize: '13px', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Before</span>
+              <span style={{ color: 'rgba(255,51,71,0.5)', fontSize: '11px' }}>✕</span>
             </div>
-            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px' }}>{sc.beforeSub}</span>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.35)', fontSize: '10px', lineHeight: 1.4 }}>Trading blind — no structure, no pattern tracking, no edge.</p>
           </div>
 
           {/* Stats */}
@@ -1490,24 +1401,25 @@ function BeforeAfterMockup() {
         <div className="ba-divider-v" style={{ background: 'rgba(255,255,255,0.07)', position: 'relative' }}>
           <div style={{
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-            background: '#090D13', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '20px',
-            padding: '4px 8px', whiteSpace: 'nowrap',
-            color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.04em',
-          }}>VS</div>
+            background: '#090D13', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '50%',
+            width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: 700,
+          }}>→</div>
         </div>
         {/* Horizontal divider (mobile) */}
         <div className="ba-divider-h" style={{ display: 'none', height: '1px', background: 'rgba(255,255,255,0.07)', margin: '0 16px', position: 'relative' }}>
-          <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: '#090D13', padding: '2px 10px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: 700 }}>VS</span>
+          <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: '#090D13', padding: '2px 12px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: 700 }}>→</span>
         </div>
 
         {/* ── AFTER panel ── */}
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* Label */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ padding: '3px 10px', borderRadius: '20px', background: 'rgba(0,255,133,0.1)', border: '1px solid rgba(0,255,133,0.25)' }}>
-              <span style={{ color: '#00FF85', fontSize: '10px', fontWeight: 700 }}>{sc.afterLabel}</span>
+          {/* Title */}
+          <div style={{ borderLeft: '3px solid #00FF85', paddingLeft: '10px', marginBottom: '2px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+              <span style={{ color: '#00FF85', fontSize: '13px', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' }}>After</span>
+              <span style={{ color: 'rgba(0,255,133,0.6)', fontSize: '11px' }}>✓</span>
             </div>
-            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px' }}>{sc.afterSub}</span>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.35)', fontSize: '10px', lineHeight: 1.4 }}>Every trade auto-logged from MT5. AI finds your edge and tells you exactly where to focus.</p>
           </div>
 
           {/* Stats */}
@@ -1976,19 +1888,6 @@ function Footer() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function LandingPage() {
-  const [showSplash, setShowSplash] = useState(false)
-
-  useEffect(() => {
-    if (!sessionStorage.getItem('velquor-intro-seen')) {
-      setShowSplash(true)
-    }
-  }, [])
-
-  function handleSplashDone() {
-    sessionStorage.setItem('velquor-intro-seen', '1')
-    setShowSplash(false)
-  }
-
   useEffect(() => {
     document.body.style.overflow = 'auto'
     document.documentElement.style.overflow = 'auto'
@@ -2004,7 +1903,6 @@ export default function LandingPage() {
 
   return (
     <>
-      {showSplash && <IntroSplash onDone={handleSplashDone} />}
       <div style={{ background: 'var(--bg)', color: 'var(--t1)', overflowX: 'hidden' }}>
         <Nav />
         <Hero />
