@@ -3,11 +3,17 @@ import { useEffect } from 'react'
 
 export default function DevLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    document.body.style.overflow = 'auto'
-    document.documentElement.style.overflow = 'auto'
+    const b = document.body
+    const h = document.documentElement
+    b.style.overflow = 'auto'
+    b.style.height = 'auto'
+    h.style.overflow = 'auto'
+    h.style.height = 'auto'
     return () => {
-      document.body.style.overflow = 'hidden'
-      document.documentElement.style.overflow = ''
+      b.style.overflow = 'hidden'
+      b.style.height = ''
+      h.style.overflow = ''
+      h.style.height = ''
     }
   }, [])
 
