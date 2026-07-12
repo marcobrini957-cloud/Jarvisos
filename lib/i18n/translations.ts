@@ -88,13 +88,13 @@ const en: LandingT = {
     getStarted: 'Get Started',
   },
   hero: {
-    badge: 'Built for serious MT5 traders',
-    h1a: 'See the truth',
-    h1b: 'Trade the edge.',
-    subtitle: 'Connect your MT5 account and instantly see what\'s working, what\'s not, and exactly where you\'re leaking money.',
+    badge: 'Auto-Sync · AI Analysis · Trade Copier',
+    h1a: 'Your edge is already',
+    h1b: 'in your trades.',
+    subtitle: 'VELQUOR auto-logs every trade from MT5, finds the patterns in your behavior and strategy that are costing you money, and mirrors positions across any account in under 2 seconds.',
     cta: 'Start free — no card needed',
     ctaSub: 'See inside ↓',
-    trust: ['Any MT5 Broker', 'Live & Demo Accounts', 'AI-Powered', 'Mobile PWA'],
+    trust: ['Any MT5 Broker', 'No manual entry ever', 'AI Behavior Analysis', 'Built-in Trade Copier'],
   },
   stats: [
     { label: 'Trades tracked' },
@@ -119,15 +119,15 @@ const en: LandingT = {
   },
   features: {
     eyebrow: 'Everything in one place',
-    h2: 'Built for the trader who takes it seriously',
-    subtitle: 'Not another trade log. A full operating system for your trading business.',
+    h2: 'Three core tools. One complete edge.',
+    subtitle: 'Auto-logging, AI behavior analysis, and trade copying — built together and working as one system.',
     items: [
-      { title: 'Auto-synced from MT5', desc: 'Every trade, position, and P&L syncs from your MT5 account in real time. No manual entry, no CSV uploads, no spreadsheets.' },
-      { title: 'VELQUOR AI coaching', desc: 'Ask anything about your trades and get answers built from your actual data — not generic advice. "Why am I losing on NAS100?" gets a real answer.' },
-      { title: 'Session & setup analytics', desc: 'Instantly see your win rate broken down by London, New York, and Asian session — and by every setup type you trade.' },
-      { title: 'Mood vs. performance', desc: 'Log how you feel before each trading day. Over time, VELQUOR shows you the exact mood states that correlate with your best and worst performance.' },
+      { title: 'Auto-synced from MT5', desc: 'Every trade, position, and P&L syncs from your MT5 account in real time. No manual entry, no CSV uploads, no spreadsheets. Connect once and it runs forever.' },
+      { title: 'Built-in Trade Copier', desc: 'Mirror every trade from your master MT5 to any number of slave accounts in under 2 seconds. Proportional or fixed lot sizing. Fully managed from your dashboard.' },
+      { title: 'AI behavior analysis', desc: 'VELQUOR correlates your behavior, your strategy, and your trading habits across every trade — and surfaces the exact combinations that win and the ones that lose.' },
+      { title: 'Session & setup analytics', desc: 'Instantly see your win rate broken down by London, New York, and Asian session — and by every setup type you trade. Find your real edge in the numbers.' },
       { title: 'Prop firm tracker', desc: 'Running a challenge? Activate Prop Firm Mode and VELQUOR watches every rule — max daily loss, drawdown, profit target — in real time.' },
-      { title: 'PDF trade reports', desc: 'Generate a professional PDF report for any date range. Weekly reviews, monthly summaries, or a full account audit — all formatted and ready.' },
+      { title: 'PDF trade reports', desc: 'Generate a professional PDF report for any date range. Weekly reviews, monthly summaries, or a full account audit — formatted and ready to go.' },
     ],
   },
   howItWorks: {
@@ -144,8 +144,8 @@ const en: LandingT = {
   },
   velquorAI: {
     eyebrow: 'VELQUOR AI',
-    h2: 'An AI that actually knows your trading',
-    subtitle: 'VELQUOR has access to every trade, every journal entry, every mood log. It doesn\'t give generic advice — it analyses your data and tells you exactly what\'s holding you back.',
+    h2: 'An AI analyst that knows your every trade',
+    subtitle: 'Most analysis stops at P&L. VELQUOR goes three levels deeper — correlating your behavior (mood, energy, confidence), your strategy (setups, sessions, instruments), and your habits (timing, frequency, risk sizing). Then it shows you exactly where those three dimensions intersect to win or lose.',
     placeholder: 'Ask VELQUOR anything…',
     online: 'Online',
     qa: [

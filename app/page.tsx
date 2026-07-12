@@ -1550,7 +1550,7 @@ function ShowcaseSection() {
 function Features() {
   const { t } = useLocale()
   const ft = t.features
-  const icons = ['⚡', '◆', '📊', '📓', '🏆', '📑']
+  const icons = ['⚡', '◉', '◆', '📊', '🏆', '📑']
   const colors = ['var(--go2)', 'var(--ac)', 'var(--cy)', 'var(--am2)', 'var(--gr2)', 'var(--pu)']
 
   return (
@@ -1884,6 +1884,379 @@ function Footer() {
   )
 }
 
+// ── Three Pillars — sub-visuals ───────────────────────────────────────────────
+function AutoSyncVisual() {
+  const [pulse, setPulse] = useState(false)
+  useEffect(() => {
+    const iv = setInterval(() => setPulse(p => !p), 1400)
+    return () => clearInterval(iv)
+  }, [])
+  const rows = [
+    { sym: 'XAUUSD', type: 'BUY',  pnl: '+€284.50', time: '09:14', fresh: true },
+    { sym: 'NAS100', type: 'SELL', pnl: '−€112.20', time: '15:31', fresh: false },
+    { sym: 'XAUUSD', type: 'BUY',  pnl: '+€196.00', time: '10:02', fresh: false },
+    { sym: 'EURUSD', type: 'BUY',  pnl: '+€44.80',  time: '13:20', fresh: false },
+  ]
+  return (
+    <div style={{ background: '#090d12', borderRadius: '16px', border: '1px solid rgba(0,255,133,0.14)', overflow: 'hidden' }}>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.018)' }}>
+        <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em' }}>TRADE JOURNAL</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00FF85', display: 'block', boxShadow: '0 0 6px #00FF85', opacity: pulse ? 1 : 0.38, transition: 'opacity 0.6s' }} />
+          <span style={{ color: '#00FF85', fontSize: '10px', fontWeight: 500 }}>MT5 Live Sync</span>
+        </div>
+      </div>
+      {rows.map((r, i) => (
+        <div key={i} style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '11px 16px',
+          borderBottom: i < rows.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+          background: r.fresh ? 'rgba(0,255,133,0.03)' : 'transparent',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+            <span style={{
+              fontSize: '9px', padding: '2px 6px', borderRadius: '4px', fontWeight: 700,
+              background: r.type === 'BUY' ? 'rgba(0,255,133,0.1)' : 'rgba(255,51,71,0.1)',
+              color: r.type === 'BUY' ? '#00FF85' : '#FF3347',
+            }}>{r.type}</span>
+            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', fontWeight: 600 }}>{r.sym}</span>
+            <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: '10px' }}>{r.time}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+            <span style={{ color: r.pnl.startsWith('+') ? '#00FF85' : '#FF3347', fontSize: '12px', fontWeight: 700 }}>{r.pnl}</span>
+            {r.fresh && (
+              <span style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '10px', background: 'rgba(0,255,133,0.1)', border: '1px solid rgba(0,255,133,0.22)', color: '#00FF85', fontWeight: 600 }}>auto</span>
+            )}
+          </div>
+        </div>
+      ))}
+      <div style={{ padding: '9px 16px', background: 'rgba(255,255,255,0.015)', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+        <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px' }}>Last sync:</span>
+        <span style={{ color: '#00FF85', fontSize: '10px', fontWeight: 600 }}>1.2 seconds ago</span>
+      </div>
+    </div>
+  )
+}
+
+function AIAnalysisVisual() {
+  const dims = [
+    {
+      label: 'BEHAVIOR', color: '#4B8FFF', rgb: '75,143,255',
+      tags: ['Mood: Confident', 'Energy: High', 'Focus: Sharp'],
+    },
+    {
+      label: 'STRATEGY', color: '#E040FB', rgb: '224,64,251',
+      tags: ['Setup: Order Block', 'Session: London', 'Pair: XAUUSD'],
+    },
+    {
+      label: 'HABITS', color: '#FFB830', rgb: '255,184,48',
+      tags: ['Time: 08:00–11:00', 'Trades/day: 2', 'Risk: 1%'],
+    },
+  ]
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {dims.map(d => (
+        <div key={d.label} style={{
+          padding: '13px 15px', borderRadius: '11px',
+          background: `rgba(${d.rgb},0.04)`,
+          border: `1px solid rgba(${d.rgb},0.14)`,
+          display: 'flex', alignItems: 'flex-start', gap: '11px',
+        }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: '8px', flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: `rgba(${d.rgb},0.12)`, border: `1px solid rgba(${d.rgb},0.25)`,
+          }}>
+            <span style={{ fontSize: '12px', fontWeight: 800, color: d.color }}>◆</span>
+          </div>
+          <div>
+            <p style={{ margin: '0 0 7px', color: d.color, fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em' }}>{d.label}</p>
+            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+              {d.tags.map(tag => (
+                <span key={tag} style={{
+                  fontSize: '11px', padding: '2px 8px', borderRadius: '20px',
+                  background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}>{tag}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+      <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.18)', fontSize: '16px', margin: '2px 0' }}>↓</div>
+      <div style={{
+        padding: '14px 15px', borderRadius: '11px',
+        background: 'linear-gradient(135deg, rgba(75,143,255,0.07), rgba(224,64,251,0.05))',
+        border: '1px solid rgba(75,143,255,0.22)',
+        display: 'flex', gap: '10px', alignItems: 'flex-start',
+      }}>
+        <LogoMark size={20} />
+        <div>
+          <p style={{ margin: '0 0 5px', color: '#4B8FFF', fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em' }}>VELQUOR FOUND A PATTERN</p>
+          <p style={{ margin: 0, color: 'rgba(255,255,255,0.72)', fontSize: '12px', lineHeight: 1.6 }}>
+            Confident + London + Order Block = <strong style={{ color: '#00FF85' }}>78% win rate</strong>, avg +€142/trade. This exact combination drives 64% of your total profit this month.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CopierVisual() {
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    const iv = setInterval(() => setTick(t => t + 1), 2800)
+    return () => clearInterval(iv)
+  }, [])
+  const signalActive = tick % 4 === 1
+  const execDone     = tick % 4 === 2
+
+  return (
+    <div style={{ background: '#090d12', borderRadius: '16px', border: '1px solid rgba(255,184,48,0.14)', overflow: 'hidden' }}>
+      {/* Group header */}
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.018)' }}>
+        <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', fontWeight: 700 }}>My Copy Group</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00FF85', display: 'block', boxShadow: '0 0 5px #00FF85' }} />
+          <span style={{ color: '#00FF85', fontSize: '10px', fontWeight: 500 }}>Active</span>
+        </div>
+      </div>
+
+      {/* Master */}
+      <div style={{ padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(255,184,48,0.03)' }}>
+        <p style={{ margin: '0 0 6px', color: '#FFB830', fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em' }}>MASTER</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00FF85', display: 'block', boxShadow: '0 0 5px #00FF85' }} />
+            <span style={{ color: 'rgba(255,255,255,0.88)', fontSize: '13px', fontWeight: 600 }}>ICM Main Live</span>
+          </div>
+          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px' }}>#452891</span>
+        </div>
+      </div>
+
+      {/* Signal banner */}
+      <div style={{
+        padding: '7px 16px',
+        background: signalActive ? 'rgba(255,184,48,0.09)' : execDone ? 'rgba(0,255,133,0.05)' : 'transparent',
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        display: 'flex', alignItems: 'center', gap: '7px',
+        opacity: (signalActive || execDone) ? 1 : 0,
+        transition: 'opacity 0.3s, background 0.3s',
+        minHeight: '30px',
+      }}>
+        <span style={{ fontSize: '11px' }}>{execDone ? '✓' : '⚡'}</span>
+        <span style={{ fontSize: '10px', fontWeight: 500, color: execDone ? '#00FF85' : '#FFB830' }}>
+          {signalActive && 'XAUUSD BUY 0.5 lots → broadcasting to slaves…'}
+          {execDone && 'All slaves executed — avg 1.8 seconds'}
+        </span>
+      </div>
+
+      {/* Slaves */}
+      <div style={{ padding: '11px 16px' }}>
+        <p style={{ margin: '0 0 9px', color: 'rgba(255,255,255,0.28)', fontSize: '9px', fontWeight: 600, letterSpacing: '0.08em' }}>SLAVE ACCOUNTS (3)</p>
+        {[
+          { name: 'FTMO Demo #781234', status: 'active',  execLots: '0.5 lots' },
+          { name: 'Hedge Fund #334-B', status: 'active',  execLots: '0.25 lots' },
+          { name: 'Personal ICM #229', status: 'paused',  execLots: null },
+        ].map((s, i) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '8px 0',
+            borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: s.status === 'active' ? '#00FF85' : '#444', display: 'block' }} />
+              <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: '12px' }}>{s.name}</span>
+            </div>
+            {execDone && s.execLots ? (
+              <span style={{ color: '#00FF85', fontSize: '10px', fontWeight: 600 }}>{s.execLots} ✓</span>
+            ) : (
+              <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: '10px' }}>{s.status}</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Footer stats */}
+      <div style={{ padding: '9px 16px', background: 'rgba(255,255,255,0.015)', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', gap: '20px' }}>
+        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+          <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: '10px' }}>Avg execution</span>
+          <span style={{ color: '#00FF85', fontSize: '10px', fontWeight: 600 }}>1.8s</span>
+        </div>
+        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+          <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: '10px' }}>Signals today</span>
+          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px', fontWeight: 600 }}>47</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Three Pillars ─────────────────────────────────────────────────────────────
+function ThreePillars() {
+  const pillars = [
+    {
+      num: '01', tag: 'AUTO-SYNC', tagColor: '#00FF85', tagRgb: '0,255,133',
+      h3: 'Never type a trade\ninto anything. Ever.',
+      sub: 'Connect your MT5 account once. From that moment, every trade you take — entry price, stop loss, take profit, open and close time, P&L — appears in your journal automatically. No spreadsheets. No copying ticket numbers. No CSV files. Nothing.',
+      points: [
+        { icon: '✓', color: '#00FF85', text: 'Works with any MT5 broker worldwide — IC Markets, Pepperstone, FTMO live accounts, any other' },
+        { icon: '✓', color: '#00FF85', text: 'Your last 30 days of trade history imports the moment you connect — you start with data, not a blank slate' },
+        { icon: '✓', color: '#00FF85', text: 'Live and demo accounts both supported — track your real results and your practice edge side by side' },
+        { icon: '✓', color: '#00FF85', text: 'You only add what MT5 cannot capture: your setup type and how you felt. Ten seconds per trade. That is the entire manual workload.' },
+      ],
+      Visual: AutoSyncVisual,
+      visualFirst: false,
+      cardBg: 'rgba(0,255,133,0.025)',
+      cardBorder: 'rgba(0,255,133,0.09)',
+    },
+    {
+      num: '02', tag: 'AI ANALYSIS', tagColor: '#4B8FFF', tagRgb: '75,143,255',
+      h3: 'Find out why you actually win —\nand exactly why you lose.',
+      sub: 'VELQUOR reads every trade across three dimensions at once: your behavior — mood, confidence, energy. Your strategy — setups, sessions, instruments. And your trading habits — when you trade, how often, how you size. Then it correlates all three and shows you what the combinations actually mean for your P&L.',
+      points: [
+        { icon: '→', color: '#4B8FFF', text: '"Your NAS100 win rate is 38% overall — but 71% when you trade London only and feel confident"' },
+        { icon: '→', color: '#4B8FFF', text: '"You overtrade after a winner — your 3rd+ trade of the day loses 68% of the time"' },
+        { icon: '→', color: '#4B8FFF', text: '"Cutting NY open entirely would have added +€680 to your last 90 days"' },
+        { icon: '→', color: '#4B8FFF', text: '"Order Block setups on XAUUSD during London: your strongest edge at 78% win rate, avg +€142"' },
+      ],
+      Visual: AIAnalysisVisual,
+      visualFirst: true,
+      cardBg: 'rgba(75,143,255,0.025)',
+      cardBorder: 'rgba(75,143,255,0.09)',
+    },
+    {
+      num: '03', tag: 'TRADE COPIER', tagColor: '#FFB830', tagRgb: '255,184,48',
+      h3: 'One master account.\nEvery slave. Under 2 seconds.',
+      sub: 'Running multiple MT5 accounts — a prop firm, a personal account, a fund? VELQUOR\'s built-in trade copier mirrors every position from your master to any number of slave accounts automatically. No third-party tools, no plugins, no manual copying. Set it up once and manage it all from your dashboard.',
+      points: [
+        { icon: '✓', color: '#FFB830', text: 'Signals travel from MT5 to your slaves in under 2 seconds via VELQUOR Bridge' },
+        { icon: '✓', color: '#FFB830', text: 'Proportional or fixed lot sizing — each slave account can have its own configuration' },
+        { icon: '✓', color: '#FFB830', text: 'Pause or remove individual slaves at any time without touching the master' },
+        { icon: '✓', color: '#FFB830', text: 'Works across any MT5 broker — master and slaves can be at completely different brokers' },
+      ],
+      Visual: CopierVisual,
+      visualFirst: false,
+      cardBg: 'rgba(255,184,48,0.02)',
+      cardBorder: 'rgba(255,184,48,0.09)',
+    },
+  ]
+
+  return (
+    <section style={{
+      padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px)',
+      background: '#000',
+      borderTop: '1px solid rgba(255,255,255,0.06)',
+    }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Section header */}
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(40px, 7vw, 72px)' }}>
+          <p style={{
+            color: '#4B8FFF', fontSize: '12px', fontWeight: 600,
+            letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '14px',
+          }}>
+            What VELQUOR does
+          </p>
+          <h2 style={{
+            fontSize: 'clamp(30px, 6vw, 54px)', fontWeight: 900,
+            letterSpacing: '-0.04em', margin: '0 0 18px', color: '#fff', lineHeight: 1.04,
+          }}>
+            Three tools.<br />One trading edge.
+          </h2>
+          <p style={{
+            color: 'rgba(255,255,255,0.48)', fontSize: 'clamp(15px, 2vw, 18px)',
+            maxWidth: '540px', margin: '0 auto', lineHeight: 1.65,
+          }}>
+            Most traders are missing all three. VELQUOR gives you all of them in one place — built to work together.
+          </p>
+        </div>
+
+        {/* Pillars */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {pillars.map((p) => {
+            const { Visual } = p
+            const textBlock = (
+              <div>
+                {/* Badge */}
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '7px',
+                  marginBottom: '20px', padding: '4px 14px', borderRadius: '20px',
+                  background: `rgba(${p.tagRgb},0.08)`,
+                  border: `1px solid rgba(${p.tagRgb},0.22)`,
+                }}>
+                  <span style={{ color: p.tagColor, fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em' }}>
+                    {p.num} — {p.tag}
+                  </span>
+                </div>
+
+                {/* Headline */}
+                <h3 style={{
+                  fontSize: 'clamp(22px, 3.5vw, 34px)', fontWeight: 800,
+                  letterSpacing: '-0.03em', color: '#fff',
+                  margin: '0 0 18px', lineHeight: 1.15,
+                  whiteSpace: 'pre-line',
+                }}>
+                  {p.h3}
+                </h3>
+
+                {/* Subtitle */}
+                <p style={{
+                  color: 'rgba(255,255,255,0.52)', fontSize: 'clamp(14px, 1.6vw, 16px)',
+                  lineHeight: 1.72, margin: '0 0 26px',
+                }}>
+                  {p.sub}
+                </p>
+
+                {/* Points */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {p.points.map((pt, i) => (
+                    <div key={i} style={{ display: 'flex', gap: '11px', alignItems: 'flex-start' }}>
+                      <span style={{ color: pt.color, fontSize: '13px', flexShrink: 0, marginTop: '2px', fontWeight: 700 }}>{pt.icon}</span>
+                      <span style={{ color: 'rgba(255,255,255,0.52)', fontSize: '13px', lineHeight: 1.58, fontStyle: pt.icon === '→' ? 'italic' : 'normal' }}>{pt.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+
+            const visualBlock = (
+              <div>
+                <Visual />
+              </div>
+            )
+
+            return (
+              <div
+                key={p.num}
+                style={{
+                  padding: 'clamp(28px, 4vw, 48px)',
+                  borderRadius: '20px',
+                  background: p.cardBg,
+                  border: `1px solid ${p.cardBorder}`,
+                }}
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'clamp(28px, 5vw, 56px)', alignItems: 'center' }}>
+                  {p.visualFirst ? (
+                    <>
+                      <div className="order-2 lg:order-1">{visualBlock}</div>
+                      <div className="order-1 lg:order-2">{textBlock}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div>{textBlock}</div>
+                      <div>{visualBlock}</div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   useEffect(() => {
@@ -1904,6 +2277,7 @@ export default function LandingPage() {
       <div style={{ background: 'var(--bg)', color: 'var(--t1)', overflowX: 'hidden' }}>
         <Nav />
         <Hero />
+        <ThreePillars />
         <StatsBar />
         <ShowcaseSection />
         <Features />
