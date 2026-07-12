@@ -1712,58 +1712,121 @@ function PropFirmSection() {
 function Pricing() {
   const { t } = useLocale()
   const pr = t.pricing
+  const [annual, setAnnual] = useState(true)
 
   return (
     <section id="pricing" style={{
       padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px)',
       borderTop: '1px solid var(--bd)', background: 'var(--s1)',
     }}>
-      <div style={{ maxWidth: '860px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+
+        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>{pr.eyebrow}</p>
-          <h2 style={{ fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)' }}>{pr.h2}</h2>
-          <p style={{ color: 'var(--t2)', fontSize: '15px', lineHeight: 1.6, margin: '0 auto', maxWidth: '400px' }}>{pr.subtitle}</p>
+          <h2 style={{ fontSize: 'clamp(30px, 6vw, 46px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 12px', color: 'var(--t1)', lineHeight: 1.04 }}>{pr.h2}</h2>
+          <p style={{ color: 'var(--t2)', fontSize: '15px', lineHeight: 1.65, margin: '0 auto 28px', maxWidth: '360px' }}>{pr.subtitle}</p>
+
+          {/* Monthly / Annual toggle */}
+          <div style={{
+            display: 'inline-flex', background: 'var(--s2)',
+            border: '1px solid var(--bd)', borderRadius: '8px', padding: '3px', gap: '2px',
+          }}>
+            {([false, true] as const).map(isAnnual => (
+              <button key={String(isAnnual)} onClick={() => setAnnual(isAnnual)} style={{
+                display: 'flex', alignItems: 'center', gap: '7px',
+                padding: '7px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 500,
+                background: annual === isAnnual ? 'var(--s3)' : 'transparent',
+                border: annual === isAnnual ? '1px solid var(--bd2)' : '1px solid transparent',
+                color: annual === isAnnual ? 'var(--t1)' : 'var(--t3)',
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}>
+                {isAnnual ? pr.toggle.annual : pr.toggle.monthly}
+                {isAnnual && (
+                  <span style={{
+                    background: 'rgba(0,255,133,0.12)', border: '1px solid rgba(0,255,133,0.25)',
+                    color: '#00FF85', fontSize: '10px', fontWeight: 700,
+                    padding: '1px 6px', borderRadius: '4px',
+                  }}>{pr.toggle.save}</span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: '16px', alignItems: 'start' }}>
-          {pr.tiers.map((tier, i) => {
-            const isHighlighted = i === 1
+        {/* Tier cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: '12px', alignItems: 'start' }}>
+          {pr.tiers.map((tier) => {
+            const isPro   = !!tier.badge
+            const price   = annual ? tier.annual : tier.monthly
+            const isFree  = tier.monthly === '€0'
+
             return (
               <div key={tier.name} style={{
-                background: isHighlighted ? 'linear-gradient(160deg, rgba(77,143,255,0.07) 0%, var(--s1) 60%)' : 'var(--s1)',
-                border: `1px solid ${isHighlighted ? 'rgba(77,143,255,0.35)' : 'var(--bd)'}`,
-                borderRadius: '16px', padding: '28px', position: 'relative',
-                boxShadow: isHighlighted ? '0 0 0 1px rgba(77,143,255,0.12), 0 24px 60px rgba(0,0,0,0.3)' : 'none',
+                background: isPro
+                  ? 'linear-gradient(160deg, rgba(77,143,255,0.055) 0%, var(--s1) 55%)'
+                  : 'var(--s1)',
+                border: `1px solid ${isPro ? 'rgba(77,143,255,0.38)' : 'var(--bd)'}`,
+                borderRadius: '12px', padding: '26px', position: 'relative',
+                boxShadow: isPro ? '0 0 0 1px rgba(77,143,255,0.08), 0 20px 50px rgba(0,0,0,0.28)' : 'none',
               }}>
-                {isHighlighted && (
-                  <div style={{
-                    position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)',
-                    background: 'var(--ac)', color: 'white', fontSize: '11px', fontWeight: 600,
-                    padding: '3px 14px', borderRadius: '20px', whiteSpace: 'nowrap',
-                    boxShadow: '0 4px 12px rgba(77,143,255,0.4)',
-                  }}>Most popular</div>
-                )}
-                <p style={{ color: 'var(--t3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 8px' }}>{tier.name}</p>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', margin: '0 0 6px' }}>
-                  <span style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--t1)', lineHeight: 1 }}>{tier.price}</span>
-                  <span style={{ color: 'var(--t3)', fontSize: '13px', paddingBottom: '6px' }}>{tier.period}</span>
-                </div>
-                <p style={{ color: 'var(--t3)', fontSize: '12px', margin: '0 0 24px', lineHeight: 1.5 }}>{tier.tagline}</p>
 
-                <Link href="/login?mode=signup" style={{
-                  display: 'block', textAlign: 'center', padding: '11px', borderRadius: '9px',
-                  fontSize: '13px', fontWeight: 600, textDecoration: 'none', marginBottom: '22px',
-                  background: isHighlighted ? 'var(--ac)' : 'var(--s2)',
-                  color: isHighlighted ? 'white' : 'var(--t1)',
-                  border: isHighlighted ? 'none' : '1px solid var(--bd2)',
-                  boxShadow: isHighlighted ? '0 4px 16px rgba(77,143,255,0.3)' : 'none',
+                {/* Badge */}
+                {tier.badge && (
+                  <div style={{
+                    position: 'absolute', top: '-11px', left: '50%', transform: 'translateX(-50%)',
+                    background: 'var(--ac)', color: 'white',
+                    fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em',
+                    padding: '3px 14px', borderRadius: '20px', whiteSpace: 'nowrap',
+                    boxShadow: '0 4px 14px rgba(77,143,255,0.35)',
+                  }}>{tier.badge}</div>
+                )}
+
+                {/* Tier name */}
+                <p style={{ margin: '0 0 14px', color: 'var(--t3)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'monospace' }}>{tier.name}</p>
+
+                {/* Price */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', marginBottom: '4px' }}>
+                  <span style={{ fontSize: 'clamp(34px, 4vw, 44px)', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--t1)', lineHeight: 1 }}>{price}</span>
+                  <span style={{ color: 'var(--t3)', fontSize: '13px', paddingBottom: '5px' }}>{tier.period}</span>
+                </div>
+
+                {/* Annual note */}
+                {annual && tier.annualNote ? (
+                  <p style={{ margin: '0 0 4px', color: '#00FF85', fontSize: '11px', fontWeight: 500 }}>{tier.annualNote}</p>
+                ) : (
+                  <p style={{ margin: '0 0 4px', color: 'transparent', fontSize: '11px', userSelect: 'none' }}>—</p>
+                )}
+
+                <p style={{ margin: '0 0 20px', color: 'var(--t3)', fontSize: '12px', lineHeight: 1.5 }}>{tier.tagline}</p>
+
+                {/* CTA */}
+                <Link href={`/login?mode=signup${isFree ? '' : `&plan=${tier.name.toLowerCase()}`}`} style={{
+                  display: 'block', textAlign: 'center', padding: '11px', borderRadius: '8px',
+                  fontSize: '13px', fontWeight: 700, textDecoration: 'none', marginBottom: '22px',
+                  background: isPro ? 'var(--ac)' : 'var(--s2)',
+                  color: isPro ? 'white' : 'var(--t1)',
+                  border: isPro ? 'none' : '1px solid var(--bd2)',
+                  boxShadow: isPro ? '0 4px 16px rgba(77,143,255,0.3)' : 'none',
+                  letterSpacing: '0.01em',
                 }}>{tier.cta}</Link>
 
+                {/* Divider */}
+                <div style={{ height: '1px', background: 'var(--bd)', marginBottom: '18px' }} />
+
+                {/* Feature list */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
-                  {tier.features.map(f => (
-                    <div key={f} style={{ display: 'flex', gap: '9px', alignItems: 'flex-start' }}>
-                      <span style={{ color: isHighlighted ? 'var(--ac)' : 'var(--gr2)', fontSize: '12px', flexShrink: 0, marginTop: '1px' }}>✓</span>
-                      <span style={{ color: 'var(--t2)', fontSize: '12px', lineHeight: 1.5 }}>{f}</span>
+                  {tier.features.map((f, fi) => (
+                    <div key={fi} style={{ display: 'flex', gap: '9px', alignItems: 'flex-start' }}>
+                      <span style={{
+                        flexShrink: 0, marginTop: '1px', fontSize: '11px', fontWeight: 700, lineHeight: 1.5,
+                        color: f.included
+                          ? (isPro ? 'var(--ac)' : '#00FF85')
+                          : 'rgba(255,255,255,0.18)',
+                      }}>{f.included ? '✓' : '✕'}</span>
+                      <span style={{
+                        fontSize: '12px', lineHeight: 1.55,
+                        color: f.included ? 'var(--t2)' : 'rgba(255,255,255,0.22)',
+                      }}>{f.text}</span>
                     </div>
                   ))}
                 </div>

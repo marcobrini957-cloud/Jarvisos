@@ -58,17 +58,20 @@ export interface LandingT {
     trackNote: string
   }
   pricing: {
-    eyebrow: string
     h2: string
     subtitle: string
+    toggle: { monthly: string; annual: string; save: string }
     footer: string
     tiers: Array<{
       name: string
-      price: string
+      monthly: string
+      annual: string
+      annualNote: string
       period: string
       tagline: string
       cta: string
-      features: string[]
+      badge?: string
+      features: Array<{ text: string; included: boolean }>
     }>
   }
   footer: {
@@ -77,6 +80,49 @@ export interface LandingT {
     impressumLabel: string
   }
 }
+
+// ── Pricing feature rows (EN-only across all locales — product terminology) ──
+const F_FREE: Array<{ text: string; included: boolean }> = [
+  { text: 'MT5 auto-sync (30-day history)',         included: true  },
+  { text: 'Trade journal (up to 100 trades)',        included: true  },
+  { text: 'Core P&L & win rate stats',              included: true  },
+  { text: 'Session analytics (London / NY / Asia)', included: false },
+  { text: 'Setup analytics (per-setup win rate)',    included: false },
+  { text: 'VELQUOR AI analysis',                    included: false },
+  { text: 'Behavior correlations',                  included: false },
+  { text: 'PDF trade reports',                      included: false },
+  { text: 'Prop firm tracker',                      included: false },
+  { text: 'Trade copier',                           included: false },
+  { text: 'Priority support',                       included: false },
+]
+
+const F_PRO: Array<{ text: string; included: boolean }> = [
+  { text: 'MT5 auto-sync (unlimited history)',       included: true  },
+  { text: 'Trade journal (unlimited trades)',         included: true  },
+  { text: 'Core P&L & win rate stats',              included: true  },
+  { text: 'Session analytics (London / NY / Asia)', included: true  },
+  { text: 'Setup analytics (per-setup win rate)',    included: true  },
+  { text: 'VELQUOR AI analysis',                    included: true  },
+  { text: 'Behavior correlations',                  included: true  },
+  { text: 'PDF trade reports',                      included: true  },
+  { text: 'Prop firm tracker',                      included: true  },
+  { text: 'Trade copier (1 group, 1 slave)',         included: true  },
+  { text: 'Priority support',                       included: false },
+]
+
+const F_ULTRA: Array<{ text: string; included: boolean }> = [
+  { text: 'MT5 auto-sync (unlimited history)',       included: true },
+  { text: 'Trade journal (unlimited trades)',         included: true },
+  { text: 'Core P&L & win rate stats',              included: true },
+  { text: 'Session analytics (London / NY / Asia)', included: true },
+  { text: 'Setup analytics (per-setup win rate)',    included: true },
+  { text: 'VELQUOR AI analysis',                    included: true },
+  { text: 'Behavior correlations',                  included: true },
+  { text: 'PDF trade reports',                      included: true },
+  { text: 'Prop firm tracker',                      included: true },
+  { text: 'Trade copier (3 groups, 5 slaves each)', included: true },
+  { text: 'Priority support',                       included: true },
+]
 
 // ── English ───────────────────────────────────────────────────────────────────
 const en: LandingT = {
@@ -163,42 +209,38 @@ const en: LandingT = {
     trackNote: 'On track — 3 days to target at current pace',
   },
   pricing: {
-    eyebrow: 'Simple pricing',
-    h2: 'One tool. Two plans.',
-    subtitle: 'Start free. Upgrade when you need more firepower.',
-    footer: 'All plans include a 7-day free trial. Cancel any time — no questions asked. Prices in EUR, VAT may apply.',
+    h2: 'Start free. Scale when ready.',
+    subtitle: 'No card needed. Cancel any time.',
+    toggle: { monthly: 'Monthly', annual: 'Annual', save: 'Save 20%' },
+    footer: 'Prices in EUR. VAT may apply. Cancel any time — no questions asked.',
     tiers: [
       {
-        name: 'Starter',
-        price: '€0',
-        period: '/month',
-        tagline: 'For traders getting started',
-        cta: 'Start free',
-        features: [
-          'Full trade journal — auto-synced from MT5',
-          'Win rate, P&L, and session analytics',
-          'Mood & habit tracking',
-          '30-day trade history',
-          '50 VELQUOR AI messages/month',
-          'PDF reports (last 7 days)',
-        ],
+        name: 'Free',
+        monthly: '€0', annual: '€0',
+        annualNote: '',
+        period: '/mo',
+        tagline: 'Get started. No card needed.',
+        cta: 'Start for free',
+        features: F_FREE,
       },
       {
         name: 'Pro',
-        price: '€29',
-        period: '/month',
-        tagline: 'For traders who trade to win',
-        cta: 'Start 7-day free trial',
-        features: [
-          'Everything in Starter, plus:',
-          'Unlimited trade history',
-          'Unlimited VELQUOR AI messages',
-          'Prop Firm Mode (unlimited challenges)',
-          'Advanced setup & session analytics',
-          'Weekly AI performance reviews',
-          'PDF reports — any date range',
-          'Priority support',
-        ],
+        monthly: '€15.99', annual: '€12.99',
+        annualNote: 'Billed €155.88/year — save €36',
+        period: '/mo',
+        tagline: 'Full analytics. Built-in trade copier.',
+        cta: 'Start Pro',
+        badge: 'Most popular',
+        features: F_PRO,
+      },
+      {
+        name: 'Ultra',
+        monthly: '€30.99', annual: '€24.99',
+        annualNote: 'Billed €299.88/year — save €72',
+        period: '/mo',
+        tagline: 'Everything in Pro. Multi-group copying.',
+        cta: 'Start Ultra',
+        features: F_ULTRA,
       },
     ],
   },
@@ -294,42 +336,38 @@ const de: LandingT = {
     trackNote: 'Auf Kurs — 3 Tage bis zum Ziel im aktuellen Tempo',
   },
   pricing: {
-    eyebrow: 'Einfache Preise',
-    h2: 'Ein Tool. Zwei Pläne.',
-    subtitle: 'Kostenlos starten. Upgraden wenn du mehr Firepower brauchst.',
-    footer: 'Alle Pläne beinhalten 7 Tage kostenlose Testphase. Jederzeit kündbar — keine Fragen gestellt. Preise in EUR, MwSt. kann anfallen.',
+    h2: 'Kostenlos starten. Skalieren wenn bereit.',
+    subtitle: 'Keine Karte nötig. Jederzeit kündbar.',
+    toggle: { monthly: 'Monatlich', annual: 'Jährlich', save: '20% sparen' },
+    footer: 'Preise in EUR. MwSt. kann anfallen. Jederzeit kündbar — keine Fragen.',
     tiers: [
       {
-        name: 'Starter',
-        price: '€0',
-        period: '/Monat',
-        tagline: 'Für Einsteiger',
+        name: 'Free',
+        monthly: '€0', annual: '€0',
+        annualNote: '',
+        period: '/Mo.',
+        tagline: 'Jetzt starten. Keine Karte nötig.',
         cta: 'Kostenlos starten',
-        features: [
-          'Vollständiges Handelsjournal — auto-sync von MT5',
-          'Gewinnrate, GuV und Session-Analytics',
-          'Stimmungs- & Gewohnheits-Tracking',
-          '30 Tage Handelshistorie',
-          '50 VELQUOR KI-Nachrichten/Monat',
-          'PDF-Berichte (letzte 7 Tage)',
-        ],
+        features: F_FREE,
       },
       {
         name: 'Pro',
-        price: '€29',
-        period: '/Monat',
-        tagline: 'Für Trader, die gewinnen wollen',
-        cta: '7 Tage kostenlos testen',
-        features: [
-          'Alles aus Starter, plus:',
-          'Unbegrenzte Handelshistorie',
-          'Unbegrenzte VELQUOR KI-Nachrichten',
-          'Prop-Firm-Modus (unbegrenzte Challenges)',
-          'Erweiterte Setup- & Session-Analytics',
-          'Wöchentliche KI-Performance-Reviews',
-          'PDF-Berichte — beliebiger Zeitraum',
-          'Priority-Support',
-        ],
+        monthly: '€15.99', annual: '€12.99',
+        annualNote: 'Jährlich €155.88 — spare €36',
+        period: '/Mo.',
+        tagline: 'Vollständige Analyse. Eingebauter Trade-Kopierer.',
+        cta: 'Pro starten',
+        badge: 'Beliebteste Wahl',
+        features: F_PRO,
+      },
+      {
+        name: 'Ultra',
+        monthly: '€30.99', annual: '€24.99',
+        annualNote: 'Jährlich €299.88 — spare €72',
+        period: '/Mo.',
+        tagline: 'Alles aus Pro. Multi-Gruppen-Kopieren.',
+        cta: 'Ultra starten',
+        features: F_ULTRA,
       },
     ],
   },
@@ -425,42 +463,38 @@ const zh: LandingT = {
     trackNote: '进度正常——按当前速度还需3天达成目标',
   },
   pricing: {
-    eyebrow: '简单定价',
-    h2: '一个工具。两种方案。',
-    subtitle: '免费开始。需要更多时再升级。',
-    footer: '所有方案均含7天免费试用。随时取消——无需解释。价格以欧元计，可能需缴增值税。',
+    h2: '免费开始。准备好了再升级。',
+    subtitle: '无需信用卡。随时取消。',
+    toggle: { monthly: '月付', annual: '年付', save: '省20%' },
+    footer: '价格以欧元计，可能需缴增值税。随时取消——无需解释。',
     tiers: [
       {
-        name: '入门版',
-        price: '€0',
+        name: '免费版',
+        monthly: '€0', annual: '€0',
+        annualNote: '',
         period: '/月',
-        tagline: '适合刚起步的交易者',
+        tagline: '立即开始，无需信用卡。',
         cta: '免费开始',
-        features: [
-          '完整交易日志——从MT5自动同步',
-          '胜率、盈亏和时段分析',
-          '情绪与习惯追踪',
-          '30天交易历史',
-          '每月50条VELQUOR AI消息',
-          'PDF报告（最近7天）',
-        ],
+        features: F_FREE,
       },
       {
-        name: '专业版',
-        price: '€29',
+        name: 'Pro',
+        monthly: '€15.99', annual: '€12.99',
+        annualNote: '年付€155.88 — 节省€36',
         period: '/月',
-        tagline: '为致胜而交易的交易者',
-        cta: '7天免费试用',
-        features: [
-          '包含入门版所有功能，另加：',
-          '无限交易历史',
-          '无限VELQUOR AI消息',
-          '自营公司模式（无限挑战赛）',
-          '高级策略与时段分析',
-          '每周AI表现回顾',
-          'PDF报告——任意日期范围',
-          '优先支持',
-        ],
+        tagline: '完整分析。内置交易复制器。',
+        cta: '开始Pro',
+        badge: '最受欢迎',
+        features: F_PRO,
+      },
+      {
+        name: 'Ultra',
+        monthly: '€30.99', annual: '€24.99',
+        annualNote: '年付€299.88 — 节省€72',
+        period: '/月',
+        tagline: '包含Pro全部功能。多组复制。',
+        cta: '开始Ultra',
+        features: F_ULTRA,
       },
     ],
   },
@@ -556,42 +590,38 @@ const es: LandingT = {
     trackNote: 'En camino — 3 días para el objetivo al ritmo actual',
   },
   pricing: {
-    eyebrow: 'Precios simples',
-    h2: 'Una herramienta. Dos planes.',
-    subtitle: 'Empieza gratis. Mejora cuando necesites más potencia.',
-    footer: 'Todos los planes incluyen 7 días de prueba gratuita. Cancela en cualquier momento — sin preguntas. Precios en EUR, puede aplicarse IVA.',
+    h2: 'Empieza gratis. Escala cuando estés listo.',
+    subtitle: 'Sin tarjeta. Cancela en cualquier momento.',
+    toggle: { monthly: 'Mensual', annual: 'Anual', save: 'Ahorra 20%' },
+    footer: 'Precios en EUR. Puede aplicarse IVA. Cancela en cualquier momento — sin preguntas.',
     tiers: [
       {
-        name: 'Starter',
-        price: '€0',
+        name: 'Free',
+        monthly: '€0', annual: '€0',
+        annualNote: '',
         period: '/mes',
-        tagline: 'Para traders que empiezan',
+        tagline: 'Empieza ahora. Sin tarjeta.',
         cta: 'Empezar gratis',
-        features: [
-          'Diario completo — sincronización automática desde MT5',
-          'Tasa de victorias, P&L y análisis de sesión',
-          'Seguimiento de estado de ánimo y hábitos',
-          '30 días de historial de operaciones',
-          '50 mensajes IA VELQUOR/mes',
-          'Informes PDF (últimos 7 días)',
-        ],
+        features: F_FREE,
       },
       {
         name: 'Pro',
-        price: '€29',
+        monthly: '€15.99', annual: '€12.99',
+        annualNote: 'Facturado €155.88/año — ahorra €36',
         period: '/mes',
-        tagline: 'Para traders que operan para ganar',
-        cta: 'Prueba gratuita 7 días',
-        features: [
-          'Todo en Starter, más:',
-          'Historial de operaciones ilimitado',
-          'Mensajes IA VELQUOR ilimitados',
-          'Modo Prop Firm (desafíos ilimitados)',
-          'Análisis avanzado de setup y sesión',
-          'Revisiones de rendimiento IA semanales',
-          'Informes PDF — cualquier rango de fechas',
-          'Soporte prioritario',
-        ],
+        tagline: 'Análisis completo. Copiador integrado.',
+        cta: 'Iniciar Pro',
+        badge: 'Más popular',
+        features: F_PRO,
+      },
+      {
+        name: 'Ultra',
+        monthly: '€30.99', annual: '€24.99',
+        annualNote: 'Facturado €299.88/año — ahorra €72',
+        period: '/mes',
+        tagline: 'Todo en Pro. Copia multi-grupo.',
+        cta: 'Iniciar Ultra',
+        features: F_ULTRA,
       },
     ],
   },
