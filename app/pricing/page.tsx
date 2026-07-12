@@ -1,56 +1,109 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import { LogoMark } from '@/components/ui/LogoMark'
 
-export const metadata = { title: 'Pricing — VELQUOR', description: 'Simple, transparent pricing. Start free.' }
+// ── Tier data ─────────────────────────────────────────────────────────────────
+type Feature = { text: string; included: boolean }
+
+const F_FREE: Feature[] = [
+  { text: 'MT5 auto-sync (30-day history)',         included: true  },
+  { text: 'Trade journal (up to 100 trades)',        included: true  },
+  { text: 'Core P&L & win rate stats',              included: true  },
+  { text: 'Session analytics (London / NY / Asia)', included: false },
+  { text: 'Setup analytics (per-setup win rate)',    included: false },
+  { text: 'VELQUOR AI analysis',                    included: false },
+  { text: 'Behavior correlations',                  included: false },
+  { text: 'PDF trade reports',                      included: false },
+  { text: 'Prop firm tracker',                      included: false },
+  { text: 'Trade copier',                           included: false },
+  { text: 'Priority support',                       included: false },
+]
+
+const F_PRO: Feature[] = [
+  { text: 'MT5 auto-sync (unlimited history)',       included: true  },
+  { text: 'Trade journal (unlimited trades)',         included: true  },
+  { text: 'Core P&L & win rate stats',              included: true  },
+  { text: 'Session analytics (London / NY / Asia)', included: true  },
+  { text: 'Setup analytics (per-setup win rate)',    included: true  },
+  { text: 'VELQUOR AI analysis',                    included: true  },
+  { text: 'Behavior correlations',                  included: true  },
+  { text: 'PDF trade reports',                      included: true  },
+  { text: 'Prop firm tracker',                      included: true  },
+  { text: 'Trade copier (1 group, 1 slave)',         included: true  },
+  { text: 'Priority support',                       included: false },
+]
+
+const F_ULTRA: Feature[] = [
+  { text: 'MT5 auto-sync (unlimited history)',       included: true },
+  { text: 'Trade journal (unlimited trades)',         included: true },
+  { text: 'Core P&L & win rate stats',              included: true },
+  { text: 'Session analytics (London / NY / Asia)', included: true },
+  { text: 'Setup analytics (per-setup win rate)',    included: true },
+  { text: 'VELQUOR AI analysis',                    included: true },
+  { text: 'Behavior correlations',                  included: true },
+  { text: 'PDF trade reports',                      included: true },
+  { text: 'Prop firm tracker',                      included: true },
+  { text: 'Trade copier (3 groups, 5 slaves each)', included: true },
+  { text: 'Priority support',                       included: true },
+]
 
 const TIERS = [
   {
-    name: 'Starter',
-    price: '€0',
-    period: '/month',
-    tagline: 'For traders getting started',
-    cta: 'Start free',
+    name: 'Free',
+    monthly: '€0', annual: '€0',
+    annualNote: '',
+    period: '/mo',
+    tagline: 'Get started. No card needed.',
+    cta: 'Start for free',
     href: '/login?mode=signup',
-    highlighted: false,
-    features: [
-      'Full trade journal — auto-synced from MT5',
-      'Win rate, P&L, and session analytics',
-      'Mood & habit tracking',
-      '30-day trade history',
-      '50 VELQUOR AI messages / month',
-      'PDF reports (last 7 days)',
-    ],
+    badge: null as string | null,
+    isPro: false,
+    isFree: true,
+    features: F_FREE,
   },
   {
     name: 'Pro',
-    price: '€29',
-    period: '/month',
-    tagline: 'For traders who trade to win',
-    cta: 'Start 7-day free trial',
+    monthly: '€15.99', annual: '€12.99',
+    annualNote: 'Billed €155.88/year — save €36',
+    period: '/mo',
+    tagline: 'Full analytics. Built-in trade copier.',
+    cta: 'Start Pro',
     href: '/login?mode=signup&plan=pro',
-    highlighted: true,
-    features: [
-      'Everything in Starter, plus:',
-      'Unlimited trade history',
-      'Unlimited VELQUOR AI messages',
-      'Prop Firm Mode (unlimited challenges)',
-      'Advanced setup & session analytics',
-      'Weekly AI performance reviews',
-      'PDF reports — any date range',
-      'Priority support',
-    ],
+    badge: 'Most popular',
+    isPro: true,
+    isFree: false,
+    features: F_PRO,
+  },
+  {
+    name: 'Ultra',
+    monthly: '€30.99', annual: '€24.99',
+    annualNote: 'Billed €299.88/year — save €72',
+    period: '/mo',
+    tagline: 'Everything in Pro. Multi-group copying.',
+    cta: 'Start Ultra',
+    href: '/login?mode=signup&plan=ultra',
+    badge: null,
+    isPro: false,
+    isFree: false,
+    features: F_ULTRA,
   },
 ]
 
 const FAQ = [
-  { q: 'Do I need a credit card to start?', a: 'No. The Starter plan is free forever — no card required.' },
-  { q: 'How does the MT5 sync work?', a: 'You install a tiny Expert Advisor inside MT5. It pushes your trades to VELQUOR every 10 seconds. No third-party cloud access to your broker account.' },
-  { q: 'Can I cancel anytime?', a: 'Yes. Cancel from your settings — no questions asked. Pro data is kept for 30 days after cancellation.' },
-  { q: 'What brokers are supported?', a: 'Any MetaTrader 5 broker. The EA works with any MT5 account — demo or live.' },
-  { q: 'Is my trading data private?', a: 'Your data is encrypted at rest in Supabase. The EA authenticates with a unique API key — nobody else can access your account data.' },
+  { q: 'Do I need a credit card to start?', a: 'No. The Free plan is free forever — no card required. You only need a card when upgrading to Pro or Ultra.' },
+  { q: 'How does the MT5 sync work?', a: 'You install a small Expert Advisor inside MT5. It pushes your trades to VELQUOR every 10 seconds. No third-party cloud access to your broker account — your credentials never leave your machine.' },
+  { q: 'Can I cancel anytime?', a: 'Yes. Cancel from your settings at any time — no questions asked. Your data is kept for 30 days after cancellation.' },
+  { q: 'What brokers are supported?', a: 'Any MetaTrader 5 broker worldwide — IC Markets, Pepperstone, FTMO live accounts, Blueberry, and any other MT5 broker. Demo and live accounts both work.' },
+  { q: 'What is the trade copier?', a: 'VELQUOR\'s built-in trade copier mirrors every trade from your master MT5 account to slave accounts automatically — in under 2 seconds. Pro includes 1 group with 1 slave. Ultra includes 3 groups with up to 5 slaves each.' },
+  { q: 'Is my trading data private?', a: 'Your data is encrypted at rest in Supabase and isolated per account with row-level security. The EA authenticates with a unique API key — nobody else can access your account data.' },
 ]
 
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function PricingPage() {
+  const [annual, setAnnual] = useState(true)
+
   return (
     <div style={{ background: '#050505', minHeight: '100vh', color: '#fff' }}>
 
@@ -60,7 +113,7 @@ export default function PricingPage() {
         padding: '0 clamp(16px, 4vw, 48px)', height: '60px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
         position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(5,5,5,0.88)', backdropFilter: 'blur(12px)',
+        background: 'rgba(5,5,5,0.90)', backdropFilter: 'blur(12px)',
       }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none' }}>
           <LogoMark size={24} />
@@ -75,100 +128,175 @@ export default function PricingPage() {
       </nav>
 
       {/* Hero */}
-      <div style={{ textAlign: 'center', padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px) 48px', maxWidth: '600px', margin: '0 auto' }}>
-        <p style={{ color: '#4D8FFF', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '14px' }}>
-          Simple pricing
-        </p>
-        <h1 style={{ fontSize: 'clamp(32px, 7vw, 52px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 16px', lineHeight: 1.05 }}>
-          One tool.{' '}
-          <span style={{ color: '#4D8FFF' }}>Two plans.</span>
+      <div style={{ textAlign: 'center', padding: 'clamp(56px, 9vw, 90px) clamp(16px, 5vw, 48px) 48px', maxWidth: '560px', margin: '0 auto' }}>
+        <h1 style={{ fontSize: 'clamp(32px, 7vw, 54px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 14px', lineHeight: 1.04 }}>
+          Start free.<br />
+          <span style={{ color: 'rgba(255,255,255,0.35)' }}>Scale when ready.</span>
         </h1>
-        <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: '16px', lineHeight: 1.6, margin: 0 }}>
-          Start free. Upgrade when you need more firepower.
+        <p style={{ color: 'rgba(255,255,255,0.52)', fontSize: '16px', lineHeight: 1.65, margin: '0 0 28px' }}>
+          No card needed. Cancel any time.
         </p>
+
+        {/* Monthly / Annual toggle */}
+        <div style={{
+          display: 'inline-flex', background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '3px', gap: '2px',
+        }}>
+          {([false, true] as const).map(isAnnual => (
+            <button key={String(isAnnual)} onClick={() => setAnnual(isAnnual)} style={{
+              display: 'flex', alignItems: 'center', gap: '7px',
+              padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: 500,
+              background: annual === isAnnual ? 'rgba(255,255,255,0.1)' : 'transparent',
+              border: annual === isAnnual ? '1px solid rgba(255,255,255,0.12)' : '1px solid transparent',
+              color: annual === isAnnual ? '#fff' : 'rgba(255,255,255,0.45)',
+              cursor: 'pointer', transition: 'all 0.15s',
+            }}>
+              {isAnnual ? 'Annual' : 'Monthly'}
+              {isAnnual && (
+                <span style={{
+                  background: 'rgba(0,255,133,0.12)', border: '1px solid rgba(0,255,133,0.25)',
+                  color: '#00FF85', fontSize: '10px', fontWeight: 700,
+                  padding: '1px 7px', borderRadius: '4px',
+                }}>Save 20%</span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tier cards */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '16px', maxWidth: '820px', margin: '0 auto',
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '14px', maxWidth: '1060px', margin: '0 auto',
         padding: '0 clamp(16px, 5vw, 48px) 80px',
       }}>
-        {TIERS.map(tier => (
-          <div key={tier.name} style={{
-            borderRadius: '20px', padding: '32px',
-            position: 'relative',
-            background: tier.highlighted
-              ? 'linear-gradient(160deg, rgba(77,143,255,0.09) 0%, rgba(5,5,5,1) 70%)'
-              : 'rgba(255,255,255,0.03)',
-            border: `1px solid ${tier.highlighted ? 'rgba(77,143,255,0.4)' : 'rgba(255,255,255,0.08)'}`,
-            boxShadow: tier.highlighted ? '0 0 0 1px rgba(77,143,255,0.1), 0 32px 80px rgba(0,0,0,0.5)' : 'none',
-          }}>
-            {tier.highlighted && (
-              <div style={{
-                position: 'absolute', top: '-13px', left: '50%', transform: 'translateX(-50%)',
-                background: '#4D8FFF', color: '#fff', fontSize: '11px', fontWeight: 700,
-                padding: '3px 16px', borderRadius: '20px', whiteSpace: 'nowrap',
-                boxShadow: '0 4px 12px rgba(77,143,255,0.45)',
-              }}>Most popular</div>
-            )}
+        {TIERS.map(tier => {
+          const price = annual ? tier.annual : tier.monthly
+          return (
+            <div key={tier.name} style={{
+              borderRadius: '12px', padding: '28px', position: 'relative',
+              background: tier.isPro
+                ? 'linear-gradient(160deg, rgba(77,143,255,0.07) 0%, rgba(5,5,5,1) 65%)'
+                : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${tier.isPro ? 'rgba(77,143,255,0.38)' : 'rgba(255,255,255,0.08)'}`,
+              boxShadow: tier.isPro ? '0 0 0 1px rgba(77,143,255,0.08), 0 28px 70px rgba(0,0,0,0.5)' : 'none',
+            }}>
 
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>{tier.name}</p>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', margin: '0 0 8px' }}>
-              <span style={{ fontSize: '48px', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1 }}>{tier.price}</span>
-              <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px', paddingBottom: '8px' }}>{tier.period}</span>
-            </div>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: '0 0 28px', lineHeight: 1.5 }}>{tier.tagline}</p>
+              {/* Badge */}
+              {tier.badge && (
+                <div style={{
+                  position: 'absolute', top: '-11px', left: '50%', transform: 'translateX(-50%)',
+                  background: '#4D8FFF', color: '#fff',
+                  fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em',
+                  padding: '3px 14px', borderRadius: '20px', whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 14px rgba(77,143,255,0.4)',
+                }}>{tier.badge}</div>
+              )}
 
-            <Link href={tier.href} style={{
-              display: 'block', textAlign: 'center',
-              padding: '13px', borderRadius: '10px',
-              fontSize: '14px', fontWeight: 700, textDecoration: 'none', marginBottom: '26px',
-              background: tier.highlighted ? '#fff' : 'rgba(255,255,255,0.07)',
-              color: tier.highlighted ? '#000' : '#fff',
-              border: tier.highlighted ? 'none' : '1px solid rgba(255,255,255,0.12)',
-              boxShadow: tier.highlighted ? '0 4px 20px rgba(255,255,255,0.15)' : 'none',
-              transition: 'opacity 0.14s',
-            }}>{tier.cta}</Link>
+              {/* Tier name */}
+              <p style={{ margin: '0 0 12px', color: 'rgba(255,255,255,0.38)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'monospace' }}>
+                {tier.name}
+              </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {tier.features.map(f => (
-                <div key={f} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                  <span style={{ color: tier.highlighted ? '#4D8FFF' : 'rgba(0,232,122,0.9)', fontSize: '12px', flexShrink: 0, marginTop: '2px' }}>✓</span>
-                  <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13px', lineHeight: 1.5 }}>{f}</span>
+              {/* Price — layout from screenshot */}
+              <div style={{ marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                  <span style={{ fontSize: 'clamp(38px, 5vw, 50px)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1 }}>{price}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px' }}>{tier.period}</span>
                 </div>
-              ))}
+                <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.35)', fontSize: '11px' }}>
+                  {annual ? 'Annual billing' : 'Monthly billing'}
+                </p>
+                {annual && tier.annualNote
+                  ? <p style={{ margin: '2px 0 0', color: '#00FF85', fontSize: '11px', fontWeight: 500 }}>{tier.annualNote}</p>
+                  : <p style={{ margin: '2px 0 0', color: 'transparent', fontSize: '11px' }}>—</p>
+                }
+              </div>
+
+              <p style={{ margin: '0 0 18px', color: 'rgba(255,255,255,0.38)', fontSize: '12px', lineHeight: 1.5 }}>{tier.tagline}</p>
+
+              {/* CTA — big button like screenshot */}
+              <Link href={tier.href} style={{
+                display: 'block', textAlign: 'center',
+                padding: '13px', borderRadius: '8px',
+                fontSize: '14px', fontWeight: 700, textDecoration: 'none',
+                marginBottom: '8px',
+                background: tier.isPro ? '#fff' : 'rgba(255,255,255,0.07)',
+                color: tier.isPro ? '#000' : '#fff',
+                border: tier.isPro ? 'none' : '1px solid rgba(255,255,255,0.12)',
+                boxShadow: tier.isPro ? '0 4px 20px rgba(255,255,255,0.12)' : 'none',
+                letterSpacing: '0.01em',
+              }}>{tier.cta}</Link>
+
+              {/* Secondary billing link — like screenshot's "oder bezahlen Sie jetzt" */}
+              {!tier.isFree && (
+                <p style={{ textAlign: 'center', margin: '0 0 18px', fontSize: '11px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.5 }}>
+                  or{' '}
+                  <button onClick={() => setAnnual(a => !a)} style={{
+                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                    color: '#4D8FFF', fontSize: '11px', textDecoration: 'underline',
+                  }}>
+                    {annual ? `pay ${tier.monthly}/mo monthly` : `save with annual (${tier.annual}/mo)`}
+                  </button>
+                </p>
+              )}
+              {tier.isFree && <div style={{ marginBottom: '18px' }} />}
+
+              {/* Divider */}
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)' }} />
+
+              {/* Feature list — with horizontal dividers between rows (from screenshot) */}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {tier.features.map((f, fi) => (
+                  <div key={fi} style={{
+                    display: 'flex', gap: '10px', alignItems: 'flex-start',
+                    padding: '9px 0',
+                    borderBottom: fi < tier.features.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                  }}>
+                    <span style={{
+                      flexShrink: 0, marginTop: '1px', fontSize: '11px', fontWeight: 700, lineHeight: 1.5,
+                      color: f.included
+                        ? (tier.isPro ? '#4D8FFF' : 'rgba(0,232,122,0.9)')
+                        : 'rgba(255,255,255,0.2)',
+                    }}>{f.included ? '✓' : '✕'}</span>
+                    <span style={{
+                      fontSize: '12px', lineHeight: 1.55,
+                      color: f.included ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.25)',
+                    }}>{f.text}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
-      {/* Trust badges */}
+      {/* Trust bar */}
       <div style={{
-        display: 'flex', flexWrap: 'wrap', gap: '32px', justifyContent: 'center',
+        display: 'flex', flexWrap: 'wrap', gap: '40px', justifyContent: 'center', alignItems: 'center',
         padding: '0 clamp(16px, 5vw, 48px) 80px',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+        paddingTop: '48px',
       }}>
         {[
-          ['🔒', 'Bank-level encryption', 'Your data stays yours'],
-          ['⚡', 'Real-time sync', 'Every 10 seconds from MT5'],
-          ['🏦', 'Any MT5 broker', 'Demo or live accounts'],
-          ['🛡', 'Cancel anytime', 'No lock-in, no questions'],
-        ].map(([icon, label, sub]) => (
-          <div key={label as string} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '22px', marginBottom: '6px' }}>{icon}</div>
-            <p style={{ margin: 0, color: '#fff', fontSize: '13px', fontWeight: 600 }}>{label}</p>
-            <p style={{ margin: '2px 0 0', color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>{sub}</p>
+          ['Any MT5 broker', 'Demo or live accounts, worldwide'],
+          ['No manual entry', 'Trades sync automatically every 10s'],
+          ['Cancel any time', 'No lock-in, no questions asked'],
+          ['Bank-level encryption', 'Your data stays private and isolated'],
+        ].map(([label, sub]) => (
+          <div key={label} style={{ textAlign: 'center' }}>
+            <p style={{ margin: '0 0 3px', color: '#fff', fontSize: '13px', fontWeight: 600 }}>{label}</p>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.38)', fontSize: '11px' }}>{sub}</p>
           </div>
         ))}
       </div>
 
       {/* FAQ */}
-      <div style={{
-        maxWidth: '620px', margin: '0 auto',
-        padding: '0 clamp(16px, 5vw, 48px) 100px',
-      }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 32px', textAlign: 'center' }}>Common questions</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+      <div style={{ maxWidth: '640px', margin: '0 auto', padding: '0 clamp(16px, 5vw, 48px) 100px' }}>
+        <h2 style={{ fontSize: 'clamp(22px, 4vw, 28px)', fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 32px', textAlign: 'center', color: '#fff' }}>
+          Common questions
+        </h2>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {FAQ.map((f, i) => (
             <div key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '20px 0' }}>
               <p style={{ margin: '0 0 8px', fontSize: '14px', fontWeight: 600, color: '#fff' }}>{f.q}</p>
@@ -181,19 +309,24 @@ export default function PricingPage() {
 
       {/* Footer CTA */}
       <div style={{
-        textAlign: 'center', padding: 'clamp(48px, 8vw, 80px) clamp(16px, 5vw, 48px)',
+        textAlign: 'center',
+        padding: 'clamp(48px, 8vw, 80px) clamp(16px, 5vw, 48px)',
         borderTop: '1px solid rgba(255,255,255,0.06)',
       }}>
-        <h2 style={{ fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 12px' }}>
-          Start knowing your edge today.
+        <h2 style={{ fontSize: 'clamp(24px, 5vw, 38px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 12px', lineHeight: 1.04 }}>
+          Know your edge today.
         </h2>
-        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '14px', margin: '0 0 28px' }}>Free forever. No card needed.</p>
+        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '14px', margin: '0 0 28px', lineHeight: 1.6 }}>
+          Free forever. No card needed.
+        </p>
         <Link href="/login?mode=signup" style={{
-          display: 'inline-block', padding: '14px 36px', borderRadius: '12px',
+          display: 'inline-block', padding: '14px 36px', borderRadius: '8px',
           background: '#fff', color: '#000', fontSize: '15px', fontWeight: 700,
-          textDecoration: 'none', boxShadow: '0 8px 32px rgba(255,255,255,0.12)',
+          textDecoration: 'none', boxShadow: '0 8px 32px rgba(255,255,255,0.1)',
+          letterSpacing: '0.01em',
         }}>Get started free →</Link>
       </div>
+
     </div>
   )
 }

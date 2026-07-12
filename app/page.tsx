@@ -1784,48 +1784,68 @@ function Pricing() {
                 {/* Tier name */}
                 <p style={{ margin: '0 0 14px', color: 'var(--t3)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'monospace' }}>{tier.name}</p>
 
-                {/* Price */}
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: 'clamp(34px, 4vw, 44px)', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--t1)', lineHeight: 1 }}>{price}</span>
-                  <span style={{ color: 'var(--t3)', fontSize: '13px', paddingBottom: '5px' }}>{tier.period}</span>
+                {/* Price block — layout from screenshot: price + period inline, billing + savings below */}
+                <div style={{ marginBottom: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                    <span style={{ fontSize: 'clamp(36px, 4vw, 46px)', fontWeight: 900, letterSpacing: '-0.04em', color: 'var(--t1)', lineHeight: 1 }}>{price}</span>
+                    <span style={{ color: 'var(--t3)', fontSize: '13px' }}>{tier.period}</span>
+                  </div>
+                  <p style={{ margin: '4px 0 0', color: 'var(--t3)', fontSize: '11px' }}>
+                    {annual ? 'Annual billing' : 'Monthly billing'}
+                  </p>
+                  {annual && tier.annualNote
+                    ? <p style={{ margin: '2px 0 0', color: '#00FF85', fontSize: '11px', fontWeight: 500 }}>{tier.annualNote}</p>
+                    : <p style={{ margin: '2px 0 0', color: 'transparent', fontSize: '11px' }}>—</p>
+                  }
                 </div>
 
-                {/* Annual note */}
-                {annual && tier.annualNote ? (
-                  <p style={{ margin: '0 0 4px', color: '#00FF85', fontSize: '11px', fontWeight: 500 }}>{tier.annualNote}</p>
-                ) : (
-                  <p style={{ margin: '0 0 4px', color: 'transparent', fontSize: '11px', userSelect: 'none' }}>—</p>
-                )}
+                <p style={{ margin: '0 0 18px', color: 'var(--t3)', fontSize: '12px', lineHeight: 1.5 }}>{tier.tagline}</p>
 
-                <p style={{ margin: '0 0 20px', color: 'var(--t3)', fontSize: '12px', lineHeight: 1.5 }}>{tier.tagline}</p>
-
-                {/* CTA */}
+                {/* CTA — big button like screenshot */}
                 <Link href={`/login?mode=signup${isFree ? '' : `&plan=${tier.name.toLowerCase()}`}`} style={{
-                  display: 'block', textAlign: 'center', padding: '11px', borderRadius: '8px',
-                  fontSize: '13px', fontWeight: 700, textDecoration: 'none', marginBottom: '22px',
-                  background: isPro ? 'var(--ac)' : 'var(--s2)',
-                  color: isPro ? 'white' : 'var(--t1)',
+                  display: 'block', textAlign: 'center', padding: '13px', borderRadius: '8px',
+                  fontSize: '14px', fontWeight: 700, textDecoration: 'none', marginBottom: '8px',
+                  background: isPro ? '#fff' : 'var(--s2)',
+                  color: isPro ? '#000' : 'var(--t1)',
                   border: isPro ? 'none' : '1px solid var(--bd2)',
-                  boxShadow: isPro ? '0 4px 16px rgba(77,143,255,0.3)' : 'none',
+                  boxShadow: isPro ? '0 4px 20px rgba(255,255,255,0.1)' : 'none',
                   letterSpacing: '0.01em',
                 }}>{tier.cta}</Link>
 
-                {/* Divider */}
-                <div style={{ height: '1px', background: 'var(--bd)', marginBottom: '18px' }} />
+                {/* Secondary billing toggle link — like screenshot's "oder bezahlen Sie jetzt" */}
+                {!isFree && (
+                  <p style={{ textAlign: 'center', margin: '0 0 18px', fontSize: '11px', color: 'var(--t3)', lineHeight: 1.5 }}>
+                    or{' '}
+                    <button onClick={() => setAnnual(a => !a)} style={{
+                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                      color: 'var(--ac)', fontSize: '11px', textDecoration: 'underline',
+                    }}>
+                      {annual ? `pay €${tier.monthly} monthly` : `save with annual (€${tier.annual}/mo)`}
+                    </button>
+                  </p>
+                )}
+                {isFree && <div style={{ marginBottom: '18px' }} />}
 
-                {/* Feature list */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
+                {/* Divider above feature list */}
+                <div style={{ height: '1px', background: 'var(--bd)' }} />
+
+                {/* Feature list — each row has a divider underneath (like screenshot) */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {tier.features.map((f, fi) => (
-                    <div key={fi} style={{ display: 'flex', gap: '9px', alignItems: 'flex-start' }}>
+                    <div key={fi} style={{
+                      display: 'flex', gap: '9px', alignItems: 'flex-start',
+                      padding: '9px 0',
+                      borderBottom: fi < tier.features.length - 1 ? '1px solid var(--bd)' : 'none',
+                    }}>
                       <span style={{
                         flexShrink: 0, marginTop: '1px', fontSize: '11px', fontWeight: 700, lineHeight: 1.5,
                         color: f.included
                           ? (isPro ? 'var(--ac)' : '#00FF85')
-                          : 'rgba(255,255,255,0.18)',
+                          : 'rgba(255,255,255,0.2)',
                       }}>{f.included ? '✓' : '✕'}</span>
                       <span style={{
                         fontSize: '12px', lineHeight: 1.55,
-                        color: f.included ? 'var(--t2)' : 'rgba(255,255,255,0.22)',
+                        color: f.included ? 'var(--t2)' : 'rgba(255,255,255,0.24)',
                       }}>{f.text}</span>
                     </div>
                   ))}
