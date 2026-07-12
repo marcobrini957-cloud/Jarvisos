@@ -25,6 +25,25 @@ interface CopyGroup {
   copy_accounts:  CopyAccount[]
 }
 
+interface CopyLogEntry {
+  id:            string
+  status:        'success' | 'failed' | 'pending'
+  slave_ticket:  string | null
+  slave_lots:    number | null
+  error_message: string | null
+  executed_at:   string | null
+  created_at:    string
+  copy_accounts: { nickname: string; mt5_login: string; role: string }
+  copy_signals:  {
+    signal_type:   'OPEN' | 'CLOSE'
+    master_ticket: number
+    symbol:        string
+    trade_type:    string
+    lot_size:      number
+    open_price:    number
+  }
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function statusDot(status: string, lastSeen: string | null) {
   const isRecent = lastSeen && (Date.now() - new Date(lastSeen).getTime()) < 15000
@@ -45,7 +64,7 @@ function statusDot(status: string, lastSeen: string | null) {
 function timeAgo(ts: string | null) {
   if (!ts) return 'never'
   const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000)
-  if (diff < 60)  return `${diff}s ago`
+  if (diff < 60)   return `${diff}s ago`
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
   return `${Math.floor(diff / 3600)}h ago`
 }
@@ -53,14 +72,16 @@ function timeAgo(ts: string | null) {
 // ── Add Account Modal ─────────────────────────────────────────────────────────
 function AddAccountModal({
   groupId,
+  defaultRole = 'slave',
   onClose,
   onAdded,
 }: {
-  groupId: string
-  onClose: () => void
-  onAdded: () => void
+  groupId:      string
+  defaultRole?: 'master' | 'slave'
+  onClose:      () => void
+  onAdded:      () => void
 }) {
-  const [role,      setRole]      = useState<'master' | 'slave'>('slave')
+  const [role,      setRole]      = useState<'master' | 'slave'>(defaultRole)
   const [mt5Login,  setMt5Login]  = useState('')
   const [mt5Server, setMt5Server] = useState('')
   const [nickname,  setNickname]  = useState('')
@@ -98,7 +119,6 @@ function AddAccountModal({
         </div>
 
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {/* Role selector */}
           <div>
             <div style={{ fontSize: '11px', color: 'var(--t3)', marginBottom: '6px' }}>ROLE</div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -122,7 +142,7 @@ function AddAccountModal({
             <div style={{ fontSize: '10px', color: 'var(--t3)', marginTop: '6px', lineHeight: 1.5 }}>
               {role === 'master'
                 ? 'This account places the real trades — others will copy it.'
-                : 'This account follows and copies the master\'s trades automatically.'}
+                : "This account follows and copies the master's trades automatically."}
             </div>
           </div>
 
@@ -136,7 +156,9 @@ function AddAccountModal({
           </label>
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--t3)' }}>BROKER SERVER <span style={{ color: '#555' }}>(optional)</span></span>
+            <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
+              BROKER SERVER <span style={{ color: '#555' }}>(optional)</span>
+            </span>
             <input
               value={mt5Server} onChange={e => setMt5Server(e.target.value)}
               placeholder="e.g. ICMarketsEU-Demo02"
@@ -145,7 +167,9 @@ function AddAccountModal({
           </label>
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--t3)' }}>NICKNAME <span style={{ color: '#555' }}>(optional)</span></span>
+            <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
+              NICKNAME <span style={{ color: '#555' }}>(optional)</span>
+            </span>
             <input
               value={nickname} onChange={e => setNickname(e.target.value)}
               placeholder="e.g. ICM Main Live"
@@ -173,13 +197,13 @@ function AddAccountModal({
 
 // ── Create Group Modal ────────────────────────────────────────────────────────
 function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [name,       setName]       = useState('Copy Group 1')
-  const [lotMode,    setLotMode]    = useState<'proportional' | 'fixed'>('proportional')
-  const [lotMult,    setLotMult]    = useState('1.0')
-  const [lotFixed,   setLotFixed]   = useState('0.01')
-  const [maxLot,     setMaxLot]     = useState('10.0')
-  const [loading,    setLoading]    = useState(false)
-  const [error,      setError]      = useState('')
+  const [name,     setName]     = useState('Copy Group 1')
+  const [lotMode,  setLotMode]  = useState<'proportional' | 'fixed'>('proportional')
+  const [lotMult,  setLotMult]  = useState('1.0')
+  const [lotFixed, setLotFixed] = useState('0.01')
+  const [maxLot,   setMaxLot]   = useState('10.0')
+  const [loading,  setLoading]  = useState(false)
+  const [error,    setError]    = useState('')
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -278,16 +302,111 @@ function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; onCreat
   )
 }
 
+// ── Signal Log ────────────────────────────────────────────────────────────────
+function SignalLog({ groupId }: { groupId: string }) {
+  const [entries, setEntries] = useState<CopyLogEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      const res = await fetch(`/api/copy/groups/${groupId}/log`)
+      if (cancelled) return
+      if (!res.ok) { setError('Could not load log'); setLoading(false); return }
+      const data = await res.json()
+      setEntries(Array.isArray(data) ? data : [])
+      setLoading(false)
+    }
+
+    load()
+    const iv = setInterval(load, 10000)
+    return () => { cancelled = true; clearInterval(iv) }
+  }, [groupId])
+
+  if (loading) return (
+    <div style={{ padding: '16px', textAlign: 'center', color: 'var(--t3)', fontSize: '12px' }}>
+      Loading log…
+    </div>
+  )
+
+  if (error) return (
+    <div style={{ padding: '16px', textAlign: 'center', color: '#FF3347', fontSize: '12px' }}>
+      {error}
+    </div>
+  )
+
+  if (entries.length === 0) return (
+    <div style={{ padding: '12px 0', textAlign: 'center', color: 'var(--t3)', fontSize: '12px' }}>
+      No activity yet — signals appear here once the master starts trading.
+    </div>
+  )
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      {entries.map(e => {
+        const sig        = e.copy_signals
+        const acc        = e.copy_accounts
+        const statusColor = e.status === 'success' ? '#00FF85' : e.status === 'failed' ? '#FF3347' : '#FFD700'
+        const sigColor   = sig.signal_type === 'OPEN' ? '#00FF85' : '#FF3347'
+
+        return (
+          <div key={e.id} style={{
+            display: 'grid',
+            gridTemplateColumns: '44px 1fr 80px 60px',
+            alignItems: 'center',
+            padding: '7px 14px',
+            borderRadius: '8px',
+            background: 'var(--s2)',
+            gap: '10px',
+            fontSize: '11px',
+          }}>
+            <div style={{
+              padding: '2px 6px', borderRadius: '4px', textAlign: 'center',
+              background: sig.signal_type === 'OPEN' ? 'rgba(0,255,133,0.1)' : 'rgba(255,51,71,0.1)',
+              color: sigColor, fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em',
+            }}>
+              {sig.signal_type}
+            </div>
+
+            <div>
+              <span style={{ color: 'var(--t1)', fontWeight: 600 }}>{sig.symbol}</span>
+              {' '}
+              <span style={{ color: sig.trade_type === 'BUY' ? '#00FF85' : '#FF3347', fontSize: '10px' }}>
+                {sig.trade_type}
+              </span>
+              <div style={{ color: 'var(--t3)', fontSize: '10px', marginTop: '1px' }}>
+                → {acc.nickname || `#${acc.mt5_login}`}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{
+                display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
+                background: statusColor, flexShrink: 0,
+                boxShadow: e.status === 'success' ? '0 0 4px #00FF85' : undefined,
+              }} />
+              <span style={{ color: statusColor, textTransform: 'capitalize', fontSize: '10px' }}>
+                {e.status}
+              </span>
+            </div>
+
+            <div style={{ color: 'var(--t3)', textAlign: 'right' }}>
+              {timeAgo(e.executed_at ?? e.created_at)}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Group Card ────────────────────────────────────────────────────────────────
-function GroupCard({
-  group,
-  onRefresh,
-}: {
-  group: CopyGroup
-  onRefresh: () => void
-}) {
-  const [showAddAccount, setShowAddAccount] = useState(false)
-  const [toggling, setToggling] = useState(false)
+function GroupCard({ group, onRefresh }: { group: CopyGroup; onRefresh: () => void }) {
+  const [addAccountRole, setAddAccountRole] = useState<'master' | 'slave' | null>(null)
+  const [toggling,       setToggling]       = useState(false)
+  const [showLog,        setShowLog]        = useState(false)
 
   const master = group.copy_accounts.find(a => a.role === 'master')
   const slaves = group.copy_accounts.filter(a => a.role === 'slave')
@@ -380,11 +499,27 @@ function GroupCard({
 
         {/* Accounts */}
         <div style={{ padding: '16px 20px' }}>
-          {/* Master */}
+
+          {/* Master section */}
           <div style={{ marginBottom: '12px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', marginBottom: '8px' }}>
-              MASTER ACCOUNT
+            <div style={{
+              fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em',
+              marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <span>MASTER ACCOUNT</span>
+              {!master && (
+                <button
+                  onClick={() => setAddAccountRole('master')}
+                  style={{
+                    fontSize: '10px', color: 'var(--ac)', background: 'none', border: 'none',
+                    cursor: 'pointer', padding: 0, fontWeight: 600, letterSpacing: '0.06em',
+                  }}
+                >
+                  + ADD MASTER
+                </button>
+              )}
             </div>
+
             {master ? (
               <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -415,26 +550,26 @@ function GroupCard({
                 background: 'var(--s2)', border: '1px dashed var(--bd)',
                 fontSize: '12px', color: 'var(--t3)',
               }}>
-                No master account — add one below
+                No master account — click <strong style={{ color: 'var(--ac)' }}>+ ADD MASTER</strong> above
               </div>
             )}
           </div>
 
-          {/* Slaves */}
+          {/* Slave section */}
           <div>
             <div style={{
               fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em',
-              marginBottom: '8px', display: 'flex', justifyContent: 'space-between',
+              marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             }}>
               <span>SLAVE ACCOUNTS ({slaves.length})</span>
               <button
-                onClick={() => setShowAddAccount(true)}
+                onClick={() => setAddAccountRole('slave')}
                 style={{
                   fontSize: '10px', color: 'var(--ac)', background: 'none', border: 'none',
                   cursor: 'pointer', padding: 0, fontWeight: 600, letterSpacing: '0.06em',
                 }}
               >
-                + ADD ACCOUNT
+                + ADD SLAVE
               </button>
             </div>
 
@@ -513,12 +648,39 @@ function GroupCard({
             </div>
           </div>
         )}
+
+        {/* Activity log */}
+        <div style={{ borderTop: '1px solid var(--bd)' }}>
+          <button
+            onClick={() => setShowLog(v => !v)}
+            style={{
+              width: '100%', padding: '10px 20px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              fontSize: '11px', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.06em',
+            }}
+          >
+            <span>ACTIVITY LOG</span>
+            <span style={{
+              fontSize: '10px', color: 'var(--t3)',
+              display: 'inline-block',
+              transform: showLog ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.15s',
+            }}>▾</span>
+          </button>
+          {showLog && (
+            <div style={{ padding: '0 20px 16px' }}>
+              <SignalLog groupId={group.id} />
+            </div>
+          )}
+        </div>
       </div>
 
-      {showAddAccount && (
+      {addAccountRole !== null && (
         <AddAccountModal
           groupId={group.id}
-          onClose={() => setShowAddAccount(false)}
+          defaultRole={addAccountRole}
+          onClose={() => setAddAccountRole(null)}
           onAdded={onRefresh}
         />
       )}
@@ -529,9 +691,7 @@ function GroupCard({
 // ── Plan Gate Banner ──────────────────────────────────────────────────────────
 function PlanGateBanner() {
   return (
-    <div style={{
-      textAlign: 'center', padding: '60px 20px',
-    }}>
+    <div style={{ textAlign: 'center', padding: '60px 20px' }}>
       <div style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: 56, height: 56, borderRadius: '14px',
@@ -567,10 +727,10 @@ function PlanGateBanner() {
 // ── How It Works ─────────────────────────────────────────────────────────────
 function HowItWorks() {
   const steps = [
-    { n: '1', title: 'Create a Copy Group', desc: 'Set up a group with a name and lot sizing config (proportional or fixed).' },
-    { n: '2', title: 'Add your accounts',   desc: 'Add the MT5 account number for your master (the one placing real trades) and your slave accounts.' },
-    { n: '3', title: 'Configure the EA',    desc: 'Copy the group ID shown above into VelquorBridge.mq5, set the mode to MASTER or SLAVE, and load it on each MT5.' },
-    { n: '4', title: 'Trades mirror instantly', desc: 'When the master opens or closes a trade, slaves receive the signal within 2 seconds and execute automatically.' },
+    { n: '1', title: 'Create a Copy Group',      desc: 'Set up a group with a name and lot sizing config (proportional or fixed).' },
+    { n: '2', title: 'Add your accounts',         desc: 'Add the MT5 account number for your master (the one placing real trades) and your slave accounts.' },
+    { n: '3', title: 'Configure the EA',          desc: 'Copy the group ID shown above into VelquorBridge.mq5, set the mode to MASTER or SLAVE, and load it on each MT5.' },
+    { n: '4', title: 'Trades mirror instantly',   desc: 'When the master opens or closes a trade, slaves receive the signal within 2 seconds and execute automatically.' },
   ]
   return (
     <div style={{
@@ -608,57 +768,26 @@ export default function CopyTradingTab() {
   const [loading,         setLoading]         = useState(true)
   const [tier,            setTier]            = useState<string>('free')
   const [showCreateGroup, setShowCreateGroup] = useState(false)
-  const [planError,       setPlanError]       = useState('')
 
+  // Single fetch: sets groups + derives tier from response status
   const load = useCallback(async () => {
-    const [groupsRes] = await Promise.all([
-      fetch('/api/copy/groups').then(r => r.json()),
-    ])
-    setGroups(Array.isArray(groupsRes) ? groupsRes : [])
+    const res = await fetch('/api/copy/groups')
+    if (res.status === 401) { setLoading(false); return }
+    if (res.status === 403) { setTier('free'); setLoading(false); return }
+    if (res.ok) {
+      const data = await res.json()
+      setTier('pro')
+      setGroups(Array.isArray(data) ? data : [])
+    }
     setLoading(false)
-  }, [])
-
-  // Fetch tier separately
-  useEffect(() => {
-    fetch('/api/dev/stats')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.recentSignups) {
-          // dev stats available — skip (we don't know our own tier from dev stats)
-        }
-      })
-      .catch(() => {})
-    // Simple tier check via groups endpoint (403 = gated)
-    fetch('/api/copy/groups').then(r => {
-      if (r.status === 403) setTier('free')
-      else if (r.ok) setTier('pro') // at minimum pro
-      r.json().then(d => {
-        if (Array.isArray(d)) setGroups(d)
-      }).catch(() => {})
-    }).catch(() => {})
   }, [])
 
   useEffect(() => { load() }, [load])
 
-  // Auto-refresh every 10s
   useEffect(() => {
     const iv = setInterval(load, 10000)
     return () => clearInterval(iv)
   }, [load])
-
-  async function handleCreateGroup() {
-    setPlanError('')
-    const res = await fetch('/api/copy/groups', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'Copy Group', lot_mode: 'proportional', lot_multiplier: 1.0, lot_fixed: 0.01, max_lot: 10.0 }),
-    })
-    if (res.status === 403) {
-      const d = await res.json()
-      setPlanError(d.error)
-      return
-    }
-    setShowCreateGroup(true)
-  }
 
   if (loading) {
     return (
@@ -669,10 +798,9 @@ export default function CopyTradingTab() {
   }
 
   return (
-    <div style={{
-      padding: '20px', maxWidth: '720px', margin: '0 auto',
-      overflowY: 'auto', height: '100%',
-    }}>
+    // No extra padding or overflow here — DashboardShell's <main> handles both
+    <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
@@ -695,21 +823,10 @@ export default function CopyTradingTab() {
         )}
       </div>
 
-      {/* Plan gate */}
       {tier === 'free' ? (
         <PlanGateBanner />
       ) : (
         <>
-          {planError && (
-            <div style={{
-              padding: '10px 14px', borderRadius: '10px', marginBottom: '16px',
-              background: 'rgba(255,51,71,0.08)', border: '1px solid rgba(255,51,71,0.2)',
-              fontSize: '13px', color: '#FF3347',
-            }}>
-              {planError}
-            </div>
-          )}
-
           {groups.length === 0 ? (
             <div style={{
               textAlign: 'center', padding: '48px 20px',
@@ -734,16 +851,14 @@ export default function CopyTradingTab() {
               </button>
             </div>
           ) : (
-            groups.map(g => (
-              <GroupCard key={g.id} group={g} onRefresh={load} />
-            ))
+            groups.map(g => <GroupCard key={g.id} group={g} onRefresh={load} />)
           )}
 
           <HowItWorks />
         </>
       )}
 
-      {/* EA URLs note */}
+      {/* MT5 URL whitelist reminder — shown for all tiers */}
       <div style={{
         marginTop: '20px', padding: '12px 16px', borderRadius: '10px',
         background: 'var(--s1)', border: '1px solid var(--bd)',
