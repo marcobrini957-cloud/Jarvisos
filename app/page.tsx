@@ -1,15 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { LogoMark } from '@/components/ui/LogoMark'
 import { useLocale } from '@/hooks/useLocale'
-
-const VelquorTrailerEmbed = dynamic(
-  () => import('@/components/trailer/VelquorTrailer'),
-  { ssr: false, loading: () => <div style={{ width: '100%', height: '100%', background: '#000' }} /> }
-)
 
 // ── Aurora data-stream bars ───────────────────────────────────────────────────
 function Aurora() {
@@ -958,18 +952,13 @@ function Hero() {
           {t.hero.subtitle}
         </p>
 
-        {/* CTAs */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'center', marginBottom: '28px' }}>
+        {/* CTA */}
+        <div style={{ marginBottom: '28px' }}>
           <Link href="/login?mode=signup" style={{
             background: '#fff', color: '#000', padding: '14px 30px', borderRadius: '8px',
-            fontSize: '15px', fontWeight: 700, textDecoration: 'none',
+            fontSize: '15px', fontWeight: 700, textDecoration: 'none', display: 'inline-block',
             boxShadow: '0 4px 24px rgba(255,255,255,0.15)', whiteSpace: 'nowrap',
           }}>{t.hero.cta}</Link>
-          <a
-            href="#"
-            onClick={(e) => { e.preventDefault(); document.getElementById('hero-trailer')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
-            style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: 500, textDecoration: 'none', padding: '14px 8px', cursor: 'pointer' }}
-          >{t.hero.ctaSub}</a>
         </div>
 
         {/* Trust bullets */}
@@ -980,42 +969,6 @@ function Hero() {
               <span style={{ color: 'rgba(255,255,255,0.38)', fontSize: '12px' }}>{b}</span>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Trailer — centered 70%, gradient border + cyber glow */}
-      <div id="hero-trailer" style={{ position: 'relative', zIndex: 2, width: '100%', display: 'flex', justifyContent: 'center', padding: '0 clamp(12px, 4vw, 48px)' }}>
-        <div style={{ position: 'relative', width: '70%', maxWidth: '860px' }}>
-          {/* Nebula glow */}
-          <div aria-hidden style={{
-            position: 'absolute', inset: '-50px -70px',
-            background: [
-              'radial-gradient(ellipse at 20% 60%, rgba(33,110,243,0.30) 0%, transparent 55%)',
-              'radial-gradient(ellipse at 80% 60%, rgba(196,50,220,0.24) 0%, transparent 55%)',
-            ].join(', '),
-            filter: 'blur(45px)',
-            pointerEvents: 'none', zIndex: 0,
-          }} />
-          {/* Gradient border wrapper */}
-          <div style={{
-            position: 'relative', zIndex: 1,
-            background: 'linear-gradient(90deg, #2196F3 0%, #7B2FBF 50%, #E040FB 100%)',
-            padding: '1.5px',
-            borderRadius: '14px',
-            boxShadow: [
-              '0 0 60px rgba(33,150,243,0.24)',
-              '0 0 120px rgba(224,64,251,0.16)',
-              '0 4px 40px rgba(33,100,200,0.20)',
-            ].join(', '),
-          }}>
-            <div style={{ background: '#000', borderRadius: '12px', overflow: 'hidden' }}>
-              <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%' }}>
-                <div style={{ position: 'absolute', inset: 0 }}>
-                  <VelquorTrailerEmbed controls={false} loop={true} />
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1533,11 +1486,15 @@ function ShowcaseSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: '16px', marginTop: '28px' }}>
-          {sc.cards.map(c => (
-            <div key={c.title} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '20px' }}>
-              <div style={{ fontSize: '20px', marginBottom: '10px' }}>{c.icon}</div>
-              <h3 style={{ margin: '0 0 6px', color: '#fff', fontSize: '13px', fontWeight: 600 }}>{c.title}</h3>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,0.45)', fontSize: '12px', lineHeight: 1.6 }}>{c.desc}</p>
+          {sc.cards.map((c, i) => (
+            <div key={c.title} style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderTop: `2px solid ${['#00FF85','#4B8FFF','#FFB830'][i] ?? 'rgba(255,255,255,0.2)'}`,
+              borderRadius: '8px', padding: '20px',
+            }}>
+              <h3 style={{ margin: '0 0 8px', color: '#fff', fontSize: '13px', fontWeight: 700, letterSpacing: '-0.01em' }}>{c.title}</h3>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,0.45)', fontSize: '12px', lineHeight: 1.65 }}>{c.desc}</p>
             </div>
           ))}
         </div>
@@ -1550,35 +1507,37 @@ function ShowcaseSection() {
 function Features() {
   const { t } = useLocale()
   const ft = t.features
-  const icons = ['⚡', '◉', '◆', '📊', '🏆', '📑']
-  const colors = ['var(--go2)', 'var(--ac)', 'var(--cy)', 'var(--am2)', 'var(--gr2)', 'var(--pu)']
+  const accentColors = ['var(--go2)', 'var(--ac)', 'var(--cy)', 'var(--am2)', 'var(--gr2)', 'var(--pu)']
 
   return (
     <section id="features" style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px)', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-        <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>{ft.eyebrow}</p>
-        <h2 style={{ fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)' }}>{ft.h2}</h2>
-        <p style={{ color: 'var(--t2)', fontSize: '16px', maxWidth: '500px', margin: '0 auto', lineHeight: 1.6 }}>{ft.subtitle}</p>
+      <div style={{ marginBottom: '48px' }}>
+        <h2 style={{ fontSize: 'clamp(30px, 6vw, 46px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 12px', color: 'var(--t1)', lineHeight: 1.04 }}>{ft.h2}</h2>
+        <p style={{ color: 'var(--t2)', fontSize: '15px', maxWidth: '480px', margin: 0, lineHeight: 1.65 }}>{ft.subtitle}</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: '14px' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: '1px', border: '1px solid var(--bd)', borderRadius: '12px', overflow: 'hidden' }}>
         {ft.items.map((f, i) => (
           <div key={f.title} style={{
-            background: 'var(--s1)', border: '1px solid var(--bd)',
-            borderRadius: '14px', padding: '22px', cursor: 'default',
-            transition: 'border-color 0.2s, transform 0.2s',
+            background: 'var(--s1)', padding: '24px',
+            borderRight: (i % 3 !== 2) ? '1px solid var(--bd)' : 'none',
+            borderBottom: (i < 3) ? '1px solid var(--bd)' : 'none',
+            cursor: 'default', transition: 'background 0.18s',
           }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--bd2)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--bd)'; e.currentTarget.style.transform = 'none' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--s2)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--s1)' }}
           >
-            <div style={{
-              width: '38px', height: '38px', borderRadius: '10px', marginBottom: '14px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px',
-              background: `color-mix(in srgb, ${colors[i]} 15%, transparent)`,
-              border: `1px solid color-mix(in srgb, ${colors[i]} 30%, transparent)`,
-            }}>{icons[i]}</div>
-            <h3 style={{ margin: '0 0 7px', color: 'var(--t1)', fontSize: '14px', fontWeight: 600 }}>{f.title}</h3>
-            <p style={{ margin: 0, color: 'var(--t2)', fontSize: '12px', lineHeight: 1.6 }}>{f.desc}</p>
+            <p style={{
+              margin: '0 0 16px',
+              color: accentColors[i],
+              fontSize: '11px', fontWeight: 700,
+              letterSpacing: '0.08em',
+              fontFamily: 'monospace',
+            }}>
+              {String(i + 1).padStart(2, '0')}
+            </p>
+            <h3 style={{ margin: '0 0 8px', color: 'var(--t1)', fontSize: '14px', fontWeight: 700, letterSpacing: '-0.01em' }}>{f.title}</h3>
+            <p style={{ margin: 0, color: 'var(--t2)', fontSize: '12px', lineHeight: 1.65 }}>{f.desc}</p>
           </div>
         ))}
       </div>
@@ -1599,21 +1558,18 @@ function HowItWorks() {
     }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>{hw.eyebrow}</p>
-          <h2 style={{ fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)' }}>{hw.h2}</h2>
-          <p style={{ color: 'var(--t2)', fontSize: '16px', maxWidth: '400px', margin: '0 auto' }}>{hw.subtitle}</p>
+          <h2 style={{ fontSize: 'clamp(30px, 6vw, 46px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 14px', color: 'var(--t1)', lineHeight: 1.04 }}>{hw.h2}</h2>
+          <p style={{ color: 'var(--t2)', fontSize: '15px', maxWidth: '400px', margin: '0 auto', lineHeight: 1.65 }}>{hw.subtitle}</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: '24px', position: 'relative' }}>
           {hw.steps.map((s, i) => (
             <div key={nums[i]}>
-              <div style={{
-                width: '42px', height: '42px', borderRadius: '12px', marginBottom: '18px',
-                background: 'var(--bg)', border: '1px solid var(--bd2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 700, fontSize: '12px', color: 'var(--ac)',
-                position: 'relative', zIndex: 1,
-              }}>{nums[i]}</div>
+              <p style={{
+                margin: '0 0 16px',
+                color: 'var(--ac)', fontSize: '13px', fontWeight: 700,
+                letterSpacing: '0.04em', fontFamily: 'monospace',
+              }}>{nums[i]}</p>
               <h3 style={{ margin: '0 0 7px', color: 'var(--t1)', fontSize: '14px', fontWeight: 600 }}>{s.title}</h3>
               <p style={{ margin: '0 0 7px', color: 'var(--t2)', fontSize: '12px', lineHeight: 1.6 }}>{s.desc}</p>
               <p style={{ margin: 0, color: 'var(--t3)', fontSize: '11px', lineHeight: 1.5 }}>{s.detail}</p>
@@ -2150,24 +2106,18 @@ function ThreePillars() {
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Section header */}
-        <div style={{ textAlign: 'center', marginBottom: 'clamp(40px, 7vw, 72px)' }}>
-          <p style={{
-            color: '#4B8FFF', fontSize: '12px', fontWeight: 600,
-            letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '14px',
-          }}>
-            What VELQUOR does
-          </p>
+        <div style={{ marginBottom: 'clamp(40px, 7vw, 72px)' }}>
           <h2 style={{
-            fontSize: 'clamp(30px, 6vw, 54px)', fontWeight: 900,
-            letterSpacing: '-0.04em', margin: '0 0 18px', color: '#fff', lineHeight: 1.04,
+            fontSize: 'clamp(36px, 7vw, 68px)', fontWeight: 900,
+            letterSpacing: '-0.04em', margin: '0 0 16px', color: '#fff', lineHeight: 0.97,
           }}>
             Three tools.<br />One trading edge.
           </h2>
           <p style={{
-            color: 'rgba(255,255,255,0.48)', fontSize: 'clamp(15px, 2vw, 18px)',
-            maxWidth: '540px', margin: '0 auto', lineHeight: 1.65,
+            color: 'rgba(255,255,255,0.42)', fontSize: 'clamp(15px, 2vw, 17px)',
+            maxWidth: '480px', margin: 0, lineHeight: 1.65,
           }}>
-            Most traders are missing all three. VELQUOR gives you all of them in one place — built to work together.
+            Most traders are missing all three. VELQUOR gives you all of them — built to work together.
           </p>
         </div>
 
@@ -2177,16 +2127,14 @@ function ThreePillars() {
             const { Visual } = p
             const textBlock = (
               <div>
-                {/* Badge */}
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '7px',
-                  marginBottom: '20px', padding: '4px 14px', borderRadius: '20px',
-                  background: `rgba(${p.tagRgb},0.08)`,
-                  border: `1px solid rgba(${p.tagRgb},0.22)`,
-                }}>
-                  <span style={{ color: p.tagColor, fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em' }}>
-                    {p.num} — {p.tag}
-                  </span>
+                {/* Number label */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '22px' }}>
+                  <span style={{
+                    color: p.tagColor, fontSize: '36px', fontWeight: 900,
+                    letterSpacing: '-0.04em', lineHeight: 1, fontFamily: 'monospace',
+                  }}>{p.num}</span>
+                  <div style={{ width: '1px', height: '32px', background: `rgba(${p.tagRgb},0.28)`, flexShrink: 0 }} />
+                  <span style={{ color: p.tagColor, fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{p.tag}</span>
                 </div>
 
                 {/* Headline */}
@@ -2230,7 +2178,7 @@ function ThreePillars() {
                 key={p.num}
                 style={{
                   padding: 'clamp(28px, 4vw, 48px)',
-                  borderRadius: '20px',
+                  borderRadius: '10px',
                   background: p.cardBg,
                   border: `1px solid ${p.cardBorder}`,
                 }}
