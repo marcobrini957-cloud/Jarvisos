@@ -72,5 +72,32 @@ Test files in `tests/`:
 Not covered (would need Supabase/network mocks — deliberately skipped): the
 copy-trade API routes themselves (`app/api/copy/*`, bridge Express routes) —
 their logic is DB orchestration; the pure parts are tested.
-## Phase 4 — TradingView design upgrade — not started
+## Phase 4 — TradingView design upgrade ✅ DONE (2026-07-13) — deliberately conservative
+
+Analyzed tradingview.com design language (dark institutional palette, restrained
+accents, tabular data density, understated secondary links, generous section
+whitespace with tight in-list stacking).
+
+**Official TradingView widgets integrated** (`components/widgets/TradingViewWidget.tsx`
+— generic embed loader + attribution links per TV widget terms):
+- Ticker tape (Gold, NAS100, EUR/USD, S&P, DAX, BTC) in DashboardShell under the
+  Topbar, desktop only
+- Advanced chart (XAUUSD default, symbol change allowed, Vienna TZ, dark theme
+  matched to Void Black) as "Live Chart" panel in TradingTab above the metrics
+- Market overview (Marco's markets / Indices / Crypto tabs, brand green/red plots)
+  in OverviewTab right column under StreakCard
+
+**Global polish applied** (globals.css): body-wide tabular-nums (every digit
+aligns, TV-style), text-wrap balance on headings, brand selection color.
+
+**Deliberately NOT done**: wholesale restyling of landing/pricing/tab layouts.
+Marco hand-tuned the landing + pricing design in the 3 commits before this run
+("design: match screenshot pricing layout exactly" etc.) and there is no way to
+visually verify changes from this environment. The existing Void Black token
+system already matches the TV analysis closely (dark surfaces, sparse accents,
+caps labels, card system). Recommend: review widgets live, then decide if a
+per-tab visual pass is wanted with eyes on the rendering.
+
+Note: a prefers-reduced-motion kill switch was considered and removed — it would
+freeze the landing cursor animation, violating Marco's "cursor never stops" rule.
 ## Phase 5 — API hardening — not started

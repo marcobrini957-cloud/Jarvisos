@@ -22,6 +22,7 @@ import { YourEdge } from './trading/YourEdge'
 import { EquityCurve } from './trading/EquityCurve'
 import { PositionSizeCalc } from './trading/PositionSizeCalc'
 import { ReportDownloadBar } from './trading/ReportDownloadBar'
+import { AdvancedChart } from '@/components/widgets/TradingViewWidget'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -169,6 +170,13 @@ export default function TradingTab() {
           })}
         </Panel>
       )}
+
+      {/* Live chart — official TradingView embed */}
+      <Panel title="Live Chart" noPadding>
+        <div style={{ height: '480px' }}>
+          <AdvancedChart symbol="OANDA:XAUUSD" height={480} />
+        </div>
+      </Panel>
 
       {/* Metrics with period selectors */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">

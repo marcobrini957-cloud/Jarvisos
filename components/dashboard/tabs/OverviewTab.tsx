@@ -21,6 +21,7 @@ import { MarketStrip } from './overview/MarketStrip'
 import { WinRing } from './overview/WinRing'
 import { TradeCalendar } from './overview/TradeCalendar'
 import { StreakCard, StreakBadge } from './overview/StreakCards'
+import { MarketOverview } from '@/components/widgets/TradingViewWidget'
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
@@ -231,6 +232,9 @@ export default function OverviewTab() {
 
         <div className="lg:col-span-1 flex flex-col gap-5">
           <StreakCard trades={trades} journalStreak={journalStreak} habitStreak={bestHabitStreak} />
+          <Panel title="Markets" accent="var(--ac)" noPadding>
+            <MarketOverview height={400} />
+          </Panel>
           <Panel title="Today's Focus" accent="var(--am2)">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 

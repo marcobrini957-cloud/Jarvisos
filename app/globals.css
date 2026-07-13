@@ -102,6 +102,15 @@ button { cursor: pointer; font: inherit; }
 a      { text-decoration: none; color: inherit; }
 input, textarea, select { font: inherit; }
 
+/* Data-dense app: every digit aligns (TradingView-style tabular figures) */
+body { font-variant-numeric: tabular-nums; }
+
+/* Balanced multi-line headlines */
+h1, h2, h3 { text-wrap: balance; }
+
+/* Brand-consistent selection */
+::selection { background: rgba(77,143,255,0.35); color: var(--t1); }
+
 /* ── Typography utilities ─────────────────────────────────────────────────── */
 .num {
   font-variant-numeric: tabular-nums;
