@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUser } from '@/lib/api/auth'
 
 // Returns daily P&L for bar chart (last 60 days of closed trades)
 export async function GET(req: Request) {
@@ -7,7 +8,7 @@ export async function GET(req: Request) {
   const days = Math.min(parseInt(searchParams.get('days') ?? '60', 10), 365)
 
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const since = new Date(Date.now() - days * 86_400_000).toISOString()

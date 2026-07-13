@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { fetchFFCalendar, todaysEvents, highImpactForTrading } from '@/lib/forex-factory/calendar'
+import { getAuthUser } from '@/lib/api/auth'
 
 export const maxDuration = 60
 
@@ -38,17 +39,18 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getAuthUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Fetch context data in parallel
     const [calendarEvents, tradesResult, portfolioResult] = await Promise.all([
       fetchFFCalendar(),
       supabase.from('trades').select('symbol,trade_type,net_profit,session,setup_type,open_time')
+        .eq('user_id', user.id)
         .eq('status', 'closed')
         .gte('open_time', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
         .order('open_time', { ascending: false }),
-      supabase.from('portfolio_holdings').select('ticker,name,asset_type,quantity,avg_buy_price').eq('is_active', true),
+      supabase.from('portfolio_holdings').select('ticker,name,asset_type,quantity,avg_buy_price').eq('user_id', user.id).eq('is_active', true),
     ])
 
     const todayEvents = todaysEvents(calendarEvents)

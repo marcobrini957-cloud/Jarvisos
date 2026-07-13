@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { rateLimit, clientIp } from '@/lib/api/rate-limit'
 
 const TROY_OZ_TO_GRAMS = 31.1034768
 
@@ -31,7 +32,10 @@ async function fetchEurUsd(): Promise<number> {
 }
 
 // GET /api/metals/prices
-export async function GET() {
+export async function GET(req: Request) {
+  if (!rateLimit(`metals:${clientIp(req)}`, 60, 60_000)) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
+  }
   try {
     const [gold, silver, usdToEur] = await Promise.all([
       fetchSpot('GC=F'),

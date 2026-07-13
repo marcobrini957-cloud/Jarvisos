@@ -100,4 +100,44 @@ per-tab visual pass is wanted with eyes on the rendering.
 
 Note: a prefers-reduced-motion kill switch was considered and removed — it would
 freeze the landing cursor animation, violating Marco's "cursor never stops" rule.
-## Phase 5 — API hardening — not started
+## Phase 5 — API hardening ✅ DONE (2026-07-13)
+
+**Critical bug found & fixed**: `lib/supabase/server` createClient() returns the
+SERVICE-ROLE client, and `auth.getUser()` on it always fails ("Auth session
+missing") — verified live against Supabase. **13 routes were returning 401 in
+production for every request** (profile, avatar, avatar-unlocks, snapshots/equity
+curve, trades/analytics, daily-pnl, reports, macro, mt5-accounts, mt5-debug,
+dev/ping…). The UI silently swallowed this (default profile name, empty charts).
+Fix: new `lib/api/auth.ts` getAuthUser/getAuthUserId (anon key + cookies — same
+pattern mt5-sync and copy routes already used); all routes now authenticate with
+it and use the service client for data only.
+
+**Cross-user data leaks fixed** (mattered as soon as a 2nd user signs up, since
+service role bypasses RLS):
+- `trades/[id]` PATCH — no auth at route + no ownership check → now 401 + `.eq('user_id')`
+- `trades/[id]/screenshot` POST — same; now verifies trade ownership before upload
+- `velquor/chat` buildContext — queried ALL users' trades/journal/snapshots/
+  holdings into the AI prompt → all scoped by user id now
+- `velquor/weekly-review`, `velquor/trade-feedback` — same, scoped + auth added
+- `macro` POST briefing, `reports`, `avatar-unlocks` — trade/journal/holdings
+  queries scoped (macro_briefings table has no user_id column — left global)
+- `ai-chat` — auth added (defense in depth; proxy already covered it)
+
+**Rate limiting** (`lib/api/rate-limit.ts`, in-memory sliding window):
+- Public routes `/api/market/strip`, `/api/macro/news`, `/api/metals/prices`:
+  60 req/min per IP → 429
+- Dev console login (`app/dev/actions.ts`): 5 attempts/min per IP,
+  timingSafeEqual compare, 750ms failure delay, Secure cookie flag in prod
+
+**proxy.ts**: unauthenticated `/api/*` requests now get 401 JSON instead of a
+302 HTML redirect to /login.
+
+Build ✓, 47 tests ✓ after all changes.
+
+---
+# BACKLOG / recommended next steps
+1. Deploy bridge to Hetzner — now includes **bridge/lib.js** (new file, required by server.js)
+2. Verify TradingView widgets render well live (ticker tape height, chart theme)
+3. Consider per-tab visual pass with eyes on rendering (Phase 4 was conservative)
+4. Distributed rate limiting (Upstash) if user count grows — current is per-instance
+5. Consider RLS instead of service-role-everywhere as the long-term security model

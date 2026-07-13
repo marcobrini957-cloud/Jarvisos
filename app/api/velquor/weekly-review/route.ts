@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUserId } from '@/lib/api/auth'
 
 export const maxDuration = 60
 
@@ -8,6 +9,9 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getAuthUserId()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { wins, losses, lessons, goals, mood, energy, week } = await req.json()
 
     const supabase = await createClient()
@@ -17,6 +21,7 @@ export async function POST(req: NextRequest) {
     const { data: trades } = await supabase
       .from('trades')
       .select('symbol,trade_type,net_profit,pips,session,setup_type,tags,emotion_pre,followed_plan')
+      .eq('user_id', userId)
       .eq('status', 'closed')
       .gte('close_time', since)
       .lte('close_time', until)
@@ -29,6 +34,7 @@ export async function POST(req: NextRequest) {
     const { data: journal } = await supabase
       .from('journal_entries')
       .select('entry_date,mood,energy_level,body_text,is_trading_day')
+      .eq('user_id', userId)
       .gte('entry_date', week)
       .lte('entry_date', new Date(new Date(week + 'T00:00:00').getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
       .order('entry_date', { ascending: true })

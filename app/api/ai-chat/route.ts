@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
+import { getAuthUserId } from '@/lib/api/auth'
 
 export const maxDuration = 60
 
@@ -7,6 +8,9 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getAuthUserId()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { message, context } = await req.json()
 
     if (!message) return NextResponse.json({ error: 'No message' }, { status: 400 })

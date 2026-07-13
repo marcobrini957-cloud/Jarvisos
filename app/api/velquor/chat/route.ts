@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUserId } from '@/lib/api/auth'
 
 export const maxDuration = 60
 
@@ -8,13 +9,14 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 // ── Supabase context ──────────────────────────────────────────────────────────
 
-async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>) {
+async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
   const [tradesRes, journalRes, snapshotRes, holdingsRes] = await Promise.all([
     supabase
       .from('trades')
       .select('symbol,trade_type,net_profit,pips,session,setup_type,tags,emotion_pre,followed_plan,open_time,close_time')
+      .eq('user_id', userId)
       .eq('status', 'closed')
       .gte('close_time', since)
       .order('close_time', { ascending: false })
@@ -22,17 +24,20 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>) 
     supabase
       .from('journal_entries')
       .select('entry_date,mood,energy_level,body_text,tags,is_trading_day')
+      .eq('user_id', userId)
       .order('entry_date', { ascending: false })
       .limit(10),
     supabase
       .from('account_snapshots')
       .select('balance,equity,daily_pnl,weekly_pnl,monthly_pnl')
+      .eq('user_id', userId)
       .order('snapshot_at', { ascending: false })
       .limit(1)
       .single(),
     supabase
       .from('portfolio_holdings')
       .select('ticker,name,quantity,avg_buy_price,currency,sector')
+      .eq('user_id', userId)
       .eq('is_active', true),
   ])
 
@@ -125,11 +130,14 @@ ${portfolioSummary || 'no holdings'}
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getAuthUserId()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { message, history = [] } = await req.json()
     if (!message) return NextResponse.json({ error: 'No message' }, { status: 400 })
 
     const supabase = await createClient()
-    const context  = await buildContext(supabase)
+    const context  = await buildContext(supabase, userId)
 
     const now = new Date()
     const todayStr = now.toLocaleDateString('en-GB', {

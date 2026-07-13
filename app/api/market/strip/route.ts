@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { rateLimit, clientIp } from '@/lib/api/rate-limit'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -94,7 +95,10 @@ async function fetchTicker(
 
 // ── GET handler ───────────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!rateLimit(`market:${clientIp(req)}`, 60, 60_000)) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
+  }
   const cacheKey = 'market-strip'
   const now      = Date.now()
   const cached   = cache.get(cacheKey)

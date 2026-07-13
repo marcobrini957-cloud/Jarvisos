@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUserId } from '@/lib/api/auth'
 
 // POST /api/trades/:id/screenshot
 // Body: FormData with file (image) and slot ('open' | 'close')
@@ -8,6 +9,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getAuthUserId()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { id } = await params
     const form = await req.formData()
     const file = form.get('file') as File | null
@@ -20,6 +24,16 @@ export async function POST(
     const buffer   = Buffer.from(await file.arrayBuffer())
 
     const supabase = await createClient()
+
+    // Verify the trade belongs to the requesting user before touching storage
+    const { data: owned } = await supabase
+      .from('trades')
+      .select('id')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (!owned) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
     await supabase.storage.createBucket('trade-screenshots', { public: true }).catch(() => {})
 
     const { error: uploadError } = await supabase.storage
@@ -39,6 +53,7 @@ export async function POST(
       .from('trades')
       .update({ [field]: publicUrl, screenshot_missing: false })
       .eq('id', id)
+      .eq('user_id', userId)
 
     return NextResponse.json({ url: publicUrl })
   } catch (err) {

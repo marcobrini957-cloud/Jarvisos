@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUserId } from '@/lib/api/auth'
 
 // PATCH /api/trades/:id  — update trade annotation fields
 export async function PATCH(
@@ -7,6 +8,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getAuthUserId()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { id } = await params
     const body = await req.json()
 
@@ -28,6 +32,7 @@ export async function PATCH(
       .from('trades')
       .update(updates)
       .eq('id', id)
+      .eq('user_id', userId)
       .select()
       .single()
 

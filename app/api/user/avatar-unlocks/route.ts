@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse }  from 'next/server'
+import { getAuthUser } from '@/lib/api/auth'
 
 export async function GET() {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getAuthUser()
     if (!user) return NextResponse.json({ unlocked: [] })
 
     const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -14,12 +15,14 @@ export async function GET() {
       supabase
         .from('trades')
         .select('net_profit, close_time, status')
+        .eq('user_id', user.id)
         .eq('status', 'closed')
         .neq('symbol', 'BALANCE')
         .order('close_time', { ascending: false }),
       supabase
         .from('journal_entries')
         .select('entry_date')
+        .eq('user_id', user.id)
         .order('entry_date', { ascending: false })
         .limit(14),
     ])

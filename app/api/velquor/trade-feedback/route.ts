@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUserId } from '@/lib/api/auth'
 
 export const maxDuration = 30
 
@@ -20,6 +21,9 @@ interface TradeFeedbackBody {
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = await getAuthUserId()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const body = await req.json() as TradeFeedbackBody
 
     const supabase = await createClient()
@@ -28,6 +32,7 @@ export async function POST(req: NextRequest) {
     const { data: recentTrades } = await supabase
       .from('trades')
       .select('symbol,trade_type,net_profit,setup_type,emotion_pre,tags,followed_plan,session')
+      .eq('user_id', userId)
       .eq('status', 'closed')
       .neq('symbol', 'BALANCE')
       .order('close_time', { ascending: false })

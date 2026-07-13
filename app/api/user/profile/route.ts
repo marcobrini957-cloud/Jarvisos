@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse }  from 'next/server'
+import { getAuthUser } from '@/lib/api/auth'
 
 const DEFAULT_PROFILE = {
   display_name:  'Trader',
@@ -13,7 +14,8 @@ export async function GET() {
   try {
     const supabase = await createClient()
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const user = await getAuthUser()
+    const userError = null
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -52,7 +54,8 @@ export async function PATCH(request: Request) {
   try {
     const supabase = await createClient()
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const user = await getAuthUser()
+    const userError = null
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

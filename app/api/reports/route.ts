@@ -4,6 +4,7 @@ import { createElement }             from 'react'
 import { createClient }              from '@/lib/supabase/server'
 import { TradingReport }             from '@/lib/pdf/TradingReport'
 import type { Trade }                from '@/types'
+import { getAuthUser } from '@/lib/api/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,13 +22,14 @@ export async function GET(req: NextRequest) {
     const supabase = await createClient()
 
     // Get current user for the trader name in the report
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getAuthUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Fetch trades in the date window (closed, real trades only)
     const { data: trades, error } = await supabase
       .from('trades')
       .select('*')
+      .eq('user_id', user.id)
       .eq('status', 'closed')
       .gte('close_time', `${from}T00:00:00.000Z`)
       .lte('close_time', `${to}T23:59:59.999Z`)

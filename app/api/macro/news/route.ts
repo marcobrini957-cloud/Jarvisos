@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { rateLimit, clientIp } from '@/lib/api/rate-limit'
 
 export interface NewsItem {
   id:        string
@@ -100,7 +101,10 @@ function deriveBias(headlines: NewsItem[]): Bias {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!rateLimit(`macro:${clientIp(req)}`, 60, 60_000)) {
+    return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
+  }
   const news = await fetchFinancialJuice()
   const bias = deriveBias(news)
   return NextResponse.json({ news, bias })
