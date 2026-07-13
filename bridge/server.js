@@ -4,6 +4,7 @@ const express = require('express');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { createClient } = require('@supabase/supabase-js');
+const { detectSession, calcPips } = require('./lib');
 
 // ─── Supabase client (service role — bypasses RLS) ───────────────────────────
 const supabase = createClient(
@@ -38,27 +39,6 @@ const copyLimiter = rateLimit({
 app.use('/copy/signal', copyLimiter);
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-function detectSession(openTimeMs) {
-  const d = new Date(openTimeMs);
-  const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
-  if (mins >= 810 && mins < 1320) return 'new_york';
-  if (mins >= 480 && mins < 990)  return 'london';
-  return 'asian';
-}
-
-function calcPips(symbol, openPrice, closePrice, tradeType) {
-  const diff = tradeType === 'buy'
-    ? closePrice - openPrice
-    : openPrice - closePrice;
-  const sym = symbol.toUpperCase();
-  if (sym.includes('XAU') || sym.includes('GOLD')) return parseFloat((diff * 10).toFixed(2));
-  if (sym.includes('JPY'))                           return parseFloat((diff / 0.01).toFixed(2));
-  if (sym.includes('NAS') || sym.includes('SPX') ||
-      sym.includes('US30') || sym.includes('DAX') ||
-      sym.includes('GER') || sym.includes('NI225')) return parseFloat(diff.toFixed(2));
-  return parseFloat((diff / 0.0001).toFixed(2));
-}
-
 // ─── Auth helpers ─────────────────────────────────────────────────────────────
 async function resolveUser(apiKey) {
   if (!apiKey || !apiKey.startsWith('vq_')) return null;

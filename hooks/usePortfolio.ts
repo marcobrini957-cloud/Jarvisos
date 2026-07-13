@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { PortfolioHolding } from '@/types'
+import { valueHolding, portfolioTotals } from '@/lib/portfolio/valuation'
 
 const TROY_OZ_TO_GRAMS = 31.1034768
 
@@ -78,13 +79,7 @@ export function usePortfolio() {
             const q = quotes?.find((q: { ticker: string }) => q.ticker === h.ticker)
             if (!q) return h
 
-            // avg_buy_price is always stored in EUR (entered via Trade Republic / our form)
             // Only the live market price from Yahoo needs FX conversion (handled by the API)
-            const costBasisEur    = h.quantity * (h.avg_buy_price ?? 0)
-            const currentValueEur = h.quantity * q.priceEur
-            const pnlEur          = currentValueEur - costBasisEur
-            const pnlPct          = costBasisEur > 0 ? (pnlEur / costBasisEur) * 100 : 0
-
             return {
               ...h,
               currentPrice:    q.price,
@@ -92,7 +87,7 @@ export function usePortfolio() {
               prevCloseEur:    q.prevCloseEur,
               change1d:        q.change1d,
               marketState:     q.marketState,
-              currentValueEur, pnlEur, pnlPct, costBasisEur,
+              ...valueHolding(h, q.priceEur),
             }
           }))
         }
@@ -109,11 +104,6 @@ export function usePortfolio() {
             const mp = metalData[h.ticker]
             if (!mp) return h
 
-            const costBasisEur    = h.quantity * (h.avg_buy_price ?? 0)  // grams × EUR/gram
-            const currentValueEur = h.quantity * mp.priceEurPerGram
-            const pnlEur          = currentValueEur - costBasisEur
-            const pnlPct          = costBasisEur > 0 ? (pnlEur / costBasisEur) * 100 : 0
-
             return {
               ...h,
               currentPrice:    mp.priceUsdPerOz,
@@ -121,7 +111,7 @@ export function usePortfolio() {
               prevCloseEur:    null,
               change1d:        mp.changePct,
               marketState:     null,
-              currentValueEur, pnlEur, pnlPct, costBasisEur,
+              ...valueHolding(h, mp.priceEurPerGram),  // grams × EUR/gram
             }
           }))
         }
@@ -172,10 +162,7 @@ export function usePortfolio() {
     setHoldings(prev => prev.filter(h => h.id !== id))
   }
 
-  const totalValueEur = holdings.reduce((s, h) => s + (h.currentValueEur ?? h.costBasisEur ?? 0), 0)
-  const totalCostEur  = holdings.reduce((s, h) => s + (h.costBasisEur ?? 0), 0)
-  const totalPnlEur   = totalValueEur - totalCostEur
-  const totalPnlPct   = totalCostEur > 0 ? (totalPnlEur / totalCostEur) * 100 : 0
+  const { totalValueEur, totalCostEur, totalPnlEur, totalPnlPct } = portfolioTotals(holdings)
 
   return {
     holdings, loading, priceLoading, priceError, eurUsdRate,

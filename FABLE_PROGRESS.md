@@ -47,6 +47,30 @@ Notes:
   detection) so they must stay client islands; converting locale to Accept-Language
   server detection would make the route dynamic and lose static caching — not done.
 
-## Phase 3 — Tests — not started
+## Phase 3 — Tests ✅ DONE (2026-07-13)
+
+Vitest + RTL installed. `npm test` = `vitest run`. **47 tests, all passing.**
+
+Money logic extracted into pure, tested modules (hooks/routes re-import, behavior identical):
+- `lib/trading/stats.ts` — computeStats, tradeResult, BE_THRESHOLD, isRealTrade
+  (moved out of hooks/useTrades.ts, which re-exports them for compat)
+- `lib/mt5/parse.ts` — calcPips, detectSession, groupDealsByPosition,
+  buildClosedTradeRows (moved out of app/api/mt5-sync/route.ts, route now 263 lines)
+- `lib/portfolio/valuation.ts` — valueHolding, portfolioTotals (used by usePortfolio)
+- `bridge/lib.js` — detectSession, calcPips (required by bridge/server.js).
+  ⚠️ bridge/lib.js must be deployed to Hetzner together with server.js.
+
+Test files in `tests/`:
+- stats.test.ts — P&L, win rate (BE exclusion), profit factor, expectancy,
+  streaks, realized R:R, max drawdown, weekly Mon–Sun buckets (fake timers)
+- mt5-parse.test.ts — pip conventions per symbol class, session boundaries,
+  deal grouping, partial-close aggregation, entry/exit fallback, screenshot flag
+- bridge-lib.test.js — bridge pip/session parity
+- csv-import.test.ts — EU/US number parsing, quoted CSV, Trade Republic headers
+- portfolio-valuation.test.ts — holding valuation + totals
+
+Not covered (would need Supabase/network mocks — deliberately skipped): the
+copy-trade API routes themselves (`app/api/copy/*`, bridge Express routes) —
+their logic is DB orchestration; the pure parts are tested.
 ## Phase 4 — TradingView design upgrade — not started
 ## Phase 5 — API hardening — not started
