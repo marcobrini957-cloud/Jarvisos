@@ -219,7 +219,7 @@ app.post('/sync', wrap(async (req, res) => {
       free_margin:       acc.free_margin       ?? 0,
       margin_level_pct:  acc.margin_level_pct  ?? 0,
       open_trades_count: acc.open_trades_count ?? 0,
-      recorded_at:       new Date().toISOString(),
+      snapshot_at:       new Date().toISOString(),
     });
   }
 

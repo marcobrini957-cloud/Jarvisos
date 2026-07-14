@@ -8,6 +8,7 @@ import { CsvImportModal, type CsvRow } from './portfolio/CsvImportModal'
 import { METAL_OPTIONS, fmtEur, fmtPct, sign, holdingColor } from './portfolio/helpers'
 import { HoldingModal } from './portfolio/HoldingModal'
 import { DonutChart, BREAKDOWN_CATS } from './portfolio/DonutChart'
+import { NetWorthCard } from './portfolio/NetWorthCard'
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -118,6 +119,9 @@ export default function PortfolioTab() {
           </button>
         </div>
       )}
+
+      {/* Total net worth — trading equity + all holdings */}
+      <NetWorthCard holdingsValueEur={totalValueEur} holdingsLoading={loading || priceLoading} />
 
       {/* Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

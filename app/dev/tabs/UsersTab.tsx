@@ -29,7 +29,7 @@ type Detail = {
     openTrades: number
     journalEntries: number
     copyGroups: number
-    lastSnapshot: { balance: number; equity: number; recorded_at: string } | null
+    lastSnapshot: { balance: number; equity: number; snapshot_at: string } | null
   }
 }
 
@@ -192,7 +192,7 @@ export function UsersTab() {
 
                 {selected!.stats.lastSnapshot && (
                   <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', marginBottom: '12px' }}>
-                    Last snapshot: balance €{selected!.stats.lastSnapshot.balance.toLocaleString()} · equity €{selected!.stats.lastSnapshot.equity.toLocaleString()} · {fmtDate(selected!.stats.lastSnapshot.recorded_at)}
+                    Last snapshot: balance €{selected!.stats.lastSnapshot.balance.toLocaleString()} · equity €{selected!.stats.lastSnapshot.equity.toLocaleString()} · {fmtDate(selected!.stats.lastSnapshot.snapshot_at)}
                   </div>
                 )}
 

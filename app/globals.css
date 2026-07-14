@@ -477,3 +477,9 @@ h1, h2, h3 { text-wrap: balance; }
   opacity: 1;
   transform: translateY(0);
 }
+
+/* Smooth scrolling for in-page anchors (nav → #how/#faq/#pricing) */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

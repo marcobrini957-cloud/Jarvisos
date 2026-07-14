@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     sb.from('trades').select('*', { count: 'exact', head: true }).eq('user_id', id).eq('status', 'open'),
     sb.from('journal_entries').select('*', { count: 'exact', head: true }).eq('user_id', id),
     sb.from('copy_groups').select('*', { count: 'exact', head: true }).eq('user_id', id),
-    sb.from('account_snapshots').select('balance, equity, recorded_at').eq('user_id', id).order('recorded_at', { ascending: false }).limit(1),
+    sb.from('account_snapshots').select('balance, equity, snapshot_at').eq('user_id', id).order('snapshot_at', { ascending: false }).limit(1),
   ])
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
