@@ -3,8 +3,11 @@ interface LogoMarkProps {
   showBackground?: boolean
 }
 
-// VQ monogram — deep black tile, letters in a white → 50% white vertical
-// gradient. Pure SVG: crisp at every size, zero image requests.
+// The VELQUOR mark — a calligraphic V cut with Renaissance stroke contrast
+// (broad down-stroke, hairline up-stroke) and the Q reduced to a small
+// orbital ring with a tail at the V's shoulder, like a notation mark on a
+// draftsman's sheet. A construction circle sits behind at 5% — the kind of
+// guide line Leonardo never erased. Letters carry a white → 50% white fade.
 export function LogoMark({ size = 32, showBackground = true }: LogoMarkProps) {
   return (
     <svg
@@ -21,8 +24,8 @@ export function LogoMark({ size = 32, showBackground = true }: LogoMarkProps) {
           <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.5" />
         </linearGradient>
         <radialGradient id="vq-sheen" cx="0.3" cy="0.12" r="1.1">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.07" />
-          <stop offset="45%" stopColor="#FFFFFF" stopOpacity="0.015" />
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.06" />
+          <stop offset="45%" stopColor="#FFFFFF" stopOpacity="0.012" />
           <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
         </radialGradient>
       </defs>
@@ -35,29 +38,18 @@ export function LogoMark({ size = 32, showBackground = true }: LogoMarkProps) {
         </>
       )}
 
-      {/* V — sharp, forward-driving */}
+      {/* construction circle — the guide line left in, 5% */}
+      <circle cx="31" cy="34" r="23" fill="none" stroke="#FFFFFF" strokeOpacity="0.05" strokeWidth="1" />
+
+      {/* V — broad down-stroke, hairline up-stroke */}
       <path
-        d="M 12 19 L 18.6 19 L 26.2 40.5 L 33.8 19 L 40.4 19 L 29.6 46.8 L 22.8 46.8 Z"
+        d="M 12 18 L 21 18 L 31.6 42.8 L 43 18 L 46.5 18 L 33.2 48 L 28.2 48 Z"
         fill="url(#vq-ink)"
       />
-      {/* Q — ring set against the V's rhythm */}
-      <path
-        d="M 44.5 24.5
-           a 9.8 9.8 0 1 0 0 19.6
-           a 9.8 9.8 0 0 0 0 -19.6 Z
-           M 44.5 29
-           a 5.3 5.3 0 1 1 0 10.6
-           a 5.3 5.3 0 0 1 0 -10.6 Z"
-        fill="url(#vq-ink)"
-        fillRule="evenodd"
-        opacity="0.92"
-      />
-      {/* Q tail */}
-      <path
-        d="M 47.5 41.2 L 54.4 48.4 L 50.6 51.2 L 44.4 44.3 Z"
-        fill="url(#vq-ink)"
-        opacity="0.92"
-      />
+
+      {/* Q — small orbital ring at the V's shoulder */}
+      <circle cx="51" cy="14.5" r="4.6" fill="none" stroke="url(#vq-ink)" strokeWidth="2.1" />
+      <line x1="52.4" y1="15.9" x2="56.4" y2="20.1" stroke="url(#vq-ink)" strokeWidth="2.1" strokeLinecap="round" />
     </svg>
   )
 }
