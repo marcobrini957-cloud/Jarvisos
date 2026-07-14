@@ -8,7 +8,10 @@ import { HowItWorks } from '@/components/landing/HowItWorks'
 import { VelquorSection } from '@/components/landing/VelquorSection'
 import { PropFirmSection } from '@/components/landing/PropFirmSection'
 import { Pricing } from '@/components/landing/Pricing'
+import { TrustSection } from '@/components/landing/TrustSection'
+import { FAQ } from '@/components/landing/FAQ'
 import { FinalCTA } from '@/components/landing/FinalCTA'
+import { getTranslations } from '@/lib/i18n/translations'
 import { FooterTagline } from '@/components/landing/FooterTagline'
 import { Footer } from '@/components/landing/Footer'
 import { ScrollSetup } from '@/components/landing/ScrollSetup'
@@ -26,8 +29,25 @@ export default function LandingPage() {
       <HowItWorks />
       <VelquorSection />
       <PropFirmSection />
+      <TrustSection />
       <Pricing />
+      <FAQ />
       <FinalCTA />
+      {/* FAQ rich-result structured data (EN — matches default crawl locale) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: getTranslations('en').faq.items.map(i => ({
+              '@type': 'Question',
+              name: i.q,
+              acceptedAnswer: { '@type': 'Answer', text: i.a },
+            })),
+          }),
+        }}
+      />
       <FooterTagline />
       <Footer />
     </div>

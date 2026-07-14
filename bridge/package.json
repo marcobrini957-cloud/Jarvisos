@@ -1,6 +1,6 @@
 {
   "name": "velquor-bridge",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "VELQUOR MT5 bridge server — receives EA data and writes to Supabase",
   "main": "server.js",
   "scripts": {

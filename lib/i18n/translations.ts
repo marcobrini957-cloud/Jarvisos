@@ -81,6 +81,17 @@ export interface LandingT {
     note: string
     brokersLabel: string
   }
+  trust: {
+    eyebrow: string
+    h2: string
+    items: Array<{ icon: string; title: string; desc: string }>
+  }
+  faq: {
+    eyebrow: string
+    h2: string
+    subtitle: string
+    items: Array<{ q: string; a: string }>
+  }
   footer: {
     copyright: string
     links: string[]
@@ -270,6 +281,29 @@ const en: LandingT = {
     note: 'Free forever plan · 2-minute setup · cancel anytime',
     brokersLabel: 'Works with every MT5 broker',
   },
+  trust: {
+    eyebrow: 'Built for trust',
+    h2: 'Your account stays yours.',
+    items: [
+      { icon: '🔑', title: 'No passwords shared', desc: 'The VELQUOR EA runs inside your own MT5 terminal. Your broker credentials never leave your machine — only trade data syncs, over a personal API key you can revoke anytime.' },
+      { icon: '🇪🇺', title: 'EU infrastructure', desc: 'Database and bridge both run on European servers. Your trading data never leaves the EU — GDPR-compliant by design.' },
+      { icon: '📤', title: 'You own your data', desc: 'Export every trade as PDF whenever you want. Delete your account and everything goes with it — no lock-in, no questions.' },
+      { icon: '⏻', title: 'Kill switch built in', desc: 'Disconnect the EA or pause the trade copier with one click from your dashboard. You are always in control of what executes.' },
+    ],
+  },
+  faq: {
+    eyebrow: 'FAQ',
+    h2: 'Questions, answered.',
+    subtitle: 'Everything traders ask before connecting their first account.',
+    items: [
+      { q: 'Do I have to give VELQUOR my MT5 password?', a: 'No. VELQUOR works through an Expert Advisor that runs inside your own MT5 terminal — your broker login never leaves your machine. The EA authenticates with a personal API key and pushes your trade data to your dashboard. You can revoke the key at any time.' },
+      { q: 'Which brokers are supported?', a: 'Every broker that offers MetaTrader 5 — IC Markets, Pepperstone, Blueberry, Vantage, FTMO, Eightcap and hundreds more. If it runs MT5, it works with VELQUOR.' },
+      { q: 'How fast is the trade copier?', a: 'Signals travel from your master account to your slave accounts in about one to two seconds. Lot sizing is proportional or fixed — you choose per group — and every copy is logged with its execution time so you can audit it.' },
+      { q: 'Is my trading data safe?', a: 'Your data is stored on EU servers, isolated per account, and encrypted in transit. Nobody else can see your trades — and VELQUOR never has the ability to withdraw from or trade on your account by itself.' },
+      { q: 'Do I need a credit card for the free plan?', a: 'No. The free plan is free forever — no card, no trial countdown. You get auto-sync, the journal, and core stats. Upgrade only when you want AI analysis, unlimited history, or the trade copier.' },
+      { q: 'Can I use it during a prop firm challenge?', a: 'Yes — that is exactly what Prop Firm Mode is for. VELQUOR tracks your max daily loss, total drawdown, and profit target in real time, and warns you before you get close to breaking a rule.' },
+    ],
+  },
   footer: {
     copyright: 'Velquor © 2026',
     links: ['Privacy', 'Terms', 'Contact'],
@@ -406,6 +440,29 @@ const de: LandingT = {
     cta: 'Kostenlos starten — keine Karte nötig',
     note: 'Für immer kostenloser Plan · 2 Minuten Setup · jederzeit kündbar',
     brokersLabel: 'Funktioniert mit jedem MT5-Broker',
+  },
+  trust: {
+    eyebrow: 'Auf Vertrauen gebaut',
+    h2: 'Dein Konto bleibt deins.',
+    items: [
+      { icon: '🔑', title: 'Keine Passwörter geteilt', desc: 'Der VELQUOR EA läuft in deinem eigenen MT5-Terminal. Deine Broker-Zugangsdaten verlassen nie deinen Rechner — nur Handelsdaten werden über einen persönlichen API-Key synchronisiert, den du jederzeit widerrufen kannst.' },
+      { icon: '🇪🇺', title: 'EU-Infrastruktur', desc: 'Datenbank und Bridge laufen auf europäischen Servern. Deine Trading-Daten verlassen die EU nicht — DSGVO-konform by design.' },
+      { icon: '📤', title: 'Deine Daten gehören dir', desc: 'Exportiere jeden Trade als PDF, wann immer du willst. Lösche dein Konto und alles verschwindet mit — kein Lock-in, keine Fragen.' },
+      { icon: '⏻', title: 'Kill-Switch eingebaut', desc: 'Trenne den EA oder pausiere den Trade-Copier mit einem Klick direkt vom Dashboard. Du behältst immer die Kontrolle darüber, was ausgeführt wird.' },
+    ],
+  },
+  faq: {
+    eyebrow: 'FAQ',
+    h2: 'Fragen, beantwortet.',
+    subtitle: 'Alles, was Trader fragen, bevor sie ihr erstes Konto verbinden.',
+    items: [
+      { q: 'Muss ich VELQUOR mein MT5-Passwort geben?', a: 'Nein. VELQUOR arbeitet über einen Expert Advisor, der in deinem eigenen MT5-Terminal läuft — dein Broker-Login verlässt nie deinen Rechner. Der EA authentifiziert sich mit einem persönlichen API-Key und sendet deine Handelsdaten an dein Dashboard. Den Key kannst du jederzeit widerrufen.' },
+      { q: 'Welche Broker werden unterstützt?', a: 'Jeder Broker mit MetaTrader 5 — IC Markets, Pepperstone, Blueberry, Vantage, FTMO, Eightcap und hunderte mehr. Wenn er MT5 anbietet, funktioniert er mit VELQUOR.' },
+      { q: 'Wie schnell ist der Trade-Copier?', a: 'Signale brauchen vom Master-Konto zu den Slave-Konten etwa ein bis zwei Sekunden. Lotgrößen sind proportional oder fest — du entscheidest pro Gruppe — und jede Kopie wird mit Ausführungszeit protokolliert.' },
+      { q: 'Sind meine Trading-Daten sicher?', a: 'Deine Daten liegen auf EU-Servern, pro Konto isoliert und verschlüsselt übertragen. Niemand sonst sieht deine Trades — und VELQUOR kann niemals selbst von deinem Konto abheben oder darauf handeln.' },
+      { q: 'Brauche ich eine Kreditkarte für den Free-Plan?', a: 'Nein. Der Free-Plan ist für immer kostenlos — keine Karte, kein Trial-Countdown. Du bekommst Auto-Sync, das Journal und Kern-Statistiken. Upgrade erst, wenn du KI-Analyse, unbegrenzte Historie oder den Trade-Copier willst.' },
+      { q: 'Kann ich es während einer Prop-Firm-Challenge nutzen?', a: 'Ja — genau dafür gibt es den Prop-Firm-Modus. VELQUOR überwacht Max Daily Loss, Gesamt-Drawdown und Profitziel in Echtzeit und warnt dich, bevor du einer Regelverletzung nahekommst.' },
+    ],
   },
   footer: {
     copyright: 'Velquor © 2026',
@@ -544,6 +601,29 @@ const zh: LandingT = {
     note: '永久免费方案 · 2分钟设置 · 随时取消',
     brokersLabel: '兼容所有MT5经纪商',
   },
+  trust: {
+    eyebrow: '为信任而建',
+    h2: '你的账户始终属于你。',
+    items: [
+      { icon: '🔑', title: '不共享任何密码', desc: 'VELQUOR EA在你自己的MT5终端内运行。经纪商登录凭证永远不会离开你的电脑——仅通过可随时撤销的个人API密钥同步交易数据。' },
+      { icon: '🇪🇺', title: '欧盟基础设施', desc: '数据库和桥接服务均运行在欧洲服务器上。你的交易数据不会离开欧盟——设计即符合GDPR。' },
+      { icon: '📤', title: '数据归你所有', desc: '随时将每笔交易导出为PDF。删除账户后所有数据一并清除——无锁定，无追问。' },
+      { icon: '⏻', title: '内置紧急开关', desc: '在仪表盘上一键断开EA或暂停跟单。执行什么，始终由你掌控。' },
+    ],
+  },
+  faq: {
+    eyebrow: '常见问题',
+    h2: '你的疑问，我们来解答。',
+    subtitle: '交易者连接第一个账户前最常问的问题。',
+    items: [
+      { q: '我需要把MT5密码交给VELQUOR吗？', a: '不需要。VELQUOR通过运行在你自己MT5终端内的EA工作——经纪商登录凭证永远不会离开你的电脑。EA使用个人API密钥认证，并将交易数据推送到仪表盘。密钥可随时撤销。' },
+      { q: '支持哪些经纪商？', a: '所有提供MetaTrader 5的经纪商——IC Markets、Pepperstone、Blueberry、Vantage、FTMO、Eightcap等数百家。只要支持MT5，就能用VELQUOR。' },
+      { q: '跟单速度有多快？', a: '信号从主账户传到从账户约需1至2秒。手数可按比例或固定——每组独立设置——每笔复制都记录执行时间，可随时审计。' },
+      { q: '我的交易数据安全吗？', a: '数据存储在欧盟服务器上，按账户隔离，传输全程加密。没有人能看到你的交易——VELQUOR自身永远无法从你的账户出金或下单。' },
+      { q: '免费方案需要信用卡吗？', a: '不需要。免费方案永久免费——无需信用卡，没有试用倒计时。包含自动同步、日志和核心统计。需要AI分析、无限历史或跟单时再升级即可。' },
+      { q: '自营公司挑战赛期间可以使用吗？', a: '可以——自营公司模式正是为此而生。VELQUOR实时追踪每日最大亏损、总回撤和盈利目标，并在你接近违规前发出警告。' },
+    ],
+  },
   footer: {
     copyright: 'Velquor © 2026',
     links: ['隐私政策', '条款', '联系我们'],
@@ -680,6 +760,29 @@ const es: LandingT = {
     cta: 'Empieza gratis — sin tarjeta',
     note: 'Plan gratuito para siempre · configuración en 2 minutos · cancela cuando quieras',
     brokersLabel: 'Funciona con cualquier broker MT5',
+  },
+  trust: {
+    eyebrow: 'Construido para la confianza',
+    h2: 'Tu cuenta sigue siendo tuya.',
+    items: [
+      { icon: '🔑', title: 'Sin compartir contraseñas', desc: 'El EA de VELQUOR corre dentro de tu propio terminal MT5. Tus credenciales del broker nunca salen de tu máquina — solo se sincronizan datos de operaciones mediante una clave API personal que puedes revocar cuando quieras.' },
+      { icon: '🇪🇺', title: 'Infraestructura en la UE', desc: 'La base de datos y el bridge corren en servidores europeos. Tus datos de trading nunca salen de la UE — conforme al RGPD por diseño.' },
+      { icon: '📤', title: 'Tus datos son tuyos', desc: 'Exporta cada operación como PDF cuando quieras. Elimina tu cuenta y todo desaparece con ella — sin ataduras, sin preguntas.' },
+      { icon: '⏻', title: 'Interruptor de emergencia', desc: 'Desconecta el EA o pausa el copiador con un clic desde tu panel. Siempre tienes el control de lo que se ejecuta.' },
+    ],
+  },
+  faq: {
+    eyebrow: 'FAQ',
+    h2: 'Preguntas, respondidas.',
+    subtitle: 'Todo lo que los traders preguntan antes de conectar su primera cuenta.',
+    items: [
+      { q: '¿Tengo que darle a VELQUOR mi contraseña de MT5?', a: 'No. VELQUOR funciona mediante un Expert Advisor que corre dentro de tu propio terminal MT5 — tu login del broker nunca sale de tu máquina. El EA se autentica con una clave API personal y envía tus datos de trading a tu panel. Puedes revocar la clave en cualquier momento.' },
+      { q: '¿Qué brokers son compatibles?', a: 'Cualquier broker que ofrezca MetaTrader 5 — IC Markets, Pepperstone, Blueberry, Vantage, FTMO, Eightcap y cientos más. Si tiene MT5, funciona con VELQUOR.' },
+      { q: '¿Qué tan rápido es el copiador de operaciones?', a: 'Las señales viajan de tu cuenta maestra a las cuentas esclavas en uno o dos segundos. Los lotes son proporcionales o fijos — lo eliges por grupo — y cada copia queda registrada con su tiempo de ejecución para poder auditarla.' },
+      { q: '¿Están seguros mis datos de trading?', a: 'Tus datos se almacenan en servidores de la UE, aislados por cuenta y cifrados en tránsito. Nadie más puede ver tus operaciones — y VELQUOR nunca puede retirar fondos ni operar en tu cuenta por sí solo.' },
+      { q: '¿Necesito tarjeta de crédito para el plan gratuito?', a: 'No. El plan gratuito es gratis para siempre — sin tarjeta, sin cuenta atrás de prueba. Incluye auto-sync, el diario y estadísticas clave. Actualiza solo cuando quieras análisis con IA, historial ilimitado o el copiador.' },
+      { q: '¿Puedo usarlo durante un desafío de prop firm?', a: 'Sí — exactamente para eso existe el Modo Prop Firm. VELQUOR vigila tu pérdida máxima diaria, el drawdown total y el objetivo de beneficio en tiempo real, y te avisa antes de que estés cerca de romper una regla.' },
+    ],
   },
   footer: {
     copyright: 'Velquor © 2026',
