@@ -8,6 +8,7 @@ import { HowItWorks } from '@/components/landing/HowItWorks'
 import { VelquorSection } from '@/components/landing/VelquorSection'
 import { PropFirmSection } from '@/components/landing/PropFirmSection'
 import { Pricing } from '@/components/landing/Pricing'
+import { FinalCTA } from '@/components/landing/FinalCTA'
 import { FooterTagline } from '@/components/landing/FooterTagline'
 import { Footer } from '@/components/landing/Footer'
 import { ScrollSetup } from '@/components/landing/ScrollSetup'
@@ -26,6 +27,7 @@ export default function LandingPage() {
       <VelquorSection />
       <PropFirmSection />
       <Pricing />
+      <FinalCTA />
       <FooterTagline />
       <Footer />
     </div>

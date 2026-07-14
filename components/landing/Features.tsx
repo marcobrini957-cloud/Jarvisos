@@ -19,7 +19,7 @@ export function Features() {
           <div key={f.title} style={{
             background: 'var(--s1)', padding: '24px',
             borderRight: (i % 3 !== 2) ? '1px solid var(--bd)' : 'none',
-            borderBottom: (i < 3) ? '1px solid var(--bd)' : 'none',
+            borderBottom: (i < ft.items.length - (ft.items.length % 3 || 3)) ? '1px solid var(--bd)' : 'none',
             cursor: 'default', transition: 'background 0.18s',
           }}
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--s2)' }}
@@ -27,7 +27,7 @@ export function Features() {
           >
             <p style={{
               margin: '0 0 16px',
-              color: accentColors[i],
+              color: accentColors[i % accentColors.length],
               fontSize: '11px', fontWeight: 700,
               letterSpacing: '0.08em',
               fontFamily: 'monospace',

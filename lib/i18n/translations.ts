@@ -74,6 +74,13 @@ export interface LandingT {
       features: Array<{ text: string; included: boolean }>
     }>
   }
+  finalCta: {
+    h2: string
+    subtitle: string
+    cta: string
+    note: string
+    brokersLabel: string
+  }
   footer: {
     copyright: string
     links: string[]
@@ -86,6 +93,9 @@ const F_FREE: Array<{ text: string; included: boolean }> = [
   { text: 'MT5 auto-sync (30-day history)',         included: true  },
   { text: 'Trade journal (up to 100 trades)',        included: true  },
   { text: 'Core P&L & win rate stats',              included: true  },
+  { text: 'Live TradingView charts & market data',  included: true  },
+  { text: 'Portfolio tracker (stocks, ETFs, metals)', included: true },
+  { text: 'AI macro briefings & economic calendar', included: false },
   { text: 'Session analytics (London / NY / Asia)', included: false },
   { text: 'Setup analytics (per-setup win rate)',    included: false },
   { text: 'VELQUOR AI analysis',                    included: false },
@@ -100,6 +110,9 @@ const F_PRO: Array<{ text: string; included: boolean }> = [
   { text: 'MT5 auto-sync (unlimited history)',       included: true  },
   { text: 'Trade journal (unlimited trades)',         included: true  },
   { text: 'Core P&L & win rate stats',              included: true  },
+  { text: 'Live TradingView charts & market data',  included: true  },
+  { text: 'Portfolio tracker (stocks, ETFs, metals)', included: true },
+  { text: 'AI macro briefings & economic calendar', included: true  },
   { text: 'Session analytics (London / NY / Asia)', included: true  },
   { text: 'Setup analytics (per-setup win rate)',    included: true  },
   { text: 'VELQUOR AI analysis',                    included: true  },
@@ -114,6 +127,9 @@ const F_ULTRA: Array<{ text: string; included: boolean }> = [
   { text: 'MT5 auto-sync (unlimited history)',       included: true },
   { text: 'Trade journal (unlimited trades)',         included: true },
   { text: 'Core P&L & win rate stats',              included: true },
+  { text: 'Live TradingView charts & market data',  included: true },
+  { text: 'Portfolio tracker (stocks, ETFs, metals)', included: true },
+  { text: 'AI macro briefings & economic calendar', included: true },
   { text: 'Session analytics (London / NY / Asia)', included: true },
   { text: 'Setup analytics (per-setup win rate)',    included: true },
   { text: 'VELQUOR AI analysis',                    included: true },
@@ -172,7 +188,10 @@ const en: LandingT = {
       { title: 'Built-in Trade Copier', desc: 'Mirror every trade from your master MT5 to any number of slave accounts in under 2 seconds. Proportional or fixed lot sizing. Fully managed from your dashboard.' },
       { title: 'AI behavior analysis', desc: 'VELQUOR correlates your behavior, your strategy, and your trading habits across every trade — and surfaces the exact combinations that win and the ones that lose.' },
       { title: 'Session & setup analytics', desc: 'Instantly see your win rate broken down by London, New York, and Asian session — and by every setup type you trade. Find your real edge in the numbers.' },
+      { title: 'Live TradingView charts', desc: 'A full TradingView chart, live ticker tape, and market overview built straight into your dashboard. Watch Gold and NAS100 without leaving your journal.' },
+      { title: 'Journal, habits & discipline', desc: 'Daily journal with mood tracking, habit streaks, discipline scoring, and AI-graded weekly reviews. Your routine and your P&L, finally connected.' },
       { title: 'Prop firm tracker', desc: 'Running a challenge? Activate Prop Firm Mode and VELQUOR watches every rule — max daily loss, drawdown, profit target — in real time.' },
+      { title: 'Macro briefings & portfolio', desc: 'An AI morning briefing on Gold, Nasdaq, and the dollar before NY open, a live economic calendar, and a long-term portfolio tracker for stocks, ETFs, and metals.' },
       { title: 'PDF trade reports', desc: 'Generate a professional PDF report for any date range. Weekly reviews, monthly summaries, or a full account audit — formatted and ready to go.' },
     ],
   },
@@ -244,6 +263,13 @@ const en: LandingT = {
       },
     ],
   },
+  finalCta: {
+    h2: 'Your next trade deserves better than a spreadsheet.',
+    subtitle: 'Connect MT5 once. Every trade auto-logged, analysed by AI, and copied across your accounts — from day one.',
+    cta: 'Start free — no card needed',
+    note: 'Free forever plan · 2-minute setup · cancel anytime',
+    brokersLabel: 'Works with every MT5 broker',
+  },
   footer: {
     copyright: 'Velquor © 2026',
     links: ['Privacy', 'Terms', 'Contact'],
@@ -296,10 +322,13 @@ const de: LandingT = {
     subtitle: 'Kein weiteres Handelsjournal. Ein vollständiges Betriebssystem für dein Trading-Business.',
     items: [
       { title: 'Auto-Sync von MT5', desc: 'Jeder Trade, jede Position, jede GuV synchronisiert in Echtzeit. Keine manuelle Eingabe, keine CSV-Uploads, keine Tabellen.' },
-      { title: 'VELQUOR KI-Coaching', desc: 'Stelle Fragen zu deinen Trades und erhalte Antworten aus deinen echten Daten — keine generischen Ratschläge. "Warum verliere ich auf NAS100?" bekommt eine echte Antwort.' },
+      { title: 'Integrierter Trade-Copier', desc: 'Spiegle jeden Trade von deinem Master-MT5 auf beliebig viele Slave-Konten in unter 2 Sekunden. Proportionale oder feste Lots — komplett vom Dashboard aus verwaltet.' },
+      { title: 'KI-Verhaltensanalyse', desc: 'VELQUOR korreliert dein Verhalten, deine Strategie und deine Gewohnheiten über jeden Trade — und zeigt exakt die Kombinationen, die gewinnen und die, die verlieren.' },
       { title: 'Session- & Setup-Analyse', desc: 'Sieh sofort deine Gewinnrate nach London-, New York- und Asia-Session — und nach jedem Setup-Typ, den du tradest.' },
-      { title: 'Stimmung vs. Performance', desc: 'Logge deine Tagesverfassung. Mit der Zeit zeigt VELQUOR, welche Gemütszustände mit deinen besten und schlechtesten Ergebnissen korrelieren.' },
+      { title: 'Live-TradingView-Charts', desc: 'Vollständiger TradingView-Chart, Live-Ticker und Marktübersicht direkt im Dashboard. Gold und NAS100 im Blick, ohne dein Journal zu verlassen.' },
+      { title: 'Journal, Habits & Disziplin', desc: 'Tagesjournal mit Stimmungstracking, Habit-Streaks, Disziplin-Score und KI-bewerteten Wochenreviews. Deine Routine und deine GuV, endlich verbunden.' },
       { title: 'Prop-Firm-Tracker', desc: 'Läuft gerade eine Challenge? Aktiviere den Prop-Firm-Modus und VELQUOR überwacht jede Regel — Max Daily Loss, Drawdown, Profitziel — in Echtzeit.' },
+      { title: 'Makro-Briefings & Portfolio', desc: 'KI-Morgenbriefing zu Gold, Nasdaq und Dollar vor NY Open, Wirtschaftskalender und ein langfristiger Portfolio-Tracker für Aktien, ETFs und Metalle.' },
       { title: 'PDF-Handelsberichte', desc: 'Erstelle professionelle PDF-Berichte für beliebige Zeiträume. Wochenreviews, Monatszusammenfassungen oder vollständige Kontoaudits — formatiert und bereit.' },
     ],
   },
@@ -371,6 +400,13 @@ const de: LandingT = {
       },
     ],
   },
+  finalCta: {
+    h2: 'Dein nächster Trade verdient mehr als eine Tabelle.',
+    subtitle: 'MT5 einmal verbinden. Jeder Trade automatisch geloggt, von KI analysiert und auf deine Konten kopiert — vom ersten Tag an.',
+    cta: 'Kostenlos starten — keine Karte nötig',
+    note: 'Für immer kostenloser Plan · 2 Minuten Setup · jederzeit kündbar',
+    brokersLabel: 'Funktioniert mit jedem MT5-Broker',
+  },
   footer: {
     copyright: 'Velquor © 2026',
     links: ['Datenschutz', 'AGB', 'Kontakt'],
@@ -423,10 +459,13 @@ const zh: LandingT = {
     subtitle: '不只是交易日志，而是你交易事业的完整操作系统。',
     items: [
       { title: '从MT5自动同步', desc: '每笔交易、每个持仓、每笔盈亏实时同步。无手动输入，无CSV上传，无电子表格。' },
-      { title: 'VELQUOR AI辅导', desc: '询问任何关于你交易的问题，获得基于你真实数据的答案——而非泛泛建议。"我为什么在NAS100上亏损？"能得到真实答案。' },
+      { title: '内置跟单系统', desc: '2秒内将主账户的每笔交易镜像到任意数量的从账户。按比例或固定手数——全部在仪表盘中管理。' },
+      { title: 'AI行为分析', desc: 'VELQUOR关联你的行为、策略和交易习惯——精准找出赢钱的组合和亏钱的组合。' },
       { title: '时段与策略分析', desc: '立即查看按伦敦、纽约、亚洲时段分解的胜率——以及每种策略类型的表现。' },
-      { title: '情绪与表现对比', desc: '记录每个交易日前的状态。随着时间推移，VELQUOR显示哪种情绪状态与你的最佳和最差表现相关。' },
+      { title: 'TradingView实时图表', desc: '完整的TradingView图表、实时行情条和市场概览直接内置于仪表盘。无需离开日志即可关注黄金和纳指。' },
+      { title: '日志、习惯与纪律', desc: '每日日志配合情绪追踪、习惯连击、纪律评分和AI评级的周度回顾。你的日常习惯与盈亏，终于关联起来。' },
       { title: '自营公司追踪器', desc: '正在参加挑战赛？激活自营公司模式，VELQUOR实时监控每条规则——每日最大亏损、回撤、盈利目标。' },
+      { title: '宏观简报与投资组合', desc: '纽约开盘前的黄金、纳指、美元AI晨报，实时经济日历，以及股票、ETF和贵金属的长期投资组合追踪。' },
       { title: 'PDF交易报告', desc: '为任意日期范围生成专业PDF报告。周度回顾、月度总结或完整账户审计——格式规范，随时可用。' },
     ],
   },
@@ -498,6 +537,13 @@ const zh: LandingT = {
       },
     ],
   },
+  finalCta: {
+    h2: '你的下一笔交易，值得比电子表格更好的工具。',
+    subtitle: '连接一次MT5。每笔交易自动记录、AI分析、并复制到你的所有账户——从第一天开始。',
+    cta: '免费开始——无需信用卡',
+    note: '永久免费方案 · 2分钟设置 · 随时取消',
+    brokersLabel: '兼容所有MT5经纪商',
+  },
   footer: {
     copyright: 'Velquor © 2026',
     links: ['隐私政策', '条款', '联系我们'],
@@ -550,10 +596,13 @@ const es: LandingT = {
     subtitle: 'No es otro diario de trading. Es un sistema operativo completo para tu negocio de trading.',
     items: [
       { title: 'Sincronización automática de MT5', desc: 'Cada operación, posición y P&L se sincroniza desde tu cuenta MT5 en tiempo real. Sin entrada manual, sin subidas CSV, sin hojas de cálculo.' },
-      { title: 'Coaching con IA VELQUOR', desc: 'Pregunta cualquier cosa sobre tus operaciones y obtén respuestas basadas en tus datos reales — no consejos genéricos. "¿Por qué pierdo en NAS100?" tiene una respuesta real.' },
+      { title: 'Copiador de operaciones integrado', desc: 'Replica cada operación de tu MT5 maestro a cualquier número de cuentas esclavas en menos de 2 segundos. Lotes proporcionales o fijos — gestionado desde tu panel.' },
+      { title: 'Análisis de comportamiento con IA', desc: 'VELQUOR correlaciona tu comportamiento, tu estrategia y tus hábitos en cada operación — y muestra exactamente las combinaciones que ganan y las que pierden.' },
       { title: 'Análisis de sesión y setup', desc: 'Ve al instante tu tasa de victorias por sesión London, New York y Asia — y por cada tipo de setup que operas.' },
-      { title: 'Estado de ánimo vs. rendimiento', desc: 'Registra cómo te sientes antes de cada jornada. Con el tiempo, VELQUOR muestra los estados de ánimo que correlacionan con tu mejor y peor rendimiento.' },
+      { title: 'Gráficos TradingView en vivo', desc: 'Un gráfico TradingView completo, cinta de cotizaciones en vivo y resumen de mercado integrados en tu panel. Sigue el Oro y el NAS100 sin salir de tu diario.' },
+      { title: 'Diario, hábitos y disciplina', desc: 'Diario con seguimiento de ánimo, rachas de hábitos, puntuación de disciplina y revisiones semanales calificadas por IA. Tu rutina y tu P&L, por fin conectados.' },
       { title: 'Rastreador de prop firm', desc: '¿En un desafío? Activa el Modo Prop Firm y VELQUOR vigila cada regla — pérdida máxima diaria, drawdown, objetivo de beneficio — en tiempo real.' },
+      { title: 'Informes macro y portafolio', desc: 'Briefing matinal de IA sobre Oro, Nasdaq y el dólar antes de la apertura de NY, calendario económico en vivo y rastreador de portafolio para acciones, ETFs y metales.' },
       { title: 'Informes PDF', desc: 'Genera un informe PDF profesional para cualquier rango de fechas. Revisiones semanales, resúmenes mensuales o auditorías completas — todo formateado y listo.' },
     ],
   },
@@ -624,6 +673,13 @@ const es: LandingT = {
         features: F_ULTRA,
       },
     ],
+  },
+  finalCta: {
+    h2: 'Tu próxima operación merece algo mejor que una hoja de cálculo.',
+    subtitle: 'Conecta MT5 una vez. Cada operación registrada automáticamente, analizada por IA y copiada a tus cuentas — desde el primer día.',
+    cta: 'Empieza gratis — sin tarjeta',
+    note: 'Plan gratuito para siempre · configuración en 2 minutos · cancela cuando quieras',
+    brokersLabel: 'Funciona con cualquier broker MT5',
   },
   footer: {
     copyright: 'Velquor © 2026',

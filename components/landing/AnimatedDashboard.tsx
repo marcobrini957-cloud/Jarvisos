@@ -7,10 +7,20 @@ const VELQUOR_TEXT = "Your NAS100 trades show a 38% win rate — below breakeven
 
 const CURSOR_SVG_PATH = "M1 1 L1 13.5 L4.2 10.2 L6.5 16.5 L8.8 15.5 L6.5 9.2 L11.5 9.2 Z"
 
+// Mirrors the real dashboard ticker tape (TradingView embed on velquor.app)
+const TICKER = [
+  { sym: 'GOLD',    price: '3,412.4', chg: '+0.82%', up: true  },
+  { sym: 'NAS100',  price: '23,186',  chg: '−0.34%', up: false },
+  { sym: 'EUR/USD', price: '1.0847',  chg: '+0.11%', up: true  },
+  { sym: 'S&P 500', price: '6,241',   chg: '+0.27%', up: true  },
+  { sym: 'DAX',     price: '18,904',  chg: '−0.18%', up: false },
+  { sym: 'BTC',     price: '118,240', chg: '+1.94%', up: true  },
+]
+
 export function AnimatedDashboard() {
-  const TAB_NAMES    = ['Overview', 'Trading', 'Journal', 'Macro', 'VELQUOR']
-  const TAB_ORDER    = [0, 1, 2, 4]
-  const NEXT_TAB_IDX = [1, 2, 4, 0]
+  const TAB_NAMES    = ['Overview', 'Trading', 'Journal', 'Copy', 'VELQUOR']
+  const STEPS        = 5
+  const NEXT_TAB_IDX = [1, 2, 3, 4, 0]
 
   const DRIFT_EASE = 520   // ms per drift transition
   const DRIFT_INTV = 470   // ms between drift starts — less than DRIFT_EASE so next fires before current arrives
@@ -18,17 +28,18 @@ export function AnimatedDashboard() {
   // Cursor never stops: 5 waypoints per tab the cursor drifts through naturally
   const DRIFT_PATHS = [
     [[0.64,0.28],[0.76,0.34],[0.55,0.42],[0.38,0.37],[0.60,0.45]], // Overview: metrics → chart → trades
-    [[0.60,0.42],[0.70,0.54],[0.48,0.62],[0.36,0.44],[0.64,0.58]], // Trading: chart → table
+    [[0.60,0.42],[0.70,0.54],[0.48,0.62],[0.36,0.44],[0.64,0.58]], // Trading: live chart → trade log
     [[0.26,0.40],[0.18,0.48],[0.32,0.44],[0.70,0.54],[0.52,0.62]], // Journal: calendar → entry
+    [[0.30,0.38],[0.52,0.46],[0.72,0.40],[0.58,0.60],[0.40,0.66]], // Copy: master → slaves → log
     [[0.58,0.50],[0.34,0.46],[0.66,0.64],[0.46,0.62],[0.56,0.72]], // VELQUOR: chips → chat
   ] as const
 
   const CONTENT_FRAC = [
-    [0.60,0.34],[0.57,0.50],[0.30,0.46],[0.54,0.67],
+    [0.60,0.34],[0.57,0.50],[0.30,0.46],[0.44,0.42],[0.54,0.67],
   ] as const
 
   const INTER_FRAC = [
-    [0.50,0.18],[0.55,0.20],[0.44,0.17],[0.40,0.28],
+    [0.50,0.18],[0.55,0.20],[0.44,0.17],[0.52,0.19],[0.40,0.28],
   ] as const
 
   const [step,           setStep]          = useState(0)
@@ -41,7 +52,7 @@ export function AnimatedDashboard() {
   const [cursorCubic,    setCursorCubic]   = useState('0.45,0,0.55,1')
   const [cursorClicking, setCursorClicking] = useState(false)
 
-  const activeTab    = TAB_ORDER[step]
+  const activeTab    = step
   const containerRef = useRef<HTMLDivElement>(null)
   const tabPtsRef    = useRef<Array<{x:number,y:number}>>([])
   const cursorPosRef = useRef({ x: 0, y: 0 })
@@ -117,7 +128,7 @@ export function AnimatedDashboard() {
 
     // Move toward next tab content
     ids.push(setTimeout(() => {
-      const nextStep = (step + 1) % 4
+      const nextStep = (step + 1) % STEPS
       const [nfx, nfy] = CONTENT_FRAC[nextStep]
       go(nfx, nfy, 480, '0.25,0.46,0.45,0.94')
 
@@ -127,7 +138,7 @@ export function AnimatedDashboard() {
       setVELQUORChars(0)
 
       setTimeout(() => {
-        setStep(s => (s + 1) % 4)
+        setStep(s => (s + 1) % STEPS)
         setProgress(0)
         setVisible(true)
       }, 260)
@@ -140,7 +151,7 @@ export function AnimatedDashboard() {
   }, [step])
 
   useEffect(() => {
-    if (step !== 3 || !visible) return
+    if (step !== 4 || !visible) return
     let i = 0
     const id = setInterval(() => {
       i++
@@ -157,21 +168,36 @@ export function AnimatedDashboard() {
   const lp  = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x},${ys[i]}`).join(' ')
   const ap  = `${lp} L${CW},${CH} L0,${CH} Z`
 
-  const trades = [
-    { sym: 'XAUUSD', type: 'BUY',  pnl: +284.50, setup: 'Order Block', session: 'London' },
-    { sym: 'NAS100', type: 'SELL', pnl: -112.20, setup: 'BOS/CHoCH',   session: 'NY open' },
-    { sym: 'XAUUSD', type: 'BUY',  pnl: +196.00, setup: 'FVG',         session: 'London' },
-    { sym: 'EURUSD', type: 'BUY',  pnl:  +44.80, setup: 'S/R Flip',    session: 'NY' },
+  // Candles for the Live Chart mock (mirrors the TradingView embed in the real Trading tab)
+  // [open, high, low, close] on a 0–100 scale
+  const candles = [
+    [38,52,34,48],[48,58,44,55],[55,60,42,45],[45,50,36,40],[40,56,38,53],
+    [53,64,50,61],[61,66,54,57],[57,62,48,52],[52,68,50,65],[65,74,62,70],
+    [70,76,60,63],[63,72,61,69],[69,80,66,77],[77,82,70,73],[73,84,71,81],
   ]
 
-  const calWins   = [3, 5, 9, 12, 16, 17, 19, 21]
-  const calLosses = [4, 10, 14, 18]
+  const trades = [
+    { sym: 'XAUUSD', type: 'BUY',  pnl: +284.50, setup: 'Order Block', session: 'London',  res: 'W'  },
+    { sym: 'NAS100', type: 'SELL', pnl: -112.20, setup: 'BOS/CHoCH',   session: 'NY',      res: 'L'  },
+    { sym: 'XAUUSD', type: 'BUY',  pnl: +196.00, setup: 'FVG',         session: 'London',  res: 'W'  },
+    { sym: 'XAUUSD', type: 'SELL', pnl:   +6.40, setup: 'Liq. Grab',   session: 'NY',      res: 'BE' },
+  ]
+
+  const calWins   = [1, 3, 6, 8, 9, 10]
+  const calLosses = [2, 7]
+
+  const copyLog = [
+    { action: 'OPEN',  sym: 'XAUUSD', lots: '0.50 → 0.25', target: 'Blueberry #221', ms: '0.9s', ok: true },
+    { action: 'OPEN',  sym: 'XAUUSD', lots: '0.50 → 0.10', target: 'FTMO #58',       ms: '1.2s', ok: true },
+    { action: 'CLOSE', sym: 'NAS100', lots: '0.30 → 0.15', target: 'Blueberry #221', ms: '0.8s', ok: true },
+  ]
 
   return (
     <>
       <style>{`
         @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
         @keyframes cursor-click { 0%{transform:scale(0.2);opacity:1} 100%{transform:scale(2.6);opacity:0} }
+        @keyframes vq-pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
       `}</style>
       <div ref={containerRef} style={{ width: '100%', background: '#090D13', position: 'relative' }}>
 
@@ -229,6 +255,21 @@ export function AnimatedDashboard() {
           </div>
         </div>
 
+        {/* Live market ticker — mirrors the real dashboard's TradingView tape */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '18px',
+          padding: '5px 18px', borderBottom: '1px solid rgba(255,255,255,0.05)',
+          overflow: 'hidden', whiteSpace: 'nowrap',
+        }}>
+          {TICKER.map(q => (
+            <span key={q.sym} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+              <span style={{ color: 'var(--t2)', fontSize: '8.5px', fontWeight: 600 }}>{q.sym}</span>
+              <span style={{ color: 'var(--t1)', fontSize: '8.5px' }}>{q.price}</span>
+              <span style={{ color: q.up ? 'var(--gr2)' : 'var(--re)', fontSize: '8.5px', fontWeight: 600 }}>{q.chg}</span>
+            </span>
+          ))}
+        </div>
+
         {/* Content — fades between tabs */}
         <div style={{
           padding: '16px 18px 14px', minHeight: '280px',
@@ -246,10 +287,10 @@ export function AnimatedDashboard() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '8px' }}>
                 {[
-                  { label: 'Today P&L',   value: '+€408.70', color: 'var(--gr2)' },
-                  { label: 'Win Rate',    value: '80%',       color: 'var(--ac)'  },
-                  { label: 'Balance',     value: '€12,408',   color: 'var(--t1)'  },
-                  { label: 'Open Trades', value: '2',         color: 'var(--am2)' },
+                  { label: 'Today P&L',    value: '+€408.70', color: 'var(--gr2)' },
+                  { label: 'Win Rate',     value: '67%',      color: 'var(--ac)'  },
+                  { label: 'Balance',      value: '€12,408',  color: 'var(--t1)'  },
+                  { label: 'Streak',       value: '🔥 12d',   color: 'var(--am2)' },
                 ].map(m => (
                   <div key={m.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '9px 10px', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <p style={{ margin: 0, color: 'var(--t3)', fontSize: '8px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{m.label}</p>
@@ -259,7 +300,7 @@ export function AnimatedDashboard() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <p style={{ margin: '0 0 8px', color: 'var(--t2)', fontSize: '10px', fontWeight: 600 }}>Weekly P&L</p>
+                  <p style={{ margin: '0 0 8px', color: 'var(--t2)', fontSize: '10px', fontWeight: 600 }}>Equity Curve</p>
                   <svg viewBox={`0 0 ${CW} ${CH}`} style={{ width: '100%', height: '44px', overflow: 'visible' }}>
                     <defs><linearGradient id="g-ov" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--ac)" stopOpacity="0.25"/><stop offset="100%" stopColor="var(--ac)" stopOpacity="0"/></linearGradient></defs>
                     <path d={ap} fill="url(#g-ov)"/>
@@ -268,16 +309,24 @@ export function AnimatedDashboard() {
                   </svg>
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-                  <p style={{ margin: 0, padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,0.04)', color: 'var(--t2)', fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recent Trades</p>
-                  {trades.slice(0,3).map((t, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ fontSize: '7px', padding: '1px 4px', borderRadius: '3px', fontWeight: 700, background: t.type==='BUY'?'rgba(0,255,133,0.1)':'rgba(255,51,71,0.1)', color: t.type==='BUY'?'var(--gr2)':'var(--re)' }}>{t.type}</span>
-                        <span style={{ color: 'var(--t1)', fontSize: '10px', fontWeight: 500 }}>{t.sym}</span>
-                      </div>
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: t.pnl>=0?'var(--gr2)':'var(--re)' }}>{t.pnl>=0?'+':''}€{Math.abs(t.pnl).toFixed(0)}</span>
+                  <p style={{ margin: 0, padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,0.04)', color: 'var(--t2)', fontSize: '9px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Daily P&L Calendar · July</p>
+                  <div style={{ padding: '8px 10px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '2px', marginBottom: '3px' }}>
+                      {['M','T','W','T','F','S','S'].map((d, i) => (
+                        <div key={i} style={{ textAlign: 'center', fontSize: '7px', color: 'var(--t3)', fontWeight: 600 }}>{d}</div>
+                      ))}
                     </div>
-                  ))}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '2px' }}>
+                      {[null,null,1,2,3,4,5,6,7,8,9,10,11,12,13].map((d, i) => (
+                        <div key={i} style={{
+                          textAlign: 'center', fontSize: '8px', padding: '2px 1px', borderRadius: '3px',
+                          color: d===13?'white':d?'var(--t2)':'transparent',
+                          background: d===13?'var(--ac)':d&&calWins.includes(d)?'rgba(0,255,133,0.18)':d&&calLosses.includes(d)?'rgba(255,51,71,0.15)':'transparent',
+                          fontWeight: d===13?700:400,
+                        }}>{d||''}</div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -292,7 +341,7 @@ export function AnimatedDashboard() {
                   { label: 'Win Rate',     value: '67%',     color: 'var(--ac)'  },
                   { label: 'Profit Factor',value: '2.14',    color: 'var(--am2)' },
                   { label: 'Avg Win',      value: '+€240',   color: 'var(--gr)'  },
-                  { label: 'Avg Loss',     value: '−€100',   color: 'var(--re)'  },
+                  { label: 'Max DD',       value: '−€310',   color: 'var(--re)'  },
                 ].map(m => (
                   <div key={m.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '9px 8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                     <p style={{ margin: 0, color: 'var(--t3)', fontSize: '7px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{m.label}</p>
@@ -302,26 +351,39 @@ export function AnimatedDashboard() {
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <p style={{ margin: 0, color: 'var(--t2)', fontSize: '10px', fontWeight: 600 }}>Equity Curve — This Month</p>
-                  <p style={{ margin: 0, color: 'var(--gr2)', fontSize: '10px', fontWeight: 600 }}>+€1,824</p>
+                  <p style={{ margin: 0, color: 'var(--t2)', fontSize: '10px', fontWeight: 600 }}>Live Chart · XAUUSD · 1H</p>
+                  <p style={{ margin: 0, color: 'var(--t3)', fontSize: '8px' }}>TradingView</p>
                 </div>
-                <svg viewBox={`0 0 ${CW} ${CH}`} style={{ width: '100%', height: '52px', overflow: 'visible' }}>
-                  <defs><linearGradient id="g-tr" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--gr2)" stopOpacity="0.2"/><stop offset="100%" stopColor="var(--gr2)" stopOpacity="0"/></linearGradient></defs>
-                  <path d={ap} fill="url(#g-tr)"/>
-                  <path d={lp} fill="none" stroke="var(--gr2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx={xs[xs.length-1]} cy={ys[ys.length-1]} r="3" fill="var(--gr2)"/>
+                <svg viewBox="0 0 500 64" style={{ width: '100%', height: '56px', overflow: 'visible' }}>
+                  {candles.map(([o, h, l, c], i) => {
+                    const x = 12 + i * 33
+                    const up = c >= o
+                    const col = up ? 'var(--gr2)' : 'var(--re)'
+                    const y = (v: number) => 64 - (v / 100) * 60
+                    return (
+                      <g key={i}>
+                        <line x1={x} x2={x} y1={y(h)} y2={y(l)} stroke={col} strokeWidth="1" opacity="0.7"/>
+                        <rect x={x - 4} width="8" y={y(Math.max(o, c))} height={Math.max(2, Math.abs(y(o) - y(c)))} fill={col} rx="1"/>
+                      </g>
+                    )
+                  })}
                 </svg>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '80px 46px 80px 1fr 64px', padding: '5px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', color: 'var(--t3)', fontSize: '7px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                  <span>Pair</span><span>Side</span><span>Setup</span><span>Session</span><span style={{ textAlign: 'right' }}>P&L</span>
+                <div style={{ display: 'grid', gridTemplateColumns: '76px 42px 76px 1fr 30px 58px', padding: '5px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', color: 'var(--t3)', fontSize: '7px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  <span>Pair</span><span>Side</span><span>Setup</span><span>Session</span><span></span><span style={{ textAlign: 'right' }}>P&L</span>
                 </div>
                 {trades.map((t, i) => (
-                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '80px 46px 80px 1fr 64px', padding: '6px 12px', borderBottom: i < trades.length-1 ? '1px solid rgba(255,255,255,0.03)' : 'none', alignItems: 'center', background: i===0?'rgba(77,143,255,0.04)':'transparent' }}>
+                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '76px 42px 76px 1fr 30px 58px', padding: '6px 12px', borderBottom: i < trades.length-1 ? '1px solid rgba(255,255,255,0.03)' : 'none', alignItems: 'center', background: i===0?'rgba(0,255,133,0.03)':'transparent' }}>
                     <span style={{ color: 'var(--t1)', fontSize: '10px', fontWeight: 600 }}>{t.sym}</span>
                     <span style={{ fontSize: '7px', padding: '2px 4px', borderRadius: '3px', fontWeight: 700, width: 'fit-content', background: t.type==='BUY'?'rgba(0,255,133,0.1)':'rgba(255,51,71,0.1)', color: t.type==='BUY'?'var(--gr2)':'var(--re)' }}>{t.type}</span>
                     <span style={{ color: 'var(--t2)', fontSize: '9px' }}>{t.setup}</span>
                     <span style={{ color: 'var(--t3)', fontSize: '9px' }}>{t.session}</span>
+                    <span style={{
+                      fontSize: '7px', fontWeight: 700, padding: '1px 5px', borderRadius: '3px', width: 'fit-content',
+                      background: t.res==='W'?'rgba(0,255,133,0.14)':t.res==='L'?'rgba(255,51,71,0.14)':'rgba(77,143,255,0.12)',
+                      color: t.res==='W'?'var(--gr2)':t.res==='L'?'var(--re)':'var(--ac)',
+                    }}>{t.res}</span>
                     <span style={{ textAlign: 'right', fontSize: '10px', fontWeight: 700, color: t.pnl>=0?'var(--gr2)':'var(--re)' }}>{t.pnl>=0?'+':''}€{Math.abs(t.pnl).toFixed(0)}</span>
                   </div>
                 ))}
@@ -334,19 +396,19 @@ export function AnimatedDashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <p style={{ margin: '0 0 10px', color: 'var(--t2)', fontSize: '10px', fontWeight: 600 }}>June 2026</p>
+                  <p style={{ margin: '0 0 10px', color: 'var(--t2)', fontSize: '10px', fontWeight: 600 }}>July 2026</p>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '2px', marginBottom: '4px' }}>
                     {['M','T','W','T','F','S','S'].map((d, i) => (
                       <div key={i} style={{ textAlign: 'center', fontSize: '7px', color: 'var(--t3)', fontWeight: 600 }}>{d}</div>
                     ))}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '2px' }}>
-                    {[null,null,null,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21].map((d, i) => (
+                    {[null,null,1,2,3,4,5,6,7,8,9,10,11,12,13].map((d, i) => (
                       <div key={i} style={{
                         textAlign: 'center', fontSize: '8px', padding: '2px 1px', borderRadius: '3px',
-                        color: d===21?'white':d?'var(--t2)':'transparent',
-                        background: d===21?'var(--ac)':d&&calWins.includes(d)?'rgba(0,255,133,0.18)':d&&calLosses.includes(d)?'rgba(255,51,71,0.15)':'transparent',
-                        fontWeight: d===21?700:400,
+                        color: d===13?'white':d?'var(--t2)':'transparent',
+                        background: d===13?'var(--ac)':d&&calWins.includes(d)?'rgba(0,255,133,0.18)':d&&calLosses.includes(d)?'rgba(255,51,71,0.15)':'transparent',
+                        fontWeight: d===13?700:400,
                       }}>{d||''}</div>
                     ))}
                   </div>
@@ -374,7 +436,7 @@ export function AnimatedDashboard() {
                 {[
                   { label: 'Journal Streak',   value: '12 days', icon: '🔥' },
                   { label: 'Discipline Score', value: '87 / 100', icon: '✅' },
-                  { label: 'Best Streak',      value: '19 days', icon: '🏆' },
+                  { label: 'Weekly AI Review', value: 'Grade A−', icon: '🤖' },
                 ].map(s => (
                   <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '16px' }}>{s.icon}</span>
@@ -388,8 +450,61 @@ export function AnimatedDashboard() {
             </div>
           )}
 
-          {/* ── VELQUOR ── */}
+          {/* ── COPY TRADING ── */}
           {step === 3 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p style={{ margin: 0, color: 'var(--t1)', fontSize: '12px', fontWeight: 700 }}>Trade Copier · Main Group</p>
+                  <p style={{ margin: '2px 0 0', color: 'var(--t3)', fontSize: '9px' }}>1 master → 2 slave accounts · proportional lots</p>
+                </div>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,255,133,0.08)', border: '1px solid rgba(0,255,133,0.2)', color: 'var(--gr2)', fontSize: '9px', padding: '3px 9px', borderRadius: '20px', fontWeight: 600 }}>
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--gr2)', animation: 'vq-pulse 1.4s ease-in-out infinite' }} />
+                  ACTIVE
+                </span>
+              </div>
+
+              {/* Master → slaves flow */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 24px 1fr', gap: '6px', alignItems: 'center' }}>
+                <div style={{ background: 'rgba(77,143,255,0.05)', border: '1px solid rgba(77,143,255,0.25)', borderRadius: '8px', padding: '10px 12px' }}>
+                  <p style={{ margin: 0, color: 'var(--ac)', fontSize: '7px', fontWeight: 700, letterSpacing: '0.08em' }}>MASTER</p>
+                  <p style={{ margin: '3px 0 0', color: 'var(--t1)', fontSize: '11px', fontWeight: 700 }}>Blueberry · #114 892</p>
+                  <p style={{ margin: '2px 0 0', color: 'var(--t3)', fontSize: '8.5px' }}>€12,408 · EA connected</p>
+                </div>
+                <div style={{ textAlign: 'center', color: 'var(--t3)', fontSize: '13px' }}>→</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  {[
+                    { name: 'Blueberry · #221 040', bal: '€6,180 · 0.5× lots' },
+                    { name: 'FTMO Challenge · #58 112', bal: '€10,000 · 0.2× lots' },
+                  ].map(s => (
+                    <div key={s.name} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '7px', padding: '7px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <p style={{ margin: 0, color: 'var(--t1)', fontSize: '9.5px', fontWeight: 600 }}>{s.name}</p>
+                        <p style={{ margin: '1px 0 0', color: 'var(--t3)', fontSize: '8px' }}>{s.bal}</p>
+                      </div>
+                      <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--gr2)', flexShrink: 0 }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Signal log */}
+              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                <p style={{ margin: 0, padding: '6px 12px', borderBottom: '1px solid rgba(255,255,255,0.04)', color: 'var(--t2)', fontSize: '8px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Signal Log</p>
+                {copyLog.map((l, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 12px', borderBottom: i < copyLog.length-1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}>
+                    <span style={{ fontSize: '7px', fontWeight: 700, padding: '1px 5px', borderRadius: '3px', background: l.action==='OPEN'?'rgba(0,255,133,0.12)':'rgba(255,176,48,0.12)', color: l.action==='OPEN'?'var(--gr2)':'var(--am2)' }}>{l.action}</span>
+                    <span style={{ color: 'var(--t1)', fontSize: '9.5px', fontWeight: 600, minWidth: '48px' }}>{l.sym}</span>
+                    <span style={{ color: 'var(--t3)', fontSize: '9px', flex: 1 }}>{l.lots} · {l.target}</span>
+                    <span style={{ color: 'var(--gr2)', fontSize: '8.5px', fontWeight: 600 }}>✓ {l.ms}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── VELQUOR ── */}
+          {step === 4 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <LogoMark size={28} />
