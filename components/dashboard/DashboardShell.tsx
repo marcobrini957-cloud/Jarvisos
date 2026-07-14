@@ -41,6 +41,23 @@ export default function DashboardShell() {
     return () => clearInterval(iv)
   }, [])
 
+  // Keyboard tab switching: 1–9 jump to tabs in bar order (skipped while typing)
+  useEffect(() => {
+    const TAB_ORDER = [0, 1, 2, 3, 4, 5, 7, 8, 6] // matches TabBar layout
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const el = document.activeElement as HTMLElement | null
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return
+      const n = Number(e.key)
+      if (n >= 1 && n <= TAB_ORDER.length) {
+        setActiveTab(TAB_ORDER[n - 1])
+        setShowSettings(false)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   const ActiveTab = TAB_COMPONENTS[activeTab] ?? TAB_COMPONENTS[0]
 
   function handleTabChange(id: number) {
@@ -74,7 +91,10 @@ export default function DashboardShell() {
           className="flex-1 overflow-y-auto overflow-x-hidden dashboard-main sm:pb-0 pb-24"
           style={{ padding: 'clamp(16px, 2vw, 28px)' }}
         >
-          {showSettings ? <SettingsTab /> : <ActiveTab />}
+          {/* keyed wrapper re-mounts on tab change → vq-tab-in entrance plays */}
+          <div key={showSettings ? 'settings' : activeTab} className="vq-tab-in">
+            {showSettings ? <SettingsTab /> : <ActiveTab />}
+          </div>
         </main>
 
         {/* Mobile bottom nav — hidden on desktop */}

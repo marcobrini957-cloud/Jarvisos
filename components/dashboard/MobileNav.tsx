@@ -20,6 +20,7 @@ const ALL_TABS = [
   { id: 4, label: 'Macro',      icon: '🌐' },
   { id: 5, label: 'Discipline', icon: '🎯' },
   { id: 7, label: 'Tasks',       icon: '✅' },
+  { id: 8, label: 'Copy',        icon: '⇄'  },
   { id: 6, label: 'Ask VELQUOR', icon: '✦', isGold: true },
 ]
 

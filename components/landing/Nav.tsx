@@ -81,7 +81,7 @@ export function Nav() {
         display: 'flex', flexDirection: 'column', gap: '2px',
         boxShadow: '0 24px 60px rgba(0,0,0,0.8)',
       }}>
-        {[['Features', '#features'], ['Pricing', '#pricing'], ['How it works', '#how']].map(([label, href]) => (
+        {[['Features', '#features'], ['Pricing', '#pricing'], ['How it works', '#how'], ['FAQ', '#faq']].map(([label, href]) => (
           <a key={label} href={href} onClick={() => setMenuOpen(false)} style={{
             color: 'var(--t1)', fontSize: '17px', fontWeight: 500,
             textDecoration: 'none', padding: '14px 4px',
@@ -210,6 +210,13 @@ export function Nav() {
             Pricing
             <span style={{ fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: 'rgba(255,184,48,0.15)', color: '#FFB830', border: '1px solid rgba(255,184,48,0.25)', letterSpacing: '0.03em' }}>FREE</span>
           </Link>
+
+          {[['How it works', '/#how'], ['FAQ', '/#faq']].map(([label, href]) => (
+            <a key={label} href={href} style={{ ...navLinkStyle, padding: '6px 10px', borderRadius: '7px', textDecoration: 'none', color: 'rgba(255,255,255,0.65)' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#F2F2F2')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.65)')}
+            >{label}</a>
+          ))}
 
         </div>
 

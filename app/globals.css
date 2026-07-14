@@ -453,3 +453,27 @@ h1, h2, h3 { text-wrap: balance; }
   0%, 100% { box-shadow: 0 0 6px rgba(232,201,106,0.3); }
   50%       { box-shadow: 0 0 18px rgba(232,201,106,0.65); }
 }
+
+/* ── Dashboard tab transitions ─────────────────────────────────────────── */
+/* Content entrance when switching tabs (wrapper is keyed by tab id) */
+@keyframes vq-tab-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.vq-tab-in {
+  animation: vq-tab-enter 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ── Landing scroll reveal ─────────────────────────────────────────────── */
+/* Both classes are applied by JS (ScrollSetup) — no-JS visitors and crawlers
+   always see fully visible content. */
+.vq-reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.vq-reveal.vq-in {
+  opacity: 1;
+  transform: translateY(0);
+}

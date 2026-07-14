@@ -18,12 +18,13 @@ import { ScrollSetup } from '@/components/landing/ScrollSetup'
 
 export default function LandingPage() {
   return (
-    <div style={{ background: 'var(--bg)', color: 'var(--t1)', overflowX: 'hidden' }}>
+    <div className="landing-root" style={{ background: 'var(--bg)', color: 'var(--t1)', overflowX: 'hidden' }}>
       <ScrollSetup />
       <Nav />
       <Hero />
-      <ThreePillars />
+      {/* proof numbers immediately after the hero, before the pitch */}
       <StatsBar />
+      <ThreePillars />
       <ShowcaseSection />
       <Features />
       <HowItWorks />
