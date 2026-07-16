@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useLocale } from '@/hooks/useLocale'
+import { SectionEyebrow } from './SectionEyebrow'
 
 export function HowItWorks() {
   const { t } = useLocale()
@@ -15,6 +16,7 @@ export function HowItWorks() {
     }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <SectionEyebrow align="center">{hw.eyebrow}</SectionEyebrow>
           <h2 style={{ fontSize: 'clamp(30px, 6vw, 46px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 14px', color: 'var(--t1)', lineHeight: 1.04 }}>{hw.h2}</h2>
           <p style={{ color: 'var(--t2)', fontSize: '15px', maxWidth: '400px', margin: '0 auto', lineHeight: 1.65 }}>{hw.subtitle}</p>
         </div>

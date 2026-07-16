@@ -1,6 +1,7 @@
 'use client'
 
 import { useLocale } from '@/hooks/useLocale'
+import { SectionEyebrow } from './SectionEyebrow'
 
 export function Features() {
   const { t } = useLocale()
@@ -10,6 +11,7 @@ export function Features() {
   return (
     <section id="features" style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px)', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ marginBottom: '48px' }}>
+        <SectionEyebrow>{ft.eyebrow}</SectionEyebrow>
         <h2 style={{ fontSize: 'clamp(30px, 6vw, 46px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 12px', color: 'var(--t1)', lineHeight: 1.04 }}>{ft.h2}</h2>
         <p style={{ color: 'var(--t2)', fontSize: '15px', maxWidth: '480px', margin: 0, lineHeight: 1.65 }}>{ft.subtitle}</p>
       </div>

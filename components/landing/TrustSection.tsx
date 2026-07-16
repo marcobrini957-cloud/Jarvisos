@@ -1,6 +1,7 @@
 'use client'
 
 import { useLocale } from '@/hooks/useLocale'
+import { SectionEyebrow } from './SectionEyebrow'
 
 export function TrustSection() {
   const { t } = useLocale()
@@ -13,7 +14,7 @@ export function TrustSection() {
     }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <p style={{ margin: '0 0 12px', color: 'var(--ac)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'monospace' }}>{tr.eyebrow}</p>
+          <SectionEyebrow align="center" color="#00FF85" rgb="0,255,133">{tr.eyebrow}</SectionEyebrow>
           <h2 style={{ fontSize: 'clamp(26px, 5vw, 38px)', fontWeight: 900, letterSpacing: '-0.04em', margin: 0, color: 'var(--t1)', lineHeight: 1.08 }}>{tr.h2}</h2>
         </div>
 

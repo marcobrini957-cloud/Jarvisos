@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useLocale } from '@/hooks/useLocale'
+import { SectionEyebrow } from './SectionEyebrow'
 
 const BeforeAfterMockup = dynamic(() => import('./BeforeAfterMockup').then(m => m.BeforeAfterMockup))
 
@@ -22,7 +23,7 @@ export function ShowcaseSection() {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <p style={{ color: '#4B8FFF', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>{sc.eyebrow}</p>
+          <SectionEyebrow align="center">{sc.eyebrow}</SectionEyebrow>
           <h2 style={{ fontSize: 'clamp(28px, 6vw, 48px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 16px', color: '#fff', lineHeight: 1.05 }}>
             {sc.h2a}<br />{sc.h2b}
           </h2>

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { LogoMark } from '@/components/ui/LogoMark'
 import { useLocale } from '@/hooks/useLocale'
+import { SectionEyebrow } from './SectionEyebrow'
 
 export function VelquorSection() {
   const { t } = useLocale()
@@ -13,7 +14,7 @@ export function VelquorSection() {
     <section style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px)', maxWidth: '1200px', margin: '0 auto' }}>
       <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'clamp(32px, 6vw, 72px)', alignItems: 'center' }}>
         <div>
-          <p style={{ color: 'var(--ac)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>{ai.eyebrow}</p>
+          <SectionEyebrow>{ai.eyebrow}</SectionEyebrow>
           <h2 style={{ fontSize: 'clamp(26px, 5vw, 38px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 16px', color: 'var(--t1)', lineHeight: 1.15 }}>{ai.h2}</h2>
           <p style={{ color: 'var(--t2)', fontSize: '15px', lineHeight: 1.7, margin: '0 0 28px' }}>{ai.subtitle}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
