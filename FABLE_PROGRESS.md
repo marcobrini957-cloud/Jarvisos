@@ -141,3 +141,29 @@ Build ✓, 47 tests ✓ after all changes.
 3. Consider per-tab visual pass with eyes on rendering (Phase 4 was conservative)
 4. Distributed rate limiting (Upstash) if user count grows — current is per-instance
 5. Consider RLS instead of service-role-everywhere as the long-term security model
+
+---
+# 2026-07-16 — Bridge deployed + Instant Connect (cloud terminals)
+
+**Bridge LIVE**: Hetzner CX23 Helsinki (37.27.179.184, `ssh velquor-bridge`),
+https://bridge.velquor.app behind nginx+LE TLS, pm2, ufw, key-only SSH.
+BRIDGE_URL/BRIDGE_ADMIN_TOKEN in Vercel prod+preview + .env.local.
+Porkbun: A record `bridge` → 37.27.179.184 (Marco added).
+
+**Instant Connect** (self-hosted MetaAPI replacement, cloudterm/):
+- Docker image: Ubuntu 24.04 + Wine 9 + Xvfb + MT5 silent install; first-run
+  extracts MQL5 stdlib (required for EA compile — installer doesn't ship it);
+  EA compiled headless via `MetaEditor64.exe /portable /compile`.
+- entrypoint writes UTF-16LE configs (autologin, EA preset, WebRequest allowlist)
+  and SUPERVISES terminal64 via /proc scan — MT5 LiveUpdate exits PID1 to
+  relaunch itself, which killed the naive exec-based container (bootloop, exit 69).
+- provisioner.js on :3002 (pm2 velquor-term): docker run per user, 700m/0.6cpu,
+  creds AES-256-GCM in /opt/velquor-term/accounts (never in Supabase),
+  TERM_CAPACITY=4 on this box. nginx exposes /provision*, /capacity.
+- Site: app/api/mt5/connect (POST/GET/DELETE) + MT5ConnectModal repointed
+  (was MetaAPI /api/user/mt5-credentials); Topbar double-POST removed.
+- EA source bugs found by first-ever compile: StringTrimLeft used as expression
+  (MQL4-style), ACCOUNT_FREEMARGIN deprecated. Fixed; EA now 0 errors.
+- MetaAPI code KEPT until Instant Connect proves out with real users.
+- Economics: MetaAPI ~€15/user/mo → self-hosted ~€0.40–0.60/user/mo at scale
+  (dedicated ~€40–50/mo = 80–120 terminals). EA-path users ≈ free.

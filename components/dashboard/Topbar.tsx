@@ -187,15 +187,6 @@ export default function Topbar() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function handleSaveCredentials(data: { accountId: string; investorPassword: string; server: string }) {
-    const res = await fetch('/api/user/mt5-credentials', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!res.ok) throw new Error((await res.json()).error ?? 'Failed')
-    setTimeout(runSync, 500)
-  }
 
   const avatarLetter = (profile.display_name || 'T')[0].toUpperCase()
 
@@ -527,7 +518,7 @@ export default function Topbar() {
       {showModal && (
         <MT5ConnectModal
           onClose={() => setShowModal(false)}
-          onSave={handleSaveCredentials}
+          onConnected={() => setTimeout(() => runSync(true), 5000)}
           isConnected={status.connected}
         />
       )}

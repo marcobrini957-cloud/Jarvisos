@@ -4,12 +4,12 @@ import { useState } from 'react'
 
 interface MT5ConnectModalProps {
   onClose: () => void
-  onSave?: (data: { accountId: string; investorPassword: string; server: string }) => Promise<void>
+  onConnected?: () => void
   currentAccountId?: string
   isConnected?: boolean
 }
 
-export default function MT5ConnectModal({ onClose, onSave, currentAccountId, isConnected }: MT5ConnectModalProps) {
+export default function MT5ConnectModal({ onClose, onConnected, currentAccountId, isConnected }: MT5ConnectModalProps) {
   const [login,    setLogin]   = useState(currentAccountId ?? '')
   const [password, setPassword] = useState('')
   const [server,   setServer]  = useState('BlueberryMarkets-Live')
@@ -25,8 +25,8 @@ export default function MT5ConnectModal({ onClose, onSave, currentAccountId, isC
     setSaving(true)
     setError('')
     try {
-      // New flow: submit to /api/user/mt5-credentials which provisions via MetaAPI
-      const res = await fetch('/api/user/mt5-credentials', {
+      // Instant Connect: provisions a VELQUOR cloud terminal on our server
+      const res = await fetch('/api/mt5/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ login: login.trim(), password: password.trim(), server: server.trim() }),
@@ -36,12 +36,9 @@ export default function MT5ConnectModal({ onClose, onSave, currentAccountId, isC
         setError(json.error ?? 'Failed to connect. Check your credentials.')
         return
       }
-      // Also call legacy onSave if provided (for backward compat)
-      if (onSave) {
-        await onSave({ accountId: json.metaAccountId, investorPassword: password.trim(), server: server.trim() })
-      }
+      onConnected?.()
       setDone(true)
-      setTimeout(onClose, 1200)
+      setTimeout(onClose, 2000)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to connect.')
     } finally {
@@ -98,7 +95,7 @@ export default function MT5ConnectModal({ onClose, onSave, currentAccountId, isC
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <div style={{ fontSize: '28px', marginBottom: '8px' }}>✓</div>
             <p style={{ color: 'var(--gr2)', fontSize: '14px', fontWeight: 600, margin: 0 }}>MT5 account connected!</p>
-            <p style={{ color: 'var(--t2)', fontSize: '12px', margin: '4px 0 0' }}>Syncing your trades now…</p>
+            <p style={{ color: 'var(--t2)', fontSize: '12px', margin: '4px 0 0' }}>Starting your cloud terminal — first sync lands in a minute or two.</p>
           </div>
         )}
 
@@ -191,8 +188,9 @@ export default function MT5ConnectModal({ onClose, onSave, currentAccountId, isC
 
         {/* Info note */}
         <p style={{ color: 'var(--t3)', fontSize: '11px', textAlign: 'center', lineHeight: '1.5' }}>
-          Powered by MetaAPI. Your credentials are encrypted and stored securely in Supabase.
-          The investor password cannot place or modify trades.
+          VELQUOR runs a private cloud terminal for your account — trades sync 24/7 even
+          when MT5 is closed on your devices. Credentials are encrypted on our EU server and
+          never stored in the database; the investor password cannot place or modify trades.
         </p>
       </div>
     </>

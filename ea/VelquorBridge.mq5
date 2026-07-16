@@ -30,6 +30,7 @@ input string         InpBridgeUrl   = "https://bridge.velquor.app"; // Bridge se
 input int            InpIntervalSec = 10;                            // Sync interval (seconds)
 input int            InpHistoryDays = 30;                            // Days of closed trades to send
 input bool           InpDebugMode   = false;                         // Print debug logs
+input bool           InpFileBridge  = false;                         // Cloud mode: write payload to file (sidecar forwards it)
 
 // ── Copy trading inputs ─────────────────────────────────────────────────────
 input ENUM_COPY_MODE InpCopyMode     = COPY_OFF;  // Copy Mode
@@ -268,7 +269,10 @@ void PollCopySignals()
    if(arrStart < 0 || arrEnd < 0) return;
 
    string arrStr = StringSubstr(respStr, arrStart + 1, arrEnd - arrStart - 1);
-   if(StringLen(StringTrimLeft(StringTrimRight(arrStr))) == 0) return;
+   string arrTrim = arrStr;
+   StringTrimLeft(arrTrim);
+   StringTrimRight(arrTrim);
+   if(StringLen(arrTrim) == 0) return;
 
    // Split on top-level objects (simple approach: split by "},{")
    // We parse each signal object individually
@@ -541,6 +545,29 @@ string NormalisedSymbol(const string sym)
 }
 
 //+------------------------------------------------------------------+
+// Cloud mode: atomically write a JSON payload for the sidecar to forward.
+// Writes to <name>.tmp then renames to <name> so the sidecar never reads a
+// half-written file. Files land in MQL5\Files (terminal data folder).
+//+------------------------------------------------------------------+
+void WriteBridgeFile(string name, string json)
+{
+   string tmp = name + ".tmp";
+   int h = FileOpen(tmp, FILE_WRITE|FILE_TXT|FILE_ANSI);
+   if(h == INVALID_HANDLE)
+   {
+      Print("WriteBridgeFile: cannot open ", tmp, " err=", GetLastError());
+      return;
+   }
+   FileWriteString(h, json);
+   FileClose(h);
+   FileDelete(name);
+   if(!FileMove(tmp, 0, name, 0))
+      Print("WriteBridgeFile: rename failed err=", GetLastError());
+   else if(InpDebugMode)
+      Print("Wrote ", name, " (", StringLen(json), " bytes)");
+}
+
+//+------------------------------------------------------------------+
 // Build the full JSON payload and POST it to /sync
 //+------------------------------------------------------------------+
 void PostSync()
@@ -550,6 +577,15 @@ void PostSync()
 
    if(InpDebugMode) Print("Payload: ", StringSubstr(json, 0, 200), "...");
 
+   // Cloud terminals can't use WebRequest (the "Allow WebRequest" permission
+   // can't be set headlessly), so they write the payload to a file that a
+   // sidecar process in the container forwards to the bridge.
+   if(InpFileBridge)
+   {
+      WriteBridgeFile("vq_sync.json", json);
+      return;
+   }
+
    char   data[];
    char   response[];
    string headers = "Content-Type: application/json\r\nX-Api-Key: " + InpApiKey;
@@ -558,6 +594,7 @@ void PostSync()
    StringToCharArray(json, data, 0, StringLen(json), CP_UTF8);
    ArrayResize(data, ArraySize(data) - 1);
 
+   ResetLastError();
    int httpCode = WebRequest("POST", g_syncUrl, headers, 5000, data, response, responseHeaders);
 
    if(httpCode == 200)
@@ -566,8 +603,9 @@ void PostSync()
    }
    else
    {
+      int err = GetLastError();
       string resp = CharArrayToString(response, 0, WHOLE_ARRAY, CP_UTF8);
-      Print("VelquorBridge sync failed — HTTP ", httpCode, " | ", resp);
+      Print("VelquorBridge sync failed — HTTP ", httpCode, " err=", err, " url=", g_syncUrl, " | ", resp);
    }
 }
 
@@ -600,7 +638,7 @@ string BuildPayload()
    double balance     = AccountInfoDouble(ACCOUNT_BALANCE);
    double equity      = AccountInfoDouble(ACCOUNT_EQUITY);
    double margin      = AccountInfoDouble(ACCOUNT_MARGIN);
-   double freeMargin  = AccountInfoDouble(ACCOUNT_FREEMARGIN);
+   double freeMargin  = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
    double marginLevel = (margin > 0) ? (equity / margin * 100.0) : 0.0;
    int    openCount   = PositionsTotal();
 
