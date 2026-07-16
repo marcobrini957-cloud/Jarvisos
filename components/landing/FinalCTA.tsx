@@ -12,12 +12,24 @@ export function FinalCTA() {
   return (
     <section style={{ borderTop: '1px solid var(--bd)', background: 'var(--s1)', overflow: 'hidden', position: 'relative' }}>
       {/* subtle center glow */}
-      <div style={{
+      <div aria-hidden style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'radial-gradient(ellipse 60% 80% at 50% 100%, rgba(77,143,255,0.08), transparent)',
+        background: 'radial-gradient(ellipse 60% 80% at 50% 100%, rgba(77,143,255,0.12), transparent 70%)',
       }} />
-      <div style={{ maxWidth: '820px', margin: '0 auto', padding: 'clamp(64px, 10vw, 110px) clamp(16px, 5vw, 48px)', textAlign: 'center', position: 'relative' }}>
-        <h2 style={{ fontSize: 'clamp(30px, 6vw, 52px)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.04, color: 'var(--t1)', margin: '0 0 16px' }}>
+      {/* grid texture — matches the hero, ties top to bottom */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px)',
+        backgroundSize: '54px 54px',
+        maskImage: 'radial-gradient(ellipse 70% 70% at 50% 60%, #000, transparent 75%)',
+        WebkitMaskImage: 'radial-gradient(ellipse 70% 70% at 50% 60%, #000, transparent 75%)',
+      }} />
+      <div style={{ maxWidth: '820px', margin: '0 auto', padding: 'clamp(64px, 10vw, 120px) clamp(16px, 5vw, 48px)', textAlign: 'center', position: 'relative' }}>
+        <h2 style={{
+          fontSize: 'clamp(32px, 6.5vw, 60px)', fontWeight: 900, letterSpacing: '-0.045em', lineHeight: 1.02, margin: '0 0 18px',
+          background: 'linear-gradient(180deg, #fff 40%, rgba(255,255,255,0.55))',
+          WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent',
+        }}>
           {c.h2}
         </h2>
         <p style={{ color: 'var(--t2)', fontSize: '15px', lineHeight: 1.7, maxWidth: '560px', margin: '0 auto 32px' }}>
