@@ -233,9 +233,10 @@ export interface ReportProps {
   to:          string
   period:      'weekly' | 'monthly'
   traderName?: string
+  coachNotes?: string   // AI Coach's Notes (Pro/Ultra only); omitted → section hidden
 }
 
-export function TradingReport({ trades, from, to, period, traderName = 'Trader' }: ReportProps) {
+export function TradingReport({ trades, from, to, period, traderName = 'Trader', coachNotes }: ReportProps) {
   const {
     sorted, wins, losses, netPnl, winRate, pf, avgWin, avgLoss,
     expectancy, bestTrade, worstTrade, maxDD, maxCW, maxCL,
@@ -490,6 +491,29 @@ export function TradingReport({ trades, from, to, period, traderName = 'Trader' 
           <Text style={{ color: C.t3, fontSize: 7 }}>Page 2 · {periodLbl} · {dateRange}</Text>
         </View>
       </Page>
+
+      {/* ── Page 3 — Coach's Notes (Pro/Ultra) ─────────────────────────────── */}
+      {coachNotes && coachNotes.trim().length > 0 && (
+        <Page size="A4" style={{ backgroundColor: C.bg, padding: 32, fontFamily: 'Helvetica', fontSize: 10 }}>
+          <PageHeader label="COACH'S NOTES" dateRange={dateRange} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 6 }}>
+            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: C.gold }} />
+            <Text style={{ color: C.t1, fontSize: 13, fontFamily: 'Helvetica-Bold' }}>VELQUOR AI · Performance Coaching</Text>
+          </View>
+          <Text style={{ color: C.t3, fontSize: 7.5, marginBottom: 14 }}>
+            Generated from your statistics for this period. Figures are computed; the analysis is AI-written.
+          </Text>
+          {coachNotes.trim().split(/\n\s*\n/).map((para, i) => (
+            <Text key={i} style={{ color: C.t2, fontSize: 9.5, lineHeight: 1.6, marginBottom: 9 }}>
+              {para.trim()}
+            </Text>
+          ))}
+          <View style={{ marginTop: 'auto', flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ color: C.t3, fontSize: 7 }}>Velquor · Trading Intelligence Platform</Text>
+            <Text style={{ color: C.t3, fontSize: 7 }}>Page 3 · {periodLbl} · {dateRange}</Text>
+          </View>
+        </Page>
+      )}
 
     </Document>
   )

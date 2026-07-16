@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { getUserPlan } from '@/lib/api/tier'
 
 async function getUserId(): Promise<string | null> {
   const cookieStore = await cookies()
@@ -68,15 +69,10 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     }
   }
 
-  // Enforce slave limit based on subscription tier
+  // Enforce slave limit based on subscription tier (shared helper, lazy-downgrade aware)
   if (role === 'slave') {
-    const { data: profile } = await admin()
-      .from('user_profiles')
-      .select('subscription_tier')
-      .eq('id', userId)
-      .single()
-    const tier = (profile?.subscription_tier ?? 'free').toLowerCase()
-    const maxSlaves = tier === 'ultra' ? 5 : 1
+    const plan = await getUserPlan(userId)
+    const maxSlaves = plan.copySlavesEach
 
     const { count } = await admin()
       .from('copy_accounts')

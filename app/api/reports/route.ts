@@ -5,8 +5,13 @@ import { createClient }              from '@/lib/supabase/server'
 import { TradingReport }             from '@/lib/pdf/TradingReport'
 import type { Trade }                from '@/types'
 import { getAuthUser } from '@/lib/api/auth'
+import { getUserPlan } from '@/lib/api/tier'
+import { computeStats } from '@/lib/trading/stats'
+import { computeBreakdowns } from '@/lib/trading/breakdowns'
+import { buildFacts, generateCoachNotes } from '@/lib/ai/coach'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60
 
 export async function GET(req: NextRequest) {
   try {
@@ -41,15 +46,27 @@ export async function GET(req: NextRequest) {
     }
 
     const traderName = user?.email?.split('@')[0] ?? 'Trader'
+    const rows       = (trades ?? []) as Trade[]
+
+    // Coach's Notes: AI narration for Pro/Ultra, computed from this period's
+    // stats. Free tier omits it (section hidden). Never blocks the report —
+    // generateCoachNotes returns '' on any failure.
+    let coachNotes = ''
+    const plan = await getUserPlan(user.id)
+    if (plan.aiCoaching && rows.filter(r => r.net_profit !== null).length >= 5) {
+      const facts = buildFacts(computeStats(rows), computeBreakdowns(rows))
+      coachNotes  = await generateCoachNotes(plan, facts)
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const buffer = await renderToBuffer(
       createElement(TradingReport, {
-        trades:      (trades ?? []) as Trade[],
+        trades:      rows,
         from,
         to,
         period,
         traderName,
+        coachNotes,
       }) as any
     )
 

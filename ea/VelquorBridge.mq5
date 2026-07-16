@@ -47,8 +47,9 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.00";
+string   g_eaVersion   = "2.10";
 string   g_mt5Login;
+int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 CTrade   g_trade;
 
 // Master: track tickets we have already signalled to avoid duplicates
@@ -98,6 +99,20 @@ int OnInit()
 
    string modeStr = (InpCopyMode == COPY_MASTER) ? "MASTER" :
                     (InpCopyMode == COPY_SLAVE)   ? "SLAVE"  : "OFF";
+
+   // Cloud mode: publish copy config so the sidecar knows whether to poll the
+   // bridge for this terminal (slaves) and with which group/login/interval.
+   if(InpFileBridge)
+   {
+      string cfg = "{";
+      cfg += "\"mode\":\""     + modeStr        + "\",";
+      cfg += "\"group\":\""    + EscapeJson(InpCopyGroupId) + "\",";
+      cfg += "\"login\":\""    + g_mt5Login     + "\",";
+      cfg += "\"poll_ms\":"    + IntegerToString(InpCopyPollMs);
+      cfg += "}";
+      WriteBridgeFile("vq_copyconfig.json", cfg);
+   }
+
    Print("VelquorBridge v", g_eaVersion, " started | Copy: ", modeStr,
          " | Interval: ", InpIntervalSec, "s | Login: ", g_mt5Login);
    return INIT_SUCCEEDED;
@@ -209,6 +224,13 @@ void SendCopySignal(
    payload += "\"close_price\":"   + DoubleToStr(closePrice, 5);
    payload += "}}";
 
+   // Cloud mode: hand the signal to the sidecar via an outbox file.
+   if(InpFileBridge)
+   {
+      WriteCopyOutbox("/copy/signal", payload);
+      return;
+   }
+
    string extraHeaders =
       "Content-Type: application/json\r\n"
       "X-Api-Key: "     + InpApiKey      + "\r\n"
@@ -241,23 +263,42 @@ void SendCopySignal(
 //+------------------------------------------------------------------+
 void PollCopySignals()
 {
-   char   data[];
-   char   response[];
-   string responseHeaders;
-   string extraHeaders =
-      "Content-Type: application/json\r\n"
-      "X-Api-Key: "    + InpApiKey      + "\r\n"
-      "X-Copy-Group: " + InpCopyGroupId + "\r\n"
-      "X-Mt5-Login: "  + g_mt5Login;
+   string respStr;
 
-   // Empty body for GET — use 1-byte dummy so WebRequest sends headers
-   ArrayResize(data, 0);
+   // Cloud mode: the sidecar polls the bridge and drops pending signals into
+   // an inbox file. Read + clear it (rename to a consumed marker) so we don't
+   // reprocess — dedup by ticket in ProcessCopySignal is the backstop.
+   if(InpFileBridge)
+   {
+      int fh = FileOpen("vq_cin_signals.json", FILE_READ|FILE_TXT|FILE_ANSI);
+      if(fh == INVALID_HANDLE) return;
+      respStr = "";
+      while(!FileIsEnding(fh)) respStr += FileReadString(fh);
+      FileClose(fh);
+      FileDelete("vq_cin_signals.json");
+      if(StringLen(respStr) < 2) return;
+      if(InpDebugMode) Print("CopyPoll(file): ", respStr);
+   }
+   else
+   {
+      char   data[];
+      char   response[];
+      string responseHeaders;
+      string extraHeaders =
+         "Content-Type: application/json\r\n"
+         "X-Api-Key: "    + InpApiKey      + "\r\n"
+         "X-Copy-Group: " + InpCopyGroupId + "\r\n"
+         "X-Mt5-Login: "  + g_mt5Login;
 
-   int httpCode = WebRequest("GET", g_copyPollUrl, extraHeaders, 3000, data, response, responseHeaders);
-   if(httpCode != 200) return;
+      // Empty body for GET — use 1-byte dummy so WebRequest sends headers
+      ArrayResize(data, 0);
 
-   string respStr = CharArrayToString(response, 0, WHOLE_ARRAY, CP_UTF8);
-   if(InpDebugMode) Print("CopyPoll: ", respStr);
+      int httpCode = WebRequest("GET", g_copyPollUrl, extraHeaders, 3000, data, response, responseHeaders);
+      if(httpCode != 200) return;
+
+      respStr = CharArrayToString(response, 0, WHOLE_ARRAY, CP_UTF8);
+      if(InpDebugMode) Print("CopyPoll: ", respStr);
+   }
 
    // Minimal JSON parser for the signals array
    // Expected: {"signals":[{...},{...}]}
@@ -412,6 +453,13 @@ void SendCopyAck(
    payload += "\"error_message\":\"" + EscapeJson(errorMsg)             + "\"";
    payload += "}";
 
+   // Cloud mode: hand the ack to the sidecar via an outbox file.
+   if(InpFileBridge)
+   {
+      WriteCopyOutbox("/copy/ack", payload);
+      return;
+   }
+
    string extraHeaders =
       "Content-Type: application/json\r\n"
       "X-Api-Key: " + InpApiKey;
@@ -426,6 +474,24 @@ void SendCopyAck(
    int httpCode = WebRequest("POST", g_copyAckUrl, extraHeaders, 3000, data, response, responseHeaders);
    if(InpDebugMode)
       Print("CopyAck [", status, "] log=", logId, " HTTP=", httpCode);
+}
+
+//+------------------------------------------------------------------+
+// Cloud copy bridge: write a self-contained envelope for the sidecar to POST.
+// Each envelope is a uniquely-named file so concurrent signals never collide.
+//+------------------------------------------------------------------+
+void WriteCopyOutbox(const string endpoint, const string body)
+{
+   g_copyOutSeq++;
+   string name = "vq_cout_" + IntegerToString((long)GetTickCount()) + "_" +
+                 IntegerToString(g_copyOutSeq) + ".json";
+   string envelope = "{";
+   envelope += "\"endpoint\":\"" + endpoint + "\",";
+   envelope += "\"group\":\""    + EscapeJson(InpCopyGroupId) + "\",";
+   envelope += "\"login\":\""    + g_mt5Login + "\",";
+   envelope += "\"body\":"       + body;
+   envelope += "}";
+   WriteBridgeFile(name, envelope);
 }
 
 //+------------------------------------------------------------------+

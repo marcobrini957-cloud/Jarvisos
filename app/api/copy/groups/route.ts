@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { getUserPlan } from '@/lib/api/tier'
 
 async function getUserId(): Promise<string | null> {
   const cookieStore = await cookies()
@@ -50,15 +51,9 @@ export async function POST(req: NextRequest) {
   const userId = await getUserId()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Subscription gating — check tier
-  const { data: profile } = await admin()
-    .from('user_profiles')
-    .select('subscription_tier')
-    .eq('id', userId)
-    .single()
-
-  const tier = (profile?.subscription_tier ?? 'free').toLowerCase()
-  if (tier === 'free') {
+  // Subscription gating — shared tier helper (honors reward expiry / lazy downgrade)
+  const plan = await getUserPlan(userId)
+  if (plan.copyGroups < 1) {
     return NextResponse.json({ error: 'Copy trading requires Pro or Ultra plan' }, { status: 403 })
   }
 
@@ -68,10 +63,9 @@ export async function POST(req: NextRequest) {
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
 
-  const maxGroups = tier === 'ultra' ? 3 : 1
-  if ((count ?? 0) >= maxGroups) {
+  if ((count ?? 0) >= plan.copyGroups) {
     return NextResponse.json(
-      { error: `Your plan allows a maximum of ${maxGroups} copy group${maxGroups > 1 ? 's' : ''}` },
+      { error: `Your plan allows a maximum of ${plan.copyGroups} copy group${plan.copyGroups > 1 ? 's' : ''}` },
       { status: 403 }
     )
   }

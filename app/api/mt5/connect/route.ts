@@ -3,6 +3,8 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { randomBytes } from 'crypto'
 import { getAuthUserId } from '@/lib/api/auth'
 import { rateLimit } from '@/lib/api/rate-limit'
+import { getUserPlan } from '@/lib/api/tier'
+import { resolveServerAddress } from '@/lib/brokers'
 
 // Instant Connect: provisions a VELQUOR cloud terminal (MT5 under Wine on our
 // bridge server) for the user's account. Credentials go straight to the
@@ -59,18 +61,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Too many attempts — wait a minute.' }, { status: 429 })
   }
 
+  // Tier gate: cloud terminals (Instant Connect) are a paid feature. Free users
+  // run the EA in their own MetaTrader instead.
+  const plan = await getUserPlan(userId)
+  if (plan.cloudTerminals < 1) {
+    return NextResponse.json(
+      { error: 'Cloud hosting is a Pro feature. On the free plan, connect by running the VELQUOR EA in your own MetaTrader.', code: 'tier_required' },
+      { status: 403 },
+    )
+  }
+
   const body = await req.json().catch(() => null)
   const login = String(body?.login ?? '').trim()
   const password = String(body?.password ?? '').trim()
-  const server = String(body?.server ?? '').trim()
+  const serverInput = String(body?.server ?? '').trim()
   if (!/^\d{3,12}$/.test(login)) {
     return NextResponse.json({ error: 'MT5 login must be your numeric account number.' }, { status: 400 })
   }
   if (!password || password.length > 64) {
     return NextResponse.json({ error: 'Password is required.' }, { status: 400 })
   }
-  if (!/^[\w.-]{3,64}$/.test(server)) {
-    return NextResponse.json({ error: 'Broker server looks invalid (e.g. BlueberryMarkets-Live).' }, { status: 400 })
+  // Resolve friendly server name / broker pick / host:port → connectable address.
+  const server = resolveServerAddress(serverInput)
+  if (!server) {
+    return NextResponse.json(
+      { error: 'Pick your broker and server, or enter the server address (e.g. live2.mt5.ts.blueberrymarkets.com:443).' },
+      { status: 400 },
+    )
   }
 
   const apiKey = await getApiKey(userId)

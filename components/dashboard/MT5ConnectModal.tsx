@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { BROKERS } from '@/lib/brokers'
 
 interface MT5ConnectModalProps {
   onClose: () => void
@@ -12,10 +13,14 @@ interface MT5ConnectModalProps {
 export default function MT5ConnectModal({ onClose, onConnected, currentAccountId, isConnected }: MT5ConnectModalProps) {
   const [login,    setLogin]   = useState(currentAccountId ?? '')
   const [password, setPassword] = useState('')
-  const [server,   setServer]  = useState('BlueberryMarkets-Live')
+  const [brokerId, setBrokerId] = useState(BROKERS[0]?.id ?? '')
+  const [server,   setServer]  = useState(BROKERS[0]?.servers[0]?.name ?? '')
   const [saving,   setSaving]  = useState(false)
   const [error,    setError]   = useState('')
   const [done,     setDone]    = useState(false)
+
+  const broker = BROKERS.find(b => b.id === brokerId) ?? null
+  const isOther = brokerId === '__other'
 
   async function handleSave() {
     if (!login.trim() || !password.trim() || !server.trim()) {
@@ -138,22 +143,74 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Broker Server</label>
-            <input
-              value={server}
-              onChange={e => setServer(e.target.value)}
-              placeholder="e.g. BlueberryMarkets-Live"
+            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Broker</label>
+            <select
+              value={brokerId}
+              onChange={e => {
+                const id = e.target.value
+                setBrokerId(id)
+                const b = BROKERS.find(x => x.id === id)
+                setServer(b?.servers[0]?.name ?? '')
+              }}
               style={{
                 background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
                 padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
               }}
-              onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-              onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
-            />
-            <p style={{ color: 'var(--t3)', fontSize: '11px' }}>
-              Find in MT5: File → Open Account — the server name shown next to your account
-            </p>
+            >
+              {BROKERS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              <option value="__other">Other / not listed</option>
+            </select>
           </div>
+
+          {broker && !isOther && (
+            <div className="flex flex-col gap-1.5">
+              <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Server</label>
+              <div className="flex gap-2 flex-wrap">
+                {broker.servers.map(srv => {
+                  const active = server === srv.name
+                  return (
+                    <button
+                      key={srv.name}
+                      type="button"
+                      onClick={() => setServer(srv.name)}
+                      style={{
+                        flex: '1 1 30%', padding: '9px 8px', borderRadius: '8px', cursor: 'pointer',
+                        fontSize: '12px', fontWeight: 500,
+                        background: active ? 'var(--ac)' : 'var(--s2)',
+                        color: active ? 'white' : 'var(--t2)',
+                        border: `1px solid ${active ? 'var(--ac)' : 'var(--bd2)'}`,
+                      }}
+                    >
+                      {srv.label}
+                    </button>
+                  )
+                })}
+              </div>
+              <p style={{ color: 'var(--t3)', fontSize: '11px' }}>
+                The server shown next to your account in MT5 (File → Login to Trade Account)
+              </p>
+            </div>
+          )}
+
+          {isOther && (
+            <div className="flex flex-col gap-1.5">
+              <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Server Address</label>
+              <input
+                value={server}
+                onChange={e => setServer(e.target.value)}
+                placeholder="e.g. live2.mybroker.com:443"
+                style={{
+                  background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
+                  padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
+                }}
+                onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+                onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
+              />
+              <p style={{ color: 'var(--t3)', fontSize: '11px' }}>
+                Your broker&apos;s MT5 server address and port. Ask support if unsure, then let us know so we add a button for it.
+              </p>
+            </div>
+          )}
         </div>
         )}
 

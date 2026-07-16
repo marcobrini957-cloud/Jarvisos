@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN dpkg --add-architecture i386 \
  && apt-get update \
  && apt-get install -y --no-install-recommends \
-      wine wine64 wine32:i386 xvfb xauth winbind ca-certificates curl \
+      wine wine64 wine32:i386 xvfb xauth winbind ca-certificates curl jq \
  && rm -rf /var/lib/apt/lists/*
 
 ENV WINEPREFIX=/wine \
