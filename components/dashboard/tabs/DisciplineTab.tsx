@@ -9,6 +9,7 @@ import { TODAY, categoryColor, last7Days } from './discipline/helpers'
 import { AddHabitModal } from './discipline/AddHabitModal'
 import { AddTaskModal } from './discipline/AddTaskModal'
 import { TaskRow } from './discipline/TaskRow'
+import { TraderDnaCard } from '@/components/dashboard/TraderDnaCard'
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,9 @@ export default function DisciplineTab() {
 
   return (
     <div className="flex flex-col gap-4">
+
+      {/* ── Trader DNA ── */}
+      <TraderDnaCard />
 
       {/* ── Metric cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

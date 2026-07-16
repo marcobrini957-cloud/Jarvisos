@@ -1,6 +1,7 @@
 import { Nav } from '@/components/landing/Nav'
 import { Hero } from '@/components/landing/Hero'
 import { ThreePillars } from '@/components/landing/ThreePillars'
+import { TraderDnaSection } from '@/components/landing/TraderDnaSection'
 import { StatsBar } from '@/components/landing/StatsBar'
 import { ShowcaseSection } from '@/components/landing/ShowcaseSection'
 import { Features } from '@/components/landing/Features'
@@ -25,6 +26,7 @@ export default function LandingPage() {
       {/* proof numbers immediately after the hero, before the pitch */}
       <StatsBar />
       <ThreePillars />
+      <TraderDnaSection />
       <ShowcaseSection />
       <Features />
       <HowItWorks />

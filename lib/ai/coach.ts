@@ -9,6 +9,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import Groq from 'groq-sdk'
 import type { TradeStats } from '@/lib/trading/stats'
 import type { Breakdowns, Segment } from '@/lib/trading/breakdowns'
+import type { TraderDna } from '@/lib/trading/traderDna'
 import type { TierPlan } from '@/lib/api/tier'
 
 const SYSTEM = `You are VELQUOR, an elite trading performance coach.
@@ -60,6 +61,53 @@ const REPORT_TASK = `Write the trader's Coach's Notes (3-5 tight paragraphs):
 3. The behavioral pattern (emotion/discipline/plan) the data reveals.
 4. Two or three specific changes for next week, each tied to a number above.
 Open with the most important finding in one sentence.`
+
+// Trader DNA focus — one sharp paragraph naming the single biggest behavioral
+// opportunity, in the spirit of "your biggest opportunity isn't a new strategy,
+// it's X". Reads the scored DNA; never invents figures.
+const DNA_SYSTEM = `You are VELQUOR's behavioral trading coach.
+You are given a trader's DNA profile: behavioral scores (0-100), labels, and the
+data-derived best window / worst condition. These are ground truth.
+Write ONE short, punchy paragraph (3-4 sentences) that names the single biggest
+opportunity to improve — the one behavior change that would move the needle most.
+Be specific to the scores. Contrast it with chasing a new strategy. Do not list
+every score; zero in on the weakest, highest-leverage one. No fluff, no fabrication.`
+
+export function dnaFacts(dna: TraderDna): string {
+  const dims = dna.dimensions.map(d => `${d.label}: ${d.score}/100`).join(' | ')
+  return [
+    `Overall DNA: ${dna.overall}/100 (from ${dna.sampleSize} trades)`,
+    dims,
+    `Impulsiveness: ${dna.impulsiveness}`,
+    `Recovery after losses: ${dna.recoveryAfterLoss}`,
+    dna.bestWindow ? `Best trading window: ${dna.bestWindow}` : '',
+    dna.worstCondition ? `Worst condition: ${dna.worstCondition}` : '',
+  ].filter(Boolean).join('\n')
+}
+
+export async function generateDnaFocus(plan: TierPlan, dna: TraderDna): Promise<string> {
+  const facts = dnaFacts(dna)
+  const task  = `TRADER DNA:\n${facts}\n\nWrite the single biggest-opportunity focus paragraph.`
+  try {
+    if (plan.aiProvider === 'anthropic') {
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+      const msg = await client.messages.create({
+        model: plan.aiModel, max_tokens: 400,
+        system: DNA_SYSTEM,
+        messages: [{ role: 'user', content: task }],
+      })
+      return msg.content.filter(b => b.type === 'text').map(b => (b as { text: string }).text).join('')
+    }
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+    const r = await groq.chat.completions.create({
+      model: plan.aiModel, max_tokens: 400, temperature: 0.5,
+      messages: [{ role: 'user', content: `${DNA_SYSTEM}\n\n${task}` }],
+    })
+    return r.choices[0]?.message?.content ?? ''
+  } catch {
+    return ''
+  }
+}
 
 // Non-streaming Coach's Notes — used by the PDF report where we need the full
 // text before rendering. Returns '' on any failure so the report still renders.
