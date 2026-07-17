@@ -31,6 +31,17 @@ export default function LoginPage() {
   const [signedUp,    setSignedUp]    = useState(false)
   const [resetSent,   setResetSent]   = useState(false)
 
+  // Root layout locks overflow:hidden for the dashboard — unlock so the form
+  // stays reachable on small phones (and under the cookie banner)
+  useEffect(() => {
+    document.body.style.overflow = 'auto'
+    document.documentElement.style.overflow = 'auto'
+    return () => {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+    }
+  }, [])
+
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => {
@@ -39,6 +50,16 @@ export default function LoginPage() {
     // Pre-fill mode from URL param
     const params = new URLSearchParams(window.location.search)
     if (params.get('mode') === 'signup') setMode('signup')
+    // Surface auth redirect failures (e.g. from /auth/callback) instead of
+    // silently dropping the user back on the form
+    const authError = params.get('error')
+    if (authError) {
+      setError(
+        authError === 'auth_callback_failed'
+          ? 'Sign-in could not be completed. Please try again.'
+          : `Sign-in failed (${authError.replace(/[_-]/g, ' ')}). Please try again.`
+      )
+    }
   }, [router])
 
   async function handleGoogleSignIn() {
