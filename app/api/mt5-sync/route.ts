@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getAuthUserId } from '@/lib/api/auth'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { type Deal, groupDealsByPosition, buildClosedTradeRows, detectSession } from '@/lib/mt5/parse'
@@ -249,13 +250,16 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   try {
+    const userId = await getAuthUserId()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const supabase = await createClient()
     const { data } = await supabase
       .from('account_snapshots')
       .select('*')
+      .eq('user_id', userId)
       .order('snapshot_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
     return NextResponse.json({ snapshot: data ?? null })
   } catch {
     return NextResponse.json({ snapshot: null })

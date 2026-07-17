@@ -53,6 +53,7 @@ export async function GET() {
   const { data: dbTrades } = await supabase
     .from('trades')
     .select('symbol, lot_size, net_profit, close_time, trade_type')
+    .eq('user_id', user.id)
     .eq('status', 'closed')
     .order('close_time', { ascending: false })
     .limit(5)
@@ -60,6 +61,7 @@ export async function GET() {
   const { data: dbStats } = await supabase
     .from('trades')
     .select('symbol, lot_size, net_profit')
+    .eq('user_id', user.id)
     .eq('status', 'closed')
 
   const yearSince = new Date(new Date().getFullYear(), 0, 1)

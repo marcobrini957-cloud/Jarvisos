@@ -8,6 +8,7 @@ import { usePortfolio }       from '@/hooks/usePortfolio'
 import { useJournalEntries }  from '@/hooks/useJournalEntries'
 import { useHabits }          from '@/hooks/useHabits'
 import { useDisplayMode }     from '@/context/DisplayModeContext'
+import { useUserProfile }     from '@/context/UserProfileContext'
 import { generateInsights }   from '@/lib/intelligence'
 import { formatValue }        from '@/lib/utils/formatting'
 import InsightCard            from '@/components/ui/InsightCard'
@@ -137,6 +138,7 @@ export default function MobileOverviewTab() {
     return () => window.removeEventListener('storage', handler)
   }, [])
 
+  const { profile } = useUserProfile()
   const { trades, allRows, stats, loading: tradesLoading } = useTrades(500)
   const { tasks }       = useTasks()
   const { snapshot }    = useAccountSnapshot()
@@ -231,7 +233,7 @@ export default function MobileOverviewTab() {
 
           {/* Greeting */}
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: '6px' }}>
-            {greeting()}, Marco
+            {greeting()}, {profile.display_name || 'Trader'}
           </h1>
 
           {/* Alert badges */}
