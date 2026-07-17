@@ -16,6 +16,7 @@ import Panel                  from '@/components/ui/Panel'
 import SessionClock           from '@/components/ui/SessionClock'
 import EquityCurveChart       from '@/components/ui/EquityCurveChart'
 import DailyPnLChart          from '@/components/ui/DailyPnLChart'
+import { useUserProfile }     from '@/context/UserProfileContext'
 import { useIsMobile, greeting, fmtEur, fmtPnl, fullDate, MOOD_COLOR } from './overview/helpers'
 import { MarketStrip } from './overview/MarketStrip'
 import { WinRing } from './overview/WinRing'
@@ -34,6 +35,7 @@ export default function OverviewTab() {
   const { entries }     = useJournalEntries()
   const { habits, isCompleted, todayCompleted, todayTotal, calcStreak } = useHabits()
   const { displayMode } = useDisplayMode()
+  const { profile }     = useUserProfile()
   const isMobile = useIsMobile()
 
   if (isMobile) return <MobileOverviewTab />
@@ -147,7 +149,7 @@ export default function OverviewTab() {
           {/* Row 2: greeting + streak alert */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px', flexWrap: 'wrap' }}>
             <h1 className="greeting-heading" style={{ fontSize: '28px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-              {greeting()}, Marco
+              {greeting()}, {profile.display_name || 'Trader'}
             </h1>
             <StreakBadge trades={trades} />
             {overdueTasks.length > 0 && (

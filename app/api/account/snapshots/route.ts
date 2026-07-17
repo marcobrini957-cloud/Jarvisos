@@ -15,10 +15,10 @@ export async function GET(req: Request) {
 
   const { data, error } = await supabase
     .from('account_snapshots')
-    .select('balance, equity, recorded_at')
+    .select('balance, equity, snapshot_at')
     .eq('user_id', user.id)
-    .gte('recorded_at', since)
-    .order('recorded_at', { ascending: true })
+    .gte('snapshot_at', since)
+    .order('snapshot_at', { ascending: true })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!data?.length) return NextResponse.json({ points: [] })
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   // Keep one point per day (last of day)
   const byDay = new Map<string, { date: string; balance: number; equity: number }>()
   for (const row of data) {
-    const d = row.recorded_at.slice(0, 10)
+    const d = row.snapshot_at.slice(0, 10)
     byDay.set(d, { date: d, balance: row.balance, equity: row.equity })
   }
 

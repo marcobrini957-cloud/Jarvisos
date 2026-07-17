@@ -328,3 +328,39 @@ Entries list), Copy (5-row signal log), Ask VELQUOR (input bar w/ gold send
 glyph); calendar extended to 17 w/ wins 13/15/16, loss 14 — consistent with
 journalEntries rows. Verified frame-by-frame via /tmp/vq-anim-test.mjs
 (12 marks, 0 page errors, loop wraps clean at ~19s).
+
+---
+# 2026-07-17 (7) — Hero animation v3: TRUE 1:1 replica (rebuilt from real screenshots)
+
+Marco called out that v2 was invented from memory, not copied ("the gold chart
+does not even look like a chart"). Rebuild process — KEEP for future 1:1 work:
+1. Seeded fable-mobiletest account (ultra tier) with 46 trades / 62 snapshots /
+   journal+habits+tasks / copy group via service-role REST (/tmp/vq-seed.mjs).
+2. Logged in via Playwright, screenshotted all 5 real tabs at 1440px
+   (/tmp/vq-capture-sections.mjs — scrolls <main>, dismisses welcome overlay,
+   accepts cookies so TradingView widgets load).
+3. Rebuilt each AnimatedDashboard scene against those screenshots.
+
+AnimatedDashboard v3: icon tab bar + gear, boxed SPY/QQQ/BTC/VIX strip w/ live
+↻ clock, hero card (habit dots, 🔥 streak chips, session-clock bar, exact
+metric cards), equity curve w/ €21,106→€25,269 axes, Daily P&L bars panel,
+TradingView chart replica (88 seeded-PRNG hourly candles in TV colors
+#26A69A/#EF5350, dotted grid, price axis, live price tag + dotted line +
+OHLC legend ticking, volume histogram, date axis w/ bold Monday, left→right
+clip reveal), Trading metric cards w/ D-W-M-Q-Y pills, Journal stats/calendar/
+mood-correlation/insight, Copy group card w/ master+slaves+EA-config block,
+Ask VELQUOR banner+quick-questions+input (types the question, then swaps to
+the answer typewriter) + What-VELQUOR-Knows rail. Per-scene durations
+[4.2,4.8,4.2,4.0,5.6]s; splineAt NaN-guarded (was a rare rAF crash).
+
+**3 REAL prod bugs found via the replica work, all fixed:**
+- /api/account/snapshots queried recorded_at (column is snapshot_at) →
+  Overview Equity Curve was EMPTY in prod for everyone since launch.
+- DailyPnLChart bars: background `${'var(--gr2)'}99` = invalid CSS → bars
+  invisible until hover. Now solid color + opacity.
+- OverviewTab greeting hardcoded ", Marco" for every user → now
+  profile.display_name like mobile (context/UserProfileContext).
+
+White band in screenshots over mock = nav backdrop-filter compositing artifact
+(proven: disappears with backdrop-filter:none) — headless-only, NOT a bug.
+64 tests pass, build green. Chrome frame-by-frame: 0 page errors.

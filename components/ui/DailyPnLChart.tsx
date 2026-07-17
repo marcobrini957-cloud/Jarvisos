@@ -96,10 +96,11 @@ export default function DailyPnLChart({ days = 30, height = 120 }: Props) {
                 position: 'absolute',
                 width: '80%',
                 height: `${barH}px`,
-                background: hovered?.date === b.date ? color : `${color}99`,
+                background: color,
+                opacity: hovered?.date === b.date ? 1 : 0.62,
                 borderRadius: isPos ? '2px 2px 0 0' : '0 0 2px 2px',
                 [isPos ? 'bottom' : 'top']: '50%',
-                transition: 'background 0.1s',
+                transition: 'opacity 0.1s',
               }} />
             </div>
           )
