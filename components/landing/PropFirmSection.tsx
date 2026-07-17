@@ -28,7 +28,11 @@ export function PropFirmSection() {
             ))}
           </div>
 
-          <div style={{ background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '14px', padding: '22px' }}>
+          <div style={{
+            background: 'var(--s1)', borderRadius: '14px', padding: '22px',
+            border: '1px solid rgba(0,255,133,0.22)',
+            boxShadow: '0 0 36px rgba(0,255,133,0.07), 0 18px 48px rgba(0,0,0,0.4)',
+          }}>
             <p style={{ margin: '0 0 18px', color: 'var(--t1)', fontSize: '13px', fontWeight: 600 }}>FTMO Challenge — Phase 1</p>
             {[
               { label: 'Profit Target',  current: 6.8, max: 10, color: 'var(--gr2)', unit: '%' },

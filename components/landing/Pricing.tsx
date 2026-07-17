@@ -69,10 +69,10 @@ export function Pricing() {
                 {tier.badge && (
                   <div style={{
                     position: 'absolute', top: '-11px', left: '50%', transform: 'translateX(-50%)',
-                    background: 'var(--ac)', color: 'white',
+                    background: 'linear-gradient(90deg, #2196F3 0%, #7B2FBF 60%, #C432DC 100%)', color: 'white',
                     fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em',
                     padding: '3px 14px', borderRadius: '20px', whiteSpace: 'nowrap',
-                    boxShadow: '0 4px 14px rgba(77,143,255,0.35)',
+                    boxShadow: '0 4px 14px rgba(123,47,191,0.4)',
                   }}>{tier.badge}</div>
                 )}
 

@@ -32,7 +32,19 @@ export function VelquorSection() {
           </div>
         </div>
 
-        <div style={{ background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}>
+        <div style={{ position: 'relative' }}>
+        {/* hero-language glow + gradient border around the chat mock */}
+        <div aria-hidden style={{
+          position: 'absolute', inset: '-24px -32px',
+          background: 'radial-gradient(ellipse at 25% 65%, rgba(33,110,243,0.16) 0%, transparent 55%), radial-gradient(ellipse at 80% 40%, rgba(196,50,220,0.13) 0%, transparent 55%)',
+          filter: 'blur(28px)', pointerEvents: 'none', zIndex: 0,
+        }} />
+        <div style={{
+          position: 'relative', zIndex: 1, padding: '1.5px', borderRadius: '17px',
+          background: 'linear-gradient(135deg, rgba(33,150,243,0.55) 0%, rgba(123,47,191,0.45) 50%, rgba(224,64,251,0.5) 100%)',
+          boxShadow: '0 0 40px rgba(33,150,243,0.14), 0 24px 64px rgba(0,0,0,0.6)',
+        }}>
+        <div style={{ background: 'var(--s1)', borderRadius: '16px', overflow: 'hidden' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--bd)', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <LogoMark size={26} />
             <div>
@@ -61,6 +73,8 @@ export function VelquorSection() {
               <span style={{ background: 'var(--ac)', color: 'white', fontSize: '10px', padding: '3px 9px', borderRadius: '5px', fontWeight: 500 }}>Send</span>
             </div>
           </div>
+        </div>
+        </div>
         </div>
       </div>
     </section>

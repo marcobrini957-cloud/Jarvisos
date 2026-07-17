@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useLocale } from '@/hooks/useLocale'
+import { SectionEyebrow } from './SectionEyebrow'
 
 export function FAQ() {
   const { t } = useLocale()
@@ -15,7 +16,7 @@ export function FAQ() {
     }}>
       <div style={{ maxWidth: '760px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '44px' }}>
-          <p style={{ margin: '0 0 12px', color: 'var(--ac)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'monospace' }}>{f.eyebrow}</p>
+          <SectionEyebrow align="center">{f.eyebrow}</SectionEyebrow>
           <h2 style={{ fontSize: 'clamp(28px, 5.5vw, 42px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 12px', color: 'var(--t1)', lineHeight: 1.06 }}>{f.h2}</h2>
           <p style={{ color: 'var(--t2)', fontSize: '15px', maxWidth: '440px', margin: '0 auto', lineHeight: 1.65 }}>{f.subtitle}</p>
         </div>

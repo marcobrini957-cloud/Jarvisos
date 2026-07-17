@@ -22,13 +22,26 @@ export function HowItWorks() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: '24px', position: 'relative' }}>
+          {/* gradient rail connecting the step chips — hero's blue→purple→magenta */}
+          <div aria-hidden className="hidden lg:block" style={{
+            position: 'absolute', top: '16px', left: '40px', right: '40px', height: '1px',
+            background: 'linear-gradient(90deg, transparent 0%, rgba(77,143,255,0.45) 12%, rgba(123,47,191,0.45) 55%, rgba(224,64,251,0.4) 88%, transparent 100%)',
+          }} />
           {hw.steps.map((s, i) => (
-            <div key={nums[i]}>
-              <p style={{
-                margin: '0 0 16px',
-                color: 'var(--ac)', fontSize: '13px', fontWeight: 700,
-                letterSpacing: '0.04em', fontFamily: 'monospace',
-              }}>{nums[i]}</p>
+            <div key={nums[i]} style={{ position: 'relative' }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: '32px', height: '32px', borderRadius: '50%', marginBottom: '14px',
+                background: 'linear-gradient(rgba(77,143,255,0.08), rgba(77,143,255,0.08)), var(--s1)',
+                border: '1px solid rgba(77,143,255,0.3)',
+                boxShadow: '0 0 16px rgba(77,143,255,0.18)',
+                position: 'relative', zIndex: 1,
+              }}>
+                <span style={{
+                  color: 'var(--ac)', fontSize: '12px', fontWeight: 700,
+                  letterSpacing: '0.04em', fontFamily: 'monospace',
+                }}>{nums[i]}</span>
+              </div>
               <h3 style={{ margin: '0 0 7px', color: 'var(--t1)', fontSize: '14px', fontWeight: 600 }}>{s.title}</h3>
               <p style={{ margin: '0 0 7px', color: 'var(--t2)', fontSize: '12px', lineHeight: 1.6 }}>{s.desc}</p>
               <p style={{ margin: 0, color: 'var(--t3)', fontSize: '11px', lineHeight: 1.5 }}>{s.detail}</p>
