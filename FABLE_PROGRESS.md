@@ -220,6 +220,40 @@ Marco asked to verify everything EU/Austrian law requires. Audit + fixes:
 LG München Google-Fonts issue avoided); market data proxied server-side; no
 analytics/tracking; EAA accessibility — micro-enterprise exemption applies.
 
+---
+# 2026-07-17 (3) — Mobile login bug hunt (commits a6f9bc4, b1b6c31, d3b9d72)
+
+Marco: "login works on PC, phone shows error + reload." Reproduced with Playwright
+WebKit iPhone emulation against production. FOUR real bugs found:
+
+1. **Supabase Site URL was still http://localhost:3000, redirect allowlist EMPTY**
+   → all OAuth/magic-link/reset/confirmation redirects went to localhost (works on
+   Marco's PC with dev server, dead on phone). Fixed via Management API (Marco's
+   sbp_ token): site_url=https://velquor.app, allowlist velquor.app/** + localhost:3000/**.
+2. **New-user signup 100% broken** ("Database error creating new user"): TWO triggers
+   on auth.users — legacy `on_auth_user_created`→`handle_new_user()` (from
+   supabase-multiuser-setup.sql, no SET search_path → unqualified user_profiles
+   unresolvable in GoTrue context) + the good foundation trigger. Dropped legacy
+   trigger+function via Management API SQL. Verified: admin user creation works,
+   profile row auto-created with API key.
+3. **Mobile dashboard crash** (= Marco's actual symptom, "This page couldn't load —
+   Reload"): OverviewTab unmounts → MobileOverviewTab mounts on phones; both
+   useTrades instances hit singleton client channel 'trades-realtime' → second .on()
+   after subscribe() throws. Fix: unique channel name per hook instance.
+4. **Cross-user data leak**: GET /api/mt5-sync — service-role client, NO auth, NO
+   user filter → returned newest snapshot across ALL users (Topbar showed Marco's
+   balance to the test user). Fixed: getAuthUserId + eq(user_id) + maybeSingle.
+   Also scoped mt5-debug trade queries; MobileOverviewTab greeted everyone as
+   hardcoded "Marco" → profile.display_name.
+
+Also: login page now displays ?error= from /auth/callback + unlocks body scroll
+(was overflow:hidden from root layout → small phones couldn't reach submit).
+
+Test account: fable-mobiletest@velquor.app (free tier, for mobile e2e tests).
+Playwright WebKit installed; e2e script /tmp/vq-login-e2e.mjs pattern in this log.
+Known console noise on fresh accounts: two 406s (.single() on empty tables) +
+one 500 (mt5 quick-sync without creds) — non-fatal, candidates for a cleanup pass.
+
 **Open items ONLY MARCO can resolve** (flagged in session report):
 - Impressum: if Gewerbe registered → must add Gewerbebezeichnung + authority (§ 5 ECG);
   if VAT-registered → UID must be listed. Currently minimal-natural-person version.
