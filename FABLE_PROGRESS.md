@@ -405,3 +405,11 @@ group id + 0.1×/0.61 lots; EA wrote vq_copyconfig.json; sync restored.
 UI verified via Playwright (test acct): modal, Host in Cloud buttons, 400s on
 missing pw / bad server, cloud-status. NOT yet tested: a real SLAVE terminal
 (needs a second MT5 account's credentials — only Marco has those).
+
+Update (same session, later): Marco added a real SLAVE (#5143547) through the
+new Add & Connect modal in prod — its cloud terminal provisioned itself, and
+after the canonical-image restart BOTH rows heartbeat active via the /sync
+X-Mt5-Login path (master #5121585 + slave, last_seen 300ms apart; snapshots
+fresh, balance 2246.24). Infrastructure fully live with 2 real accounts.
+Remaining: first actual mirrored trade (master opens → slave executes) — just
+needs Marco to place one.
