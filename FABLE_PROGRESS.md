@@ -260,3 +260,25 @@ one 500 (mt5 quick-sync without creds) — non-fatal, candidates for a cleanup p
 - Pricing footer says "VAT may apply" — before Stripe: B2C prices must be FINAL incl.
   VAT (or state Kleinunternehmer no-VAT). Decide with tax advisor.
 - DPAs with Vercel/Supabase/Hetzner/Anthropic (standard in their terms — accept/archive).
+
+---
+# 2026-07-17 (4) — Live ticker + landing middle/bottom premium pass (00c1d25, 5fc4a8d)
+
+**Live ticker**: TickerStrip now fetches /api/market/strip?set=landing (new
+LANDING_TICKERS set in the route: GC=F→XAUUSD, ^NDX→NAS100, FX =X pairs, ^DJI,
+^GSPC, ^GDAXI, SI=F, BTC-USD; same 5-min module cache, per-set cache key).
+Hardcoded row stays as instant render + fallback (kept if <6 symbols return).
+Real gold was ~4,000 vs fake 2,384 — Marco was right that it looked off.
+
+**Design pass** (verified section-by-section via Playwright WebKit screenshots
+against local dev — script pattern: scrollIntoView per <section>, force .vq-in):
+- Features: per-cell accent hairline + glowing mono numbers
+- HowItWorks: gradient rail connecting 4 numbered chip rings
+- Trust: emoji → green line-icon tiles (ICONS array by index, locale-safe)
+- VelquorSection: chat mock in hero gradient border + ambient glow
+- PropFirm: challenge card green border + glow
+- FAQ: eyebrow → shared SectionEyebrow pill (was the last plain-text one)
+- Pricing: badge → hero gradient (layout untouched — Marco hand-tuned it)
+
+Note: headless WebKit shows a white square artifact top-left when scrolled
+(backdrop-filter nav compositing) — NOT a real bug, renders fine live.
