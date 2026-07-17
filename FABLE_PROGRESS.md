@@ -282,3 +282,29 @@ against local dev — script pattern: scrollIntoView per <section>, force .vq-in
 
 Note: headless WebKit shows a white square artifact top-left when scrolled
 (backdrop-filter nav compositing) — NOT a real bug, renders fine live.
+
+---
+# 2026-07-17 (5) — Hero animation rAF engine + smart logo (aba8592)
+
+**Logo rule** (Marco): logged out → landing, logged in → dashboard. Landing Nav
+already did this; dashboard Topbar → /dashboard ✓; /pricing logo FIXED (was
+always '/'). Login-page centre logo is not a link (Back-to-home covers it).
+
+**AnimatedDashboard rewritten** (components/landing/AnimatedDashboard.tsx) as a
+single-rAF-clock engine — key design decisions for future edits:
+- Cursor = Catmull-Rom spline per scene: [current pos, 6 reading waypoints
+  (READ_PATHS fractions), next tab pos]; eased easeInOutSine over SCENE_MS
+  (3600ms) + micro sin drift → never stops (cursor rule!). Click at u=0.955,
+  scene switch at u=1; next spline starts at the tab → continuous by construction.
+- All 60fps writes via refs (cursor transform, progress scaleX, eq dashoffset,
+  dot getPointAtLength, live candle attrs, [data-count-to] textContent);
+  React re-renders ONLY on step change.
+- Equity curve: EQUITY array → smoothPath() Catmull-Rom→bezier; draws via
+  dashoffset over 1.3s; head dot keeps 'breathing' after draw.
+- [data-hot] elements glow by cursor proximity (measured on scene entry).
+- [data-count-to/-dec/-pre/-suf] spans count up with easeOutExpo over 1.1s.
+- Candle mapping: y = 64-((v-30)/58)*58-3 (band 30-88 → full height, keep both
+  render + live-tick in sync). Candles enter via .vq-candle scaleY overshoot.
+- Ticker values synced to real July-2026 levels; tape marquees (vq-tape 26s).
+Verified frame-by-frame via /tmp/vq-anim-test.mjs (finds mock by
+background rgb(9,13,19) + [data-tab], clips, screenshots at time marks).
