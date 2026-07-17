@@ -59,11 +59,15 @@ export function useTrades(limit = 50) {
 
   useEffect(() => { load() }, [load])
 
-  // Realtime subscription — instantly reflects any DB insert/update on the trades table
+  // Realtime subscription — instantly reflects any DB insert/update on the trades table.
+  // Channel name must be unique per hook instance: the browser client is a singleton,
+  // so a shared name returns the already-subscribed channel and .on() throws
+  // ("cannot add postgres_changes callbacks after subscribe()") when two consumers
+  // overlap — e.g. OverviewTab unmounting while MobileOverviewTab mounts on phones.
   useEffect(() => {
     const supabase = createClient()
     const channel  = supabase
-      .channel('trades-realtime')
+      .channel(`trades-realtime-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trades' }, () => {
         load()
       })
