@@ -1,10 +1,15 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { getCookieConsent, setCookieConsent, onConsentChange } from '@/components/CookieConsent'
 
 // Official TradingView embed loader. Widgets are free to use with the
 // attribution link included below (per TradingView widget terms).
 // https://www.tradingview.com/widget-docs/
+//
+// § 165 TKG / ePrivacy: TradingView is third-party content that sets its own
+// cookies, so the script only loads after 'all' consent. Until then we show a
+// placeholder whose button grants that consent (one clearly-informed click).
 export function TradingViewWidget({
   script,
   config,
@@ -18,10 +23,16 @@ export function TradingViewWidget({
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const configJson = JSON.stringify(config)
+  const [consented, setConsented] = useState(false)
+
+  useEffect(() => {
+    setConsented(getCookieConsent() === 'all')
+    return onConsentChange(v => setConsented(v === 'all'))
+  }, [])
 
   useEffect(() => {
     const container = ref.current
-    if (!container) return
+    if (!container || !consented) return
     container.innerHTML = ''
     const s = document.createElement('script')
     s.src = `https://s3.tradingview.com/external-embedding/${script}.js`
@@ -30,7 +41,34 @@ export function TradingViewWidget({
     s.innerHTML = configJson
     container.appendChild(s)
     return () => { container.innerHTML = '' }
-  }, [script, configJson])
+  }, [script, configJson, consented])
+
+  if (!consented) {
+    const compact = typeof height === 'number' && height <= 80
+    return (
+      <div style={{
+        height, width: '100%', display: 'flex', flexDirection: compact ? 'row' : 'column',
+        alignItems: 'center', justifyContent: 'center', gap: compact ? '12px' : '10px',
+        padding: compact ? '0 16px' : '16px', boxSizing: 'border-box',
+      }}>
+        <p style={{ margin: 0, color: 'var(--t3)', fontSize: compact ? '11px' : '12px', lineHeight: 1.5, textAlign: 'center', maxWidth: '420px' }}>
+          {compact
+            ? 'Live market data by TradingView (third-party cookies)'
+            : 'Live market widgets are provided by TradingView (third party) and set their own cookies.'}
+        </p>
+        <button
+          onClick={() => setCookieConsent('all')}
+          style={{
+            background: 'transparent', border: '1px solid var(--bd2)', color: 'var(--t2)',
+            borderRadius: '8px', padding: compact ? '3px 10px' : '7px 14px',
+            fontSize: compact ? '11px' : '12px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+          }}
+        >
+          {compact ? 'Load' : 'Load TradingView widgets'}
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="tradingview-widget-container" style={{ height, width: '100%' }}>

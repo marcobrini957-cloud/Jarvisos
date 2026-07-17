@@ -12,7 +12,11 @@ const UL = ({ children }: { children: React.ReactNode }) => <ul style={{ margin:
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of Service" subtitle="Last updated: 17 July 2026 · Applies to velquor.app and all Velquor services">
+    <LegalPage
+      title="Terms of Service"
+      subtitle="Last updated: 17 July 2026 · Applies to velquor.app and all Velquor services"
+      altLang={{ href: '/agb', label: 'Auf Deutsch lesen (AGB)' }}
+    >
 
       <LegalSection heading="1. The service">
         <P>
@@ -52,7 +56,26 @@ export default function TermsPage() {
         </P>
       </LegalSection>
 
-      <LegalSection heading="5. Acceptable use">
+      <LegalSection heading="5. Right of withdrawal (consumers)">
+        <P>
+          If you are a consumer in the EU, you may withdraw from a paid subscription within 14 days
+          of purchase without giving any reason (§ 11 FAGG / Directive 2011/83/EU). To exercise
+          this right, send a clear statement to{' '}
+          <a href="mailto:support@velquor.app" style={{ color: 'var(--ac)', textDecoration: 'none' }}>support@velquor.app</a>{' '}
+          before the deadline — you may use the model text below, but you don&apos;t have to.
+        </P>
+        <P>
+          If you ask us to start the service immediately, you acknowledge that you owe payment for
+          the period until withdrawal, and that the withdrawal right expires once the service has
+          been fully performed. Refunds are made using the original payment method within 14 days.
+        </P>
+        <P>
+          <em>Model withdrawal form: &quot;I hereby withdraw from my contract for the Velquor
+          subscription purchased on [date]. Name, email used for the account, date.&quot;</em>
+        </P>
+      </LegalSection>
+
+      <LegalSection heading="6. Acceptable use">
         <UL>
           <li>No attempts to breach, probe, or overload the service or other users&apos; data.</li>
           <li>No reselling or providing the service to third parties without our consent.</li>
@@ -61,7 +84,7 @@ export default function TermsPage() {
         </UL>
       </LegalSection>
 
-      <LegalSection heading="6. Availability and liability">
+      <LegalSection heading="7. Availability and liability">
         <P>
           We operate the service with care but provide it &quot;as is&quot;, without warranty of
           uninterrupted availability. Market data and broker connections depend on third parties
@@ -76,7 +99,7 @@ export default function TermsPage() {
         </P>
       </LegalSection>
 
-      <LegalSection heading="7. Data">
+      <LegalSection heading="8. Data">
         <P>
           Your trading data remains yours. How we process personal data is described in the{' '}
           <a href="/privacy" style={{ color: 'var(--ac)', textDecoration: 'none' }}>Privacy Policy</a>.
@@ -84,7 +107,7 @@ export default function TermsPage() {
         </P>
       </LegalSection>
 
-      <LegalSection heading="8. Termination">
+      <LegalSection heading="9. Termination">
         <P>
           You may stop using Velquor and delete your account at any time. We may terminate free
           accounts with reasonable notice and paid accounts with effect from the end of the paid
@@ -92,7 +115,16 @@ export default function TermsPage() {
         </P>
       </LegalSection>
 
-      <LegalSection heading="9. Governing law">
+      <LegalSection heading="10. Dispute resolution">
+        <P>
+          We are neither obliged nor willing to participate in dispute resolution proceedings
+          before a consumer arbitration board (Alternative-Streitbeilegung-Gesetz, AStG). You can
+          always reach us directly at support@velquor.app — we try to resolve any issue informally
+          first.
+        </P>
+      </LegalSection>
+
+      <LegalSection heading="11. Governing law">
         <P>
           These terms are governed by Austrian law, excluding its conflict-of-law rules and the UN
           Convention on Contracts for the International Sale of Goods. For consumers residing in
@@ -101,7 +133,7 @@ export default function TermsPage() {
         </P>
       </LegalSection>
 
-      <LegalSection heading="10. Changes">
+      <LegalSection heading="12. Changes">
         <P>
           We may amend these terms as the service evolves. You will be informed of material changes
           in the app; continued use after the effective date constitutes acceptance. The current

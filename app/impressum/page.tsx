@@ -34,6 +34,14 @@ export default function ImpressumPage() {
         </p>
       </LegalSection>
 
+      <LegalSection heading="Verbraucherstreitbeilegung">
+        <p style={{ margin: 0 }}>
+          Wir sind nicht verpflichtet und nicht bereit, an Streitbeilegungsverfahren vor einer
+          Verbraucherschlichtungsstelle teilzunehmen (AStG). Bei Anliegen erreichen Sie uns direkt
+          unter support@velquor.app.
+        </p>
+      </LegalSection>
+
       <LegalSection heading="Haftungsausschluss">
         <p style={{ margin: 0 }}>
           Die Inhalte dieser Website dienen ausschließlich zu Informationszwecken und stellen keine Anlageberatung dar.

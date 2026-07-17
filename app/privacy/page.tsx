@@ -12,7 +12,11 @@ const UL = ({ children }: { children: React.ReactNode }) => <ul style={{ margin:
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy" subtitle="Last updated: 17 July 2026 · Applies to velquor.app and all Velquor services">
+    <LegalPage
+      title="Privacy Policy"
+      subtitle="Last updated: 17 July 2026 · Applies to velquor.app and all Velquor services"
+      altLang={{ href: '/datenschutz', label: 'Auf Deutsch lesen (Datenschutzerklärung)' }}
+    >
 
       <LegalSection heading="1. Controller">
         <P>
@@ -63,8 +67,10 @@ export default function PrivacyPage() {
         <P>
           Velquor uses only strictly necessary cookies: session cookies for login (Supabase Auth)
           and a preference entry storing your cookie choice. We run no advertising or tracking
-          cookies. Embedded TradingView market widgets inside the dashboard are loaded from
-          TradingView and may set their own cookies — see TradingView&apos;s privacy policy.
+          cookies. Embedded TradingView market widgets inside the dashboard are third-party content
+          that sets its own cookies — they load only after you accept them, and you can withdraw
+          that choice at any time via &quot;Cookie settings&quot; in the footer (Art. 7(3) GDPR).
+          See TradingView&apos;s privacy policy for their processing.
         </P>
       </LegalSection>
 

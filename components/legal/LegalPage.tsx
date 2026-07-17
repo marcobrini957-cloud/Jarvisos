@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import { openCookieSettings } from '@/components/CookieConsent'
 
 export function LegalSection({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
@@ -16,9 +17,10 @@ export function LegalSection({ heading, children }: { heading: string; children:
   )
 }
 
-export function LegalPage({ title, subtitle, children }: {
+export function LegalPage({ title, subtitle, altLang, children }: {
   title: string
   subtitle: string
+  altLang?: { href: string; label: string }   // link to this document in the other language
   children: React.ReactNode
 }) {
   // Root layout locks overflow:hidden for the dashboard — unlock it here
@@ -46,9 +48,16 @@ export function LegalPage({ title, subtitle, children }: {
         <h1 style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 8px', color: 'var(--t1)' }}>
           {title}
         </h1>
-        <p style={{ color: 'var(--t3)', fontSize: '13px', margin: '0 0 40px' }}>
+        <p style={{ color: 'var(--t3)', fontSize: '13px', margin: altLang ? '0 0 12px' : '0 0 40px' }}>
           {subtitle}
         </p>
+        {altLang && (
+          <p style={{ margin: '0 0 40px' }}>
+            <Link href={altLang.href} style={{ color: 'var(--ac)', fontSize: '13px', textDecoration: 'none' }}>
+              {altLang.label} →
+            </Link>
+          </p>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           {children}
@@ -56,10 +65,18 @@ export function LegalPage({ title, subtitle, children }: {
 
         <div style={{ borderTop: '1px solid var(--bd)', marginTop: '48px', paddingTop: '24px', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
           <p style={{ color: 'var(--t3)', fontSize: '12px', margin: 0 }}>© 2026 Velquor</p>
-          <div style={{ display: 'flex', gap: '16px' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
             <Link href="/impressum" style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>Impressum</Link>
             <Link href="/privacy" style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>Privacy</Link>
             <Link href="/terms" style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>Terms</Link>
+            <Link href="/datenschutz" style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>Datenschutz</Link>
+            <Link href="/agb" style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>AGB</Link>
+            <button
+              onClick={openCookieSettings}
+              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--t3)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Cookie settings
+            </button>
           </div>
         </div>
 

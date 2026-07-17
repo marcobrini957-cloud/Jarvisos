@@ -17,6 +17,8 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/impressum') ||
     pathname.startsWith('/privacy') ||
     pathname.startsWith('/terms') ||
+    pathname.startsWith('/datenschutz') ||
+    pathname.startsWith('/agb') ||
     pathname.startsWith('/dev') ||
     pathname.startsWith('/api/dev') ||
     pathname.startsWith('/api/market') ||

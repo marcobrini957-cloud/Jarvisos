@@ -2,12 +2,15 @@
 
 import { LogoMark } from '@/components/ui/LogoMark'
 import { useLocale } from '@/hooks/useLocale'
+import { openCookieSettings } from '@/components/CookieConsent'
 
 const LINK_HREFS = ['/privacy', '/terms', 'mailto:support@velquor.app']
+const LINK_HREFS_DE = ['/datenschutz', '/agb', 'mailto:support@velquor.app']
 
 export function Footer() {
-  const { t } = useLocale()
+  const { locale, t } = useLocale()
   const fo = t.footer
+  const hrefs = locale === 'de' ? LINK_HREFS_DE : LINK_HREFS
 
   return (
     <footer style={{
@@ -23,8 +26,14 @@ export function Footer() {
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
           {/* hrefs by index — locale files keep links in Privacy/Terms/Contact order */}
           {fo.links.map((l, i) => (
-            <a key={l} href={LINK_HREFS[i] ?? '/'} style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>{l}</a>
+            <a key={l} href={hrefs[i] ?? '/'} style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>{l}</a>
           ))}
+          <button
+            onClick={openCookieSettings}
+            style={{ background: 'none', border: 'none', padding: 0, color: 'var(--t3)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            {locale === 'de' ? 'Cookie-Einstellungen' : 'Cookie settings'}
+          </button>
         </div>
       </div>
 
