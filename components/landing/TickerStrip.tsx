@@ -1,24 +1,54 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 // Premium market ticker — a thin, always-scrolling terminal strip under the nav.
 // Bloomberg/crypto energy: monospace symbols, green/red deltas, continuous motion.
-// Representative values (landing chrome, not a live feed).
+// Live prices from /api/market/strip?set=landing (Yahoo, 5-min server cache);
+// the static row below renders instantly and is the fallback if the fetch fails.
 
-const TICKERS = [
+type Row = { s: string; p: string; d: string; up: boolean }
+
+const FALLBACK: Row[] = [
   { s: 'XAUUSD',  p: '2,384.10', d: '+0.62%', up: true },
   { s: 'NAS100',  p: '20,114.5', d: '+1.24%', up: true },
   { s: 'EURUSD',  p: '1.0872',   d: '-0.11%', up: false },
   { s: 'GBPUSD',  p: '1.3204',   d: '+0.28%', up: true },
   { s: 'US30',    p: '41,988',   d: '-0.34%', up: false },
-  { s: 'BTCUSD',  p: '67,420',   d: '+2.010%', up: true },
+  { s: 'BTCUSD',  p: '67,420',   d: '+2.01%', up: true },
   { s: 'USDJPY',  p: '156.42',   d: '+0.19%', up: true },
   { s: 'SPX500',  p: '5,634.2',  d: '+0.47%', up: true },
   { s: 'GER40',   p: '18,720',   d: '-0.22%', up: false },
   { s: 'XAGUSD',  p: '31.08',    d: '+1.63%', up: true },
 ]
 
+function fmtPrice(p: number): string {
+  if (p < 10)    return p.toFixed(4)   // FX majors
+  if (p < 1000)  return p.toFixed(2)   // JPY pairs, silver
+  return p.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+}
+
 export function TickerStrip() {
-  const row = [...TICKERS, ...TICKERS] // duplicate for seamless loop
+  const [rows, setRows] = useState<Row[]>(FALLBACK)
+
+  useEffect(() => {
+    const ctrl = new AbortController()
+    fetch('/api/market/strip?set=landing', { signal: ctrl.signal })
+      .then(r => r.json())
+      .then((d: { items?: Array<{ label: string; price: number; change1d: number }> }) => {
+        if (!d.items || d.items.length < 6) return // partial feed — keep fallback
+        setRows(d.items.map(i => ({
+          s:  i.label,
+          p:  fmtPrice(i.price),
+          d:  `${i.change1d >= 0 ? '+' : '-'}${Math.abs(i.change1d).toFixed(2)}%`,
+          up: i.change1d >= 0,
+        })))
+      })
+      .catch(() => {})
+    return () => ctrl.abort()
+  }, [])
+
+  const row = [...rows, ...rows] // duplicate for seamless loop
   return (
     <div
       aria-hidden

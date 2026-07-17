@@ -26,6 +26,20 @@ const TICKERS: Array<{ symbol: string; label: string; currency: string }> = [
   { symbol: '^VIX',    label: 'VIX', currency: 'USD' },
 ]
 
+// Landing-page hero ticker — trader-facing symbol set (labels match MT5 naming)
+const LANDING_TICKERS: Array<{ symbol: string; label: string; currency: string }> = [
+  { symbol: 'GC=F',     label: 'XAUUSD', currency: 'USD' },
+  { symbol: '^NDX',     label: 'NAS100', currency: 'USD' },
+  { symbol: 'EURUSD=X', label: 'EURUSD', currency: 'USD' },
+  { symbol: 'GBPUSD=X', label: 'GBPUSD', currency: 'USD' },
+  { symbol: '^DJI',     label: 'US30',   currency: 'USD' },
+  { symbol: 'BTC-USD',  label: 'BTCUSD', currency: 'USD' },
+  { symbol: 'USDJPY=X', label: 'USDJPY', currency: 'USD' },
+  { symbol: '^GSPC',    label: 'SPX500', currency: 'USD' },
+  { symbol: '^GDAXI',   label: 'GER40',  currency: 'EUR' },
+  { symbol: 'SI=F',     label: 'XAGUSD', currency: 'USD' },
+]
+
 // ── Yahoo Finance headers ─────────────────────────────────────────────────────
 
 const YF_HEADERS = {
@@ -99,7 +113,9 @@ export async function GET(req: Request) {
   if (!rateLimit(`market:${clientIp(req)}`, 60, 60_000)) {
     return NextResponse.json({ error: 'rate_limited' }, { status: 429 })
   }
-  const cacheKey = 'market-strip'
+  const set      = new URL(req.url).searchParams.get('set') === 'landing' ? 'landing' : 'default'
+  const tickers  = set === 'landing' ? LANDING_TICKERS : TICKERS
+  const cacheKey = `market-strip:${set}`
   const now      = Date.now()
   const cached   = cache.get(cacheKey)
 
@@ -108,7 +124,7 @@ export async function GET(req: Request) {
   }
 
   const results = await Promise.all(
-    TICKERS.map(t => fetchTicker(t.symbol, t.label, t.currency)),
+    tickers.map(t => fetchTicker(t.symbol, t.label, t.currency)),
   )
 
   const items: StripItem[] = results.filter((r): r is StripItem => r !== null)
