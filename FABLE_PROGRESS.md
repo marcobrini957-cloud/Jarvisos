@@ -308,3 +308,23 @@ single-rAF-clock engine — key design decisions for future edits:
 - Ticker values synced to real July-2026 levels; tape marquees (vq-tape 26s).
 Verified frame-by-frame via /tmp/vq-anim-test.mjs (finds mock by
 background rgb(9,13,19) + [data-tab], clips, screenshots at time marks).
+
+---
+# 2026-07-17 (6) — Hero animation v2: 1:1 dashboard replica
+
+AnimatedDashboard now replicates the real logged-in dashboard: TradingView-style
+tape with logo chips (TAPE) + SPY/QQQ/BTC/VIX strip (STRIP) + real 9-tab bar
+(SCENE_TABS = [0,1,3,7,8] → Overview/Trading/Journal/Copy/Ask VELQUOR), greeting
+header w/ London-session clock running real time, win-rate ring, 30-day Daily
+P&L bars, TV-style Gold chart w/ volume footer, journal calendar (today = the
+real 17th), trade copier master→slaves map, chat with typewriter answer.
+
+Cursor spline upgraded to PER-SEGMENT velocity curves (eases out of / into each
+waypoint, durations weighted by segment length, linear blend keeps velocity > 0
+— cursor rule holds). No emojis — SVG glyphs only.
+
+Resumed-after-limit polish pass: filled dead bottom band in Journal (Recent
+Entries list), Copy (5-row signal log), Ask VELQUOR (input bar w/ gold send
+glyph); calendar extended to 17 w/ wins 13/15/16, loss 14 — consistent with
+journalEntries rows. Verified frame-by-frame via /tmp/vq-anim-test.mjs
+(12 marks, 0 page errors, loop wraps clean at ~19s).
