@@ -14,6 +14,9 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/brand') ||
     pathname.startsWith('/trailer') ||
     pathname.startsWith('/pricing') ||
+    pathname.startsWith('/impressum') ||
+    pathname.startsWith('/privacy') ||
+    pathname.startsWith('/terms') ||
     pathname.startsWith('/dev') ||
     pathname.startsWith('/api/dev') ||
     pathname.startsWith('/api/market') ||
