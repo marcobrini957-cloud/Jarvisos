@@ -194,3 +194,35 @@ tier gating via lib/api/tier.ts). Note: schema went with `copy_accounts`, not
 routing, Gmail Send-As, Resend + templates), billing (Stripe account → then columns,
 webhook, portal), growth (PostHog, Sentry, UptimeRobot, Stripe→dev console),
 infra (DEV_SECRET in Vercel — unverified).
+
+---
+# 2026-07-17 (2) — Full EU compliance pass (commit ec3fb84)
+
+Marco asked to verify everything EU/Austrian law requires. Audit + fixes:
+
+**Shipped:**
+- `/datenschutz` + `/agb` — full German Datenschutzerklärung + AGB (Austrian operator
+  marketing in German → English-only legal texts are weak against consumers).
+  Language cross-links on all four pages (LegalPage `altLang` prop).
+- **Consent-gated TradingView widgets** (§ 165 TKG / ePrivacy): third-party script
+  loads only after 'all' consent; placeholder with informed one-click opt-in
+  (compact row variant for the 40px ticker tape). setCookieConsent/onConsentChange
+  event system in CookieConsent.tsx.
+- **Consent withdrawal** (Art. 7(3) DSGVO): "Cookie settings" reopens banner —
+  in landing Footer (locale-aware label) + legal shell footer.
+- **14-day consumer withdrawal right** (§ 11 FAGG) incl. model form + immediate-
+  performance clause in Terms §5 / AGB §5 — REQUIRED before Stripe goes live.
+- **ADR statement** (AStG — "not obliged/not willing") in Terms §10, AGB §10,
+  Impressum. (EU ODR platform was discontinued July 2025 — no link needed.)
+- de locale footer → /datenschutz + /agb. Proxy allowlist extended.
+
+**Verified OK, no action:** next/font self-hosts Inter (no Google request — the
+LG München Google-Fonts issue avoided); market data proxied server-side; no
+analytics/tracking; EAA accessibility — micro-enterprise exemption applies.
+
+**Open items ONLY MARCO can resolve** (flagged in session report):
+- Impressum: if Gewerbe registered → must add Gewerbebezeichnung + authority (§ 5 ECG);
+  if VAT-registered → UID must be listed. Currently minimal-natural-person version.
+- Pricing footer says "VAT may apply" — before Stripe: B2C prices must be FINAL incl.
+  VAT (or state Kleinunternehmer no-VAT). Decide with tax advisor.
+- DPAs with Vercel/Supabase/Hetzner/Anthropic (standard in their terms — accept/archive).
