@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { accountSlot, provisioner, bridgeConfigured } from '@/lib/api/copy-cloud'
 
 async function getUserId(): Promise<string | null> {
   const cookieStore = await cookies()
@@ -68,5 +69,13 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     .eq('user_id', userId)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // If this account had a hosted cloud terminal, stop it — otherwise the
+  // container would keep running (and keep a slot) for a deleted account.
+  // Best-effort: the main terminal is never touched here (its slot is 'main').
+  if (bridgeConfigured()) {
+    await provisioner(`/provision/${userId}?slot=${accountSlot(accountId)}`, { method: 'DELETE' }).catch(() => {})
+  }
+
   return NextResponse.json({ ok: true })
 }

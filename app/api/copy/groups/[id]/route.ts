@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { accountSlot, provisioner, bridgeConfigured } from '@/lib/api/copy-cloud'
 
 async function getUserId(): Promise<string | null> {
   const cookieStore = await cookies()
@@ -61,6 +62,15 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
+
+  // Collect the group's accounts BEFORE the delete cascades them away, so any
+  // hosted cloud terminals can be stopped too.
+  const { data: accounts } = await admin()
+    .from('copy_accounts')
+    .select('id')
+    .eq('group_id', id)
+    .eq('user_id', userId)
+
   const { error } = await admin()
     .from('copy_groups')
     .delete()
@@ -68,5 +78,12 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     .eq('user_id', userId)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (bridgeConfigured() && accounts?.length) {
+    await Promise.allSettled(
+      accounts.map(a => provisioner(`/provision/${userId}?slot=${accountSlot(a.id)}`, { method: 'DELETE' }))
+    )
+  }
+
   return NextResponse.json({ ok: true })
 }
