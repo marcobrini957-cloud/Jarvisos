@@ -3,6 +3,8 @@
 import { LogoMark } from '@/components/ui/LogoMark'
 import { useLocale } from '@/hooks/useLocale'
 
+const LINK_HREFS = ['/privacy', '/terms', 'mailto:support@velquor.app']
+
 export function Footer() {
   const { t } = useLocale()
   const fo = t.footer
@@ -19,8 +21,9 @@ export function Footer() {
           <span style={{ color: 'var(--t3)', fontSize: '12px' }}>{fo.copyright}</span>
         </div>
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-          {fo.links.map(l => (
-            <a key={l} href="#" style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>{l}</a>
+          {/* hrefs by index — locale files keep links in Privacy/Terms/Contact order */}
+          {fo.links.map((l, i) => (
+            <a key={l} href={LINK_HREFS[i] ?? '/'} style={{ color: 'var(--t3)', fontSize: '12px', textDecoration: 'none' }}>{l}</a>
           ))}
         </div>
       </div>

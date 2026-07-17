@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { DisplayModeProvider } from '@/context/DisplayModeContext'
+import { CookieConsent } from '@/components/CookieConsent'
 import './globals.css'
 
 const inter = Inter({
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`h-full ${inter.variable}`}>
       <body className="h-full" style={{ overflow: 'hidden' }}>
         <DisplayModeProvider>{children}</DisplayModeProvider>
+        <CookieConsent />
       </body>
     </html>
   )
