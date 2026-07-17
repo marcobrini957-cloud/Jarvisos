@@ -22,7 +22,7 @@ import { MarketStrip } from './overview/MarketStrip'
 import { WinRing } from './overview/WinRing'
 import { TradeCalendar } from './overview/TradeCalendar'
 import { StreakCard, StreakBadge } from './overview/StreakCards'
-import { MarketOverview } from '@/components/widgets/TradingViewWidget'
+import { MarketsCard } from './overview/MarketsCard'
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
@@ -206,38 +206,69 @@ export default function OverviewTab() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════
-          CHARTS — Equity Curve + Daily P&L
+          CHARTS — Equity Curve + Daily P&L (equal-height row)
       ══════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-stretch">
         <div className="lg:col-span-3">
-          <Panel title="Equity Curve" accent="var(--gr2)">
-            <EquityCurveChart days={60} height={160} />
+          <Panel title="Equity Curve" accent="var(--gr2)" className="h-full">
+            <EquityCurveChart days={60} height={150} showStats />
           </Panel>
         </div>
         <div className="lg:col-span-2">
-          <Panel title="Daily P&L — 30 Days" accent="var(--ac)">
-            <DailyPnLChart days={30} height={160} />
+          <Panel title="Daily P&L — 30 Days" accent="var(--ac)" className="h-full">
+            <DailyPnLChart days={30} height={150} showStats />
           </Panel>
         </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════════
-          CALENDAR + TODAY'S FOCUS
+          CALENDAR + STREAKS/MARKETS (equal-height row)
       ══════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
 
         <div className="lg:col-span-2">
-          <Panel title="Daily P&L Calendar" accent="var(--gr)">
+          <Panel title="Daily P&L Calendar" accent="var(--gr)" className="h-full">
             <TradeCalendar allRows={allRows} />
           </Panel>
         </div>
 
         <div className="lg:col-span-1 flex flex-col gap-5">
           <StreakCard trades={trades} journalStreak={journalStreak} habitStreak={bestHabitStreak} />
-          <Panel title="Markets" accent="var(--ac)" noPadding>
-            <MarketOverview height={400} />
+          <Panel title="Markets" accent="var(--ac)" noPadding className="flex-1">
+            <MarketsCard />
           </Panel>
-          <Panel title="Today's Focus" accent="var(--am2)">
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════
+          INTELLIGENCE + TODAY'S FOCUS (equal-height row)
+      ══════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
+        <div className="lg:col-span-2">
+          <Panel
+            title="VELQUOR Intelligence"
+            accent="var(--go2)"
+            className="h-full"
+            action={insights.length > 0 ? (
+              <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '6px', background: 'rgba(255,176,48,0.1)', color: 'var(--go2)', fontWeight: 600, border: '1px solid rgba(255,176,48,0.2)' }}>
+                {insights.length} insight{insights.length !== 1 ? 's' : ''}
+              </span>
+            ) : undefined}
+          >
+            {insights.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {insights.slice(0, 3).map(i => <InsightCard key={i.id} insight={i} compact />)}
+              </div>
+            ) : (
+              <p style={{ color: 'var(--t3)', fontSize: '13px' }}>
+                {tradesLoading ? 'Analysing your trades…' : 'Sync MT5 and add trades to generate insights.'}
+              </p>
+            )}
+          </Panel>
+        </div>
+
+        <div className="lg:col-span-1">
+          <Panel title="Today's Focus" accent="var(--am2)" className="h-full">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
               {habits.length > 0 && (
@@ -316,29 +347,6 @@ export default function OverviewTab() {
           </Panel>
         </div>
       </div>
-
-      {/* ══════════════════════════════════════════════════════════
-          VELQUOR INTELLIGENCE
-      ══════════════════════════════════════════════════════════ */}
-      <Panel
-        title="VELQUOR Intelligence"
-        accent="var(--go2)"
-        action={insights.length > 0 ? (
-          <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '6px', background: 'rgba(255,176,48,0.1)', color: 'var(--go2)', fontWeight: 600, border: '1px solid rgba(255,176,48,0.2)' }}>
-            {insights.length} insight{insights.length !== 1 ? 's' : ''}
-          </span>
-        ) : undefined}
-      >
-        {insights.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {insights.slice(0, 3).map(i => <InsightCard key={i.id} insight={i} compact />)}
-          </div>
-        ) : (
-          <p style={{ color: 'var(--t3)', fontSize: '13px' }}>
-            {tradesLoading ? 'Analysing your trades…' : 'Sync MT5 and add trades to generate insights.'}
-          </p>
-        )}
-      </Panel>
 
     </div>
   )

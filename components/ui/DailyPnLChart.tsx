@@ -5,11 +5,12 @@ import { useEffect, useState } from 'react'
 interface Bar { date: string; pnl: number; wins: number; losses: number }
 
 interface Props {
-  days?:   number
-  height?: number
+  days?:      number
+  height?:    number
+  showStats?: boolean   // header row: period total + green/red day counts
 }
 
-export default function DailyPnLChart({ days = 30, height = 120 }: Props) {
+export default function DailyPnLChart({ days = 30, height = 120, showStats = false }: Props) {
   const [bars,    setBars]    = useState<Bar[]>([])
   const [loading, setLoading] = useState(true)
   const [hovered, setHovered] = useState<Bar | null>(null)
@@ -66,8 +67,25 @@ export default function DailyPnLChart({ days = 30, height = 120 }: Props) {
     return `${x.toFixed(1)},${y.toFixed(1)}`
   }).join(' ')
 
+  const total     = displayBars.reduce((s, b) => s + b.pnl, 0)
+  const greenDays = displayBars.filter(b => b.pnl >= 0).length
+  const redDays   = displayBars.length - greenDays
+
   return (
     <div style={{ position: 'relative' }}>
+      {showStats && (
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '10px', gap: '10px' }}>
+          <span style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1, color: total >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
+            {total >= 0 ? '+' : '−'}€{Math.abs(total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+          <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
+            <span style={{ color: 'var(--gr2)', fontWeight: 600 }}>{greenDays} green</span>
+            {' · '}
+            <span style={{ color: 'var(--re)', fontWeight: 600 }}>{redDays} red</span>
+            {' '}days
+          </span>
+        </div>
+      )}
       {/* Bars */}
       <div style={{ display: 'flex', alignItems: 'center', height, gap: '1px', position: 'relative' }}>
         {/* Zero line */}

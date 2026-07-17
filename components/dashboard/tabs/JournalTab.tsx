@@ -127,7 +127,23 @@ export default function JournalTab() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <MetricCard title="Entries This Month" value={`${entries.filter(e => e.entry_date.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`)).length}`} change={`of ${calDays.filter(isWeekday).length} trading days`} changePositive={null} barColor="var(--ac)" />
         <MetricCard title="Avg Mood"     value={avgMoodScore > 0 ? `${avgMoodScore.toFixed(1)}/10` : '—'} change={entries.length > 0 ? 'Based on entries' : 'No entries yet'} changePositive={avgMoodScore >= 6 ? true : null} barColor="var(--gr)" />
-        <MetricCard title="Mood → P&L"   value={Object.keys(moodStats).length > 0 ? 'See below' : '—'} change="Correlation analysis" changePositive={null} barColor="var(--am)" />
+        {(() => {
+          const withStats = MOODS.filter(m => moodStats[m])
+          if (withStats.length === 0) {
+            return <MetricCard title="Best Mood" value="—" change="Log moods to find your edge" changePositive={null} barColor="var(--am)" />
+          }
+          const best = withStats.sort((a, b) => (moodStats[b].totalPnl / moodStats[b].count) - (moodStats[a].totalPnl / moodStats[a].count))[0]
+          const bestAvg = moodStats[best].totalPnl / moodStats[best].count
+          return (
+            <MetricCard
+              title="Best Mood"
+              value={best.charAt(0).toUpperCase() + best.slice(1)}
+              change={`${bestAvg >= 0 ? '+' : '−'}€${Math.abs(bestAvg).toFixed(0)}/day avg`}
+              changePositive={bestAvg >= 0}
+              barColor="var(--am)"
+            />
+          )
+        })()}
         <MetricCard title="Streak"       value={`${streak}d`} change={streak > 0 ? 'consecutive days' : 'Start journaling today!'} changePositive={streak > 0} barColor="var(--pu)" />
       </div>
 
@@ -399,8 +415,10 @@ export default function JournalTab() {
                     <div className="rounded-lg p-3 mt-2" style={{ background: 'rgba(232,201,106,0.05)', border: '1px solid rgba(232,201,106,0.15)' }}>
                       <p style={{ color: 'var(--go2)', fontSize: '11px', fontWeight: 500, marginBottom: '4px' }}>VELQUOR INSIGHT</p>
                       <p style={{ color: 'var(--t2)', fontSize: '12px', lineHeight: '1.6' }}>
-                        You trade best when feeling <strong style={{ color: MOOD_COLOR[best as Mood] }}>{best}</strong> (avg {bestAvg >= 0 ? '+' : ''}€{Math.abs(bestAvg).toFixed(2)}/day).
-                        {best !== worst && ` Avoid trading when <strong style="color:${MOOD_COLOR[worst as Mood]}">${worst}</strong> (avg ${worstAvg >= 0 ? '+' : ''}€${Math.abs(worstAvg).toFixed(2)}/day).`}
+                        You trade best when feeling <strong style={{ color: MOOD_COLOR[best as Mood] }}>{best}</strong> (avg {bestAvg >= 0 ? '+' : '−'}€{Math.abs(bestAvg).toFixed(2)}/day).
+                        {best !== worst && <>
+                          {' '}Avoid trading when <strong style={{ color: MOOD_COLOR[worst as Mood] }}>{worst}</strong> (avg {worstAvg >= 0 ? '+' : '−'}€{Math.abs(worstAvg).toFixed(2)}/day).
+                        </>}
                       </p>
                     </div>
                   )

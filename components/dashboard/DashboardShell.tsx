@@ -16,7 +16,6 @@ import TasksTab        from './tabs/TasksTab'
 import CopyTradingTab  from './tabs/CopyTradingTab'
 import SettingsTab     from './tabs/SettingsTab'
 import WelcomeGreeting from './WelcomeGreeting'
-import { TickerTape } from '@/components/widgets/TradingViewWidget'
 
 const TAB_COMPONENTS: Record<number, React.ComponentType> = {
   0: OverviewTab,
@@ -70,11 +69,6 @@ export default function DashboardShell() {
       <WelcomeGreeting />
       <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflowX: 'hidden' }}>
         <Topbar />
-
-        {/* Live market ticker — official TradingView embed, desktop only */}
-        <div className="hidden sm:block">
-          <TickerTape />
-        </div>
 
         {/* Desktop tab bar — hidden on mobile */}
         <div className="hidden sm:block">

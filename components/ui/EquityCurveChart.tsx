@@ -5,14 +5,17 @@ import { useEffect, useRef, useState } from 'react'
 interface Point { date: string; balance: number; equity: number }
 
 interface Props {
-  days?:   number
-  height?: number
+  days?:      number
+  height?:    number
+  showStats?: boolean   // header row: current value, period P&L, max drawdown + period switcher
 }
 
-function lerp(a: number, b: number, t: number) { return a + (b - a) * t }
 function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)) }
 
-export default function EquityCurveChart({ days = 60, height = 160 }: Props) {
+const PERIODS = [30, 60, 90] as const
+
+export default function EquityCurveChart({ days = 60, height = 160, showStats = false }: Props) {
+  const [period,  setPeriod]  = useState(days)
   const [points,  setPoints]  = useState<Point[]>([])
   const [loading, setLoading] = useState(true)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; p: Point } | null>(null)
@@ -20,12 +23,12 @@ export default function EquityCurveChart({ days = 60, height = 160 }: Props) {
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/account/snapshots?days=${days}`)
+    fetch(`/api/account/snapshots?days=${period}`)
       .then(r => r.json())
       .then(d => setPoints(d.points ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [days])
+  }, [period])
 
   const W = 800
   const H = height
@@ -108,6 +111,16 @@ export default function EquityCurveChart({ days = 60, height = 160 }: Props) {
   const isUp     = endBal >= startBal
   const lineColor = isUp ? 'var(--gr2)' : 'var(--re)'
 
+  // Period P&L + max drawdown (peak-to-trough on balance)
+  const periodPnl = endBal - startBal
+  const periodPct = startBal > 0 ? (periodPnl / startBal) * 100 : 0
+  let peak = points[0].balance, maxDd = 0
+  for (const p of points) {
+    if (p.balance > peak) peak = p.balance
+    maxDd = Math.max(maxDd, peak - p.balance)
+  }
+  const maxDdPct = peak > 0 ? (maxDd / peak) * 100 : 0
+
   // Y axis tick values
   const tickCount = 3
   const ticks = Array.from({ length: tickCount }, (_, i) =>
@@ -128,6 +141,40 @@ export default function EquityCurveChart({ days = 60, height = 160 }: Props) {
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
+      {showStats && (
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '10px', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '22px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+              €{endBal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: lineColor }}>
+              {periodPnl >= 0 ? '+' : '−'}€{Math.abs(periodPnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {' '}({periodPct >= 0 ? '+' : ''}{periodPct.toFixed(1)}%)
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
+              Max DD <span style={{ color: maxDd > 0 ? 'var(--re)' : 'var(--t2)', fontWeight: 600 }}>
+                −€{maxDd.toLocaleString('en-US', { maximumFractionDigits: 0 })} ({maxDdPct.toFixed(1)}%)
+              </span>
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {PERIODS.map(p => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                style={{
+                  fontSize: '10px', fontWeight: 600, padding: '3px 9px', borderRadius: '6px',
+                  background: period === p ? 'rgba(255,255,255,0.08)' : 'transparent',
+                  border: period === p ? '1px solid var(--bd2)' : '1px solid transparent',
+                  color: period === p ? 'var(--t1)' : 'var(--t3)', cursor: 'pointer',
+                }}
+              >
+                {p}D
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}

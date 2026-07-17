@@ -413,3 +413,32 @@ X-Mt5-Login path (master #5121585 + slave, last_seen 300ms apart; snapshots
 fresh, balance 2246.24). Infrastructure fully live with 2 real accounts.
 Remaining: first actual mirrored trade (master opens → slave executes) — just
 needs Marco to place one.
+
+---
+# 2026-07-17 (9) — Dashboard design pass: Lego-grid Overview, Journal + Copy polish
+
+Marco's brief: no blank spaces, rows must lock together "like Lego", tape too
+loud (removed — it stays on the landing page only), equity curve needs more
+info, Markets panel made no sense.
+
+- **Ticker tape removed** from DashboardShell (TradingView embed gone; the
+  small SPY/QQQ/BTC/VIX MarketStrip inside Overview stays).
+- **Overview restructured into equal-height rows** (items-stretch + h-full
+  Panels): [Equity 3/5 | DailyPnL 2/5] → [Calendar 2/3 | Streaks+Markets] →
+  [Intelligence 2/3 | Today's Focus]. Page 2171→1843px, zero dead zones. The
+  old layout had a ~500px blank hole left of the Markets widget.
+- **Markets panel**: TradingView MarketOverview iframe (rendered empty)
+  replaced by MarketsCard — our /api/market/strip?set=landing quotes
+  (XAUUSD/NAS100/FX/indices), live dots, 5-min refresh.
+- **EquityCurveChart** showStats: current balance, period P&L (+€/%), max
+  drawdown (peak-to-trough), 30/60/90D period pills (self-fetching).
+- **DailyPnLChart** showStats: period total + green/red day counts.
+- **Journal**: raw-HTML bug FIXED (insight box printed literal
+  `<strong style=...>` — template literal inside JSX; now real JSX). Filler
+  "Mood → P&L: See below" card → "Best Mood" (name + avg €/day).
+- **Copy tab**: EA CONFIGURATION collapsed by default ("for accounts on your
+  own MetaTrader"), WebRequest reminder reworded + demoted (cloud users need
+  no setup).
+- Macro/Discipline/Tasks/Trading reviewed — already structurally sound, left
+  alone. Portfolio untouched (Marco approves of it as-is).
+64 tests, build green; verified via Playwright screenshots per tab.

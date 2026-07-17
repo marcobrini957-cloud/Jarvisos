@@ -114,17 +114,17 @@ export default function CopyTradingTab() {
         </>
       )}
 
-      {/* MT5 URL whitelist reminder — shown for all tiers */}
+      {/* MT5 URL whitelist reminder — only relevant for own-MetaTrader (EA) accounts */}
       <div style={{
-        marginTop: '20px', padding: '12px 16px', borderRadius: '10px',
+        marginTop: '20px', padding: '10px 16px', borderRadius: '10px',
         background: 'var(--s1)', border: '1px solid var(--bd)',
-        fontSize: '11px', color: 'var(--t3)', lineHeight: 1.6,
+        fontSize: '11px', color: 'var(--t3)', lineHeight: 1.6, opacity: 0.85,
       }}>
-        <strong style={{ color: 'var(--t2)' }}>Add to MT5 allowed URLs:</strong>{' '}
+        Running the EA on your own MetaTrader? Add{' '}
         <code style={{ color: 'var(--ac)', background: 'var(--s2)', padding: '1px 6px', borderRadius: '4px' }}>
           https://bridge.velquor.app
         </code>
-        {' '}under <em>Tools → Options → Expert Advisors → Allow WebRequest</em>
+        {' '}under <em>Tools → Options → Expert Advisors → Allow WebRequest</em>. Cloud-hosted accounts need no setup.
       </div>
 
       {showCreateGroup && (

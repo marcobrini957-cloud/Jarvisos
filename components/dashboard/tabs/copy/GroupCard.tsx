@@ -18,6 +18,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
   const [hostAccount,    setHostAccount]    = useState<CopyAccount | null>(null)
   const [toggling,       setToggling]       = useState(false)
   const [showLog,        setShowLog]        = useState(false)
+  const [showEaConfig,   setShowEaConfig]   = useState(false)
 
   const master = group.copy_accounts.find(a => a.role === 'master')
   const slaves = group.copy_accounts.filter(a => a.role === 'slave')
@@ -287,15 +288,29 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
           </div>
         </div>
 
-        {/* EA config snippet */}
+        {/* EA config snippet — only needed for self-hosted (own MetaTrader)
+            accounts, so collapsed by default to keep the card clean */}
         {(master || slaves.length > 0) && (
           <div style={{
             margin: '0 20px 16px', padding: '12px 14px', borderRadius: '10px',
             background: 'rgba(0,255,133,0.03)', border: '1px solid rgba(0,255,133,0.1)',
           }}>
-            <div style={{ fontSize: '10px', color: '#00FF85', letterSpacing: '0.08em', marginBottom: '8px', fontWeight: 700 }}>
-              EA CONFIGURATION
-            </div>
+            <button
+              onClick={() => setShowEaConfig(v => !v)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: '10px', color: '#00FF85', letterSpacing: '0.08em', fontWeight: 700 }}>
+                EA CONFIGURATION <span style={{ color: 'var(--t3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· for accounts on your own MetaTrader</span>
+              </span>
+              <span style={{
+                fontSize: '10px', color: 'var(--t3)', display: 'inline-block',
+                transform: showEaConfig ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s',
+              }}>▾</span>
+            </button>
+            {showEaConfig && <div style={{ marginTop: '8px' }}>
             <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--t2)', lineHeight: '1.7' }}>
               <div><span style={{ color: 'var(--t3)' }}>InpCopyMode</span> = <span style={{ color: '#FFD700' }}>COPY_MASTER</span> <span style={{ color: '#555' }}>// or COPY_SLAVE</span></div>
               <div><span style={{ color: 'var(--t3)' }}>InpCopyGroupId</span> = <span style={{ color: '#7A4FFF' }}>"{group.id}"</span></div>
@@ -308,6 +323,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
               }
               <div><span style={{ color: 'var(--t3)' }}>InpCopyMaxLot</span> = <span style={{ color: '#00FF85' }}>{group.max_lot}</span></div>
             </div>
+            </div>}
           </div>
         )}
 
