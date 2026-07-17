@@ -3,20 +3,31 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { CopyGroup } from './copy/types'
 import { CreateGroupModal } from './copy/CreateGroupModal'
-import { GroupCard } from './copy/GroupCard'
+import { GroupCard, type CloudInfo } from './copy/GroupCard'
 import { PlanGateBanner } from './copy/PlanGateBanner'
 import { HowItWorks } from './copy/HowItWorks'
 
 // ── Main Tab ──────────────────────────────────────────────────────────────────
 export default function CopyTradingTab() {
   const [groups,          setGroups]          = useState<CopyGroup[]>([])
+  const [cloud,           setCloud]           = useState<CloudInfo>({ hostedIds: [], mainLogin: null })
   const [loading,         setLoading]         = useState(true)
   const [tier,            setTier]            = useState<string>('free')
   const [showCreateGroup, setShowCreateGroup] = useState(false)
 
   // Single fetch: sets groups + derives tier from response status
   const load = useCallback(async () => {
-    const res = await fetch('/api/copy/groups')
+    const [res, cloudRes] = await Promise.all([
+      fetch('/api/copy/groups'),
+      fetch('/api/copy/cloud-status').catch(() => null),
+    ])
+    if (cloudRes?.ok) {
+      const c = await cloudRes.json()
+      setCloud({
+        hostedIds: c.hosted_account_ids ?? [],
+        mainLogin: c.main_terminal?.login != null ? String(c.main_terminal.login) : null,
+      })
+    }
     if (res.status === 401) { setLoading(false); return }
     if (res.status === 403) { setTier('free'); setLoading(false); return }
     if (res.ok) {
@@ -96,7 +107,7 @@ export default function CopyTradingTab() {
               </button>
             </div>
           ) : (
-            groups.map(g => <GroupCard key={g.id} group={g} onRefresh={load} />)
+            groups.map(g => <GroupCard key={g.id} group={g} cloud={cloud} onRefresh={load} />)
           )}
 
           <HowItWorks />

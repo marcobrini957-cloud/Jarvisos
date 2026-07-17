@@ -50,15 +50,37 @@ const docker = (args) =>
     execFile('docker', args, { timeout: 60000 }, (err, stdout, stderr) =>
       err ? reject(new Error(stderr || err.message)) : resolve(stdout.trim())));
 
-const containerName = (userId) => `velquor-term-${userId.replace(/[^a-zA-Z0-9-]/g, '')}`;
+// Container per (user, slot). Slot '' / 'main' = the classic Instant Connect
+// terminal (legacy name, no suffix). Copy-trading slave/master terminals get
+// their own slot: velquor-term-<uid>--<slot>.
+const cleanId = (s) => String(s || '').replace(/[^a-zA-Z0-9-]/g, '');
+const containerName = (userId, slot) => {
+  const base = `velquor-term-${cleanId(userId)}`;
+  return slot && slot !== 'main' ? `${base}--${cleanId(slot)}` : base;
+};
 
 async function runningTerminals() {
   const out = await docker(['ps', '--filter', 'name=velquor-term-', '--format', '{{.Names}}']);
   return out ? out.split('\n') : [];
 }
 
-async function startContainer(userId, creds) {
-  const name = containerName(userId);
+// Copy-mode envs for the entrypoint (enum ints match the EA:
+// COPY_OFF=0 MASTER=1 SLAVE=2; LOT_PROPORTIONAL=0 LOT_FIXED=1).
+function copyEnv(copy) {
+  if (!copy || !copy.mode || !copy.group_id) return [];
+  const mode = copy.mode === 'master' ? 1 : copy.mode === 'slave' ? 2 : 0;
+  if (!mode) return [];
+  return [
+    `VQ_COPY_MODE=${mode}`,
+    `VQ_COPY_GROUP=${String(copy.group_id)}`,
+    `VQ_COPY_LOT_MODE=${copy.lot_mode === 'fixed' ? 1 : 0}`,
+    `VQ_COPY_LOT_FIXED=${Number(copy.lot_fixed) > 0 ? Number(copy.lot_fixed) : 0.01}`,
+    `VQ_COPY_LOT_MULT=${Number(copy.lot_mult) > 0 ? Number(copy.lot_mult) : 1.0}`,
+    `VQ_COPY_MAX_LOT=${Number(copy.max_lot) > 0 ? Number(copy.max_lot) : 10.0}`,
+  ];
+}
+
+async function startContainer(name, creds, copy) {
   await docker(['rm', '-f', name]).catch(() => {});
   const envFile = path.join(ACCOUNTS_DIR, `${name}.env.tmp`);
   fs.writeFileSync(envFile, [
@@ -67,6 +89,7 @@ async function startContainer(userId, creds) {
     `MT5_SERVER=${creds.server}`,
     `VQ_API_KEY=${creds.api_key}`,
     `BRIDGE_URL=${BRIDGE_URL}`,
+    ...copyEnv(copy),
   ].join('\n'), { mode: 0o600 });
   try {
     await docker(['run', '-d', '--name', name,
@@ -88,21 +111,40 @@ app.use((req, res, next) => {
   next();
 });
 
+// POST /provision
+// Body: { user_id, login, password, server, api_key, slot?, copy?, reuse_stored? }
+// - slot: extra terminal for copy trading (e.g. "c1a2b3c4"); omitted = main.
+// - copy: { mode: 'master'|'slave', group_id, lot_mode, lot_fixed, lot_mult, max_lot }
+// - reuse_stored: restart the slot with its stored credentials (no password
+//   needed — used to flip an existing terminal into copy master/slave mode).
 app.post('/provision', async (req, res) => {
   try {
-    const { user_id, login, password, server, api_key } = req.body || {};
-    if (!user_id || !login || !password || !server || !api_key) {
-      return res.status(400).json({ error: 'user_id, login, password, server, api_key required' });
+    const { user_id, login, password, server, api_key, slot, copy, reuse_stored } = req.body || {};
+    if (!user_id) return res.status(400).json({ error: 'user_id required' });
+    const name = containerName(user_id, slot);
+    const credPath = path.join(ACCOUNTS_DIR, `${name}.cred`);
+
+    let creds;
+    if (reuse_stored) {
+      if (!fs.existsSync(credPath)) return res.status(404).json({ error: 'no_stored_credentials' });
+      creds = decrypt(fs.readFileSync(credPath, 'utf8'));
+      if (api_key) creds.api_key = String(api_key);
+    } else {
+      if (!login || !password || !server || !api_key) {
+        return res.status(400).json({ error: 'login, password, server, api_key required' });
+      }
+      creds = { login: String(login), password: String(password), server: String(server), api_key: String(api_key) };
     }
+
     const running = await runningTerminals();
-    const name = containerName(user_id);
     if (!running.includes(name) && running.length >= CAPACITY) {
       return res.status(507).json({ error: 'at_capacity', used: running.length, max: CAPACITY });
     }
-    const creds = { login: String(login), password: String(password), server: String(server), api_key: String(api_key) };
-    fs.writeFileSync(path.join(ACCOUNTS_DIR, `${name}.cred`), encrypt(creds), { mode: 0o600 });
-    await startContainer(user_id, creds);
-    log({ msg: 'provisioned', user: user_id, login: creds.login, server: creds.server });
+    const stored = { ...creds };
+    if (copy) stored.copy = copy;   // survives reuse_stored restarts
+    fs.writeFileSync(credPath, encrypt(stored), { mode: 0o600 });
+    await startContainer(name, creds, copy ?? stored.copy);
+    log({ msg: 'provisioned', user: user_id, slot: slot || 'main', login: creds.login, copy: copy?.mode || 'off' });
     res.json({ status: 'starting' });
   } catch (e) {
     log({ level: 'error', msg: 'provision_failed', err: e.message });
@@ -112,7 +154,7 @@ app.post('/provision', async (req, res) => {
 
 app.get('/provision/:userId/status', async (req, res) => {
   try {
-    const name = containerName(req.params.userId);
+    const name = containerName(req.params.userId, req.query.slot);
     const out = await docker(['inspect', '--format',
       '{{.State.Running}} {{.State.StartedAt}} {{.State.RestartCount}}', name])
       .catch(() => null);
@@ -124,12 +166,27 @@ app.get('/provision/:userId/status', async (req, res) => {
   }
 });
 
+// GET /provision/:userId/slots — every terminal this user has (main + copy)
+app.get('/provision/:userId/slots', async (req, res) => {
+  try {
+    const base = `velquor-term-${cleanId(req.params.userId)}`;
+    const running = await runningTerminals();
+    const mine = running.filter(n => n === base || n.startsWith(`${base}--`));
+    res.json({
+      count: mine.length,
+      slots: mine.map(n => (n === base ? 'main' : n.slice(base.length + 2))),
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'slots_failed' });
+  }
+});
+
 app.delete('/provision/:userId', async (req, res) => {
   try {
-    const name = containerName(req.params.userId);
+    const name = containerName(req.params.userId, req.query.slot);
     await docker(['rm', '-f', name]).catch(() => {});
     fs.rmSync(path.join(ACCOUNTS_DIR, `${name}.cred`), { force: true });
-    log({ msg: 'deprovisioned', user: req.params.userId });
+    log({ msg: 'deprovisioned', user: req.params.userId, slot: req.query.slot || 'main' });
     res.json({ status: 'disconnected' });
   } catch (e) {
     res.status(500).json({ error: 'deprovision_failed' });

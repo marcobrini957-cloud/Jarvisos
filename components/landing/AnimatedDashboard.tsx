@@ -491,10 +491,10 @@ export function AnimatedDashboard() {
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <div style={{ width: '18px', height: '18px', borderRadius: '5px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8.5px', color: 'var(--t2)' }}>€</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8.5px', fontWeight: 700, color: 'white' }}>M</div>
+              <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8.5px', fontWeight: 700, color: 'white' }}>T</div>
               <div>
-                <p style={{ margin: 0, color: 'var(--t1)', fontSize: '8px', fontWeight: 600, lineHeight: 1.25 }}>Marco</p>
-                <p style={{ margin: 0, color: 'var(--t3)', fontSize: '6.5px', lineHeight: 1.25 }}>Vienna · EUR</p>
+                <p style={{ margin: 0, color: 'var(--t1)', fontSize: '8px', fontWeight: 600, lineHeight: 1.25 }}>Trader</p>
+                <p style={{ margin: 0, color: 'var(--t3)', fontSize: '6.5px', lineHeight: 1.25 }}>Live · EUR</p>
               </div>
             </div>
           </div>
@@ -575,7 +575,7 @@ export function AnimatedDashboard() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '8px' }}>
-                  <p style={{ margin: 0, color: 'var(--t1)', fontSize: '17px', fontWeight: 700, letterSpacing: '-0.03em' }}>Good afternoon, Marco</p>
+                  <p style={{ margin: 0, color: 'var(--t1)', fontSize: '17px', fontWeight: 700, letterSpacing: '-0.03em' }}>Good afternoon, Trader</p>
                   <span style={{ background: 'rgba(0,232,122,0.1)', border: '1px solid rgba(0,232,122,0.25)', color: 'var(--gr2)', fontSize: '7.5px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', ...stag(2) }}>🔥 2-trade win streak</span>
                 </div>
                 {/* Session clock bar */}

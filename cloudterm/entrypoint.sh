@@ -16,6 +16,16 @@ w16() { # w16 <path> — reads stdin (UTF-8, LF), writes BOM + UTF-16LE CRLF
 
 mkdir -p "$MT5DIR/config" "$MT5DIR/MQL5/Presets"
 
+# Copy trading config — provisioner sets these for master/slave terminals.
+# Enum ints match ea/VelquorBridge.mq5: COPY_OFF=0 MASTER=1 SLAVE=2;
+# LOT_PROPORTIONAL=0 LOT_FIXED=1.
+VQ_COPY_MODE="${VQ_COPY_MODE:-0}"
+VQ_COPY_GROUP="${VQ_COPY_GROUP:-}"
+VQ_COPY_LOT_MODE="${VQ_COPY_LOT_MODE:-0}"
+VQ_COPY_LOT_FIXED="${VQ_COPY_LOT_FIXED:-0.01}"
+VQ_COPY_LOT_MULT="${VQ_COPY_LOT_MULT:-1.0}"
+VQ_COPY_MAX_LOT="${VQ_COPY_MAX_LOT:-10.0}"
+
 # EA inputs preset
 w16 "$MT5DIR/MQL5/Presets/velquor.set" <<EOF
 InpApiKey=$VQ_API_KEY
@@ -24,7 +34,12 @@ InpIntervalSec=10
 InpHistoryDays=30
 InpDebugMode=true
 InpFileBridge=true
-InpCopyMode=0
+InpCopyMode=$VQ_COPY_MODE
+InpCopyGroupId=$VQ_COPY_GROUP
+InpCopyLotMode=$VQ_COPY_LOT_MODE
+InpCopyLotFixed=$VQ_COPY_LOT_FIXED
+InpCopyLotMult=$VQ_COPY_LOT_MULT
+InpCopyMaxLot=$VQ_COPY_MAX_LOT
 EOF
 
 # WebRequest allowlist (persistent terminal config)

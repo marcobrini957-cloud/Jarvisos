@@ -4,11 +4,18 @@ import { useState } from 'react'
 import type { CopyAccount, CopyGroup } from './types'
 import { statusDot, timeAgo } from './helpers'
 import { AddAccountModal } from './AddAccountModal'
+import { HostAccountModal } from './HostAccountModal'
 import { SignalLog } from './SignalLog'
 
+export interface CloudInfo {
+  hostedIds: string[]           // copy_accounts ids running in a cloud terminal
+  mainLogin: string | null      // login of the user's connected main terminal
+}
+
 // ── Group Card ────────────────────────────────────────────────────────────────
-export function GroupCard({ group, onRefresh }: { group: CopyGroup; onRefresh: () => void }) {
+export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud: CloudInfo; onRefresh: () => void }) {
   const [addAccountRole, setAddAccountRole] = useState<'master' | 'slave' | null>(null)
+  const [hostAccount,    setHostAccount]    = useState<CopyAccount | null>(null)
   const [toggling,       setToggling]       = useState(false)
   const [showLog,        setShowLog]        = useState(false)
 
@@ -46,6 +53,51 @@ export function GroupCard({ group, onRefresh }: { group: CopyGroup; onRefresh: (
     })
     onRefresh()
   }
+
+  async function unhostAccount(acc: CopyAccount) {
+    if (!confirm(`Stop the cloud terminal for #${acc.mt5_login}? Copying stops until you reconnect it (cloud or your own EA).`)) return
+    await fetch(`/api/copy/accounts/${acc.id}/connect`, { method: 'DELETE' })
+    onRefresh()
+  }
+
+  const isHosted = (acc: CopyAccount) => cloud.hostedIds.includes(acc.id)
+    || (cloud.mainLogin != null && String(acc.mt5_login) === String(cloud.mainLogin))
+
+  const cloudBadge = (
+    <span style={{
+      fontSize: '9px', fontWeight: 700, letterSpacing: '0.05em', padding: '2px 7px',
+      borderRadius: '20px', background: 'rgba(0,255,133,0.1)',
+      border: '1px solid rgba(0,255,133,0.25)', color: '#00FF85', flexShrink: 0,
+    }}>
+      CLOUD
+    </span>
+  )
+
+  const hostButton = (acc: CopyAccount) => isHosted(acc) ? (
+    <button
+      onClick={() => unhostAccount(acc)}
+      title="Stop the hosted cloud terminal"
+      style={{
+        fontSize: '10px', padding: '4px 10px', borderRadius: '6px',
+        background: 'var(--s1)', border: '1px solid var(--bd)',
+        color: 'var(--t3)', cursor: 'pointer',
+      }}
+    >
+      Unhost
+    </button>
+  ) : (
+    <button
+      onClick={() => setHostAccount(acc)}
+      title="Run this account in a VELQUOR cloud terminal"
+      style={{
+        fontSize: '10px', padding: '4px 10px', borderRadius: '6px', fontWeight: 600,
+        background: 'rgba(0,255,133,0.08)', border: '1px solid rgba(0,255,133,0.3)',
+        color: '#00FF85', cursor: 'pointer',
+      }}
+    >
+      Host in Cloud
+    </button>
+  )
 
   return (
     <>
@@ -133,20 +185,24 @@ export function GroupCard({ group, onRefresh }: { group: CopyGroup; onRefresh: (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {statusDot(master.status, master.last_seen_at)}
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       {master.nickname || master.mt5_login}
+                      {isHosted(master) && cloudBadge}
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--t3)' }}>
                       #{master.mt5_login}{master.mt5_server ? ` · ${master.mt5_server}` : ''} · {timeAgo(master.last_seen_at)}
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => removeAccount(master.id)}
-                  style={{ fontSize: '11px', color: '#FF3347', background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  Remove
-                </button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {hostButton(master)}
+                  <button
+                    onClick={() => removeAccount(master.id)}
+                    style={{ fontSize: '11px', color: '#FF3347', background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    Remove
+                  </button>
+                </div>
               </div>
             ) : (
               <div style={{
@@ -196,8 +252,9 @@ export function GroupCard({ group, onRefresh }: { group: CopyGroup; onRefresh: (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       {statusDot(slave.status, slave.last_seen_at)}
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           {slave.nickname || slave.mt5_login}
+                          {isHosted(slave) && cloudBadge}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--t3)' }}>
                           #{slave.mt5_login}{slave.mt5_server ? ` · ${slave.mt5_server}` : ''} · {timeAgo(slave.last_seen_at)}
@@ -205,6 +262,7 @@ export function GroupCard({ group, onRefresh }: { group: CopyGroup; onRefresh: (
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
+                      {hostButton(slave)}
                       <button
                         onClick={() => toggleAccountStatus(slave)}
                         style={{
@@ -284,8 +342,18 @@ export function GroupCard({ group, onRefresh }: { group: CopyGroup; onRefresh: (
         <AddAccountModal
           groupId={group.id}
           defaultRole={addAccountRole}
+          mainLogin={cloud.mainLogin}
           onClose={() => setAddAccountRole(null)}
           onAdded={onRefresh}
+        />
+      )}
+
+      {hostAccount !== null && (
+        <HostAccountModal
+          account={hostAccount}
+          mainLogin={cloud.mainLogin}
+          onClose={() => setHostAccount(null)}
+          onHosted={onRefresh}
         />
       )}
     </>

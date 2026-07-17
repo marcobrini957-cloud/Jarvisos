@@ -4,9 +4,9 @@
 export function HowItWorks() {
   const steps = [
     { n: '1', title: 'Create a Copy Group',      desc: 'Set up a group with a name and lot sizing config (proportional or fixed).' },
-    { n: '2', title: 'Add your accounts',         desc: 'Add the MT5 account number for your master (the one placing real trades) and your slave accounts.' },
-    { n: '3', title: 'Configure the EA',          desc: 'Copy the group ID shown above into VelquorBridge.mq5, set the mode to MASTER or SLAVE, and load it on each MT5.' },
-    { n: '4', title: 'Trades mirror instantly',   desc: 'When the master opens or closes a trade, slaves receive the signal within 2 seconds and execute automatically.' },
+    { n: '2', title: 'Connect your accounts',     desc: 'Add your master (the one placing real trades) and your slaves. Pick VELQUOR Cloud and enter login, broker server and password — we host the terminal for you, 24/7. Masters work with the read-only investor password; slaves need the trading password.' },
+    { n: '3', title: 'Prefer your own MetaTrader?', desc: 'Choose "My own MetaTrader" instead: run VelquorBridge.mq5 on your machine with the EA CONFIGURATION values shown on the group card (mode MASTER or SLAVE + the group ID).' },
+    { n: '4', title: 'Trades mirror automatically', desc: 'When the master opens or closes a trade, slaves receive the signal and execute it — typically within a few seconds.' },
   ]
   return (
     <div style={{
