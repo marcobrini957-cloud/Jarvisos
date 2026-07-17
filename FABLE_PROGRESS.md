@@ -167,3 +167,30 @@ Porkbun: A record `bridge` → 37.27.179.184 (Marco added).
 - MetaAPI code KEPT until Instant Connect proves out with real users.
 - Economics: MetaAPI ~€15/user/mo → self-hosted ~€0.40–0.60/user/mo at scale
   (dedicated ~€40–50/mo = 80–120 terminals). EA-path users ≈ free.
+
+---
+# 2026-07-17 — Legal package + dev_todos cleanup
+
+**dev_todos table synced with reality**: marked 10 stale items done after verifying
+in code/DB (all copy-trading items — EA master/slave, bridge routing, copy_* tables,
+settings UI, lot sizing, SignalLog; bridge deploy + domain; last-seen migration;
+tier gating via lib/api/tier.ts). Note: schema went with `copy_accounts`, not
+`linked_accounts`. `stripe_customer_id` column does NOT exist yet (billing todo open).
+
+**Legal package shipped** (commit e73e9e2):
+- `components/legal/LegalPage.tsx` — shared shell (overflow unlock, back link,
+  cross-links footer); impressum refactored onto it (now a server component page)
+- `/privacy` — GDPR policy: controller, data categories w/ Art. 6 bases, AI section
+  (Anthropic as processor), processors (Vercel/Supabase/Hetzner/Anthropic), cookies,
+  retention, rights (incl. dsb.gv.at)
+- `/terms` — not-financial-advice, investor-password recommendation, plans, acceptable
+  use (incl. no unlicensed signal-selling), Austrian-law liability clause, Graz venue
+- `components/CookieConsent.tsx` — banner in root layout; localStorage `vq-cookie-consent`
+  ('all'|'essential'); getCookieConsent() exported for future PostHog gating
+- Footer Privacy/Terms/Contact links wired (LINK_HREFS by index — locale files keep
+  Privacy/Terms/Contact order in all 4 locales)
+
+**Remaining open todos** (all need external accounts from Marco): email (Cloudflare
+routing, Gmail Send-As, Resend + templates), billing (Stripe account → then columns,
+webhook, portal), growth (PostHog, Sentry, UptimeRobot, Stripe→dev console),
+infra (DEV_SECRET in Vercel — unverified).
