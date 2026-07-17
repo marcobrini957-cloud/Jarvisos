@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { LogoMark } from '@/components/ui/LogoMark'
 
@@ -92,6 +92,16 @@ const FAQ = [
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(true)
+  const [loggedIn, setLoggedIn] = useState(false)
+
+  // Logo rule: logged out → landing, logged in → dashboard (same as landing Nav)
+  useEffect(() => {
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      createClient().auth.getUser().then(({ data }) => {
+        if (data.user) setLoggedIn(true)
+      })
+    })
+  }, [])
 
   return (
     <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff' }}>
@@ -104,7 +114,7 @@ export default function PricingPage() {
         position: 'sticky', top: 0, zIndex: 50,
         background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(12px)',
       }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none' }}>
+        <Link href={loggedIn ? '/dashboard' : '/'} style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none' }}>
           <LogoMark size={24} />
           <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px', letterSpacing: '-0.01em' }}>VELQUOR</span>
         </Link>
