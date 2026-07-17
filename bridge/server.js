@@ -208,6 +208,19 @@ app.post('/sync', wrap(async (req, res) => {
     return res.status(426).json({ error: 'upgrade_required', min_version: settings.min_ea_version });
   }
 
+  // Heartbeat any copy-trading rows for this terminal: a quiet master would
+  // otherwise sit at 'pending' forever (signals/polls are the only other
+  // touchpoints). Login comes from the X-Mt5-Login header (EA + sidecar).
+  const mt5Login = req.headers['x-mt5-login'];
+  if (mt5Login && /^\d{3,12}$/.test(String(mt5Login))) {
+    await supabase
+      .from('copy_accounts')
+      .update({ last_seen_at: new Date().toISOString(), status: 'active' })
+      .eq('user_id', user.id)
+      .eq('mt5_login', String(mt5Login))
+      .in('status', ['pending', 'active']);
+  }
+
   // 1. account snapshot
   if (body.account) {
     const acc = body.account;

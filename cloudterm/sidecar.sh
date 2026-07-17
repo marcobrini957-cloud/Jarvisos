@@ -34,7 +34,7 @@ forward_sync() {
   [ "$mt" = "$last_sync_mt" ] && return
   local body; body="$(cat "$SYNC_FILE" 2>/dev/null)"
   [ "${body:0:1}" = "{" ] || return
-  local code; code="$(post_json /sync "$body")"
+  local code; code="$(post_json /sync "$body" -H "X-Mt5-Login: ${MT5_LOGIN:-}")"
   if [ "$code" = "200" ]; then last_sync_mt="$mt"; log "sync 200 ${#body}b"; else log "sync http=$code"; fi
 }
 

@@ -364,3 +364,44 @@ the answer typewriter) + What-VELQUOR-Knows rail. Per-scene durations
 White band in screenshots over mock = nav backdrop-filter compositing artifact
 (proven: disappears with backdrop-filter:none) — headless-only, NOT a bug.
 64 tests pass, build green. Chrome frame-by-frame: 0 page errors.
+
+---
+# 2026-07-17 (8) — Copy Trading actually connectable (4f1d21d) + neutral hero greeting
+
+Marco: "you cannot put in your account, login, the password... the whole copy
+trading tab needs full-on work." Root cause: AddAccountModal only recorded an
+account NUMBER — nothing ever connected unless the user ran the EA themselves.
+
+**New flow — two connection methods per account (master or slave):**
+- VELQUOR Cloud (default): broker-server picker (BROKERS quick buttons +
+  free text), login, password → we provision a dedicated cloud terminal per
+  copy account running the EA in COPY_MASTER/COPY_SLAVE with the group's lot
+  settings. Master hint: investor (read-only) pw is enough; slave needs the
+  trading pw. If the login equals the user's connected main terminal →
+  password-free: main terminal re-provisioned in copy mode via stored creds.
+- My own MetaTrader: old flow (number only) + EA CONFIGURATION block.
+GroupCard rows: CLOUD badge + Host in Cloud / Unhost buttons.
+
+**Plumbing:**
+- provisioner.js: multi-slot containers velquor-term-<uid>--<slot> (slot =
+  'c'+accountId[0:8]), copy env passthrough, reuse_stored (re-start with
+  stored creds; copy config persists in the .cred file), GET /slots.
+- entrypoint.sh: VQ_COPY_MODE/GROUP/LOT_MODE/LOT_FIXED/LOT_MULT/MAX_LOT env →
+  InpCopy* preset inputs (enum ints: OFF=0 MASTER=1 SLAVE=2; PROP=0 FIXED=1).
+- Site: POST/DELETE /api/copy/accounts/[id]/connect (tier-gated vs
+  plan.cloudTerminals via provisioner slot count), GET /api/copy/cloud-status
+  (hosted ids derived from slots — NO new DB column). copy_accounts.status
+  check constraint allows only pending/active/paused/error ('connecting' 23514).
+
+**Deploy gotcha that bit us:** server /opt/velquor-term/build/Dockerfile was a
+STALE variant without `COPY sidecar.sh` + jq — my image rebuild silently
+dropped the sidecar (= no file-bridge forwarding, sync dead). Fixed via hotfix
+layer (jq + sidecar) + canonical Dockerfile synced to server; stale
+Dockerfile.copy/.side/.v2 deleted. Server build dir now mirrors cloudterm/.
+
+**E2E verified (master side):** Marco's real terminal re-provisioned as
+COPY_MASTER for his group via reuse_stored — preset shows InpCopyMode=1 +
+group id + 0.1×/0.61 lots; EA wrote vq_copyconfig.json; sync restored.
+UI verified via Playwright (test acct): modal, Host in Cloud buttons, 400s on
+missing pw / bad server, cloud-status. NOT yet tested: a real SLAVE terminal
+(needs a second MT5 account's credentials — only Marco has those).
