@@ -54,40 +54,49 @@ forward_copy_outbox() {
   done
 }
 
-poll_copy_inbox() {
-  [ -s "$CONFIG_FILE" ] || return
-  local mode grp lgn
-  mode="$(jq -r '.mode // "OFF"' "$CONFIG_FILE" 2>/dev/null)"
-  [ "$mode" = "SLAVE" ] || return
-  grp="$(jq -r '.group // ""' "$CONFIG_FILE" 2>/dev/null)"
-  lgn="$(jq -r '.login // ""' "$CONFIG_FILE" 2>/dev/null)"
-  # Don't clobber an inbox the EA hasn't consumed yet.
-  [ -e "$INBOX" ] && return
-  local resp code
-  resp="$(curl -s --max-time 8 -w '\n%{http_code}' "$BRIDGE_URL/copy/poll" \
-    -H "X-Api-Key: $VQ_API_KEY" -H "X-Copy-Group: $grp" -H "X-Mt5-Login: $lgn" 2>/dev/null)"
-  code="${resp##*$'\n'}"
-  resp="${resp%$'\n'*}"
-  if [ "$code" != "200" ]; then
-    # Log state changes only — a sustained 429/5xx would otherwise flood stdout.
-    [ "$code" = "$last_poll_code" ] || log "copy-poll http=$code"
-    last_poll_code="$code"
-    return
-  fi
-  [ "$last_poll_code" = "200" ] || { [ -n "$last_poll_code" ] && log "copy-poll recovered"; }
-  last_poll_code="200"
-  # Only write a file when there are actually signals to process.
-  if echo "$resp" | jq -e '.signals | length > 0' >/dev/null 2>&1; then
-    printf '%s' "$resp" > "$INBOX"
-    log "copy-in $(echo "$resp" | jq -r '.signals | length') signals"
-  fi
+# Dedicated long-poll loop (backgrounded): the bridge holds ?wait=25 requests
+# open and answers the instant a signal lands, so delivery latency is network
+# round-trip, not poll cadence.
+copy_poll_loop() {
+  local last_poll_code=""
+  while true; do
+    if [ ! -s "$CONFIG_FILE" ] || [ "$(jq -r '.mode // "OFF"' "$CONFIG_FILE" 2>/dev/null)" != "SLAVE" ]; then
+      sleep 5; continue
+    fi
+    # Don't clobber an inbox the EA hasn't consumed yet.
+    if [ -e "$INBOX" ]; then sleep 0.2; continue; fi
+    local grp lgn resp code
+    grp="$(jq -r '.group // ""' "$CONFIG_FILE" 2>/dev/null)"
+    lgn="$(jq -r '.login // ""' "$CONFIG_FILE" 2>/dev/null)"
+    resp="$(curl -s --max-time 30 -w '\n%{http_code}' "$BRIDGE_URL/copy/poll?wait=25" \
+      -H "X-Api-Key: $VQ_API_KEY" -H "X-Copy-Group: $grp" -H "X-Mt5-Login: $lgn" 2>/dev/null)"
+    code="${resp##*$'\n'}"
+    resp="${resp%$'\n'*}"
+    if [ "$code" != "200" ]; then
+      # Log state changes only — a sustained 429/5xx would otherwise flood stdout.
+      [ "$code" = "$last_poll_code" ] || log "copy-poll http=$code"
+      last_poll_code="$code"
+      sleep 2; continue
+    fi
+    [ "$last_poll_code" = "200" ] || { [ -n "$last_poll_code" ] && log "copy-poll recovered"; }
+    last_poll_code="200"
+    # Only write a file when there are actually signals to process.
+    if echo "$resp" | jq -e '.signals | length > 0' >/dev/null 2>&1; then
+      printf '%s' "$resp" > "$INBOX"
+      log "copy-in $(echo "$resp" | jq -r '.signals | length') signals"
+      # Give the EA time to consume + the ack to reach the bridge before
+      # re-polling, or the same pending row comes straight back.
+      sleep 1
+    fi
+  done
 }
 
 last_sync_mt=""
-last_poll_code=""
+copy_poll_loop &
+# Fast local loop: file checks are cheap, and copy-out latency (master signal
+# → bridge) rides on this cadence.
 while true; do
   forward_sync
   forward_copy_outbox
-  poll_copy_inbox
-  sleep 3
+  sleep 0.3
 done

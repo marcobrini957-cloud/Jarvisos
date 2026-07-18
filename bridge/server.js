@@ -236,9 +236,17 @@ app.post('/sync', wrap(async (req, res) => {
   const mt5Login = req.headers['x-mt5-login'];
   const loginNum = mt5Login && /^\d{3,12}$/.test(String(mt5Login)) ? Number(mt5Login) : null;
   if (loginNum) {
+    // Heartbeat + live account figures — the only place slave balances are
+    // stored (they're excluded from account_snapshots by design).
+    const hb = { last_seen_at: new Date().toISOString(), status: 'active' };
+    if (body.account) {
+      hb.balance           = body.account.balance           ?? null;
+      hb.equity            = body.account.equity            ?? null;
+      hb.open_trades_count = body.account.open_trades_count ?? null;
+    }
     await supabase
       .from('copy_accounts')
-      .update({ last_seen_at: new Date().toISOString(), status: 'active' })
+      .update(hb)
       .eq('user_id', user.id)
       .eq('mt5_login', String(mt5Login))
       .in('status', ['pending', 'active']);
@@ -361,13 +369,64 @@ app.post('/copy/signal', wrap(async (req, res) => {
     await supabase.from('copy_log').insert(
       slaves.map(s => ({ signal_id: sig.id, slave_account_id: s.id, status: 'pending' }))
     );
+    // Wake any long-polling slave immediately — this is what makes copy
+    // delivery push-latency instead of poll-latency.
+    for (const s of slaves) notifySlave(s.id);
   }
 
   metrics.signals++;
   return res.json({ ok: true, signal_id: sig.id, slaves_notified: slaves?.length ?? 0 });
 }));
 
+// ─── Long-poll plumbing: /copy/signal wakes waiting /copy/poll requests ───────
+const slaveWaiters = new Map(); // slaveAccountId -> Set<fn>
+function notifySlave(slaveAccId) {
+  const set = slaveWaiters.get(slaveAccId);
+  if (!set) return;
+  for (const fn of set) fn();
+}
+// Arm BEFORE querying for pending rows, or a signal landing in between would
+// be missed and only delivered at the wait timeout.
+function armSlaveWaiter(slaveAccId, ms, req) {
+  let done = false;
+  let resolveFn;
+  const promise = new Promise(resolve => { resolveFn = resolve; });
+  const finish = () => {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    const set = slaveWaiters.get(slaveAccId);
+    if (set) { set.delete(finish); if (set.size === 0) slaveWaiters.delete(slaveAccId); }
+    resolveFn();
+  };
+  const timer = setTimeout(finish, ms);
+  if (!slaveWaiters.has(slaveAccId)) slaveWaiters.set(slaveAccId, new Set());
+  slaveWaiters.get(slaveAccId).add(finish);
+  req.on('close', finish);
+  return { promise, cancel: finish };
+}
+
+async function fetchPendingSignals(slaveAccId) {
+  const { data: pending } = await supabase
+    .from('copy_log')
+    .select(`
+      id,
+      copy_signals(
+        id, signal_type, master_ticket, symbol, trade_type, lot_size,
+        open_price, stop_loss, take_profit, close_price,
+        copy_groups(lot_mode, lot_fixed, lot_multiplier, max_lot)
+      )
+    `)
+    .eq('slave_account_id', slaveAccId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+    .limit(10);
+  return pending || [];
+}
+
 // ─── GET /copy/poll — slave polls for pending trade signals ───────────────────
+// ?wait=<seconds> (max 25) holds the request open until a signal arrives, so
+// sidecars sit in a blocking poll instead of hammering every few seconds.
 app.get('/copy/poll', wrap(async (req, res) => {
   if (!settings.copy_enabled) return res.status(503).json({ error: 'copy_disabled' });
 
@@ -387,22 +446,18 @@ app.get('/copy/poll', wrap(async (req, res) => {
     .update({ status: 'active', last_seen_at: new Date().toISOString() })
     .eq('id', slaveAcc.id);
 
-  const { data: pending } = await supabase
-    .from('copy_log')
-    .select(`
-      id,
-      copy_signals(
-        id, signal_type, master_ticket, symbol, trade_type, lot_size,
-        open_price, stop_loss, take_profit, close_price,
-        copy_groups(lot_mode, lot_fixed, lot_multiplier, max_lot)
-      )
-    `)
-    .eq('slave_account_id', slaveAcc.id)
-    .eq('status', 'pending')
-    .order('created_at', { ascending: true })
-    .limit(10);
+  const waitS = Math.min(Number(req.query.wait) || 0, 25);
+  const waiter = waitS > 0 ? armSlaveWaiter(slaveAcc.id, waitS * 1000, req) : null;
 
-  const signals = (pending || []).map(p => {
+  let pending = await fetchPendingSignals(slaveAcc.id);
+  if (pending.length === 0 && waiter) {
+    await waiter.promise;
+    if (req.destroyed) return;
+    pending = await fetchPendingSignals(slaveAcc.id);
+  }
+  waiter?.cancel();
+
+  const signals = pending.map(p => {
     const s  = p.copy_signals;
     const cg = s?.copy_groups;
     return {

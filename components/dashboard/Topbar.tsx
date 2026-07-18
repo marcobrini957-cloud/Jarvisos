@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import MT5ConnectModal from './MT5ConnectModal'
+import AccountMenu from './AccountMenu'
 import { LogoMark } from '@/components/ui/LogoMark'
 import { useDisplayMode } from '@/context/DisplayModeContext'
 import { useUserProfile } from '@/context/UserProfileContext'
@@ -16,13 +17,6 @@ interface MT5Status {
   openPositions: number
   syncedAt:      string | null
   error:         string | null
-}
-
-function timeAgo(iso: string): string {
-  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60)   return `${s}s ago`
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`
-  return `${Math.floor(s / 3600)}h ago`
 }
 
 const AVATAR_COLORS = [
@@ -222,52 +216,13 @@ export default function Topbar() {
           </span>
         </Link>
 
-        {/* MT5 Status */}
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-          style={{
-            background: 'transparent',
-            border: '1px solid var(--bd2)',
-            cursor: 'pointer',
-            transition: 'all 0.12s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-        >
-          <span style={{
-            width: '6px', height: '6px', borderRadius: '50%', display: 'inline-block', flexShrink: 0,
-            background: status.connected ? 'var(--gr2)' : status.error ? 'var(--re)' : 'var(--t3)',
-            boxShadow:  status.connected ? '0 0 6px var(--gr)' : 'none',
-            animation:  syncing ? 'pulse-dot 1s ease-in-out infinite' : 'none',
-          }} />
-
-          {status.connected ? (
-            <div className="flex items-center gap-3">
-              <span className="topbar-mt5-label" style={{ color: 'var(--t2)', fontSize: '12px' }}>MT5</span>
-              {status.balance !== null && (
-                <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 500 }}>
-                  €{status.balance.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-              )}
-              {status.openPositions > 0 && (
-                <span className="topbar-mt5-open" style={{
-                  background: 'rgba(88,166,255,0.12)', color: 'var(--ac)',
-                  fontSize: '11px', padding: '1px 7px', borderRadius: '4px',
-                }}>
-                  {status.openPositions} open
-                </span>
-              )}
-              {status.syncedAt && (
-                <span className="topbar-mt5-time" style={{ color: 'var(--t3)', fontSize: '11px' }}>{timeAgo(status.syncedAt)}</span>
-              )}
-            </div>
-          ) : status.error ? (
-            <span style={{ color: 'var(--re)', fontSize: '12px' }}>Reconnect MT5</span>
-          ) : (
-            <span style={{ color: 'var(--t3)', fontSize: '12px' }}>Connect MT5</span>
-          )}
-        </button>
+        {/* MT5 status pill + account switcher */}
+        <AccountMenu
+          status={status}
+          syncing={syncing}
+          onSync={() => runSync(true)}
+          onConnect={() => setShowModal(true)}
+        />
 
         {/* Display mode toggle */}
         <button

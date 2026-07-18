@@ -57,6 +57,19 @@ export default function DashboardShell() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Programmatic tab switching (e.g. topbar account menu → Copy tab)
+  useEffect(() => {
+    const onSwitch = (e: Event) => {
+      const tab = (e as CustomEvent<number>).detail
+      if (typeof tab === 'number' && TAB_COMPONENTS[tab]) {
+        setActiveTab(tab)
+        setShowSettings(false)
+      }
+    }
+    window.addEventListener('vq-switch-tab', onSwitch)
+    return () => window.removeEventListener('vq-switch-tab', onSwitch)
+  }, [])
+
   const ActiveTab = TAB_COMPONENTS[activeTab] ?? TAB_COMPONENTS[0]
 
   function handleTabChange(id: number) {

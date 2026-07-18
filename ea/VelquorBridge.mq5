@@ -39,7 +39,7 @@ input ENUM_LOT_MODE  InpCopyLotMode  = LOT_PROPORTIONAL; // Slave lot sizing
 input double         InpCopyLotFixed = 0.01;       // Fixed lot size (slave, LOT_FIXED mode)
 input double         InpCopyLotMult  = 1.0;        // Lot multiplier (slave, LOT_PROPORTIONAL mode)
 input double         InpCopyMaxLot   = 10.0;       // Maximum lot per copied trade (slave)
-input int            InpCopyPollMs   = 2000;       // Slave poll interval ms (default 2000)
+input int            InpCopyPollMs   = 250;        // Slave inbox check interval ms
 
 //── Globals ───────────────────────────────────────────────────────────────────
 string   g_syncUrl;
@@ -47,7 +47,7 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.12";
+string   g_eaVersion   = "2.14";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // slave: throttles PostSync inside the fast timer
@@ -380,6 +380,20 @@ void ProcessCopySignal(const string objStr)
 
    if(sigType == "open")
    {
+      // Idempotency: fast redelivery (long-poll returns before our ack lands)
+      // must never open the same master trade twice. The comment scan in
+      // FindSlaveTicket catches it even across EA restarts.
+      long existing = FindSlaveTicket(masterTicket, brokerSymbol);
+      if(existing > 0)
+      {
+         execStatus  = "executed";
+         slaveTicket = existing;
+         Print("CopyTrade OPEN duplicate delivery ignored: master=", masterTicket,
+               " already open as slave=", existing);
+         SendCopyAck(logId, execStatus, slaveTicket, slaveLots, "");
+         return;
+      }
+
       // The slave terminal has likely never shown this symbol — without a
       // Market Watch subscription there are no quotes and OrderSend fails
       // with 10021. Select it and wait briefly for the first tick.
