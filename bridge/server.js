@@ -322,6 +322,16 @@ async function cachedMasterAcc(userId, groupId, login) {
   return acc;
 }
 
+const slaveAccCache = new Map(); // `${userId}:${groupId}:${login}` -> { acc, ts }
+async function cachedSlaveAcc(userId, groupId, login) {
+  const key = `${userId}:${groupId}:${login}`;
+  const hit = slaveAccCache.get(key);
+  if (hit && Date.now() - hit.ts < 60_000) return hit.acc;
+  const acc = await resolveCopyAccount(userId, groupId, login, 'slave');
+  if (acc) slaveAccCache.set(key, { acc, ts: Date.now() });
+  return acc;
+}
+
 async function cachedGroup(groupId, userId) {
   const hit = groupConfigCache.get(groupId);
   if (hit && Date.now() - hit.ts < HOT_TTL) return hit.group;
@@ -507,13 +517,16 @@ app.get('/copy/poll', wrap(async (req, res) => {
   const mt5Login = req.headers['x-mt5-login'];
   if (!groupId || !mt5Login) return res.status(400).json({ error: 'missing_headers' });
 
-  const slaveAcc = await resolveCopyAccount(user.id, groupId, mt5Login, 'slave');
+  const slaveAcc = await cachedSlaveAcc(user.id, groupId, mt5Login);
   if (!slaveAcc) return res.status(403).json({ error: 'not_slave_in_group' });
 
-  await supabase
+  // Heartbeat off the critical path — the poll must re-arm as fast as
+  // possible so in-memory pushes find a waiter instead of falling back to DB.
+  supabase
     .from('copy_accounts')
     .update({ status: 'active', last_seen_at: new Date().toISOString() })
-    .eq('id', slaveAcc.id);
+    .eq('id', slaveAcc.id)
+    .then(() => {}, () => {});
 
   const waitS = Math.min(Number(req.query.wait) || 0, 25);
   const waiter = waitS > 0 ? armSlaveWaiter(slaveAcc.id, waitS * 1000, req) : null;

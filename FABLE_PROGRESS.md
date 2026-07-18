@@ -567,3 +567,31 @@ Connection (modal), Copy Trading → (vq-switch-tab CustomEvent → DashboardShe
 listener). GET /api/accounts/overview merges latest master snapshot +
 copy_accounts (which now carry balance/equity/open_trades_count, heartbeated
 by the bridge on every slave sync). Journal stays master-only.
+
+---
+# 2026-07-18 (5) — Copy hot path: DB off the critical path (~0.3-0.55s delivery)
+
+Marco: "make it a highway." Rework (8af96ce + follow-up):
+- /copy/signal → in-memory handoff to waiting long-polls (payload in the exact
+  /copy/poll shape, copy_log ids pre-generated via crypto.randomUUID); the
+  copy_signals/copy_log inserts run AFTER res.json as audit trail. Hot-path
+  caches: master acc + slave acc 60s, group config + slave list 10s.
+- /copy/poll: pushed payloads returned with ZERO db reads; slave-acc lookup
+  cached; heartbeat update fire-and-forget; timed-out polls keep the pending
+  catch-up query (correctness backstop for signals arriving while the inbox
+  was occupied / no waiter armed).
+- /copy/ack: updates only status='pending' rows — late acks from redelivered
+  signals can never overwrite the recorded result. Acks racing their own
+  copy_log insert 403 → sidecar retries → self-heals. Sidecar drops cout
+  envelopes stuck >120s (no infinite retry). Loops: 0.1s local, 0.5s
+  post-delivery pause. EA 2.15: 100ms inbox checks.
+
+**Measured**: delivery (signal POST → slave inbox) 551ms typical, 100-330ms
+when a waiter is armed. Remaining ack lag = broker fill time (weekend BTC
+1-2s; NOT our pipeline). Master event → slave order sent ≈ 0.3-0.7s total.
+
+**BURST TEST (3 rapid opens + 3 closes) — copy_log flawless**: #11 open→
+51187210 closed✓, #12 open→51187211 closed✓, #13 open FAILED 10019 (margin,
+correct — €8 only fits two 0.01 BTC) → its close SKIPPED correctly. No
+duplicates, no orphans, slave flat after. The redelivery+idempotency+
+pending-only-ack triangle held under fire.
