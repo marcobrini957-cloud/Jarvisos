@@ -595,3 +595,28 @@ when a waiter is armed. Remaining ack lag = broker fill time (weekend BTC
 correct — €8 only fits two 0.01 BTC) → its close SKIPPED correctly. No
 duplicates, no orphans, slave flat after. The redelivery+idempotency+
 pending-only-ack triangle held under fire.
+
+---
+# 2026-07-18 (6) — Terminal density optimization + TOMORROW.md (b689a33)
+
+Correction first: the earlier "93% full" reading was contaminated by my own
+docker builds/burst tests on the same box. Clean Saturday baseline was
+~0.10-0.15 cpu / ~300MB per terminal.
+
+Optimization (entrypoint + EA 2.16 + provisioner):
+- Chart profile wiped at boot → 1 chart instead of 6 rendering headlessly
+- MaxBars=10000, Xvfb 1024x768→800x600
+- EA 2.16 TrimMarketWatch(): cloud-only (InpFileBridge gate — desktop users'
+  Market Watch untouched), keeps chart symbol + symbols with positions/orders;
+  hid 8 → 1 symbol remains. EnsureSymbolReady re-subscribes on demand —
+  VERIFIED: BTCUSD copy signal executed+closed cleanly post-trim (51188593).
+- Provisioner caps 700m/0.6cpu → 600m/0.5cpu
+
+After: ~7.6-10% cpu, ~275MB per terminal (cpu -25%, ram -8% vs baseline).
+Capacity on the €5 CX23: Marco's 2 + comfortably ~4-6 guests (RAM-bound);
+re-measure on a WEEKDAY (Saturday = no forex ticks) before committing to
+TERM_CAPACITY bump. Unlimited EA-path users regardless.
+
+TOMORROW.md written: weekday validation, Pro-tier cloud decision, infra
+signups (Supabase/Vercel/Stripe/Anthropic key), snapshot pruning job, EA
+Connect Wizard, Copy tab live positions, security sweep (revoke sbp_ token).
