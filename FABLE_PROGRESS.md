@@ -534,3 +534,36 @@ Also confirmed: Marco's 12:11 real mirror worked — master 51187055 → slave
 Marco UX answers: slave's open trade visible only when logged into the slave
 account in MT5 (normal); dashboard open-trades view is master-only (by
 design now). Future: show slave live state in Copy tab from copy_log/acks.
+
+---
+# 2026-07-18 (4) — Copy latency 5-6s → ~1s + account switcher (62695ec + nginx)
+
+**Marco's 3 asks:** slave leaking into topbar (was the snapshot blending,
+fixed earlier same day), account switcher on the MT5 pill, and copy latency.
+
+**Latency rework — polling stack replaced with push:**
+- bridge GET /copy/poll?wait=25 long-polls: armSlaveWaiter BEFORE the pending
+  query (race-free), /copy/signal wakes waiters in-process (slaveWaiters Map).
+- sidecar: fast 0.3s local loop (sync + cout forwarding) + backgrounded
+  dedicated long-poll loop (curl --max-time 30, 1s pause after copy-in so the
+  ack lands before re-poll, 2s backoff on errors, state-change-only logging).
+- EA 2.14: InpCopyPollMs 250ms inbox checks (desktop WebRequest slaves poll
+  at the same rate — fine with per-login rate buckets).
+- ⚠️ nginx proxy_read_timeout was 10s → 504'd every idle long-poll. Now 40s
+  (server + bridge/nginx.conf). Idle poll verified: 200 after 25.4s.
+- ⚠️ DUPLICATE EXECUTION found in testing: long-poll redelivers the pending
+  row before the ack arrives → slave opened the same master trade TWICE
+  (tickets 51187119+120). EA 2.14 idempotency: FindSlaveTicket (mapping +
+  VQ:<ticket> comment scan) before open; duplicate delivery acks 'executed'
+  with the existing ticket. Orphan closed via re-sent close signal.
+**Measured (single clock): open ack 1.17s, close ack 1.24s** — fill is
+earlier still (ack return path ≈0.3-0.6s). Was 5-6s.
+
+**Account switcher (Topbar):** AccountMenu.tsx replaces the bare MT5 pill —
+dropdown lists primary + copy accounts (live/stale/offline dots, PRIMARY/
+MASTER/COPY badges, balance/equity, group/broker, last-seen), click to switch
+what the pill shows (localStorage vq-account-view), actions: Sync now, MT5
+Connection (modal), Copy Trading → (vq-switch-tab CustomEvent → DashboardShell
+listener). GET /api/accounts/overview merges latest master snapshot +
+copy_accounts (which now carry balance/equity/open_trades_count, heartbeated
+by the bridge on every slave sync). Journal stays master-only.
