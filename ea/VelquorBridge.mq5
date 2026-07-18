@@ -47,9 +47,10 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.10";
+string   g_eaVersion   = "2.11";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
+ulong    g_lastSyncMs  = 0;   // slave: throttles PostSync inside the fast timer
 CTrade   g_trade;
 
 // Master: track tickets we have already signalled to avoid duplicates
@@ -92,10 +93,13 @@ int OnInit()
    ArrayResize(g_masterTickets, 0);
    ArrayResize(g_slaveTickets,  0);
 
-   // Set timers: normal sync every InpIntervalSec + fast copy poll every InpCopyPollMs (slave only)
-   EventSetTimer(InpIntervalSec);
+   // One timer only — MQL5 has a single timer slot and every variant fires
+   // OnTimer(). Slaves need the fast cadence for copy polling; PostSync is
+   // throttled to InpIntervalSec inside OnTimer.
    if(InpCopyMode == COPY_SLAVE)
       EventSetMillisecondTimer(InpCopyPollMs);
+   else
+      EventSetTimer(InpIntervalSec);
 
    string modeStr = (InpCopyMode == COPY_MASTER) ? "MASTER" :
                     (InpCopyMode == COPY_SLAVE)   ? "SLAVE"  : "OFF";
@@ -127,18 +131,23 @@ void OnDeinit(const int reason)
 }
 
 //+------------------------------------------------------------------+
+// Fires every InpCopyPollMs on slaves (fast copy poll + throttled sync),
+// every InpIntervalSec otherwise.
+//+------------------------------------------------------------------+
 void OnTimer()
 {
-   PostSync();
-}
-
-//+------------------------------------------------------------------+
-// Fast millisecond timer — only used by SLAVE mode for polling
-//+------------------------------------------------------------------+
-void OnTimerMillisecond()
-{
    if(InpCopyMode == COPY_SLAVE)
+   {
       PollCopySignals();
+      ulong nowMs = GetTickCount64();
+      if(nowMs - g_lastSyncMs >= (ulong)InpIntervalSec * 1000)
+      {
+         g_lastSyncMs = nowMs;
+         PostSync();
+      }
+      return;
+   }
+   PostSync();
 }
 
 //+------------------------------------------------------------------+

@@ -181,8 +181,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rate limits — max reads live settings, so admin changes apply without restart
-const keyOrIp = (req) => (typeof req.headers['x-api-key'] === 'string' ? req.headers['x-api-key'] : req.ip);
+// Rate limits — max reads live settings, so admin changes apply without restart.
+// Keyed per api-key + MT5 login: one user runs several cloud terminals (master +
+// slaves) on the same key, and a slave's copy polling must never starve the
+// master's /copy/signal posts.
+const keyOrIp = (req) => {
+  const key = typeof req.headers['x-api-key'] === 'string' ? req.headers['x-api-key'] : req.ip;
+  const login = typeof req.headers['x-mt5-login'] === 'string' ? req.headers['x-mt5-login'] : '';
+  return `${key}:${login}`;
+};
 app.use('/sync', rateLimit({
   windowMs: 15 * 60 * 1000,
   max: () => settings.rate_limit_sync,

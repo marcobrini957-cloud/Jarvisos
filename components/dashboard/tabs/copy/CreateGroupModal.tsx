@@ -6,7 +6,7 @@ import { inputStyle, btnPrimary, btnSecondary } from './styles'
 // ── Create Group Modal ────────────────────────────────────────────────────────
 export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [name,     setName]     = useState('Copy Group 1')
-  const [lotMode,  setLotMode]  = useState<'proportional' | 'fixed'>('proportional')
+  const [sizing,   setSizing]   = useState<'mirror' | 'multiplier' | 'fixed'>('mirror')
   const [lotMult,  setLotMult]  = useState('1.0')
   const [lotFixed, setLotFixed] = useState('0.01')
   const [maxLot,   setMaxLot]   = useState('10.0')
@@ -16,14 +16,16 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true); setError('')
+    // 1:1 mirror is proportional × 1.0 with an effectively-open cap.
     const res = await fetch('/api/copy/groups', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({
-        name, lot_mode: lotMode,
-        lot_multiplier: parseFloat(lotMult),
+        name,
+        lot_mode:       sizing === 'fixed' ? 'fixed' : 'proportional',
+        lot_multiplier: sizing === 'mirror' ? 1.0 : parseFloat(lotMult),
         lot_fixed:      parseFloat(lotFixed),
-        max_lot:        parseFloat(maxLot),
+        max_lot:        sizing === 'mirror' ? 100 : parseFloat(maxLot),
       }),
     })
     const data = await res.json()
@@ -53,33 +55,39 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
           </label>
 
           <div>
-            <div style={{ fontSize: '11px', color: 'var(--t3)', marginBottom: '6px' }}>LOT SIZING MODE</div>
+            <div style={{ fontSize: '11px', color: 'var(--t3)', marginBottom: '6px' }}>LOT SIZING</div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              {(['proportional', 'fixed'] as const).map(m => (
+              {([['mirror', '1:1 Mirror'], ['multiplier', 'Multiplier'], ['fixed', 'Fixed']] as const).map(([m, label]) => (
                 <button
-                  key={m} type="button" onClick={() => setLotMode(m)}
+                  key={m} type="button" onClick={() => setSizing(m)}
                   style={{
                     flex: 1, padding: '9px 0', borderRadius: '8px', fontSize: '12px',
-                    fontWeight: lotMode === m ? 700 : 400,
-                    background: lotMode === m ? 'rgba(122,79,255,0.15)' : 'var(--s2)',
-                    border:     lotMode === m ? '1px solid rgba(122,79,255,0.5)' : '1px solid var(--bd)',
-                    color:      lotMode === m ? 'var(--ac)' : 'var(--t3)',
-                    cursor:     'pointer', textTransform: 'capitalize',
+                    fontWeight: sizing === m ? 700 : 400,
+                    background: sizing === m ? 'rgba(122,79,255,0.15)' : 'var(--s2)',
+                    border:     sizing === m ? '1px solid rgba(122,79,255,0.5)' : '1px solid var(--bd)',
+                    color:      sizing === m ? 'var(--ac)' : 'var(--t3)',
+                    cursor:     'pointer',
                   }}
                 >
-                  {m === 'proportional' ? 'Proportional' : 'Fixed'}
+                  {label}
                 </button>
               ))}
             </div>
           </div>
 
-          {lotMode === 'proportional' ? (
+          {sizing === 'mirror' && (
+            <span style={{ fontSize: '10px', color: 'var(--t3)' }}>
+              Slaves copy every trade at exactly the master&apos;s lot size.
+            </span>
+          )}
+          {sizing === 'multiplier' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <span style={{ fontSize: '11px', color: 'var(--t3)' }}>LOT MULTIPLIER</span>
               <input value={lotMult} onChange={e => setLotMult(e.target.value)} type="number" step="0.01" min="0.01" style={inputStyle} />
               <span style={{ fontSize: '10px', color: 'var(--t3)' }}>Slave lots = master lots × {lotMult || '1.0'}</span>
             </label>
-          ) : (
+          )}
+          {sizing === 'fixed' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <span style={{ fontSize: '11px', color: 'var(--t3)' }}>FIXED LOT SIZE</span>
               <input value={lotFixed} onChange={e => setLotFixed(e.target.value)} type="number" step="0.01" min="0.01" style={inputStyle} />
@@ -87,10 +95,12 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
             </label>
           )}
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--t3)' }}>MAX LOT CAP</span>
-            <input value={maxLot} onChange={e => setMaxLot(e.target.value)} type="number" step="0.1" min="0.01" style={inputStyle} />
-          </label>
+          {sizing !== 'mirror' && (
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--t3)' }}>MAX LOT CAP</span>
+              <input value={maxLot} onChange={e => setMaxLot(e.target.value)} type="number" step="0.1" min="0.01" style={inputStyle} />
+            </label>
+          )}
 
           {error && (
             <div style={{ fontSize: '12px', color: '#FF3347', padding: '8px 12px', background: 'rgba(255,51,71,0.08)', borderRadius: '8px' }}>

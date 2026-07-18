@@ -442,3 +442,46 @@ info, Markets panel made no sense.
 - Macro/Discipline/Tasks/Trading reviewed — already structurally sound, left
   alone. Portfolio untouched (Marco approves of it as-is).
 64 tests, build green; verified via Playwright screenshots per tab.
+
+---
+# 2026-07-18 — First copy-trade attempt failed: three root causes found + fixed
+
+Marco opened BTCUSD 0.05 + 0.01 on the master — nothing reached the slave.
+Full trace (bridge metrics → copy_signals/copy_log → container logs → EA log):
+
+**Bug 1 (EA, fatal): `OnTimerMillisecond()` is not an MQL5 event.** MQL5 fires
+only `OnTimer()`, and `EventSetMillisecondTimer()` REPLACES `EventSetTimer()`
+(one timer slot). Net effect on slaves: PostSync ran every 2s (log-confirmed)
+and `PollCopySignals()` was dead code — the slave never polled, ever.
+Fix (EA 2.11): slaves set only the millisecond timer; OnTimer polls copy
+signals every tick and throttles PostSync to InpIntervalSec via GetTickCount64.
+
+**Bug 2 (bridge): /copy rate limit 120 req/15min keyed per API key** — shared
+by ALL of a user's terminals. Slave polling (~every 3.4s ≈ 265/window) filled
+the bucket in ~7 min, then the MASTER's /copy/signal posts got 429 — the 0.01
+open + both closes sat as vq_cout_* files retrying every 3s (which kept the
+bucket full — self-DoS). /sync (300/window) was also ~50% throttled with two
+terminals; nobody noticed because last_seen stayed fresh enough.
+Fix: bridge_settings rate_limit_sync 300→3000, rate_limit_copy 120→6000
+(live, no restart) + server.js limiter now keys on api_key:mt5_login so
+terminals get separate buckets. Deployed + pm2 restart.
+
+**Bug 3 (sidecar): poll_copy_inbox swallowed non-200s** — jq silently failed
+on the 429 text body, so logs showed nothing. Fix: capture http code, log
+state CHANGES only (`copy-poll http=429` once, `recovered` once).
+
+**1:1 lot sizing (Marco's ask: "the way all firms do it"):**
+- Copy Group 1: lot_multiplier 0.1→1.0, max_lot 0.61→100 (0.1× would have
+  turned 0.05 into 0.005 lots — below broker min — even with delivery fixed).
+  Applies live: bridge sends group config with every signal, EA obeys server.
+- CreateGroupModal: sizing picker is now [1:1 Mirror | Multiplier | Fixed],
+  mirror default (= proportional ×1.0, cap 100, no inputs shown).
+
+**Cleanup:** 4 stale copy_log rows (master trades already closed) marked
+'skipped' before the fixed slave came online, so it won't execute dead opens.
+Image rebuilt (EA 2.11 compile-verified in Docker build), both terminals
+re-provisioned via provisioner reuse_stored (needs Bearer BRIDGE_ADMIN_TOKEN).
+
+**Slave account #5143547 now has €10** (Marco funded it) — enough to prove
+signal delivery but a 1:1 BTC trade will likely fail on margin; the EA acks
+'failed' with the retcode, which is itself a valid end-to-end test.

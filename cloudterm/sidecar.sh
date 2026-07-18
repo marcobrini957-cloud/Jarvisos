@@ -63,9 +63,19 @@ poll_copy_inbox() {
   lgn="$(jq -r '.login // ""' "$CONFIG_FILE" 2>/dev/null)"
   # Don't clobber an inbox the EA hasn't consumed yet.
   [ -e "$INBOX" ] && return
-  local resp
-  resp="$(curl -s --max-time 8 "$BRIDGE_URL/copy/poll" \
+  local resp code
+  resp="$(curl -s --max-time 8 -w '\n%{http_code}' "$BRIDGE_URL/copy/poll" \
     -H "X-Api-Key: $VQ_API_KEY" -H "X-Copy-Group: $grp" -H "X-Mt5-Login: $lgn" 2>/dev/null)"
+  code="${resp##*$'\n'}"
+  resp="${resp%$'\n'*}"
+  if [ "$code" != "200" ]; then
+    # Log state changes only — a sustained 429/5xx would otherwise flood stdout.
+    [ "$code" = "$last_poll_code" ] || log "copy-poll http=$code"
+    last_poll_code="$code"
+    return
+  fi
+  [ "$last_poll_code" = "200" ] || { [ -n "$last_poll_code" ] && log "copy-poll recovered"; }
+  last_poll_code="200"
   # Only write a file when there are actually signals to process.
   if echo "$resp" | jq -e '.signals | length > 0' >/dev/null 2>&1; then
     printf '%s' "$resp" > "$INBOX"
@@ -74,6 +84,7 @@ poll_copy_inbox() {
 }
 
 last_sync_mt=""
+last_poll_code=""
 while true; do
   forward_sync
   forward_copy_outbox
