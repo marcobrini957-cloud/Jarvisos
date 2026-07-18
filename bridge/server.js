@@ -134,6 +134,21 @@ async function authed(req, res) {
   return user;
 }
 
+// Slave-login lookup for /sync filtering (60 s cache, same shape as userCache)
+const slaveLoginCache = new Map(); // userId -> { logins: Set<number>, ts }
+async function isSlaveLogin(userId, loginNum) {
+  const hit = slaveLoginCache.get(userId);
+  if (hit && Date.now() - hit.ts < 60_000) return hit.logins.has(loginNum);
+  const { data } = await supabase
+    .from('copy_accounts')
+    .select('mt5_login')
+    .eq('user_id', userId)
+    .eq('role', 'slave');
+  const logins = new Set((data || []).map(r => Number(r.mt5_login)));
+  slaveLoginCache.set(userId, { logins, ts: Date.now() });
+  return logins.has(loginNum);
+}
+
 async function resolveCopyAccount(userId, groupId, mt5Login, role) {
   if (!userId || !groupId || !mt5Login) return null;
   const { data, error } = await supabase
@@ -219,7 +234,8 @@ app.post('/sync', wrap(async (req, res) => {
   // otherwise sit at 'pending' forever (signals/polls are the only other
   // touchpoints). Login comes from the X-Mt5-Login header (EA + sidecar).
   const mt5Login = req.headers['x-mt5-login'];
-  if (mt5Login && /^\d{3,12}$/.test(String(mt5Login))) {
+  const loginNum = mt5Login && /^\d{3,12}$/.test(String(mt5Login)) ? Number(mt5Login) : null;
+  if (loginNum) {
     await supabase
       .from('copy_accounts')
       .update({ last_seen_at: new Date().toISOString(), status: 'active' })
@@ -228,11 +244,20 @@ app.post('/sync', wrap(async (req, res) => {
       .in('status', ['pending', 'active']);
   }
 
-  // 1. account snapshot
+  // Copy-slave terminals sync only as heartbeat + copy plumbing: their
+  // balances and trades must NOT land in the user's journal/equity data
+  // (they'd blend with the master account and double-count every mirror).
+  if (loginNum && await isSlaveLogin(user.id, loginNum)) {
+    return res.json({ ok: true, slave: true });
+  }
+
+  // 1. account snapshot — tagged with the terminal's login so multi-terminal
+  // users (copy master + slaves on one API key) don't blend balances.
   if (body.account) {
     const acc = body.account;
     await supabase.from('account_snapshots').insert({
       user_id:           user.id,
+      mt5_login:         loginNum,
       balance:           acc.balance           ?? 0,
       equity:            acc.equity            ?? 0,
       margin_used:       acc.margin_used       ?? 0,
@@ -247,7 +272,7 @@ app.post('/sync', wrap(async (req, res) => {
   const rows = [
     ...(Array.isArray(body.open_positions) ? body.open_positions.map(p => mapOpenPosition(p, user.id)) : []),
     ...(Array.isArray(body.closed_trades)  ? body.closed_trades.map(t => mapClosedTrade(t, user.id))   : []),
-  ];
+  ].map(r => ({ ...r, mt5_login: loginNum }));
   if (rows.length > 0) {
     const { error } = await supabase.from('trades').upsert(rows, { onConflict: 'mt5_ticket' });
     if (error) {

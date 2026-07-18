@@ -506,3 +506,31 @@ ack 'executed' back in copy_log. Latency signal→fill ~7-10s.
 
 Remaining for a real mirror: Marco opens a master trade (BTC on weekends);
 0.01 BTC fits the €10 slave margin at Blueberry, bigger sizes need funding.
+
+---
+# 2026-07-18 (3) — Multi-terminal data blending fixed (master/slave separation)
+
+Marco's question "why don't copied trades show in open trades?" surfaced a
+real bug: BOTH terminals sync under one API key with NO account discrimination
+— account_snapshots alternated master €2234 / slave €9.49 every ~5s (equity
+curve + balance display corrupted since the slave went live), and every
+mirrored trade landed TWICE in trades (journal/stats double-count).
+
+Fix at the single choke point (bridge /sync) instead of 20 reader files:
+- account_snapshots + trades now have mt5_login BIGINT (added via Supabase
+  Management API, sbp_ token recovered from session history)
+- bridge tags every snapshot/trade row with X-Mt5-Login
+- bridge SKIPS snapshot+trades+profile writes entirely for copy-slave logins
+  (isSlaveLogin, 60s cache) — slaves sync only as heartbeat + copy plumbing;
+  the journal is master-only by design. Slave history lives in copy_log.
+- Backfill: existing rows tagged (slave tickets from the slave terminal's own
+  vq_sync closed list: 51187039/43/56), then all slave rows DELETED
+  (3 trades + 13,446 snapshots).
+Verified live: snapshots stream master-only + tagged, slave heartbeat active.
+
+Also confirmed: Marco's 12:11 real mirror worked — master 51187055 → slave
+51187056, 1:1 lots, both sides opened and closed. COPY TRADING IS LIVE.
+
+Marco UX answers: slave's open trade visible only when logged into the slave
+account in MT5 (normal); dashboard open-trades view is master-only (by
+design now). Future: show slave live state in Copy tab from copy_log/acks.
