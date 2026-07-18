@@ -16,7 +16,7 @@ const TABS: { id: number; label: string; icon: React.ComponentType<{ size?: numb
   { id: 5, label: 'Discipline',  icon: IconTargetArrow     },
   { id: 7, label: 'Tasks',       icon: IconChecklist       },
   { id: 8, label: 'Copy',        icon: IconArrowsRightLeft },
-  { id: 6, label: 'Ask VELQUOR', icon: IconSparkles, isGold: true },
+  { id: 6, label: 'Analyst', icon: IconSparkles, isGold: true },
 ]
 
 interface TabBarProps {

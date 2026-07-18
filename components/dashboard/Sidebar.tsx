@@ -128,7 +128,7 @@ export default function Sidebar({ activeTab, onTabChange, showSettings, onSettin
       {/* VELQUOR AI (gold) */}
       <IconBtn
         icon={IconRobot}
-        label="VELQUOR AI"
+        label="Analyst"
         isActive={!showSettings && activeTab === 8}
         isGold
         onClick={() => onTabChange(8)}

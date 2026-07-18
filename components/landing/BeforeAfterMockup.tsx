@@ -70,7 +70,7 @@ export function BeforeAfterMockup() {
           <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '10px', fontWeight: 700 }}>VELQUOR</span>
         </div>
         <div style={{ display: 'flex', gap: '2px' }}>
-          {['Overview','Trading','Journal','Macro','VELQUOR AI'].map(t => (
+          {['Overview','Trading','Journal','Macro','Analyst'].map(t => (
             <span key={t} style={{
               fontSize: '9px', padding: '3px 8px', borderRadius: '5px',
               color: t === 'Trading' ? '#4B8FFF' : 'rgba(255,255,255,0.28)',

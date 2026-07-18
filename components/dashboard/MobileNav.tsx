@@ -6,7 +6,7 @@ import { useState } from 'react'
 const PRIMARY_TABS = [
   { id: 0, label: 'Home',       icon: '⌂'  },
   { id: 1, label: 'Trading',    icon: '📈' },
-  { id: 6, label: 'Ask VELQUOR', icon: '✦', isGold: true },
+  { id: 6, label: 'Analyst', icon: '✦', isGold: true },
   { id: 3, label: 'Journal',    icon: '✍' },
   { id: -1, label: 'More',      icon: '⋯'  },
 ]
@@ -21,7 +21,7 @@ const ALL_TABS = [
   { id: 5, label: 'Discipline', icon: '🎯' },
   { id: 7, label: 'Tasks',       icon: '✅' },
   { id: 8, label: 'Copy',        icon: '⇄'  },
-  { id: 6, label: 'Ask VELQUOR', icon: '✦', isGold: true },
+  { id: 6, label: 'Analyst', icon: '✦', isGold: true },
 ]
 
 interface Props {

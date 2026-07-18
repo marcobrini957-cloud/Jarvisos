@@ -50,7 +50,7 @@ export function Nav() {
     { icon: '▤', label: 'Journal', sub: 'Log trades, tag setups, review sessions', href: '#features' },
     { icon: '◆', label: 'Portfolio', sub: 'All accounts, all brokers in one view', href: '#features' },
     { icon: '◐', label: 'Macro', sub: 'Economic calendar & market context', href: '#features' },
-    { icon: '✦', label: 'VELQUOR AI', sub: 'AI insights that read your trading', href: '#features' },
+    { icon: '✦', label: 'VELQUOR Analyst', sub: 'AI insights that read your trading', href: '#features' },
   ]
 
   const navLinkStyle = {

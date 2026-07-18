@@ -146,7 +146,7 @@ export function VelquorChat({ trades }: { trades: Trade[] }) {
   ]
 
   return (
-    <Panel title="Ask VELQUOR">
+    <Panel title="Analyst">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
         {/* Chat messages */}

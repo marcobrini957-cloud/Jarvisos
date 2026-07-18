@@ -12,9 +12,14 @@ interface Props {
 
 function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)) }
 
-const PERIODS = [30, 60, 90] as const
+const PERIODS = [
+  { label: '1W', days: 7 },
+  { label: '1M', days: 30 },
+  { label: '3M', days: 90 },
+  { label: '1Y', days: 365 },
+] as const
 
-export default function EquityCurveChart({ days = 60, height = 160, showStats = false }: Props) {
+export default function EquityCurveChart({ days = 30, height = 160, showStats = false }: Props) {
   const [period,  setPeriod]  = useState(days)
   const [points,  setPoints]  = useState<Point[]>([])
   const [loading, setLoading] = useState(true)
@@ -87,7 +92,6 @@ export default function EquityCurveChart({ days = 60, height = 160, showStats = 
   if (points.length < 2) {
     return (
       <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '6px' }}>
-        <span style={{ fontSize: '22px', opacity: 0.3 }}>📈</span>
         <span style={{ color: 'var(--t3)', fontSize: '12px' }}>Equity curve appears once your account syncs</span>
       </div>
     )
@@ -160,16 +164,16 @@ export default function EquityCurveChart({ days = 60, height = 160, showStats = 
           <div style={{ display: 'flex', gap: '4px' }}>
             {PERIODS.map(p => (
               <button
-                key={p}
-                onClick={() => setPeriod(p)}
+                key={p.label}
+                onClick={() => setPeriod(p.days)}
                 style={{
                   fontSize: '10px', fontWeight: 600, padding: '3px 9px', borderRadius: '6px',
-                  background: period === p ? 'rgba(255,255,255,0.08)' : 'transparent',
-                  border: period === p ? '1px solid var(--bd2)' : '1px solid transparent',
-                  color: period === p ? 'var(--t1)' : 'var(--t3)', cursor: 'pointer',
+                  background: period === p.days ? 'rgba(255,255,255,0.08)' : 'transparent',
+                  border: period === p.days ? '1px solid var(--bd2)' : '1px solid transparent',
+                  color: period === p.days ? 'var(--t1)' : 'var(--t3)', cursor: 'pointer',
                 }}
               >
-                {p}D
+                {p.label}
               </button>
             ))}
           </div>

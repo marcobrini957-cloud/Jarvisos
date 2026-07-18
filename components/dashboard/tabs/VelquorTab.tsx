@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import Panel from '@/components/ui/Panel'
+import { LogoMark } from '@/components/ui/LogoMark'
 import { useSpeech } from '@/hooks/useSpeech'
 
 interface Message {
@@ -9,22 +9,31 @@ interface Message {
   content: string
 }
 
-const QUICK_ACTIONS = [
-  "Full performance analysis — what's working and what isn't?",
-  "Why am I losing on Nasdaq?",
-  "Mood vs P&L — what's the pattern?",
-  "Am I overtrading?",
-  "What setup wins most for me?",
-  "How does my energy level affect my trading?",
+const CAPABILITIES = [
+  { label: 'Your MT5 trades',   sub: 'P&L, win rate, sessions, setups' },
+  { label: 'Journal & mood',    sub: 'How psychology moves your numbers' },
+  { label: 'Discipline data',   sub: 'Habits, streaks, plan adherence' },
+  { label: 'Portfolio & macro', sub: 'Holdings, news, market context' },
 ]
 
+// Full-screen analyst chat. The intro plays once (localStorage-gated),
+// afterwards the empty state renders without the staggered animation.
 export default function VelquorTab() {
-  const [messages,   setMessages]   = useState<Message[]>([])
-  const [input,      setInput]      = useState('')
-  const [streaming,  setStreaming]  = useState(false)
-  const [hasLoaded,  setHasLoaded]  = useState(false)
+  const [messages,  setMessages]  = useState<Message[]>([])
+  const [input,     setInput]     = useState('')
+  const [streaming, setStreaming] = useState(false)
+  const [animate,   setAnimate]   = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const { speak, stop, speakingIdx } = useSpeech()
+  const inputRef  = useRef<HTMLTextAreaElement>(null)
+  const { speak, speakingIdx } = useSpeech()
+
+  useEffect(() => {
+    const seen = localStorage.getItem('vq-analyst-intro-seen')
+    if (!seen) {
+      setAnimate(true)
+      localStorage.setItem('vq-analyst-intro-seen', '1')
+    }
+  }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -33,28 +42,20 @@ export default function VelquorTab() {
   async function ask(query: string) {
     if (streaming || !query.trim()) return
     setStreaming(true)
-    setHasLoaded(true)
 
-    const userMsg: Message = { role: 'user', content: query }
-    setMessages(prev => [...prev, userMsg])
-
-    // Placeholder for streaming assistant message
-    setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+    setMessages(prev => [...prev, { role: 'user', content: query }, { role: 'assistant', content: '' }])
 
     try {
       const res = await fetch('/api/velquor/chat', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          message: query,
-          history: messages.slice(-10),
-        }),
+        body:    JSON.stringify({ message: query, history: messages.slice(-10) }),
       })
 
       if (!res.ok || !res.body) {
         setMessages(prev => {
           const copy = [...prev]
-          copy[copy.length - 1] = { role: 'assistant', content: 'Error reaching VELQUOR. Check that GROQ_API_KEY is set in environment variables.' }
+          copy[copy.length - 1] = { role: 'assistant', content: 'The Analyst is unreachable right now. Try again in a moment.' }
           return copy
         })
         return
@@ -63,7 +64,6 @@ export default function VelquorTab() {
       const reader = res.body.getReader()
       const dec    = new TextDecoder()
       let text = ''
-
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
@@ -89,226 +89,190 @@ export default function VelquorTab() {
     if (!input.trim()) return
     ask(input)
     setInput('')
+    if (inputRef.current) inputRef.current.style.height = 'auto'
   }
 
+  const empty = messages.length === 0
+
+  const introStyle = (i: number): React.CSSProperties => animate
+    ? { animation: `vq-analyst-in 0.6s cubic-bezier(0.22,1,0.36,1) both`, animationDelay: `${0.12 + i * 0.14}s` }
+    : {}
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* Header */}
-      <div className="rounded-xl p-5" style={{ background: 'rgba(232,201,106,0.06)', border: '1px solid rgba(232,201,106,0.15)' }}>
-        <div className="flex items-start gap-4">
-          <div className="flex items-center justify-center rounded-xl flex-shrink-0"
-            style={{ width: '48px', height: '48px', background: 'rgba(232,201,106,0.12)', border: '1px solid rgba(232,201,106,0.25)' }}>
-            <span style={{ fontSize: '24px' }}>🤖</span>
-          </div>
-          <div>
-            <h2 style={{ color: 'var(--go2)', fontSize: '18px', fontWeight: 600 }}>VELQUOR AI</h2>
-            <p style={{ color: 'var(--t2)', fontSize: '13px', marginTop: '3px', lineHeight: 1.5 }}>
-              Your personal trading coach. VELQUOR analyses your trade history, journal entries, and portfolio data to give you real, specific insights about your performance, habits, and psychology.
-            </p>
-          </div>
+    <div style={{
+      display: 'flex', flexDirection: 'column',
+      height: 'calc(100vh - 158px)', minHeight: '480px',
+    }}>
+      <style>{`
+        @keyframes vq-analyst-in {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes vq-analyst-ring {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(232,201,106,0.25); }
+          50%      { box-shadow: 0 0 0 14px rgba(232,201,106,0); }
+        }
+      `}</style>
+
+      {/* ── Conversation area ── */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px' }}>
+        <div style={{ maxWidth: '760px', margin: '0 auto', paddingBottom: '24px' }}>
+
+          {empty && (
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', textAlign: 'center',
+              minHeight: 'calc(100vh - 300px)', gap: '18px', paddingTop: '24px',
+            }}>
+              <div style={introStyle(0)}>
+                <div style={{
+                  display: 'inline-flex', padding: '14px', borderRadius: '20px',
+                  background: 'rgba(232,201,106,0.07)', border: '1px solid rgba(232,201,106,0.2)',
+                  animation: animate ? 'vq-analyst-ring 2.4s ease-in-out 1.2s 3' : 'none',
+                }}>
+                  <LogoMark size={44} />
+                </div>
+              </div>
+
+              <div style={introStyle(1)}>
+                <h1 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.03em', margin: 0 }}>
+                  VELQUOR Analyst
+                </h1>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--t2)', lineHeight: 1.65, maxWidth: '520px', margin: '10px auto 0' }}>
+                  Your trading desk analyst. It reads your actual trade history, journal, and
+                  discipline data — then answers with your numbers, not generic advice.
+                  Ask why you lose on certain days, which setup carries you, or what to fix first.
+                </p>
+              </div>
+
+              <div style={{ ...introStyle(2), display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '8px', width: '100%', maxWidth: '640px', marginTop: '6px' }}>
+                {CAPABILITIES.map(c => (
+                  <div key={c.label} style={{
+                    padding: '12px 14px', borderRadius: '10px', textAlign: 'left',
+                    background: 'rgba(255,255,255,0.02)', border: '1px solid var(--bd2)',
+                  }}>
+                    <p style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{c.label}</p>
+                    <p style={{ fontSize: '11px', color: 'var(--t3)', margin: '3px 0 0', lineHeight: 1.45 }}>{c.sub}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {messages.map((msg, i) => (
+            msg.role === 'user' ? (
+              <div key={i} style={{ display: 'flex', justifyContent: 'flex-end', margin: '20px 0' }}>
+                <div style={{
+                  maxWidth: '78%', padding: '11px 16px',
+                  background: 'rgba(55,138,221,0.14)', border: '1px solid rgba(55,138,221,0.22)',
+                  borderRadius: '14px 14px 3px 14px',
+                }}>
+                  <p style={{ color: 'var(--t1)', fontSize: '13.5px', fontWeight: 500, lineHeight: 1.65, margin: 0, whiteSpace: 'pre-line' }}>
+                    {msg.content}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div key={i} style={{ display: 'flex', gap: '12px', margin: '20px 0', alignItems: 'flex-start' }}>
+                <div style={{
+                  flexShrink: 0, marginTop: '2px', borderRadius: '9px', overflow: 'hidden',
+                  outline: speakingIdx === i ? '2px solid rgba(232,201,106,0.5)' : 'none',
+                }}>
+                  <LogoMark size={26} />
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  {msg.content === '' && streaming ? (
+                    <span style={{ color: 'var(--go2)', fontSize: '14px' }}>▌</span>
+                  ) : (
+                    <>
+                      <p style={{ color: 'var(--t1)', fontSize: '13.5px', fontWeight: 450, lineHeight: 1.75, margin: 0, whiteSpace: 'pre-line' }}>
+                        {msg.content}
+                        {streaming && i === messages.length - 1 && <span style={{ color: 'var(--go2)' }}>▌</span>}
+                      </p>
+                      {msg.content && !streaming && (
+                        <button
+                          onClick={() => speak(msg.content, i)}
+                          style={{
+                            marginTop: '8px', padding: '3px 10px', borderRadius: '6px',
+                            background: speakingIdx === i ? 'rgba(232,201,106,0.15)' : 'transparent',
+                            border: '1px solid rgba(232,201,106,0.25)',
+                            color: speakingIdx === i ? 'var(--go2)' : 'var(--t3)',
+                            fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+                          }}
+                        >
+                          {speakingIdx === i ? 'Stop' : 'Read aloud'}
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )
+          ))}
+          <div ref={bottomRef} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Chat */}
-        <div className="lg:col-span-2">
-          <Panel title="Ask VELQUOR" noPadding>
-            {/* Messages */}
-            <div style={{ minHeight: '300px', maxHeight: '500px', overflowY: 'auto', padding: '16px' }}>
-              {!hasLoaded && messages.length === 0 && (
-                <div className="flex flex-col gap-2 mb-4">
-                  <p style={{ color: 'var(--t3)', fontSize: '12px', marginBottom: '8px' }}>Quick questions:</p>
-                  <div className="grid grid-cols-1 gap-2">
-                    {QUICK_ACTIONS.map((q, i) => (
-                      <button key={i} onClick={() => ask(q)}
-                        className="text-left px-4 py-3 rounded-lg transition-colors"
-                        style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '12px', cursor: 'pointer' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--s3)'; e.currentTarget.style.color = 'var(--t1)' }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--s2)'; e.currentTarget.style.color = 'var(--t2)' }}>
-                        {q}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
-                  {msg.role === 'assistant' && (
-                    <div className="flex-shrink-0 mr-2 flex items-start">
-                      <div className="flex items-center justify-center rounded-lg"
-                        style={{
-                          width: '28px', height: '28px', fontSize: '14px',
-                          background: speakingIdx === i ? 'rgba(232,201,106,0.28)' : 'rgba(232,201,106,0.15)',
-                          border: `1px solid ${speakingIdx === i ? 'rgba(232,201,106,0.6)' : 'rgba(232,201,106,0.2)'}`,
-                          boxShadow: speakingIdx === i ? '0 0 10px rgba(232,201,106,0.35)' : 'none',
-                          transition: 'all 0.3s ease',
-                          animation: speakingIdx === i ? 'vq-pulse 1.2s ease-in-out infinite' : 'none',
-                        }}>
-                        🤖
-                      </div>
-                    </div>
-                  )}
-                  <div style={{
-                    maxWidth: '80%',
-                    background: msg.role === 'user' ? 'rgba(55,138,221,0.15)' : 'rgba(232,201,106,0.06)',
-                    border:     msg.role === 'user' ? '1px solid rgba(55,138,221,0.25)' : '1px solid rgba(232,201,106,0.15)',
-                    borderRadius: msg.role === 'user' ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
-                    padding: '10px 14px',
-                    position: 'relative',
-                  }}>
-                    {msg.role === 'assistant' && msg.content === '' && streaming ? (
-                      <span style={{ color: 'var(--go2)' }}>▌</span>
-                    ) : (
-                      <>
-                        <p style={{
-                          color:      'var(--t1)',
-                          fontSize:   '13px', lineHeight: '1.7',
-                          whiteSpace: 'pre-line',
-                          paddingBottom: msg.role === 'assistant' && msg.content ? '28px' : '0',
-                        }}>
-                          {msg.content}
-                          {msg.role === 'assistant' && streaming && i === messages.length - 1 && (
-                            <span style={{ color: 'var(--go2)' }}>▌</span>
-                          )}
-                        </p>
-                        {msg.role === 'assistant' && msg.content && !streaming && (
-                          <button
-                            onClick={() => speak(msg.content, i)}
-                            title={speakingIdx === i ? 'Stop reading' : 'Read aloud'}
-                            style={{
-                              position: 'absolute', bottom: '8px', right: '10px',
-                              background: speakingIdx === i ? 'rgba(232,201,106,0.2)' : 'transparent',
-                              border: `1px solid ${speakingIdx === i ? 'rgba(232,201,106,0.45)' : 'rgba(232,201,106,0.2)'}`,
-                              borderRadius: '6px',
-                              padding: '3px 8px',
-                              cursor: 'pointer',
-                              display: 'flex', alignItems: 'center', gap: '4px',
-                              transition: 'all 0.2s ease',
-                              color: speakingIdx === i ? 'var(--go2)' : 'var(--t3)',
-                              fontSize: '11px',
-                            }}
-                            onMouseEnter={e => {
-                              if (speakingIdx !== i) {
-                                e.currentTarget.style.borderColor = 'rgba(232,201,106,0.45)'
-                                e.currentTarget.style.color = 'var(--go2)'
-                              }
-                            }}
-                            onMouseLeave={e => {
-                              if (speakingIdx !== i) {
-                                e.currentTarget.style.borderColor = 'rgba(232,201,106,0.2)'
-                                e.currentTarget.style.color = 'var(--t3)'
-                              }
-                            }}
-                          >
-                            {speakingIdx === i ? (
-                              <>
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                                  <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
-                                </svg>
-                                Stop
-                              </>
-                            ) : (
-                              <>
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                                </svg>
-                                Read
-                              </>
-                            )}
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <div ref={bottomRef} />
-            </div>
-
-            {/* Input */}
-            <div className="flex gap-2 p-3" style={{ borderTop: '1px solid var(--bd)' }}>
-              <input
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
-                placeholder="Ask VELQUOR about your trading, performance, or anything…"
-                disabled={streaming}
-                className="flex-1 px-3 py-2.5 rounded-md outline-none"
-                style={{
-                  background: 'var(--s2)', border: '1px solid var(--bd2)',
-                  color: 'var(--t1)', fontSize: '13px',
-                  opacity: streaming ? 0.6 : 1,
-                }}
-              />
-              <button onClick={handleSubmit} disabled={streaming || !input.trim()}
-                style={{
-                  padding: '0 16px', borderRadius: '8px', border: '1px solid rgba(232,201,106,0.3)',
-                  background: 'rgba(232,201,106,0.12)', color: 'var(--go2)',
-                  fontSize: '13px', cursor: (streaming || !input.trim()) ? 'not-allowed' : 'pointer',
-                  opacity: (streaming || !input.trim()) ? 0.5 : 1, fontWeight: 500,
-                }}>
-                {streaming ? '…' : 'Ask'}
-              </button>
-            </div>
-          </Panel>
-        </div>
-
-        {/* Right — info + quick actions */}
-        <div className="flex flex-col gap-4">
-          <Panel title="What VELQUOR Knows">
-            <div className="flex flex-col gap-3">
-              {[
-                { icon: '📊', label: 'All your MT5 trades', sub: 'P&L, win rate, sessions, setups' },
-                { icon: '📓', label: 'Journal entries',     sub: 'Mood, energy, daily notes' },
-                { icon: '✅', label: 'Habits tracker',      sub: 'Daily streaks, consistency' },
-                { icon: '💼', label: 'Portfolio',           sub: 'Trade Republic holdings' },
-                { icon: '🌍', label: 'Macro context',       sub: 'News, events, bias' },
-              ].map(item => (
-                <div key={item.label} className="flex items-center gap-3">
-                  <div className="flex-shrink-0 text-lg">{item.icon}</div>
-                  <div>
-                    <p style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 500 }}>{item.label}</p>
-                    <p style={{ color: 'var(--t3)', fontSize: '11px' }}>{item.sub}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Panel>
-
-          <Panel title="Example Questions">
-            <div className="flex flex-col gap-1.5">
-              {[
-                '"What time of day should I stop trading?"',
-                '"Am I overtrading?"',
-                '"When do I trade best — morning or afternoon?"',
-                '"What happens to my P&L when I trade angry?"',
-                '"What setup wins most for me?"',
-                '"What are my worst trading habits?"',
-              ].map((q, i) => (
-                <button key={i} onClick={() => ask(q.replace(/"/g, ''))}
-                  className="text-left py-2 px-1 rounded transition-colors"
-                  style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '11px', cursor: 'pointer', lineHeight: 1.5 }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'var(--ac)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'var(--t3)')}>
-                  {q}
-                </button>
-              ))}
-            </div>
-          </Panel>
-
-          {messages.length > 0 && (
-            <button onClick={() => { setMessages([]); setHasLoaded(false) }}
+      {/* ── Composer ── */}
+      <div style={{ padding: '12px 16px 4px' }}>
+        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
+          <div style={{
+            display: 'flex', alignItems: 'flex-end', gap: '10px',
+            background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '14px',
+            padding: '10px 12px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+          }}>
+            <textarea
+              ref={inputRef}
+              value={input}
+              rows={1}
+              onChange={e => {
+                setInput(e.target.value)
+                e.target.style.height = 'auto'
+                e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px'
+              }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
+              placeholder="Ask the Analyst about your trading…"
+              disabled={streaming}
               style={{
-                background: 'var(--s2)', border: '1px solid var(--bd2)',
-                borderRadius: '8px', padding: '10px', color: 'var(--t3)',
-                fontSize: '12px', cursor: 'pointer',
-              }}>
-              ↺ Clear conversation
+                flex: 1, resize: 'none', background: 'transparent', border: 'none',
+                outline: 'none', color: 'var(--t1)', fontSize: '13.5px', fontWeight: 500,
+                lineHeight: 1.6, maxHeight: '140px', opacity: streaming ? 0.6 : 1,
+              }}
+            />
+            <button
+              onClick={handleSubmit}
+              disabled={streaming || !input.trim()}
+              style={{
+                width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
+                border: 'none',
+                background: input.trim() && !streaming ? 'var(--go2)' : 'var(--s3)',
+                color: input.trim() && !streaming ? '#111' : 'var(--t3)',
+                cursor: (streaming || !input.trim()) ? 'default' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'background 0.15s',
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 19V5" /><path d="M5 12l7-7 7 7" />
+              </svg>
             </button>
-          )}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 4px 0' }}>
+            <span style={{ fontSize: '10.5px', color: 'var(--t3)' }}>
+              Answers are built from your own data. Not financial advice.
+            </span>
+            {messages.length > 0 && !streaming && (
+              <button
+                onClick={() => setMessages([])}
+                style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '10.5px', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--t1)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--t3)')}
+              >
+                Clear conversation
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
