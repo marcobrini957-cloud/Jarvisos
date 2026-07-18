@@ -42,6 +42,11 @@ forward_copy_outbox() {
   local f
   for f in "$FILES_DIR"/vq_cout_*.json; do
     [ -e "$f" ] || continue
+    # Give up on envelopes stuck >120s (~hundreds of retries) — e.g. an ack
+    # whose copy_log row never landed. Never let one bad file spin forever.
+    if [ -n "$(find "$f" -mmin +2 2>/dev/null)" ]; then
+      log "copy-out DROPPED stale $(basename "$f")"; rm -f "$f"; continue
+    fi
     local ep grp lgn body
     ep="$(jq -r '.endpoint // empty' "$f" 2>/dev/null)"
     grp="$(jq -r '.group // ""' "$f" 2>/dev/null)"
@@ -85,8 +90,10 @@ copy_poll_loop() {
       printf '%s' "$resp" > "$INBOX"
       log "copy-in $(echo "$resp" | jq -r '.signals | length') signals"
       # Give the EA time to consume + the ack to reach the bridge before
-      # re-polling, or the same pending row comes straight back.
-      sleep 1
+      # re-polling, or the same pending row comes straight back. (Redelivery
+      # is harmless — idempotent opens + pending-only acks — this just avoids
+      # wasted round-trips.)
+      sleep 0.5
     fi
   done
 }
@@ -98,5 +105,5 @@ copy_poll_loop &
 while true; do
   forward_sync
   forward_copy_outbox
-  sleep 0.3
+  sleep 0.1
 done

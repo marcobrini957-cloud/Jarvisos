@@ -304,7 +304,56 @@ app.post('/sync', wrap(async (req, res) => {
   return res.json({ ok: true, ts: Date.now() });
 }));
 
+// ─── Hot-path caches for /copy/signal (10 s TTL) ─────────────────────────────
+// Latency budget: every awaited Supabase round-trip here delays every mirror.
+// Staleness is bounded and safe — a just-added slave misses at most one
+// 10 s window, and lot-config edits apply within 10 s.
+const HOT_TTL = 10_000;
+const groupConfigCache = new Map(); // groupId -> { group, ts }
+const groupSlavesCache = new Map(); // groupId -> { slaves, ts }
+const masterAccCache   = new Map(); // `${userId}:${groupId}:${login}` -> { acc, ts }
+
+async function cachedMasterAcc(userId, groupId, login) {
+  const key = `${userId}:${groupId}:${login}`;
+  const hit = masterAccCache.get(key);
+  if (hit && Date.now() - hit.ts < 60_000) return hit.acc;
+  const acc = await resolveCopyAccount(userId, groupId, login, 'master');
+  if (acc) masterAccCache.set(key, { acc, ts: Date.now() });
+  return acc;
+}
+
+async function cachedGroup(groupId, userId) {
+  const hit = groupConfigCache.get(groupId);
+  if (hit && Date.now() - hit.ts < HOT_TTL) return hit.group;
+  const { data: group } = await supabase
+    .from('copy_groups')
+    .select('id, active, lot_mode, lot_fixed, lot_multiplier, max_lot')
+    .eq('id', groupId)
+    .eq('user_id', userId)
+    .eq('active', true)
+    .maybeSingle();
+  if (group) groupConfigCache.set(groupId, { group, ts: Date.now() });
+  return group;
+}
+
+async function cachedSlaves(groupId) {
+  const hit = groupSlavesCache.get(groupId);
+  if (hit && Date.now() - hit.ts < HOT_TTL) return hit.slaves;
+  const { data: slaves } = await supabase
+    .from('copy_accounts')
+    .select('id')
+    .eq('group_id', groupId)
+    .eq('role', 'slave')
+    .eq('status', 'active');
+  groupSlavesCache.set(groupId, { slaves: slaves || [], ts: Date.now() });
+  return slaves || [];
+}
+
 // ─── POST /copy/signal — master broadcasts a new trade signal ─────────────────
+// The signal payload is handed to waiting slave long-polls IN MEMORY before
+// anything touches the database; copy_signals/copy_log inserts happen right
+// after, off the response path, purely as the audit trail. If an ack races
+// ahead of its copy_log insert, the ack 403s and the sidecar retries it.
 app.post('/copy/signal', wrap(async (req, res) => {
   if (!settings.copy_enabled) return res.status(503).json({ error: 'copy_disabled' });
 
@@ -317,16 +366,10 @@ app.post('/copy/signal', wrap(async (req, res) => {
   if (!groupId)  return res.status(400).json({ error: 'missing_x_copy_group' });
   if (!mt5Login) return res.status(400).json({ error: 'missing_x_mt5_login' });
 
-  const masterAcc = await resolveCopyAccount(user.id, groupId, mt5Login, 'master');
+  const masterAcc = await cachedMasterAcc(user.id, groupId, mt5Login);
   if (!masterAcc) return res.status(403).json({ error: 'not_master_in_group' });
 
-  const { data: group } = await supabase
-    .from('copy_groups')
-    .select('id, active, lot_mode, lot_fixed, lot_multiplier, max_lot')
-    .eq('id', groupId)
-    .eq('user_id', user.id)
-    .eq('active', true)
-    .maybeSingle();
+  const group = await cachedGroup(groupId, user.id);
   if (!group) return res.status(403).json({ error: 'group_inactive_or_not_found' });
 
   const { signal } = req.body || {};
@@ -334,9 +377,44 @@ app.post('/copy/signal', wrap(async (req, res) => {
     return res.status(400).json({ error: 'missing_signal_fields' });
   }
 
-  const { data: sig, error: sigErr } = await supabase
+  const slaves = await cachedSlaves(groupId);
+  const sigId  = crypto.randomUUID();
+
+  // Deliver instantly to any waiting long-poll, in the exact shape /copy/poll
+  // returns, with pre-generated copy_log ids the EA will ack against.
+  const deliveries = slaves.map(s => ({
+    slaveId: s.id,
+    logId:   crypto.randomUUID(),
+  }));
+  for (const d of deliveries) {
+    notifySlave(d.slaveId, [{
+      log_id:         d.logId,
+      signal_type:    signal.type,
+      master_ticket:  Number(signal.ticket),
+      symbol:         signal.symbol,
+      trade_type:     signal.trade_type,
+      master_lots:    signal.lot_size    ?? null,
+      open_price:     signal.open_price  ?? null,
+      stop_loss:      signal.stop_loss   ?? 0,
+      take_profit:    signal.take_profit ?? 0,
+      close_price:    signal.close_price ?? null,
+      lot_mode:       group.lot_mode,
+      lot_fixed:      group.lot_fixed,
+      lot_multiplier: group.lot_multiplier,
+      max_lot:        group.max_lot,
+    }]);
+  }
+
+  metrics.signals++;
+  res.json({ ok: true, signal_id: sigId, slaves_notified: slaves.length });
+
+  // Audit trail — after the response, but still awaited inside wrap so a DB
+  // failure is logged. Slaves not waiting right now pick the rows up via the
+  // pending-query fallback on their next poll.
+  const { error: sigErr } = await supabase
     .from('copy_signals')
     .insert({
+      id:                sigId,
       group_id:          groupId,
       master_account_id: masterAcc.id,
       signal_type:       signal.type,
@@ -348,42 +426,33 @@ app.post('/copy/signal', wrap(async (req, res) => {
       stop_loss:         signal.stop_loss   ?? 0,
       take_profit:       signal.take_profit ?? 0,
       close_price:       signal.close_price ?? null,
-    })
-    .select('id')
-    .single();
-  if (sigErr || !sig) {
+    });
+  if (sigErr) {
     metrics.errors++;
-    metrics.last_error = `signal insert: ${sigErr?.message}`;
+    metrics.last_error = `signal insert: ${sigErr.message}`;
     metrics.last_error_at = new Date().toISOString();
-    return res.status(500).json({ error: 'signal_insert_failed', detail: sigErr?.message });
+    return;
   }
-
-  const { data: slaves } = await supabase
-    .from('copy_accounts')
-    .select('id')
-    .eq('group_id', groupId)
-    .eq('role', 'slave')
-    .eq('status', 'active');
-
-  if (slaves && slaves.length > 0) {
-    await supabase.from('copy_log').insert(
-      slaves.map(s => ({ signal_id: sig.id, slave_account_id: s.id, status: 'pending' }))
+  if (deliveries.length > 0) {
+    const { error: logErr } = await supabase.from('copy_log').insert(
+      deliveries.map(d => ({ id: d.logId, signal_id: sigId, slave_account_id: d.slaveId, status: 'pending' }))
     );
-    // Wake any long-polling slave immediately — this is what makes copy
-    // delivery push-latency instead of poll-latency.
-    for (const s of slaves) notifySlave(s.id);
+    if (logErr) {
+      metrics.errors++;
+      metrics.last_error = `copy_log insert: ${logErr.message}`;
+      metrics.last_error_at = new Date().toISOString();
+    }
   }
-
-  metrics.signals++;
-  return res.json({ ok: true, signal_id: sig.id, slaves_notified: slaves?.length ?? 0 });
 }));
 
 // ─── Long-poll plumbing: /copy/signal wakes waiting /copy/poll requests ───────
-const slaveWaiters = new Map(); // slaveAccountId -> Set<fn>
-function notifySlave(slaveAccId) {
+// Waiters resolve WITH the signal payloads, so a woken poll returns them
+// directly — zero database reads between master signal and slave delivery.
+const slaveWaiters = new Map(); // slaveAccountId -> Set<fn(payloads)>
+function notifySlave(slaveAccId, payloads) {
   const set = slaveWaiters.get(slaveAccId);
   if (!set) return;
-  for (const fn of set) fn();
+  for (const fn of set) fn(payloads);
 }
 // Arm BEFORE querying for pending rows, or a signal landing in between would
 // be missed and only delivered at the wait timeout.
@@ -391,19 +460,19 @@ function armSlaveWaiter(slaveAccId, ms, req) {
   let done = false;
   let resolveFn;
   const promise = new Promise(resolve => { resolveFn = resolve; });
-  const finish = () => {
+  const finish = (payloads) => {
     if (done) return;
     done = true;
     clearTimeout(timer);
     const set = slaveWaiters.get(slaveAccId);
     if (set) { set.delete(finish); if (set.size === 0) slaveWaiters.delete(slaveAccId); }
-    resolveFn();
+    resolveFn(payloads ?? null);
   };
   const timer = setTimeout(finish, ms);
   if (!slaveWaiters.has(slaveAccId)) slaveWaiters.set(slaveAccId, new Set());
   slaveWaiters.get(slaveAccId).add(finish);
-  req.on('close', finish);
-  return { promise, cancel: finish };
+  req.on('close', () => finish());
+  return { promise, cancel: () => finish() };
 }
 
 async function fetchPendingSignals(slaveAccId) {
@@ -451,8 +520,15 @@ app.get('/copy/poll', wrap(async (req, res) => {
 
   let pending = await fetchPendingSignals(slaveAcc.id);
   if (pending.length === 0 && waiter) {
-    await waiter.promise;
+    const pushed = await waiter.promise;
     if (req.destroyed) return;
+    if (pushed) {
+      // Fast path: payloads pushed in memory by /copy/signal — no DB read.
+      metrics.polls++;
+      return res.json({ signals: pushed });
+    }
+    // Timed out — one last catch-up query for rows that arrived while the
+    // inbox was occupied or via other paths.
     pending = await fetchPendingSignals(slaveAcc.id);
   }
   waiter?.cancel();
@@ -499,16 +575,18 @@ app.post('/copy/ack', wrap(async (req, res) => {
     return res.status(403).json({ error: 'unauthorized_log_entry' });
   }
 
-  await supabase.from('copy_log').update({
+  // pending-only: a redelivered signal's late 'skipped'/'failed' ack must
+  // never overwrite the real execution result already recorded.
+  const { data: updated } = await supabase.from('copy_log').update({
     status:        status,
     slave_ticket:  slave_ticket  ?? null,
     slave_lots:    slave_lots    ?? null,
     error_message: error_message ?? null,
     executed_at:   new Date().toISOString(),
-  }).eq('id', log_id);
+  }).eq('id', log_id).eq('status', 'pending').select('id');
 
   metrics.acks++;
-  return res.json({ ok: true });
+  return res.json({ ok: true, stale: !updated || updated.length === 0 });
 }));
 
 // ─── POST /disconnect ─────────────────────────────────────────────────────────

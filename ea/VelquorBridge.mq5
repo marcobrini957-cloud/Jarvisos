@@ -39,7 +39,7 @@ input ENUM_LOT_MODE  InpCopyLotMode  = LOT_PROPORTIONAL; // Slave lot sizing
 input double         InpCopyLotFixed = 0.01;       // Fixed lot size (slave, LOT_FIXED mode)
 input double         InpCopyLotMult  = 1.0;        // Lot multiplier (slave, LOT_PROPORTIONAL mode)
 input double         InpCopyMaxLot   = 10.0;       // Maximum lot per copied trade (slave)
-input int            InpCopyPollMs   = 250;        // Slave inbox check interval ms
+input int            InpCopyPollMs   = 100;        // Slave inbox check interval ms
 
 //── Globals ───────────────────────────────────────────────────────────────────
 string   g_syncUrl;
@@ -47,7 +47,7 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.14";
+string   g_eaVersion   = "2.15";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // slave: throttles PostSync inside the fast timer
