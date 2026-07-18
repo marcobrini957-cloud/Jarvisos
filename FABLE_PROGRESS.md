@@ -620,3 +620,39 @@ TERM_CAPACITY bump. Unlimited EA-path users regardless.
 TOMORROW.md written: weekday validation, Pro-tier cloud decision, infra
 signups (Supabase/Vercel/Stripe/Anthropic key), snapshot pruning job, EA
 Connect Wizard, Copy tab live positions, security sweep (revoke sbp_ token).
+
+---
+# 2026-07-18 (7) — Marco's tab overhaul list (Overview/Analyst/Macro/Mobile)
+
+**Overview (7854cca):** WinRateCard w/ period select (This Month/Q1-Q4/Year/
+All — computed from close_time ranges); EquityCurveChart periods 1W/1M/3M/1Y
+(the "bug" Marco saw was the master/slave snapshot blending, already fixed at
+the bridge); chart row heights 150→130; MarketStrip ticker + MarketsCard
+REMOVED (files deleted); Today's Focus rebuilt (overview/TodaysFocus.tsx):
+red-folder countdowns from /api/macro + weekday loss pattern + best-hour edge
+window + worstCombo from computeBreakdowns — replaces habits/tasks/journal
+filler (those live in their own tabs); VELQUOR Intelligence → full-width
+"Edge Report" (overview/EdgeReport.tsx): insights + Fact grid (best/worst
+instrument, session, setup, combos).
+
+**Analyst (was Ask VELQUOR / VELQUOR AI):** VelquorTab rewritten as
+ChatGPT-style full-screen chat — centered 760px column, autosizing textarea
+composer, empty state = LogoMark + explainer + 4 capability cards, first-run
+staggered intro animation (localStorage vq-analyst-intro-seen), zero emojis,
+example-questions boxes gone. Renamed "Analyst" in TabBar/Sidebar/MobileNav/
+pricing/landing.
+
+**Macro:** full Bloomberg-style rebuild — terminal header (red square,
+VIENNA/LONDON/NEW YORK ticking clocks), NEXT RELEASE hero with live 1s
+countdown, dense week table (TIME|■|CCY|EVENT|ACT/FCT/PRV in tabular mono,
+beat/miss coloring, past rows dimmed, <1h rows tinted red). Briefing/news/
+bias cards removed per Marco ("only red folder news"). Gotcha: FF feed's
+`time` string is empty — derive from `date` (eventTime()).
+
+**Mobile:** TradeLogTable minWidth:480+overflowX removed → true mobile cards
+(hidden sm:flex desktop row + flex sm:hidden card, tap = annotate); 📷 →
+IMG chip. Jank fix in globals.css: @media ≤768px kills ambient blob
+animations/blur + backdrop-filter (main repaint cost on phones) +
+prefers-reduced-motion. Playwright audit: zero horizontal-overflow elements
+at 390px. Screenshots verified desktop+mobile via webkit (test acct password
+reset via GoTrue admin; welcome modal dismiss = click LET'S WIN).

@@ -288,6 +288,24 @@ h1, h2, h3 { text-wrap: balance; }
   filter: blur(1px);
 }
 
+/* Mobile: the drifting blurred blobs + heavy backdrop blur repaint
+   continuously and are the main source of scroll jank on phones. */
+@media (max-width: 768px) {
+  .ambient-blue, .ambient-gold, .ambient-green, .ambient-cyan {
+    animation: none;
+    filter: none;
+    opacity: 0.25;
+  }
+  .glass {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(8,8,10,0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ambient-blue, .ambient-gold, .ambient-green, .ambient-cyan { animation: none; }
+}
+
 /* ── Win / Loss text glow ────────────────────────────────────────────────── */
 .glow-green { text-shadow: 0 0 12px rgba(0,232,122,0.6); }
 .glow-red   { text-shadow: 0 0 12px rgba(255,61,80,0.6);  }

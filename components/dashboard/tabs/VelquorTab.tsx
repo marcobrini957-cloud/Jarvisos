@@ -145,7 +145,7 @@ export default function VelquorTab() {
                 </p>
               </div>
 
-              <div style={{ ...introStyle(2), display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '8px', width: '100%', maxWidth: '640px', marginTop: '6px' }}>
+              <div style={{ ...introStyle(2), display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', width: '100%', maxWidth: '640px', marginTop: '6px' }}>
                 {CAPABILITIES.map(c => (
                   <div key={c.label} style={{
                     padding: '12px 14px', borderRadius: '10px', textAlign: 'left',

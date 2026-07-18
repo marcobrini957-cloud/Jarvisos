@@ -38,11 +38,9 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
               ))}
             </div>
           }>
-            {/* Scrollable wrapper for tablet/mobile */}
-            <div style={{ overflowX: 'auto' }}>
-            {/* Header */}
-            <div className="flex items-center px-4 py-2 gap-3"
-              style={{ borderBottom:'1px solid var(--bd)', fontSize:'11px', color:'var(--t3)', letterSpacing:'0.04em', minWidth: '480px' }}>
+            {/* Header — desktop only; mobile rows are self-describing cards */}
+            <div className="hidden sm:flex items-center px-4 py-2 gap-3"
+              style={{ borderBottom:'1px solid var(--bd)', fontSize:'11px', color:'var(--t3)', letterSpacing:'0.04em' }}>
               <span style={{ minWidth:'80px' }}>PAIR</span>
               <span style={{ minWidth:'90px' }}>SESSION</span>
               <span className="flex-1">SETUP / NOTE</span>
@@ -61,10 +59,58 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
               const hoverBg = result === 'win'  ? 'rgba(99,153,34,0.13)'
                             : result === 'loss' ? 'rgba(226,75,74,0.13)'
                             : 'var(--s3)'
+              const resultBadge = (
+                <span style={{
+                  fontSize: '10px', fontWeight: 700, letterSpacing: '0.04em',
+                  padding: '2px 7px', borderRadius: '4px', flexShrink: 0,
+                  background: result === 'win'  ? 'rgba(99,153,34,0.18)'
+                            : result === 'loss' ? 'rgba(226,75,74,0.18)'
+                            : 'rgba(88,166,255,0.12)',
+                  color:      result === 'win'  ? 'var(--gr2)'
+                            : result === 'loss' ? 'var(--re)'
+                            : 'var(--ac)',
+                }}>
+                  {result === 'win' ? 'W' : result === 'loss' ? 'L' : 'BE'}
+                </span>
+              )
               return (
-              <div key={trade.id}
-                className="flex items-center gap-3 px-4 py-3 transition-colors cursor-pointer group"
-                style={{ borderBottom:'1px solid var(--bd)', background: rowBg, minWidth: '480px' }}
+              <div key={trade.id}>
+
+              {/* ── Mobile card: everything fits the viewport, tap to annotate ── */}
+              <div
+                className="flex sm:hidden flex-col px-4 py-3 gap-1.5"
+                style={{ borderBottom:'1px solid var(--bd)', background: rowBg }}
+                onClick={() => onAnnotate(trade)}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2" style={{ minWidth: 0 }}>
+                    <span style={{ color:'var(--t1)', fontWeight:600, fontSize:'13.5px' }}>{trade.symbol}</span>
+                    <Badge variant={trade.trade_type as 'buy'|'sell'}>{trade.trade_type.toUpperCase()}</Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="num" style={{
+                      color: result === 'win' ? 'var(--gr2)' : result === 'loss' ? 'var(--re)' : 'var(--ac)',
+                      fontWeight: 700, fontSize: '14px', letterSpacing: '-0.02em',
+                    }}>
+                      {fmtPnl(trade.net_profit)}
+                    </span>
+                    {resultBadge}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span style={{ color:'var(--t3)', fontSize:'11px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {fmtDate(trade.open_time)} · {fmtTime(trade.open_time)}
+                    {trade.session ? ` · ${trade.session === 'new_york' ? 'NY' : trade.session.charAt(0).toUpperCase() + trade.session.slice(1)}` : ''}
+                    {trade.setup_type ? ` · ${trade.setup_type}` : ''}
+                  </span>
+                  <span style={{ color:'var(--t3)', fontSize:'11px', flexShrink: 0 }}>{fmtPips(trade.pips)}</span>
+                </div>
+              </div>
+
+              {/* ── Desktop row ── */}
+              <div
+                className="hidden sm:flex items-center gap-3 px-4 py-3 transition-colors cursor-pointer group"
+                style={{ borderBottom:'1px solid var(--bd)', background: rowBg }}
                 onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
                 onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
 
@@ -89,11 +135,11 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
                   <button
                     onClick={e => { e.stopPropagation(); onViewScreenshot(trade.screenshot_open_url || trade.screenshot_close_url || '') }}
                     title="View screenshot"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', flexShrink: 0, padding: '2px', lineHeight: 1, opacity: 0.7 }}
+                    style={{ background: 'rgba(88,166,255,0.1)', border: '1px solid rgba(88,166,255,0.2)', borderRadius: '4px', cursor: 'pointer', fontSize: '8.5px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--ac)', flexShrink: 0, padding: '2px 4px', lineHeight: 1.2, opacity: 0.8 }}
                     onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-                    onMouseLeave={e => (e.currentTarget.style.opacity = '0.7')}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = '0.8')}
                   >
-                    📷
+                    IMG
                   </button>
                 ) : (
                   <span style={{ width: '22px', flexShrink: 0 }} />
@@ -120,19 +166,7 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
                   <span style={{ color:'var(--t3)', fontSize:'11px' }}>{fmtPips(trade.pips)}</span>
                 </div>
 
-                {/* W / L / BE badge */}
-                <span style={{
-                  fontSize: '10px', fontWeight: 700, letterSpacing: '0.04em',
-                  padding: '2px 7px', borderRadius: '4px', flexShrink: 0,
-                  background: result === 'win'  ? 'rgba(99,153,34,0.18)'
-                            : result === 'loss' ? 'rgba(226,75,74,0.18)'
-                            : 'rgba(88,166,255,0.12)',
-                  color:      result === 'win'  ? 'var(--gr2)'
-                            : result === 'loss' ? 'var(--re)'
-                            : 'var(--ac)',
-                }}>
-                  {result === 'win' ? 'W' : result === 'loss' ? 'L' : 'BE'}
-                </span>
+                {resultBadge}
 
                 {/* Pencil — annotate */}
                 <button
@@ -143,8 +177,9 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
                   ✎
                 </button>
               </div>
+
+              </div>
             )})}
-            </div>{/* end overflowX wrapper */}
 
             {/* Pagination */}
             {totalPages > 1 && (
