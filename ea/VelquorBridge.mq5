@@ -47,7 +47,7 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.15";
+string   g_eaVersion   = "2.16";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // slave: throttles PostSync inside the fast timer
@@ -115,6 +115,12 @@ int OnInit()
       cfg += "\"poll_ms\":"    + IntegerToString(InpCopyPollMs);
       cfg += "}";
       WriteBridgeFile("vq_copyconfig.json", cfg);
+
+      // Headless density: every visible Market Watch symbol streams ticks the
+      // terminal must process for nobody. Keep only what this account needs;
+      // EnsureSymbolReady re-subscribes on demand when a copy signal arrives.
+      // NEVER runs for desktop users (their Market Watch is theirs).
+      TrimMarketWatch();
    }
 
    Print("VelquorBridge v", g_eaVersion, " started | Copy: ", modeStr,
@@ -527,6 +533,34 @@ void WriteCopyOutbox(const string endpoint, const string body)
    envelope += "\"body\":"       + body;
    envelope += "}";
    WriteBridgeFile(name, envelope);
+}
+
+//+------------------------------------------------------------------+
+// Cloud terminals: hide every Market Watch symbol this account doesn't use.
+// Keeps the chart symbol + symbols with open positions or working orders
+// (SymbolSelect(false) refuses those anyway — belt and braces).
+//+------------------------------------------------------------------+
+void TrimMarketWatch()
+{
+   int hidden = 0;
+   for(int i = SymbolsTotal(true) - 1; i >= 0; i--)
+   {
+      string sym = SymbolName(i, true);
+      if(sym == _Symbol) continue;
+
+      bool inUse = false;
+      for(int p = PositionsTotal() - 1; p >= 0 && !inUse; p--)
+         if(PositionGetSymbol(p) == sym) inUse = true;
+      for(int o = OrdersTotal() - 1; o >= 0 && !inUse; o--)
+      {
+         ulong t = OrderGetTicket(o);
+         if(t > 0 && OrderGetString(ORDER_SYMBOL) == sym) inUse = true;
+      }
+
+      if(!inUse && SymbolSelect(sym, false)) hidden++;
+   }
+   Print("TrimMarketWatch: hid ", hidden, " unused symbols, ",
+         SymbolsTotal(true), " remain");
 }
 
 //+------------------------------------------------------------------+

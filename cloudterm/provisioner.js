@@ -94,7 +94,9 @@ async function startContainer(name, creds, copy) {
   try {
     await docker(['run', '-d', '--name', name,
       '--restart', 'unless-stopped',
-      '--memory', '700m', '--cpus', '0.6',
+      // Real terminal usage is ~300MB / ~0.15 cpu after the headless trims
+      // (single chart, pruned Market Watch); caps sized ~2x steady-state.
+      '--memory', '600m', '--cpus', '0.5',
       '--env-file', envFile, IMAGE]);
   } finally {
     fs.unlinkSync(envFile);

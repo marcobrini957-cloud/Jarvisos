@@ -53,6 +53,11 @@ NewsEnable=0
 Url0=$BRIDGE_URL
 EOF
 
+# Headless terminals render for nobody: drop the saved chart profile so MT5
+# boots with only the single EA chart from [StartUp] (a stock profile carries
+# 5 charts — ~6 charts redrawing per terminal cost real CPU on the host).
+rm -f "$MT5DIR/MQL5/Profiles/Charts/Default/"chart*.chr
+
 # Start config: auto-login + auto-attach EA.
 # NOTE: unlike the terminal's own config files, the /config start file must be
 # plain ANSI text — UTF-16LE made the terminal skip the login silently.
@@ -62,6 +67,8 @@ Login=$MT5_LOGIN
 Password=$MT5_PASSWORD
 Server=$MT5_SERVER
 KeepPrivate=1
+[Charts]
+MaxBars=10000
 [Experts]
 AllowLiveTrading=1
 AllowDllImport=0
@@ -76,7 +83,7 @@ Period=M15
 EOF
 
 rm -f /tmp/.X99-lock
-Xvfb :99 -screen 0 1024x768x16 &
+Xvfb :99 -screen 0 800x600x16 &
 sleep 2
 
 echo "[cloudterm] starting MT5 for login $MT5_LOGIN on $MT5_SERVER"
