@@ -485,3 +485,24 @@ re-provisioned via provisioner reuse_stored (needs Bearer BRIDGE_ADMIN_TOKEN).
 **Slave account #5143547 now has €10** (Marco funded it) — enough to prove
 signal delivery but a 1:1 BTC trade will likely fail on margin; the EA acks
 'failed' with the retcode, which is itself a valid end-to-end test.
+
+---
+# 2026-07-18 (2) — COPY TRADING PROVEN WITH REAL EXECUTION (EA 2.12)
+
+Marco's second real trade (12:03 BTCUSD 0.01 buy) DELIVERED in 7s but slave
+OrderSend failed retcode=10021 "no quotes": the slave terminal had never
+charted BTCUSD → no Market Watch subscription → MT5 refuses the order.
+EA 2.12: EnsureSymbolReady() — SymbolSelect + wait ≤3s for first tick before
+executing; clean ack message on timeout. (2800e1b)
+
+Synthetic E2E with REAL money on slave #5143547 (€10):
+- EURUSD test → retcode 10018 market closed (it's Saturday — that's why Marco
+  trades BTC today; forex tests only work weekdays)
+- BTCUSD 0.01 open signal → slave EXECUTED ticket 51187043 at 1:1 lots
+- close signal → slave closed same ticket. Balance 10.00→9.64 (spread from
+  the test round-trip + a manual sell Marco made on the slave directly).
+Full chain proven: bridge → copy_log → sidecar poll → inbox → EA execute →
+ack 'executed' back in copy_log. Latency signal→fill ~7-10s.
+
+Remaining for a real mirror: Marco opens a master trade (BTC on weekends);
+0.01 BTC fits the €10 slave margin at Blueberry, bigger sizes need funding.
