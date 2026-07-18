@@ -47,7 +47,7 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.11";
+string   g_eaVersion   = "2.12";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // slave: throttles PostSync inside the fast timer
@@ -380,6 +380,18 @@ void ProcessCopySignal(const string objStr)
 
    if(sigType == "open")
    {
+      // The slave terminal has likely never shown this symbol — without a
+      // Market Watch subscription there are no quotes and OrderSend fails
+      // with 10021. Select it and wait briefly for the first tick.
+      if(!EnsureSymbolReady(brokerSymbol))
+      {
+         execStatus = "failed";
+         errorMsg   = "No quotes for " + brokerSymbol + " (symbol select/tick timeout)";
+         Print("CopyTrade OPEN failed: ", errorMsg);
+         SendCopyAck(logId, execStatus, slaveTicket, slaveLots, errorMsg);
+         return;
+      }
+
       // Calculate lot size
       slaveLots = CalcLots(masterLots, lotMode, lotFixed, lotMult, maxLot);
 
@@ -501,6 +513,25 @@ void WriteCopyOutbox(const string endpoint, const string body)
    envelope += "\"body\":"       + body;
    envelope += "}";
    WriteBridgeFile(name, envelope);
+}
+
+//+------------------------------------------------------------------+
+// Make sure a symbol is subscribed in Market Watch and has live quotes.
+// A freshly-selected symbol needs a moment before the first tick arrives.
+//+------------------------------------------------------------------+
+bool EnsureSymbolReady(const string symbol)
+{
+   if(!SymbolSelect(symbol, true))
+      return false;
+
+   MqlTick tick;
+   for(int i = 0; i < 30; i++)   // up to ~3s
+   {
+      if(SymbolInfoTick(symbol, tick) && tick.bid > 0 && tick.ask > 0)
+         return true;
+      Sleep(100);
+   }
+   return false;
 }
 
 //+------------------------------------------------------------------+
