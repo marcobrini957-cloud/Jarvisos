@@ -710,3 +710,49 @@ calendar day click): News briefs, Analyst chips, Journal Dictate button,
 Overview "+8.2% trading" label + Edge Report facts all confirmed. Known
 noise, not ours: /api/mt5-sync 500s = legacy MetaAPI polling (delete per
 TOMORROW.md #12), hydration warning on /login pre-exists.
+
+---
+# 2026-07-19 (2) — Terminology migration: master/slave → leader/follower (3db5801)
+
+Marco: remove master/slave wording from the whole code base. New terms:
+**Leader / Follower** (industry standard). 438 case-mapped renames across
+site, bridge, cloudterm, EA, schema files, TOMORROW.md — zero leftovers
+(checked master password false-positives first; none existed).
+
+**DB (supabase-leader-follower.sql, run via Management API):**
+copy_signals.master_account_id/master_ticket → leader_*, copy_log.slave_* →
+follower_account_id/follower_ticket/follower_lots, role values migrated
+under dropped+recreated check constraint, idx_copy_log_follower_pending
+renamed, dev_todos titles cleaned, nickname 'slave acc' → 'Follower acc'.
+Fresh sbp_ token from Marco lives in ~/.velquor-supabase-token (0600,
+outside repo) — revokable, reusable for future DDL.
+
+**Wire protocol renamed in lockstep** (breaking, coordinated cutover on a
+Sunday): poll payloads now leader_ticket/leader_lots, acks
+follower_ticket/follower_lots, EA copyconfig mode LEADER/FOLLOWER (sidecar
+gate matches), provisioner copy.mode 'leader'/'follower'. EA → 2.17.
+
+**Deploy order (DB first, then everything the same hour):** migration →
+bridge deploy.sh → git push (Vercel) → scp cloudterm files → image rebuild
+(layer cache, ~1min) → provisioner.js copied to /opt/velquor-term + pm2
+restart (must happen BEFORE re-provision calls — old provisioner maps
+'leader' to mode 0) → both terminals re-provisioned with reuse_stored +
+EXPLICIT copy config (the .cred files are AES-GCM blobs holding the old
+role strings — cannot sed; explicit copy{} overrides and re-persists) →
+EA 2.17 compiled on Marco's Mac via bundled wine64 (NOT wine — only
+wine64 exists in the MT5.app wrapper; MetaEditor64.exe /portable /compile,
+exit code 1 is normal, log says 0 errors).
+
+**E2E PROVEN post-rename:** both accounts heartbeat with new roles;
+synthetic BTCUSD 0.01 open → follower filled ticket 51191112 in ~1.2s
+(duplicate delivery correctly ignored by idempotency guard) → close
+executed same ticket → follower flat (open_trades_count 0). Copy tab in
+prod shows LEADER ACCOUNT / FOLLOWER ACCOUNTS. Landing bundle serves
+Follower strings.
+
+**Gotcha catalogued:** the test account fable-mobiletest owns 'Main Group'
+(leader 114892, followers 221040 + FTMO 58112) — SEEDED data, static
+last_seen 2026-07-17T12:00. Never fire test signals at groups without
+checking user_id ownership first; a stray signal into a real FTMO
+challenge would be catastrophic. Marco's real pair = Copy Group 1
+(5121585 → 5143547).
