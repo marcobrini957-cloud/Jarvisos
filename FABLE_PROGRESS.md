@@ -842,3 +842,52 @@ Chrome, no browser download). Cookie consent localStorage value is
 'all'/'essential' — NOT 'accepted' (wrong value = banner intercepts
 clicks). Test account fable-mobiletest has a known password now, stored
 in Claude's local memory, not here (repo is public).
+
+---
+# 2026-07-19 (6) — Auto MT5 chart screenshots (Marco's idea, built same day)
+
+Cloud terminals watch the charts 24/7 anyway — now every trade open/close
+auto-captures a chart image into the trade journal. Full pipeline:
+
+**EA 2.18** (compiled on Hetzner via image build): OnTradeTransaction
+queues shots (copy signal always sent first — capture never touches the
+hot path), OnTimer renders on a THROWAWAY ChartOpen chart (never the
+EA's own chart — ChartSetSymbolPeriod there would deinit/reinit the EA
+mid-session). Open shot = M5; close shot timeframe auto-fits duration
+(M1 ≤4h, M5 ≤20h, M15 ≤2.5d, H1 ≤10d, else H4) so entry+exit both fit
+at ~260 visible bars. VELQUOR dark chart colors, blue entry line, amber
+exit line, dotted VLINE at open time. PNG (ChartScreenShot can't JPEG)
+written atomically (tmp+FileMove) as vq_shot_<posId>_<slot>.png.
+InpAutoScreenshot input (default true). Followers never capture
+(mirror trades don't reach the journal).
+
+**Sidecar**: forward_screenshots() in the fast loop, throttled to one
+pass/3s (404 retries would otherwise burn the rate limit in seconds),
+posts binary to /screenshot, deletes on 200, drops stale >10min.
+
+**Bridge**: POST /screenshot (express.raw 3mb, rate limit 240/15min) —
+sharp PNG→JPEG q78 max-w1280 (~50% smaller, Marco asked for JPEG),
+upload to trade-screenshots bucket auto/<uid>/<ticket>_<slot>_<ts>.jpg,
+update trades by mt5_ticket (= position id, matches EA posId). 404 when
+/sync hasn't landed the row yet — sidecar/EA retry semantics. Desktop
+EAs upload via WebRequest with the same retry logic in OnTimer.
+
+**Web**: trades.screenshot_user_url (DDL applied), modal "MT5 Auto
+Capture" Entry/Exit thumbs + "Your Chart Screenshot" (slot user, for
+TradingView shots — all uploads sharp-compressed to JPEG), IMG chip /
+gallery prefer close > open > user. Stale public EA v1.00 → 2.18.
+
+**Deploy state**: bridge live (nginx: /screenshot allowlisted — NOTE
+sites-enabled/velquor-bridge is a REGULAR FILE, not a symlink to
+sites-available; edit the enabled one), image rebuilt, both of Marco's
+terminals recreated via provisioner reuse_stored, EA 2.18 heartbeating
+(user_profiles.ea_version). Sidecar→nginx→bridge proven live with a
+dummy shot file in the real container (404 loop on 3s throttle, then
+cleaned). NOT yet proven: actual ChartScreenShot render quality on a
+real fill — needs Monday's first trade. Check the first shots' framing
+before calling it done. min_ea_version stays 2.00 — desktop 2.17 EAs
+keep working, just without shots.
+
+Gotcha hit: `git add -A` swallowed bridge/node_modules (root .gitignore
+had only /node_modules) — amended + force-pushed, .gitignore now has
+bare node_modules/.
