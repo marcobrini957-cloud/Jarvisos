@@ -484,7 +484,11 @@ h1, h2, h3 { text-wrap: balance; }
   to   { opacity: 1; transform: translateY(0); }
 }
 .vq-tab-in {
-  animation: vq-tab-enter 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  /* fill-mode must stay `backwards`, never `both`/`forwards`: a retained
+     transform (even translateY(0)) makes this div the containing block for
+     every position:fixed modal inside a tab — they center in the 5000px+
+     tab content instead of the viewport and render off-screen. */
+  animation: vq-tab-enter 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
 }
 
 /* ── Landing scroll reveal ─────────────────────────────────────────────── */
