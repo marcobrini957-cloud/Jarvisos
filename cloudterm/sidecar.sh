@@ -6,6 +6,7 @@
 #   /sync ........ EA writes vq_sync.json (every write) → POST /sync
 #   copy out ..... EA writes vq_cout_*.json envelopes    → POST endpoint in each
 #   copy in ...... this loop polls GET /copy/poll (followers) → writes vq_cin_signals.json
+#   screenshots .. EA writes vq_shot_<ticket>_<slot>.png → POST /screenshot
 #
 # curl + jq only, no extra runtime. Env: VQ_API_KEY, BRIDGE_URL.
 set -u
@@ -59,6 +60,39 @@ forward_copy_outbox() {
   done
 }
 
+forward_screenshots() {
+  # Throttled to one pass per 3 s: a 404 (trade row not synced yet) must retry
+  # on the /sync cadence, not the 0.1 s file-loop cadence, or the rate limit
+  # burns out in seconds.
+  local now; now="$(date +%s)"
+  [ $((now - last_shot_ts)) -lt 3 ] && return
+  last_shot_ts=$now
+  local f
+  for f in "$FILES_DIR"/vq_shot_*.png; do
+    [ -e "$f" ] || continue
+    local base ticket slot
+    base="$(basename "$f" .png)"          # vq_shot_<ticket>_<slot>
+    ticket="${base#vq_shot_}"
+    slot="${ticket##*_}"
+    ticket="${ticket%_*}"
+    case "$slot" in open|close) ;; *) log "shot DROPPED bad name $(basename "$f")"; rm -f "$f"; continue ;; esac
+    # Trade rows land via /sync within ~10 s; anything unsent after 10 min is dead.
+    if [ -n "$(find "$f" -mmin +10 2>/dev/null)" ]; then
+      log "shot DROPPED stale $(basename "$f")"; rm -f "$f"; continue
+    fi
+    local code
+    code="$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 \
+      -X POST "$BRIDGE_URL/screenshot?ticket=$ticket&slot=$slot" \
+      -H "Content-Type: image/png" \
+      -H "X-Api-Key: $VQ_API_KEY" \
+      -H "X-Mt5-Login: ${MT5_LOGIN:-}" \
+      --data-binary @"$f" 2>/dev/null || echo 000)"
+    if [ "$code" = "200" ]; then rm -f "$f"; log "shot $slot $ticket 200"
+    elif [ "$code" = "404" ]; then :   # row not synced yet — quiet retry next pass
+    else log "shot $slot $ticket http=$code (retry)"; fi
+  done
+}
+
 # Dedicated long-poll loop (backgrounded): the bridge holds ?wait=25 requests
 # open and answers the instant a signal lands, so delivery latency is network
 # round-trip, not poll cadence.
@@ -99,11 +133,13 @@ copy_poll_loop() {
 }
 
 last_sync_mt=""
+last_shot_ts=0
 copy_poll_loop &
 # Fast local loop: file checks are cheap, and copy-out latency (leader signal
 # → bridge) rides on this cadence.
 while true; do
   forward_sync
   forward_copy_outbox
+  forward_screenshots
   sleep 0.1
 done

@@ -39,6 +39,7 @@ export interface Trade {
   voice_note_url: string | null
   screenshot_open_url: string | null
   screenshot_close_url: string | null
+  screenshot_user_url: string | null
   screenshot_missing: boolean
 }
 

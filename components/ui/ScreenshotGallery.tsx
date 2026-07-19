@@ -20,10 +20,15 @@ function fmtPnl(n: number | null): string {
   return `${n >= 0 ? '+' : '-'}€${Math.abs(n).toFixed(2)}`
 }
 
+// Close shot first — it has both entry and exit marked.
+export function bestShot(t: Trade): string | null {
+  return t.screenshot_close_url || t.screenshot_open_url || t.screenshot_user_url || null
+}
+
 export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
   const [lightbox, setLightbox] = useState<Trade | null>(null)
 
-  const withScreenshots = trades.filter(t => t.screenshot_open_url)
+  const withScreenshots = trades.filter(t => bestShot(t))
 
   if (withScreenshots.length === 0) {
     return (
@@ -33,7 +38,7 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
       }}>
         <p style={{ color: 'var(--t3)', fontSize: '13px' }}>No chart screenshots yet.</p>
         <p style={{ color: 'var(--t3)', fontSize: '11px', marginTop: '4px' }}>
-          Annotate trades and upload screenshots to see them here.
+          New trades are captured automatically from MT5 — or upload your own in the trade journal.
         </p>
       </div>
     )
@@ -72,7 +77,7 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
               <div style={{ position: 'relative', paddingTop: '56.25%', background: 'var(--s3)' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={trade.screenshot_open_url!}
+                  src={bestShot(trade)!}
                   alt={`${trade.symbol} chart`}
                   style={{
                     position: 'absolute', inset: 0, width: '100%', height: '100%',
@@ -118,7 +123,7 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={lightbox.screenshot_open_url!}
+              src={bestShot(lightbox)!}
               alt={`${lightbox.symbol} chart`}
               style={{
                 width: '100%', maxHeight: 'calc(90vh - 80px)',

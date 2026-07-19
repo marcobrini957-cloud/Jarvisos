@@ -19,7 +19,7 @@ export async function PATCH(
       'setup_type', 'trade_rationale', 'emotion_pre',
       'followed_plan', 'discipline_score', 'notes',
       'tags', 'timeframe', 'indicators_used',
-      'screenshot_open_url', 'screenshot_close_url', 'screenshot_missing',
+      'screenshot_open_url', 'screenshot_close_url', 'screenshot_user_url', 'screenshot_missing',
     ]
     const updates: Record<string, unknown> = {}
     for (const key of allowed) {

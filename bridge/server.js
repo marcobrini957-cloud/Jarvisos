@@ -3,6 +3,7 @@
 const express = require('express');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const sharp = require('sharp');
 const { createClient } = require('@supabase/supabase-js');
 const {
   mapOpenPosition, mapClosedTrade, versionLt,
@@ -215,6 +216,12 @@ app.use('/copy', rateLimit({
   max: () => settings.rate_limit_copy,
   keyGenerator: keyOrIp, standardHeaders: true, legacyHeaders: false,
 }));
+// Screenshots fire only on trade open/close (+404 retries) — 240/15min is ample.
+app.use('/screenshot', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 240,
+  keyGenerator: keyOrIp, standardHeaders: true, legacyHeaders: false,
+}));
 
 // ─── POST /sync ───────────────────────────────────────────────────────────────
 app.post('/sync', wrap(async (req, res) => {
@@ -303,6 +310,71 @@ app.post('/sync', wrap(async (req, res) => {
   metrics.syncs++;
   return res.json({ ok: true, ts: Date.now() });
 }));
+
+// ─── POST /screenshot ────────────────────────────────────────────────────────
+// Auto chart screenshots from the EA (PNG, ChartScreenShot can't write JPEG).
+// Converted to JPEG here — storage is where size matters, not the one-hop
+// upload. 404 when the trade row hasn't landed via /sync yet: the sidecar
+// (cloud) and the EA retry loop (desktop) keep the file and try again.
+app.post('/screenshot',
+  express.raw({ type: ['image/png', 'application/octet-stream'], limit: '3mb' }),
+  wrap(async (req, res) => {
+    if (!settings.sync_enabled) return res.status(503).json({ error: 'sync_disabled' });
+    const user = await authed(req, res);
+    if (!user) return;
+    touchKey(req.headers['x-api-key']);
+
+    const ticket = String(req.query.ticket || '');
+    const slot   = String(req.query.slot   || '');
+    if (!/^\d{1,20}$/.test(ticket))         return res.status(400).json({ error: 'bad_ticket' });
+    if (slot !== 'open' && slot !== 'close') return res.status(400).json({ error: 'bad_slot' });
+    if (!Buffer.isBuffer(req.body) || req.body.length < 100)
+      return res.status(400).json({ error: 'empty_body' });
+
+    const { data: trade } = await supabase
+      .from('trades')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('mt5_ticket', ticket)
+      .maybeSingle();
+    if (!trade) return res.status(404).json({ error: 'trade_not_synced_yet' });
+
+    let jpeg;
+    try {
+      jpeg = await sharp(req.body)
+        .resize({ width: 1280, withoutEnlargement: true })
+        .jpeg({ quality: 78 })
+        .toBuffer();
+    } catch {
+      return res.status(400).json({ error: 'bad_image' });
+    }
+
+    const path = `auto/${user.id}/${ticket}_${slot}_${Date.now()}.jpg`;
+    const { error: upErr } = await supabase.storage
+      .from('trade-screenshots')
+      .upload(path, jpeg, { contentType: 'image/jpeg', upsert: true });
+    if (upErr) {
+      metrics.errors++;
+      metrics.last_error = `screenshot upload: ${upErr.message}`;
+      metrics.last_error_at = new Date().toISOString();
+      log('error', 'screenshot upload failed', { user: user.id, ticket, slot, error: upErr.message });
+      return res.status(500).json({ error: 'upload_failed' });
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('trade-screenshots')
+      .getPublicUrl(path);
+
+    const field = slot === 'open' ? 'screenshot_open_url' : 'screenshot_close_url';
+    await supabase
+      .from('trades')
+      .update({ [field]: publicUrl, screenshot_missing: false })
+      .eq('id', trade.id);
+
+    metrics.screenshots = (metrics.screenshots || 0) + 1;
+    log('info', 'screenshot stored', { user: user.id, ticket, slot, kb: Math.round(jpeg.length / 1024) });
+    return res.json({ ok: true, url: publicUrl });
+  }));
 
 // ─── Hot-path caches for /copy/signal (10 s TTL) ─────────────────────────────
 // Latency budget: every awaited Supabase round-trip here delays every mirror.
@@ -679,6 +751,9 @@ process.on('uncaughtException', (err) => {
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
 refreshSettings();
+// Screenshot bucket must exist before the first EA upload (web app also
+// creates it lazily; whichever runs first wins, error is benign).
+supabase.storage.createBucket('trade-screenshots', { public: true }).catch(() => {});
 const settingsTimer  = setInterval(refreshSettings, 30_000);
 const heartbeatTimer = setInterval(heartbeat, 30_000);
 

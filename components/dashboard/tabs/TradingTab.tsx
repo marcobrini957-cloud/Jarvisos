@@ -495,7 +495,7 @@ export default function TradingTab() {
       </Panel>
 
       {/* Screenshot Gallery */}
-      <Panel title={`Screenshot Gallery (${trades.filter(t => t.screenshot_open_url).length})`} accent="var(--cy2)">
+      <Panel title={`Screenshot Gallery (${trades.filter(t => t.screenshot_close_url || t.screenshot_open_url || t.screenshot_user_url).length})`} accent="var(--cy2)">
         <ScreenshotGallery trades={trades} />
       </Panel>
 

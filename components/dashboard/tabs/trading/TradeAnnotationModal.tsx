@@ -18,7 +18,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
   const [notes,       setNotes]     = useState(trade.notes ?? '')
   const [tags,        setTags]      = useState<string[]>(trade.tags ?? [])
   const [uploading,   setUploading] = useState(false)
-  const [screenshotUrl, setScreenshotUrl] = useState(trade.screenshot_open_url ?? '')
+  const [screenshotUrl, setScreenshotUrl] = useState(trade.screenshot_user_url ?? '')
   const [saving,      setSaving]    = useState(false)
   const [saved,       setSaved]     = useState(false)
   const [aiFeedback,  setAiFeedback]  = useState<string | null>(null)
@@ -40,7 +40,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
     try {
       const form = new FormData()
       form.append('file', file)
-      form.append('slot', 'open')
+      form.append('slot', 'user')
       const res = await fetch(`/api/trades/${trade.id}/screenshot`, { method: 'POST', body: form })
       const json = await res.json()
       if (json.url) setScreenshotUrl(json.url)
@@ -62,7 +62,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
           followed_plan:   followed,
           notes:           notes     || null,
           tags:            tags.length > 0 ? tags : null,
-          screenshot_missing: !screenshotUrl,
+          screenshot_missing: !screenshotUrl && !trade.screenshot_open_url && !trade.screenshot_close_url,
         }),
       })
       setSaved(true)
@@ -224,9 +224,35 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
           </div>
         </div>
 
+        {/* Auto captures from MT5 (EA writes them via the bridge) */}
+        {(trade.screenshot_open_url || trade.screenshot_close_url) && (
+          <div className="flex flex-col gap-2">
+            <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>MT5 Auto Capture</label>
+            <div className="flex gap-2">
+              {[{ url: trade.screenshot_open_url, label: 'Entry' },
+                { url: trade.screenshot_close_url, label: 'Exit' }].map(shot => shot.url && (
+                <a key={shot.label} href={shot.url} target="_blank" rel="noreferrer"
+                  className="relative flex-1 rounded-lg overflow-hidden"
+                  style={{ border: '1px solid var(--bd2)', maxHeight: '110px' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={shot.url} alt={`${shot.label} chart`}
+                    style={{ width: '100%', height: '110px', objectFit: 'cover' }} />
+                  <span style={{
+                    position: 'absolute', top: '6px', left: '6px', fontSize: '10px', fontWeight: 700,
+                    letterSpacing: '0.05em', padding: '2px 7px', borderRadius: '4px',
+                    background: 'rgba(0,0,0,0.7)', color: shot.label === 'Entry' ? 'var(--ac)' : 'var(--am2)',
+                  }}>
+                    {shot.label}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Screenshot */}
         <div className="flex flex-col gap-2">
-          <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Chart Screenshot</label>
+          <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Your Chart Screenshot</label>
           {screenshotUrl ? (
             <div className="relative rounded-lg overflow-hidden" style={{ maxHeight: '180px' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -130,10 +130,11 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
                   </span>
                 </div>
 
-                {/* Screenshot indicator — shown only when screenshot exists, clickable to view */}
-                {(trade.screenshot_open_url || trade.screenshot_close_url) ? (
+                {/* Screenshot indicator — shown only when screenshot exists, clickable to view.
+                    Close shot first: it has entry AND exit marked. */}
+                {(trade.screenshot_close_url || trade.screenshot_open_url || trade.screenshot_user_url) ? (
                   <button
-                    onClick={e => { e.stopPropagation(); onViewScreenshot(trade.screenshot_open_url || trade.screenshot_close_url || '') }}
+                    onClick={e => { e.stopPropagation(); onViewScreenshot(trade.screenshot_close_url || trade.screenshot_open_url || trade.screenshot_user_url || '') }}
                     title="View screenshot"
                     style={{ background: 'rgba(88,166,255,0.1)', border: '1px solid rgba(88,166,255,0.2)', borderRadius: '4px', cursor: 'pointer', fontSize: '8.5px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--ac)', flexShrink: 0, padding: '2px 4px', lineHeight: 1.2, opacity: 0.8 }}
                     onMouseEnter={e => (e.currentTarget.style.opacity = '1')}

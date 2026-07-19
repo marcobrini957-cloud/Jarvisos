@@ -4,7 +4,7 @@
 //|  Place in: MQL5/Experts/VelquorBridge.mq5                        |
 //+------------------------------------------------------------------+
 #property copyright "VELQUOR"
-#property version   "2.00"
+#property version   "2.18"
 #property strict
 
 #include <Trade\Trade.mqh>
@@ -31,6 +31,7 @@ input int            InpIntervalSec = 10;                            // Sync int
 input int            InpHistoryDays = 30;                            // Days of closed trades to send
 input bool           InpDebugMode   = false;                         // Print debug logs
 input bool           InpFileBridge  = false;                         // Cloud mode: write payload to file (sidecar forwards it)
+input bool           InpAutoScreenshot = true;                       // Auto chart screenshot on trade open/close
 
 // ── Copy trading inputs ─────────────────────────────────────────────────────
 input ENUM_COPY_MODE InpCopyMode     = COPY_OFF;  // Copy Mode
@@ -47,7 +48,7 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.17";
+string   g_eaVersion   = "2.18";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // follower: throttles PostSync inside the fast timer
@@ -61,6 +62,24 @@ ulong    g_signaledClose[];
 long     g_leaderTickets[];
 long     g_followerTickets[];
 int      g_mappingSize = 0;
+
+// Auto screenshots: queued in OnTradeTransaction (cheap array push — that
+// handler is the copy-latency hot path), captured later in OnTimer where a
+// few hundred ms of chart work can't delay a copy signal for the same fill.
+struct PendingShot
+{
+   ulong    ticket;      // MT5 position id — matches trades.mt5_ticket
+   string   symbol;
+   double   entryPrice;
+   double   exitPrice;   // 0 for open shots
+   datetime openTime;
+   datetime closeTime;   // 0 for open shots
+   bool     isClose;
+   datetime dueAt;       // give the fill 2s to appear on the chart
+   int      attempts;
+   bool     captured;    // PNG written, desktop upload still pending
+};
+PendingShot g_shots[];
 
 //+------------------------------------------------------------------+
 int OnInit()
@@ -154,17 +173,22 @@ void OnTimer()
       return;
    }
    PostSync();
+   ProcessPendingShots();
 }
 
 //+------------------------------------------------------------------+
-// LEADER: fires immediately on every trade transaction
+// Fires immediately on every trade transaction. LEADER: broadcast copy
+// signals. OFF + LEADER: queue auto screenshots (followers hold mirror
+// trades that never reach the journal, so they take no screenshots).
 //+------------------------------------------------------------------+
 void OnTradeTransaction(
    const MqlTradeTransaction& trans,
    const MqlTradeRequest&     request,
    const MqlTradeResult&      result)
 {
-   if(InpCopyMode != COPY_LEADER) return;
+   bool wantCopy  = (InpCopyMode == COPY_LEADER);
+   bool wantShots = (InpAutoScreenshot && InpCopyMode != COPY_FOLLOWER);
+   if(!wantCopy && !wantShots) return;
 
    // We care about deal events (position open/close)
    if(trans.type != TRADE_TRANSACTION_DEAL_ADD) return;
@@ -198,18 +222,48 @@ void OnTradeTransaction(
 
    if(entry == DEAL_ENTRY_IN)
    {
-      // Position opened — check we haven't signalled this posId yet
-      if(TicketAlreadySignalled(posId, g_signaledOpen)) return;
-      AddTicket(posId, g_signaledOpen);
-      SendCopySignal("open", posId, symbol, tradeTypeStr, lots, price, sl, tp, 0);
+      // Copy signal first — its latency is the product; the shot queue is a
+      // memory push and can wait.
+      if(wantCopy && !TicketAlreadySignalled(posId, g_signaledOpen))
+      {
+         AddTicket(posId, g_signaledOpen);
+         SendCopySignal("open", posId, symbol, tradeTypeStr, lots, price, sl, tp, 0);
+      }
+      if(wantShots)
+         QueueShot(posId, symbol, price, 0,
+                   (datetime)HistoryDealGetInteger(dealTicket, DEAL_TIME), 0, false);
    }
    else if(entry == DEAL_ENTRY_OUT || entry == DEAL_ENTRY_INOUT)
    {
-      // Position closed — check we haven't signalled this close yet
-      if(TicketAlreadySignalled(posId, g_signaledClose)) return;
-      AddTicket(posId, g_signaledClose);
       double closePrice = HistoryDealGetDouble(dealTicket, DEAL_PRICE);
-      SendCopySignal("close", posId, symbol, tradeTypeStr, lots, price, sl, tp, closePrice);
+      if(wantCopy && !TicketAlreadySignalled(posId, g_signaledClose))
+      {
+         AddTicket(posId, g_signaledClose);
+         SendCopySignal("close", posId, symbol, tradeTypeStr, lots, price, sl, tp, closePrice);
+      }
+      if(wantShots)
+      {
+         // Entry price/time come from the position's ENTRY_IN deal — the OUT
+         // deal only knows the close. Partial closes re-queue the same
+         // ticket+slot; QueueShot updates in place so the last close wins.
+         double   entryPx   = 0;
+         datetime openTime  = 0;
+         datetime closeTime = (datetime)HistoryDealGetInteger(dealTicket, DEAL_TIME);
+         if(HistorySelectByPosition(posId))
+         {
+            int n = HistoryDealsTotal();
+            for(int k = 0; k < n; k++)
+            {
+               ulong dt = HistoryDealGetTicket(k);
+               if(dt == 0) continue;
+               if((ENUM_DEAL_ENTRY)HistoryDealGetInteger(dt, DEAL_ENTRY) != DEAL_ENTRY_IN) continue;
+               entryPx  = HistoryDealGetDouble(dt, DEAL_PRICE);
+               openTime = (datetime)HistoryDealGetInteger(dt, DEAL_TIME);
+               break;
+            }
+         }
+         QueueShot(posId, symbol, entryPx, closePrice, openTime, closeTime, true);
+      }
    }
 }
 
@@ -580,6 +634,195 @@ bool EnsureSymbolReady(const string symbol)
       Sleep(100);
    }
    return false;
+}
+
+//+------------------------------------------------------------------+
+// Auto screenshots — queue, capture, deliver
+//+------------------------------------------------------------------+
+string ShotFileName(const PendingShot &s)
+{
+   return "vq_shot_" + IntegerToString((long)s.ticket) + "_" + (s.isClose ? "close" : "open") + ".png";
+}
+
+void QueueShot(const ulong ticket, const string symbol, const double entryPx,
+               const double exitPx, const datetime openTime, const datetime closeTime,
+               const bool isClose)
+{
+   // Same ticket+slot already queued (partial close) — update in place.
+   for(int i = 0; i < ArraySize(g_shots); i++)
+   {
+      if(g_shots[i].ticket == ticket && g_shots[i].isClose == isClose)
+      {
+         g_shots[i].entryPrice = entryPx;
+         g_shots[i].exitPrice  = exitPx;
+         g_shots[i].closeTime  = closeTime;
+         g_shots[i].dueAt      = TimeCurrent() + 2;
+         g_shots[i].captured   = false;
+         return;
+      }
+   }
+   int sz = ArraySize(g_shots);
+   if(sz >= 20) return;   // runaway guard — journal shots are best-effort
+   ArrayResize(g_shots, sz + 1);
+   g_shots[sz].ticket     = ticket;
+   g_shots[sz].symbol     = symbol;
+   g_shots[sz].entryPrice = entryPx;
+   g_shots[sz].exitPrice  = exitPx;
+   g_shots[sz].openTime   = openTime;
+   g_shots[sz].closeTime  = closeTime;
+   g_shots[sz].isClose    = isClose;
+   g_shots[sz].dueAt      = TimeCurrent() + 2;
+   g_shots[sz].attempts   = 0;
+   g_shots[sz].captured   = false;
+}
+
+void RemoveShot(const int idx)
+{
+   int last = ArraySize(g_shots) - 1;
+   if(idx < last) g_shots[idx] = g_shots[last];
+   ArrayResize(g_shots, last);
+}
+
+// Close shots must keep the entry on screen: ~260 visible bars at scale 2 /
+// 1280px wide, so pick the smallest timeframe whose bar count fits.
+ENUM_TIMEFRAMES FitTimeframe(const datetime openT, const datetime closeT)
+{
+   long dur = (long)(closeT - openT);
+   if(dur <= 240 * 60)    return PERIOD_M1;   // ≤ 4h
+   if(dur <= 240 * 300)   return PERIOD_M5;   // ≤ 20h
+   if(dur <= 240 * 900)   return PERIOD_M15;  // ≤ 2.5d
+   if(dur <= 240 * 3600)  return PERIOD_H1;   // ≤ 10d
+   return PERIOD_H4;
+}
+
+// Renders the shot on a throwaway chart — never the EA's own chart, because
+// ChartSetSymbolPeriod on it would deinit/reinit this EA mid-session.
+bool CaptureShot(PendingShot &s)
+{
+   ENUM_TIMEFRAMES tf = s.isClose ? FitTimeframe(s.openTime, s.closeTime) : PERIOD_M5;
+   if(!EnsureSymbolReady(s.symbol)) return false;
+
+   long cid = ChartOpen(s.symbol, tf);
+   if(cid <= 0) return false;
+
+   // The traded symbol is already streaming, so this settles in one pass in
+   // practice; the loop is for a cold chart after terminal restart.
+   for(int k = 0; k < 20 && !SeriesInfoInteger(s.symbol, tf, SERIES_SYNCHRONIZED); k++)
+      Sleep(100);
+
+   // VELQUOR dark look, entry/exit levels marked
+   ChartSetInteger(cid, CHART_SHOW_GRID, false);
+   ChartSetInteger(cid, CHART_MODE, CHART_CANDLES);
+   ChartSetInteger(cid, CHART_AUTOSCROLL, true);
+   ChartSetInteger(cid, CHART_SHIFT, true);
+   ChartSetInteger(cid, CHART_SCALE, 2);
+   ChartSetInteger(cid, CHART_SHOW_VOLUMES, CHART_VOLUME_HIDE);
+   ChartSetInteger(cid, CHART_COLOR_BACKGROUND, C'13,17,23');
+   ChartSetInteger(cid, CHART_COLOR_FOREGROUND, C'139,148,158');
+   ChartSetInteger(cid, CHART_COLOR_GRID,       C'33,38,45');
+   ChartSetInteger(cid, CHART_COLOR_CHART_UP,   C'99,153,52');
+   ChartSetInteger(cid, CHART_COLOR_CANDLE_BULL,C'99,153,52');
+   ChartSetInteger(cid, CHART_COLOR_CHART_DOWN, C'226,75,74');
+   ChartSetInteger(cid, CHART_COLOR_CANDLE_BEAR,C'226,75,74');
+
+   if(s.entryPrice > 0)
+   {
+      ObjectCreate(cid, "vq_entry", OBJ_HLINE, 0, 0, s.entryPrice);
+      ObjectSetInteger(cid, "vq_entry", OBJPROP_COLOR, C'88,166,255');
+      ObjectSetInteger(cid, "vq_entry", OBJPROP_WIDTH, 2);
+      ObjectSetString(cid,  "vq_entry", OBJPROP_TEXT, "Entry " + DoubleToStr(s.entryPrice, (int)SymbolInfoInteger(s.symbol, SYMBOL_DIGITS)));
+   }
+   if(s.isClose && s.exitPrice > 0)
+   {
+      ObjectCreate(cid, "vq_exit", OBJ_HLINE, 0, 0, s.exitPrice);
+      ObjectSetInteger(cid, "vq_exit", OBJPROP_COLOR, C'240,180,41');
+      ObjectSetInteger(cid, "vq_exit", OBJPROP_WIDTH, 2);
+      ObjectSetString(cid,  "vq_exit", OBJPROP_TEXT, "Exit " + DoubleToStr(s.exitPrice, (int)SymbolInfoInteger(s.symbol, SYMBOL_DIGITS)));
+      if(s.openTime > 0)
+         ObjectCreate(cid, "vq_open_t", OBJ_VLINE, 0, s.openTime, 0);
+      ObjectSetInteger(cid, "vq_open_t", OBJPROP_COLOR, C'48,54,61');
+      ObjectSetInteger(cid, "vq_open_t", OBJPROP_STYLE, STYLE_DOT);
+   }
+
+   ChartRedraw(cid);
+   Sleep(300);   // one paint cycle — screenshot of an unpainted chart is black
+
+   string tmp = "vq_tmp_shot.png";
+   bool ok = ChartScreenShot(cid, tmp, 1280, 720, ALIGN_RIGHT);
+   ChartClose(cid);
+   if(!ok) return false;
+
+   // Publish atomically — the sidecar must never upload a half-written PNG.
+   string fname = ShotFileName(s);
+   FileDelete(fname);
+   return FileMove(tmp, 0, fname, 0);
+}
+
+// Desktop delivery (cloud terminals leave the file for the sidecar).
+// Returns the HTTP code; 404 = trade row not synced yet, retry next timer.
+int UploadShot(const PendingShot &s)
+{
+   string fname = ShotFileName(s);
+   int h = FileOpen(fname, FILE_READ|FILE_BIN);
+   if(h == INVALID_HANDLE) return -1;
+   char body[];
+   ArrayResize(body, (int)FileSize(h));
+   FileReadArray(h, body, 0, WHOLE_ARRAY);
+   FileClose(h);
+
+   string url = InpBridgeUrl + "/screenshot?ticket=" + IntegerToString((long)s.ticket)
+              + "&slot=" + (s.isClose ? "close" : "open");
+   string headers = "Content-Type: image/png\r\nX-Api-Key: " + InpApiKey
+                  + "\r\nX-Mt5-Login: " + g_mt5Login;
+   char   response[];
+   string responseHeaders;
+   return WebRequest("POST", url, headers, 8000, body, response, responseHeaders);
+}
+
+void ProcessPendingShots()
+{
+   for(int i = ArraySize(g_shots) - 1; i >= 0; i--)
+   {
+      if(TimeCurrent() < g_shots[i].dueAt) continue;
+
+      if(!g_shots[i].captured)
+      {
+         if(!CaptureShot(g_shots[i]))
+         {
+            g_shots[i].attempts++;
+            if(g_shots[i].attempts >= 3)
+            {
+               Print("Screenshot capture failed 3x — dropping ", ShotFileName(g_shots[i]));
+               RemoveShot(i);
+            }
+            continue;
+         }
+         g_shots[i].captured = true;
+         g_shots[i].attempts = 0;
+         if(InpDebugMode) Print("Screenshot captured: ", ShotFileName(g_shots[i]));
+      }
+
+      if(InpFileBridge) { RemoveShot(i); continue; }   // sidecar owns the file now
+
+      int code = UploadShot(g_shots[i]);
+      if(code == 200)
+      {
+         FileDelete(ShotFileName(g_shots[i]));
+         RemoveShot(i);
+      }
+      else
+      {
+         g_shots[i].attempts++;
+         // 404 = /sync hasn't landed the trade row yet (10s cadence) — patient.
+         int limit = (code == 404) ? 30 : 5;
+         if(g_shots[i].attempts >= limit)
+         {
+            Print("Screenshot upload gave up (HTTP ", code, ") — ", ShotFileName(g_shots[i]));
+            FileDelete(ShotFileName(g_shots[i]));
+            RemoveShot(i);
+         }
+      }
+   }
 }
 
 //+------------------------------------------------------------------+
