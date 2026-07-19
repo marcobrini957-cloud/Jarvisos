@@ -441,7 +441,12 @@ h1, h2, h3 { text-wrap: balance; }
   }
   /* Give each row/header inside the scroll area a minimum width so it scrolls */
   .portfolio-table-wrap > * {
-    min-width: 480px;
+    min-width: 560px;
+  }
+
+  /* ── Trading — Live Chart height on phones ────────────────────────── */
+  .tv-chart-wrap {
+    height: 340px !important;
   }
 
   /* ── Portfolio — action bar wrapping ─────────────────────────────── */
@@ -500,4 +505,9 @@ h1, h2, h3 { text-wrap: balance; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+}
+
+/* Live Chart container — mobile override lives in the ≤768px media block */
+.tv-chart-wrap {
+  height: 480px;
 }

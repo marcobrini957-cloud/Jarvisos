@@ -174,8 +174,8 @@ export default function TradingTab() {
 
       {/* Live chart — official TradingView embed */}
       <Panel title="Live Chart" noPadding>
-        <div style={{ height: '480px' }}>
-          <AdvancedChart symbol="OANDA:XAUUSD" height={480} />
+        <div className="tv-chart-wrap">
+          <AdvancedChart symbol="OANDA:XAUUSD" height="100%" />
         </div>
       </Panel>
 

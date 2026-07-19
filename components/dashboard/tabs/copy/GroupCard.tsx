@@ -93,7 +93,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
       style={{
         fontSize: '10px', padding: '4px 10px', borderRadius: '6px', fontWeight: 600,
         background: 'rgba(0,255,133,0.08)', border: '1px solid rgba(0,255,133,0.3)',
-        color: '#00FF85', cursor: 'pointer',
+        color: '#00FF85', cursor: 'pointer', whiteSpace: 'nowrap',
       }}
     >
       Host in Cloud

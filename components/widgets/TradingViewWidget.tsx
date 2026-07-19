@@ -110,7 +110,7 @@ export function TickerTape() {
   )
 }
 
-export function AdvancedChart({ symbol = 'OANDA:XAUUSD', height = 480 }: { symbol?: string; height?: number }) {
+export function AdvancedChart({ symbol = 'OANDA:XAUUSD', height = 480 }: { symbol?: string; height?: number | string }) {
   return (
     <TradingViewWidget
       script="embed-widget-advanced-chart"

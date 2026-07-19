@@ -217,7 +217,7 @@ export default function PortfolioTab() {
             <div className="flex items-center px-4 py-2"
               style={{ borderBottom: '1px solid var(--bd)', fontSize: '11px', color: 'var(--t3)', letterSpacing: '0.04em' }}>
               <span style={{ width: '110px', flexShrink: 0 }}>ASSET</span>
-              <span style={{ flex: 1, minWidth: 0 }}>ALLOCATION</span>
+              <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>ALLOCATION</span>
               <span style={{ width: '82px', flexShrink: 0, textAlign: 'right' }}>CURRENT</span>
               <span style={{ width: '76px', flexShrink: 0, textAlign: 'right' }}>COST</span>
               <span style={{ width: '82px', flexShrink: 0, textAlign: 'right' }}>P&amp;L</span>

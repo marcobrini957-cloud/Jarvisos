@@ -7,7 +7,14 @@ import type { Trade } from '@/types'
 import type { VelquorInsight } from '@/lib/intelligence'
 import InsightCard from '@/components/ui/InsightCard'
 
-function Fact({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
+export interface EdgeFact {
+  label:  string
+  value:  string
+  sub?:   string
+  color?: string
+}
+
+export function Fact({ label, value, sub, color }: EdgeFact) {
   return (
     <div style={{
       padding: '10px 12px', borderRadius: '9px',
@@ -25,6 +32,11 @@ function Fact({ label, value, sub, color }: { label: string; value: string; sub?
   )
 }
 
+// 'london' / 'new_york' keys → display names
+function prettySession(key: string): string {
+  return key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
+
 function bestOf(segs: Segment[]): Segment | null {
   const eligible = segs.filter(s => s.trades >= 4)
   if (eligible.length === 0) return null
@@ -36,29 +48,22 @@ function worstOf(segs: Segment[]): Segment | null {
   return eligible.reduce((a, b) => (b.netPnl < a.netPnl ? b : a))
 }
 
-// Edge Report — the old "VELQUOR Intelligence" panel, rebuilt around hard
-// numbers from the trade database next to the generated insights.
-export function EdgeReport({ allRows, insights, loading }: {
-  allRows:  Trade[]
-  insights: VelquorInsight[]
-  loading:  boolean
-}) {
-  const b = useMemo(() => computeBreakdowns(allRows), [allRows])
-  const s = useMemo(() => computeStats(allRows), [allRows])
-
-  // Trading edge only — portfolio/tasks noise stays in its own tabs.
-  const edgeInsights = insights.filter(i => i.category !== 'portfolio')
+// Hard numbers from the trade database — shared by the desktop Edge Report
+// and the mobile overview's Edge Report section.
+export function buildEdgeFacts(allRows: Trade[]): EdgeFact[] {
+  const b = computeBreakdowns(allRows)
+  const s = computeStats(allRows)
 
   const bestSymbol  = bestOf(b.bySymbol)
   const worstSymbol = worstOf(b.bySymbol)
   const bestSession = bestOf(b.bySession)
   const bestSetup   = bestOf(b.bySetup)
 
-  const facts: { label: string; value: string; sub?: string; color?: string }[] = []
+  const facts: EdgeFact[] = []
   if (bestSymbol)  facts.push({ label: 'Best instrument',  value: bestSymbol.key,  sub: `+€${bestSymbol.netPnl.toFixed(0)} · ${bestSymbol.winRate.toFixed(0)}% WR · ${bestSymbol.trades} trades`, color: 'var(--gr2)' })
   if (worstSymbol && worstSymbol.netPnl < 0) facts.push({ label: 'Worst instrument', value: worstSymbol.key, sub: `€${worstSymbol.netPnl.toFixed(0)} · ${worstSymbol.winRate.toFixed(0)}% WR · ${worstSymbol.trades} trades`, color: 'var(--re)' })
-  if (bestSession) facts.push({ label: 'Best session',     value: bestSession.key, sub: `+€${bestSession.netPnl.toFixed(0)} · ${bestSession.winRate.toFixed(0)}% WR`, color: 'var(--gr2)' })
-  if (bestSetup)   facts.push({ label: 'Best setup',       value: bestSetup.key,   sub: `€${bestSetup.expectancy.toFixed(0)}/trade expectancy`, color: 'var(--gr2)' })
+  if (bestSession) facts.push({ label: 'Best session',     value: prettySession(bestSession.key), sub: `+€${bestSession.netPnl.toFixed(0)} · ${bestSession.winRate.toFixed(0)}% WR`, color: 'var(--gr2)' })
+  if (bestSetup)   facts.push({ label: 'Best setup',       value: bestSetup.key,   sub: `avg €${bestSetup.expectancy.toFixed(0)} per trade`, color: 'var(--gr2)' })
   if (s && s.totalTrades >= 5) {
     facts.push({
       label: 'Profit factor',
@@ -73,7 +78,7 @@ export function EdgeReport({ allRows, insights, loading }: {
       color: s.avgWin >= s.avgLoss ? 'var(--gr2)' : 'var(--re)',
     })
     facts.push({
-      label: 'Expectancy',
+      label: 'Avg profit per trade',
       value: `€${s.expectancy.toFixed(2)}/trade`,
       sub:   `Across ${s.totalTrades} trades (break-evens excluded)`,
       color: s.expectancy >= 0 ? 'var(--gr2)' : 'var(--re)',
@@ -86,6 +91,21 @@ export function EdgeReport({ allRows, insights, loading }: {
   }
   if (b.bestCombo) facts.push({ label: 'Strongest combo',  value: b.bestCombo.label, sub: `+€${b.bestCombo.netPnl.toFixed(0)} · ${b.bestCombo.winRate.toFixed(0)}% WR`, color: 'var(--gr2)' })
   if (b.worstCombo) facts.push({ label: 'Most damaging combo', value: b.worstCombo.label, sub: `€${b.worstCombo.netPnl.toFixed(0)} · ${b.worstCombo.winRate.toFixed(0)}% WR`, color: 'var(--re)' })
+  return facts
+}
+
+// Edge Report — the old "VELQUOR Intelligence" panel, rebuilt around hard
+// numbers from the trade database next to the generated insights.
+export function EdgeReport({ allRows, insights, loading }: {
+  allRows:  Trade[]
+  insights: VelquorInsight[]
+  loading:  boolean
+}) {
+  const facts = useMemo(() => buildEdgeFacts(allRows), [allRows])
+
+  // Day-trading only — anything derived from portfolio holdings, journal
+  // streaks, or tasks stays in its own tab.
+  const edgeInsights = insights.filter(i => i.source === 'trades')
 
   const hasAnything = facts.length > 0 || edgeInsights.length > 0
 

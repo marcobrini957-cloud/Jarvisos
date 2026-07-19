@@ -61,7 +61,7 @@ export default function PeriodMetricCard({
       )}
 
       {/* Title + period selector */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="label-caps">{title}</p>
 
         <div className="flex items-center" style={{ gap: '1px', background: 'var(--s3)', borderRadius: '6px', padding: '2px' }}>

@@ -12,6 +12,7 @@ import { useUserProfile }     from '@/context/UserProfileContext'
 import { generateInsights }   from '@/lib/intelligence'
 import { formatValue }        from '@/lib/utils/formatting'
 import InsightCard            from '@/components/ui/InsightCard'
+import { buildEdgeFacts, Fact } from './overview/EdgeReport'
 import SessionClock           from '@/components/ui/SessionClock'
 import DailyMaxLoss           from '@/components/ui/DailyMaxLoss'
 import type { Trade }         from '@/types'
@@ -188,6 +189,10 @@ export default function MobileOverviewTab() {
     trades: [...trades, ...allRows.filter(t => t.symbol === 'BALANCE')],
     holdings, journal: entries, tasks, accountBalance: balance, portfolioValue: totalValueEur,
   }), [trades, allRows, holdings, entries, tasks, balance, totalValueEur])
+
+  // Edge Report is day-trading only — portfolio/journal/task insights live in their tabs
+  const edgeInsights = useMemo(() => insights.filter(i => i.source === 'trades'), [insights])
+  const edgeFacts    = useMemo(() => buildEdgeFacts(allRows), [allRows])
 
   const monthPnl    = stats?.monthPnl ?? 0
   const monthPnlPct = balance > 0 ? (monthPnl / balance) * 100 : 0
@@ -383,15 +388,20 @@ export default function MobileOverviewTab() {
         </div>
       )}
 
-      {/* ── VELQUOR Insights (top 2) ────────────────────────────── */}
-      {insights.length > 0 && (
+      {/* ── Edge Report — day-trading insights + hard numbers ───── */}
+      {(edgeInsights.length > 0 || edgeFacts.length > 0) && (
         <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid rgba(255,176,48,0.15)' }}>
           <span style={{ fontSize: '10px', color: 'var(--go2)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>
-            VELQUOR · {insights.length} insight{insights.length !== 1 ? 's' : ''}
+            Edge Report
           </span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {insights.slice(0, 2).map(i => <InsightCard key={i.id} insight={i} compact />)}
+            {edgeInsights.slice(0, 3).map(i => <InsightCard key={i.id} insight={i} compact />)}
           </div>
+          {edgeFacts.length > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: edgeInsights.length > 0 ? '10px' : 0 }}>
+              {edgeFacts.slice(0, 6).map((f, i) => <Fact key={i} {...f} />)}
+            </div>
+          )}
         </div>
       )}
 

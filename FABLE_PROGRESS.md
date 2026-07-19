@@ -756,3 +756,46 @@ last_seen 2026-07-17T12:00. Never fire test signals at groups without
 checking user_id ownership first; a stray signal into a real FTMO
 challenge would be catastrophic. Marco's real pair = Copy Group 1
 (5121585 → 5143547).
+
+---
+# 2026-07-19 (3) — Edge Report truth fix + trades-only filter + mobile pass
+
+**The "Difficult month at 23.1%" bug (Marco: "I'm not in a red month"):**
+lib/intelligence.ts computed win rate as wins/ALL trades — Marco's July is
+3 wins, 0 losses, 10 break-evens, +€109.51, and the formula called that
+23.1% and "difficult". New decidedStats() helper: win rate = wins/(wins+
+losses), break-evens excluded BOTH sides → his July is 100%. Monthly
+insight now judges P&L AND decided win rate (a green month is never
+"difficult"); removed hardcoded "Gold is your stronger instrument" and
+"60% target" fossils. ALL win-rate denominators in intelligence.ts
+(instruments, sessions, day-of-week, emotions, plan, setups) now decided-
+only, messages rewritten in plain English ("Gold is working much better
+for you than Nasdaq: 54% vs 32% of decided trades won"). Regression tests
+in tests/intelligence.test.ts (68 total pass).
+
+**Portfolio purge:** VelquorInsight gained `source: trades|portfolio|
+journal|tasks`; every push tagged. Edge Report (desktop + mobile) filters
+source==='trades' — the gold-leverage/tech-concentration warnings
+(category 'warning' but holdings-derived) can never leak in again. Fact
+labels de-jargoned: Expectancy → "Avg profit per trade", setup sub "avg
+€X per trade", session keys prettified (london → London).
+
+**Mobile (390px audit, all 9 tabs, seg screenshots via inner-container
+scroll — window.scrollTo does NOTHING, DashboardShell scrolls inside):**
+- MobileOverviewTab: generic "VELQUOR Insights" section → real Edge
+  Report (trades-filtered insights + shared buildEdgeFacts() 2-col grid;
+  fact builder extracted from overview/EdgeReport.tsx for reuse)
+- PeriodMetricCard D/W/M/Q/Y pills clipped on narrow cards → header
+  flex-wrap (pills drop below title)
+- Trading Live Chart: 480px fixed → .tv-chart-wrap class, 340px ≤768px
+  (the consent placeholder alone was ~1250px of dead space on phones)
+- Portfolio holdings header ALLOCATION/CURRENT overlapped → ellipsis +
+  scroll min-width 480→560
+- Copy "Host in Cloud" button wrapped 3 lines → nowrap
+- Clean already: Journal, Discipline (Trader DNA), News, Tasks, Analyst,
+  Copy — zero horizontal overflow anywhere (scrollW 390 on all tabs)
+- AdvancedChart height prop widened to number|string
+E2e gotchas catalogued: greeting modal key vq_greeting_date (toDateString
+format), suppress via addInitScript with vq-cookie-consent +
+vq-analyst-intro-seen; Playwright text= locators flaky on the bottom nav
+→ jsClick via evaluate.
