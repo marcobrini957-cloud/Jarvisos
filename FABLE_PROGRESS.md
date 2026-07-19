@@ -891,3 +891,31 @@ keep working, just without shots.
 Gotcha hit: `git add -A` swallowed bridge/node_modules (root .gitignore
 had only /node_modules) — amended + force-pushed, .gitignore now has
 bare node_modules/.
+
+---
+# 2026-07-19 (7) — Full-site audit (Marco: "check everything, Overview → Analyst")
+
+Playwright vs PRODUCTION as fable-mobiletest (ultra, seeded), desktop
+1440px + iPhone 13. RESULT: healthy across the board.
+
+- All 9 tabs render, zero page crashes, desktop AND mobile (scrollWidth
+  390 on every mobile tab — no horizontal overflow anywhere).
+- Interactions verified: trade row → journal modal (new whole-row
+  click), symbol filter, pagination (1/3→2/3), journal calendar day →
+  EntryModal (day cells are <button>s — text-div locators miss them),
+  task create/complete/delete round-trip, Analyst chat replied with
+  real data ("23 trades in the last 30 days"), Copy tab shows group +
+  hosting states, News weekend empty state correct.
+- Public pages all 200: / /pricing /impressum /privacy /terms /login
+  /onboarding.
+- FIXED during audit: React #418 hydration error on every dashboard
+  load — SessionClock (seconds + countdown) and News tri-city clocks
+  render time strings that can't match prerender; suppressHydrationWarning
+  on those spans. Was recoverable/invisible but polluted the console.
+- Known remaining noise (NOT bugs, documented decisions):
+  1. POST /api/mt5-sync?quick=true → 500 on dashboard load (legacy
+     MetaAPI Topbar polling; MetaAPI deleted only after Instant Connect
+     declared proven — TOMORROW.md D.12).
+  2. Supabase auth login can rate-limit brief bursts (e2e scripts hit
+     it; real users won't).
+- Audit artifacts: /tmp/vq-e2e/audit/*.png + report-desktop.json.
