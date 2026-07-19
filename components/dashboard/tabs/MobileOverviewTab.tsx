@@ -12,6 +12,8 @@ import { useUserProfile }     from '@/context/UserProfileContext'
 import { generateInsights }   from '@/lib/intelligence'
 import { formatValue }        from '@/lib/utils/formatting'
 import InsightCard            from '@/components/ui/InsightCard'
+import EquityCurveChart       from '@/components/ui/EquityCurveChart'
+import DailyPnLChart          from '@/components/ui/DailyPnLChart'
 import { buildEdgeFacts, Fact } from './overview/EdgeReport'
 import SessionClock           from '@/components/ui/SessionClock'
 import DailyMaxLoss           from '@/components/ui/DailyMaxLoss'
@@ -42,62 +44,6 @@ function WinRing({ wr }: { wr: number }) {
       <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: `conic-gradient(${color} ${deg}deg, var(--s3) ${deg}deg)`, boxShadow: `0 0 12px ${glow}` }} />
       <div style={{ position: 'absolute', inset: '7px', borderRadius: '50%', background: 'var(--s1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ color, fontSize: '12px', fontWeight: 700 }}>{pct.toFixed(0)}%</span>
-      </div>
-    </div>
-  )
-}
-
-// ── Weekly Mini Chart ─────────────────────────────────────────────────────────
-
-function WeeklyMiniChart({ weeklyPnl }: { weeklyPnl: number[] }) {
-  const maxAbs   = Math.max(1, ...weeklyPnl.map(Math.abs))
-  const totalPnl = weeklyPnl.reduce((s, v) => s + v, 0)
-  const now = new Date()
-  const mon = new Date(now)
-  mon.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1))
-  mon.setHours(0, 0, 0, 0)
-  const labels = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(mon)
-    d.setDate(d.getDate() - (6 - i) * 7)
-    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  })
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '11px', color: 'var(--t3)', letterSpacing: '0.07em', textTransform: 'uppercase', fontWeight: 600 }}>Last 7 Weeks</span>
-        <span style={{ fontSize: '14px', fontWeight: 700, color: totalPnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
-          {totalPnl >= 0 ? '+' : ''}€{totalPnl.toFixed(0)}
-        </span>
-      </div>
-      <div style={{ position: 'relative', height: '56px' }}>
-        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'var(--bd2)' }} />
-        <div style={{ display: 'flex', gap: '4px', height: '100%' }}>
-          {weeklyPnl.map((pnl, i) => {
-            const h   = Math.max(4, (Math.abs(pnl) / maxAbs) * 24)
-            const pos = pnl >= 0
-            const cur = i === 6
-            const col = pos ? 'var(--gr2)' : 'var(--re)'
-            return (
-              <div key={i} title={`${labels[i]}: ${pnl >= 0 ? '+' : ''}€${pnl.toFixed(2)}`}
-                style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ height: '28px', display: 'flex', alignItems: 'flex-end', width: '100%' }}>
-                  {pos && <div style={{ width: '100%', height: `${h}px`, background: col, borderRadius: '3px 3px 0 0', opacity: cur ? 1 : 0.35, boxShadow: cur ? `0 -3px 8px ${col}66` : 'none' }} />}
-                </div>
-                <div style={{ height: '28px', display: 'flex', alignItems: 'flex-start', width: '100%' }}>
-                  {!pos && <div style={{ width: '100%', height: `${h}px`, background: col, borderRadius: '0 0 3px 3px', opacity: cur ? 1 : 0.35, boxShadow: cur ? `0 3px 8px ${col}66` : 'none' }} />}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: '4px' }}>
-        {labels.map((lbl, i) => (
-          <div key={i} style={{ flex: 1, textAlign: 'center' }}>
-            <span style={{ fontSize: '8px', color: i === 6 ? 'var(--t2)' : 'var(--t3)', fontWeight: i === 6 ? 600 : 400, whiteSpace: 'nowrap' }}>{lbl}</span>
-          </div>
-        ))}
       </div>
     </div>
   )
@@ -196,7 +142,6 @@ export default function MobileOverviewTab() {
 
   const monthPnl    = stats?.monthPnl ?? 0
   const monthPnlPct = balance > 0 ? (monthPnl / balance) * 100 : 0
-  const weeklyPnl   = stats?.weeklyPnl ?? Array(7).fill(0)
 
   const todayColor = todayPnl > 0 ? 'var(--gr2)' : todayPnl < 0 ? 'var(--re)' : 'var(--t2)'
   const monthColor = monthPnl >= 0 ? 'var(--gr2)' : 'var(--re)'
@@ -309,9 +254,16 @@ export default function MobileOverviewTab() {
         </div>
       </div>
 
-      {/* ── Weekly Chart ───────────────────────────────────────── */}
+      {/* ── Equity Curve (same data as desktop, period-selectable) ── */}
       <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid var(--bd2)' }}>
-        <WeeklyMiniChart weeklyPnl={weeklyPnl} />
+        <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>Equity Curve</span>
+        <EquityCurveChart days={30} height={140} showStats />
+      </div>
+
+      {/* ── Daily P&L — 30 days ────────────────────────────────── */}
+      <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid var(--bd2)' }}>
+        <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>Daily P&L — 30 Days</span>
+        <DailyPnLChart days={30} height={130} showStats />
       </div>
 
       {/* ── Daily Max Loss ─────────────────────────────────────── */}

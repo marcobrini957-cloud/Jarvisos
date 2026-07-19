@@ -799,3 +799,16 @@ E2e gotchas catalogued: greeting modal key vq_greeting_date (toDateString
 format), suppress via addInitScript with vq-cookie-consent +
 vq-analyst-intro-seen; Playwright text= locators flaky on the bottom nav
 → jsClick via evaluate.
+
+---
+# 2026-07-19 (4) — Mobile Overview: real charts instead of 7-week bars
+
+Marco asked whether mobile has a separate Overview (yes — MobileOverviewTab
+swaps in <768px; other tabs are shared responsive) and wanted the "Last 7
+Weeks" mini bars replaced with the desktop charts. Done: WeeklyMiniChart
+component deleted, replaced with the SAME components desktop uses —
+EquityCurveChart (1W/1M/3M/1Y selector, deposit-aware "+€X trading" split,
+Max DD) and DailyPnLChart (30 days, green/red day count, touch tooltip).
+Both are viewBox SVGs → fully fluid at 390px, verified with screenshots.
+Mobile Overview now: header → stat cards → win ring → Equity Curve →
+Daily P&L → Daily Risk → Today's Focus → Edge Report.
