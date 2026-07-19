@@ -113,12 +113,13 @@ export default function SessionClock() {
       {/* Divider */}
       <div style={{ width: '1px', height: '16px', background: 'var(--bd2)' }} />
 
-      {/* Times */}
+      {/* Times — second-precision strings can never match between server
+          prerender and hydration, hence the suppression (React #418) */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <span style={{ fontSize: '12px', color: 'var(--t2)', fontFamily: 'monospace', letterSpacing: '0.02em' }}>
+        <span suppressHydrationWarning style={{ fontSize: '12px', color: 'var(--t2)', fontFamily: 'monospace', letterSpacing: '0.02em' }}>
           {formatLocalTime()} CET
         </span>
-        <span style={{ fontSize: '11px', color: 'var(--t3)', fontFamily: 'monospace' }}>
+        <span suppressHydrationWarning style={{ fontSize: '11px', color: 'var(--t3)', fontFamily: 'monospace' }}>
           {formatUTCTime()}
         </span>
       </div>
@@ -130,7 +131,7 @@ export default function SessionClock() {
       {next && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{next.label} in</span>
-          <span style={{
+          <span suppressHydrationWarning style={{
             fontSize: '12px', fontWeight: 700, color: next.color,
             background: `${next.color}15`, padding: '1px 7px', borderRadius: '4px',
             border: `1px solid ${next.color}30`, fontFamily: 'monospace',

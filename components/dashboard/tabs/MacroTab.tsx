@@ -185,7 +185,8 @@ export default function MacroTab() {
           ].map(c => (
             <div key={c.label} style={{ textAlign: 'right' }}>
               <p style={{ fontSize: '9px', color: 'var(--t3)', letterSpacing: '0.12em', margin: 0 }}>{c.label}</p>
-              <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--t1)', margin: '1px 0 0' }}>{clock(c.tz)}</p>
+              {/* second-precision — server/client can never agree (React #418) */}
+              <p suppressHydrationWarning style={{ fontSize: '14px', fontWeight: 700, color: 'var(--t1)', margin: '1px 0 0' }}>{clock(c.tz)}</p>
             </div>
           ))}
         </div>
