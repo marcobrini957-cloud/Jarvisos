@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUserId } from '@/lib/api/auth'
+import { BE_THRESHOLD } from '@/lib/trading/stats'
 
 export const maxDuration = 60
 
@@ -42,8 +43,8 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>, 
   ])
 
   const t = (tradesRes.data ?? [])
-  const wins     = t.filter(x => (x.net_profit ?? 0) > 0)
-  const losses   = t.filter(x => (x.net_profit ?? 0) < 0)
+  const wins     = t.filter(x => (x.net_profit ?? 0) > BE_THRESHOLD)
+  const losses   = t.filter(x => (x.net_profit ?? 0) < -BE_THRESHOLD)
   const winRate  = t.length > 0 ? (wins.length / t.length * 100).toFixed(1) : '0'
   const totalPnl = t.reduce((s, x) => s + (x.net_profit ?? 0), 0).toFixed(2)
   const avgWin   = wins.length   > 0 ? (wins.reduce((s,x)=>s+(x.net_profit??0),0)/wins.length).toFixed(2)   : '0'
@@ -54,7 +55,7 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>, 
     for (const tag of tr.tags ?? []) {
       const s = tagMap.get(tag) ?? { w: 0, t: 0 }
       s.t++
-      if ((tr.net_profit ?? 0) > 0) s.w++
+      if ((tr.net_profit ?? 0) > BE_THRESHOLD) s.w++
       tagMap.set(tag, s)
     }
   }
@@ -67,7 +68,7 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>, 
     const s = tr.session ?? 'unknown'
     const cur = sessionMap.get(s) ?? { w: 0, t: 0 }
     cur.t++
-    if ((tr.net_profit ?? 0) > 0) cur.w++
+    if ((tr.net_profit ?? 0) > BE_THRESHOLD) cur.w++
     sessionMap.set(s, cur)
   }
   const sessionSummary = Array.from(sessionMap.entries())
@@ -173,7 +174,7 @@ WHAT YOU CANNOT DO:
 ✗ Do not guess or fabricate any price levels, RSI values, MA values, or market conditions
 
 WHEN ASKED ABOUT THE MARKET (current prices, bias, "should I trade now?", technical levels):
-Respond like this: "I only have access to your personal trading data — I can't see live prices or market conditions. For current market context, check the Macro tab. What I can tell you is [pivot to something useful from his data — e.g. how he's performed at this time of day, his win rate in this session, etc.]."
+Respond like this: "I only have access to your personal trading data — I can't see live prices or market conditions. For current market context, check the News tab. What I can tell you is [pivot to something useful from his data — e.g. how he's performed at this time of day, his win rate in this session, etc.]."
 
 ═══════════════════════════════════════════
 HOW TO RESPOND

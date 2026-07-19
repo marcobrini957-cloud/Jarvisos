@@ -1,4 +1,5 @@
 import type { Trade, JournalEntry, Task } from '@/types'
+import { BE_THRESHOLD } from '@/lib/trading/stats'
 import type { HoldingWithPrice } from '@/hooks/usePortfolio'
 
 export interface VelquorInsight {
@@ -63,7 +64,7 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
   const monthStart = startOf('month')
   const monthTrades = closed.filter(t => t.close_time && new Date(t.close_time) >= monthStart)
   if (monthTrades.length >= 5) {
-    const wins    = monthTrades.filter(t => (t.net_profit ?? 0) > 0).length
+    const wins    = monthTrades.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length
     const winRate = (wins / monthTrades.length) * 100
 
     if (winRate >= 65) {
@@ -86,8 +87,8 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
     const gold   = closed.filter(t => t.symbol?.includes('XAU'))
     const nasdaq = closed.filter(t => t.symbol?.includes('NAS') || t.symbol?.includes('US100'))
     if (gold.length >= 3 && nasdaq.length >= 3) {
-      const goldWR   = (gold.filter(t => (t.net_profit ?? 0) > 0).length   / gold.length)   * 100
-      const nasdaqWR = (nasdaq.filter(t => (t.net_profit ?? 0) > 0).length / nasdaq.length) * 100
+      const goldWR   = (gold.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length   / gold.length)   * 100
+      const nasdaqWR = (nasdaq.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length / nasdaq.length) * 100
 
       if (goldWR > nasdaqWR + 15) {
         push({ category: 'trading', priority: 'medium',
@@ -106,8 +107,8 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
     const london = closed.filter(t => t.session === 'london')
     const ny     = closed.filter(t => t.session === 'new_york')
     if (london.length >= 3 && ny.length >= 3) {
-      const londonWR = (london.filter(t => (t.net_profit ?? 0) > 0).length / london.length) * 100
-      const nyWR     = (ny.filter(t => (t.net_profit ?? 0) > 0).length     / ny.length)     * 100
+      const londonWR = (london.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length / london.length) * 100
+      const nyWR     = (ny.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length     / ny.length)     * 100
 
       if (londonWR > nyWR + 15) {
         push({ category: 'trading', priority: 'medium',
@@ -143,11 +144,11 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
   const last3 = recent.slice(0, 3)
   const last5 = recent.slice(0, 5)
 
-  if (last3.length === 3 && last3.every(t => (t.net_profit ?? 0) < 0)) {
+  if (last3.length === 3 && last3.every(t => (t.net_profit ?? 0) < -BE_THRESHOLD)) {
     push({ category: 'warning', priority: 'high',
       message: '3 losses in a row detected. Step away for at least 30 minutes before considering another trade. Revenge trading costs you.',
       action: 'Take a break' })
-  } else if (last5.length === 5 && last5.filter(t => (t.net_profit ?? 0) < 0).length >= 4) {
+  } else if (last5.length === 5 && last5.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length >= 4) {
     push({ category: 'warning', priority: 'high',
       message: '4 of your last 5 trades are losses. Today is not your day. Protect your capital — consider stopping for the day.',
       action: 'Stop trading for today' })
@@ -184,7 +185,7 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
       if (d === 0 || d === 6) continue          // skip weekends
       if (!dayMap[d]) dayMap[d] = { wins: 0, total: 0 }
       dayMap[d].total++
-      if ((t.net_profit ?? 0) > 0) dayMap[d].wins++
+      if ((t.net_profit ?? 0) > BE_THRESHOLD) dayMap[d].wins++
     }
     const days = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
     const eligible = Object.entries(dayMap).filter(([, v]) => v.total >= 3)
@@ -234,7 +235,7 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
       const s = emotionMap.get(e) ?? { wins: 0, total: 0, pnl: 0 }
       s.total++
       s.pnl += t.net_profit ?? 0
-      if ((t.net_profit ?? 0) > 0) s.wins++
+      if ((t.net_profit ?? 0) > BE_THRESHOLD) s.wins++
       emotionMap.set(e, s)
     }
     const eligible = [...emotionMap.entries()].filter(([, v]) => v.total >= 3)
@@ -263,8 +264,8 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
     const followed    = planAnnotated.filter(t => t.followed_plan === true)
     const notFollowed = planAnnotated.filter(t => t.followed_plan === false)
     if (followed.length >= 3 && notFollowed.length >= 3) {
-      const followedWR    = (followed.filter(t => (t.net_profit ?? 0) > 0).length    / followed.length)    * 100
-      const notFollowedWR = (notFollowed.filter(t => (t.net_profit ?? 0) > 0).length / notFollowed.length) * 100
+      const followedWR    = (followed.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length    / followed.length)    * 100
+      const notFollowedWR = (notFollowed.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length / notFollowed.length) * 100
       const followedAvg   = followed.reduce((s, t) => s + (t.net_profit ?? 0), 0) / followed.length
       const notFollowedAvg = notFollowed.reduce((s, t) => s + (t.net_profit ?? 0), 0) / notFollowed.length
 
@@ -289,7 +290,7 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
       const v = setupMap.get(s) ?? { wins: 0, total: 0, pnl: 0 }
       v.total++
       v.pnl += t.net_profit ?? 0
-      if ((t.net_profit ?? 0) > 0) v.wins++
+      if ((t.net_profit ?? 0) > BE_THRESHOLD) v.wins++
       setupMap.set(s, v)
     }
     const eligible = [...setupMap.entries()].filter(([, v]) => v.total >= 3)

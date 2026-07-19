@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { FFEvent } from '@/lib/forex-factory/calendar'
+import { briefFor } from '@/lib/news/eventBriefs'
 
 // ── Bloomberg-style economic calendar: red-folder (high-impact) releases only ──
 
@@ -61,35 +62,46 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
         const at = eventDate(e).getTime()
         const past = at < now - 30 * 60_000
         const isNext = !past && at > now
+        const brief = briefFor(e.title)
         return (
-          <div key={i} className="macro-row" style={{
-            display: 'grid',
-            gridTemplateColumns: '68px 20px 44px 1fr 96px 96px 96px',
-            gap: '10px', alignItems: 'center',
+          <div key={i} style={{
             padding: '9px 14px',
             borderBottom: '1px solid var(--bd)',
             opacity: past ? 0.45 : 1,
             background: isNext && at - now < 3600_000 ? 'rgba(255,61,80,0.04)' : 'transparent',
           }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--t1)', ...MONO }}>{eventTime(e)}</span>
-            <span title="High impact" style={{
-              width: '9px', height: '9px', borderRadius: '2px', background: 'var(--re)',
-              boxShadow: past ? 'none' : '0 0 6px rgba(255,61,80,0.6)',
-            }} />
-            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.06em', ...MONO }}>{e.currency}</span>
-            <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {e.title}
-            </span>
-            {[
-              { label: 'ACT', value: e.actual,   color: actualTone(e) },
-              { label: 'FCT', value: e.forecast, color: 'var(--t2)' },
-              { label: 'PRV', value: e.previous, color: 'var(--t3)' },
-            ].map(cell => (
-              <span key={cell.label} style={{ fontSize: '12px', textAlign: 'right', ...MONO, color: cell.value ? cell.color : 'var(--t3)' }}>
-                <span style={{ fontSize: '8.5px', color: 'var(--t3)', marginRight: '6px', letterSpacing: '0.08em' }}>{cell.label}</span>
-                {cell.value || '—'}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '68px 20px 44px 1fr 96px 96px 96px',
+              gap: '10px', alignItems: 'center',
+            }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--t1)', ...MONO }}>{eventTime(e)}</span>
+              <span title="High impact" style={{
+                width: '9px', height: '9px', borderRadius: '2px', background: 'var(--re)',
+                boxShadow: past ? 'none' : '0 0 6px rgba(255,61,80,0.6)',
+              }} />
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.06em', ...MONO }}>{e.currency}</span>
+              <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {e.title}
               </span>
-            ))}
+              {[
+                { label: 'ACT', value: e.actual,   color: actualTone(e) },
+                { label: 'FCT', value: e.forecast, color: 'var(--t2)' },
+                { label: 'PRV', value: e.previous, color: 'var(--t3)' },
+              ].map(cell => (
+                <span key={cell.label} style={{ fontSize: '12px', textAlign: 'right', ...MONO, color: cell.value ? cell.color : 'var(--t3)' }}>
+                  <span style={{ fontSize: '8.5px', color: 'var(--t3)', marginRight: '6px', letterSpacing: '0.08em' }}>{cell.label}</span>
+                  {cell.value || '—'}
+                </span>
+              ))}
+            </div>
+            {/* One-glance explainer: what it is + what a hot/miss print does */}
+            <p style={{
+              margin: '4px 0 0', paddingLeft: '78px',
+              fontSize: '11px', color: 'var(--t3)', lineHeight: 1.5,
+            }}>
+              {brief.what} <span style={{ color: 'var(--t2)' }}>{brief.effect}</span>
+            </p>
           </div>
         )
       })}
@@ -157,10 +169,10 @@ export default function MacroTab() {
           }} />
           <div>
             <h2 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--t1)', letterSpacing: '0.02em', margin: 0 }}>
-              ECONOMIC CALENDAR
+              MARKET NEWS
             </h2>
             <p style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.1em', margin: '2px 0 0' }}>
-              USD · HIGH IMPACT ONLY · FOREXFACTORY FEED
+              USD · RED FOLDERS ONLY · FOREXFACTORY FEED
             </p>
           </div>
         </div>
@@ -199,6 +211,10 @@ export default function MacroTab() {
                 {nextEvent.currency} · {eventDate(nextEvent).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} {eventTime(nextEvent)}
                 {nextEvent.forecast && ` · FCT ${nextEvent.forecast}`}
                 {nextEvent.previous && ` · PRV ${nextEvent.previous}`}
+              </p>
+              <p style={{ fontSize: '12px', color: 'var(--t3)', margin: '6px 0 0', lineHeight: 1.55, maxWidth: '560px' }}>
+                {briefFor(nextEvent.title).what}{' '}
+                <span style={{ color: 'var(--t2)' }}>{briefFor(nextEvent.title).effect}</span>
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>

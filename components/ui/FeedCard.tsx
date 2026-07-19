@@ -12,7 +12,7 @@ interface FeedCardProps {
 const TYPE_LABEL: Record<FeedType, string> = {
   trading:     'Trading',
   portfolio:   'Portfolio',
-  macro:       'Macro',
+  macro:       'News',
   opportunity: 'Opportunity',
   life:        'Life',
 }

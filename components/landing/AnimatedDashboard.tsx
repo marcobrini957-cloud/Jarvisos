@@ -157,7 +157,7 @@ const TAB_ICONS: string[] = [
 export function AnimatedDashboard() {
   const TABS = [
     { name: 'Overview' }, { name: 'Trading' }, { name: 'Portfolio' }, { name: 'Journal' },
-    { name: 'Macro' }, { name: 'Discipline' }, { name: 'Tasks' }, { name: 'Copy' }, { name: 'Ask VELQUOR', gold: true },
+    { name: 'News' }, { name: 'Discipline' }, { name: 'Tasks' }, { name: 'Copy' }, { name: 'Analyst', gold: true },
   ]
   const SCENE_TABS = [0, 1, 3, 7, 8]
   const STEPS = SCENE_TABS.length
@@ -987,14 +987,14 @@ export function AnimatedDashboard() {
                   <LogoMark size={14} />
                 </span>
                 <div>
-                  <p style={{ margin: 0, color: '#E8B84B', fontSize: '9.5px', fontWeight: 800 }}>VELQUOR AI</p>
+                  <p style={{ margin: 0, color: '#E8B84B', fontSize: '9.5px', fontWeight: 800 }}>VELQUOR Analyst</p>
                   <p style={{ margin: '1px 0 0', color: 'var(--t3)', fontSize: '7px', lineHeight: 1.4 }}>Your personal trading coach. VELQUOR analyses your trade history, journal entries, and portfolio data to give you real, specific insights about your performance, habits, and psychology.</p>
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '9px' }}>
                 {/* Ask card */}
                 <div data-hot style={{ ...card, padding: '9px 12px', display: 'flex', flexDirection: 'column', ...stag(1) }}>
-                  <p style={{ margin: '0 0 6px', color: 'var(--t1)', fontSize: '9px', fontWeight: 700 }}>Ask VELQUOR</p>
+                  <p style={{ margin: '0 0 6px', color: 'var(--t1)', fontSize: '9px', fontWeight: 700 }}>Ask the Analyst</p>
                   {!answerOn ? (
                     <>
                       <p style={{ margin: '0 0 5px', color: 'var(--t3)', fontSize: '7px' }}>Quick questions:</p>
@@ -1035,7 +1035,7 @@ export function AnimatedDashboard() {
                   {/* Input */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '7px', ...stag(7) }}>
                     <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '7px', padding: '5.5px 10px', fontSize: '7.5px', color: qChars > 0 ? 'var(--t1)' : 'var(--t3)' }}>
-                      {qChars > 0 ? VELQUOR_Q.slice(0, qChars) : 'Ask VELQUOR about your trading, performance, or anything...'}
+                      {qChars > 0 ? VELQUOR_Q.slice(0, qChars) : 'Ask the Analyst about your trading, performance, or anything...'}
                       {qChars > 0 && qChars < VELQUOR_Q.length && (
                         <span style={{ display: 'inline-block', width: '1.5px', height: '8px', background: 'var(--t1)', marginLeft: '1px', animation: 'vq-caret 0.7s step-end infinite', verticalAlign: 'text-bottom' }} />
                       )}

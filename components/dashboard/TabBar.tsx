@@ -12,7 +12,7 @@ const TABS: { id: number; label: string; icon: React.ComponentType<{ size?: numb
   { id: 1, label: 'Trading',     icon: IconChartCandle     },
   { id: 2, label: 'Portfolio',   icon: IconBriefcase       },
   { id: 3, label: 'Journal',     icon: IconNotebook        },
-  { id: 4, label: 'Macro',       icon: IconWorld           },
+  { id: 4, label: 'News',       icon: IconWorld           },
   { id: 5, label: 'Discipline',  icon: IconTargetArrow     },
   { id: 7, label: 'Tasks',       icon: IconChecklist       },
   { id: 8, label: 'Copy',        icon: IconArrowsRightLeft },

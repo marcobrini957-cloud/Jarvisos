@@ -5,6 +5,7 @@ import { useJournalEntries } from '@/hooks/useJournalEntries'
 import { tradeResult } from '@/hooks/useTrades'
 import type { JournalEntry } from '@/types'
 import { type Mood, MOOD_COLOR, MOODS } from './helpers'
+import VoiceDictationButton from '@/components/ui/VoiceDictationButton'
 
 // ── Add / Edit Entry Modal ────────────────────────────────────────────────────
 
@@ -142,9 +143,12 @@ export function EntryModal({
 
         {/* Text body */}
         <div>
-          <p style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500, marginBottom: '8px' }}>
-            Journal Entry <span style={{ color: 'var(--t3)' }}>— how was your trading day? What did you feel?</span>
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+            <p style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500, margin: 0 }}>
+              Journal Entry <span style={{ color: 'var(--t3)' }}>— how was your trading day? What did you feel?</span>
+            </p>
+            <VoiceDictationButton onText={t => setBody(prev => (prev ? prev.trimEnd() + '\n\n' : '') + t)} />
+          </div>
           <textarea
             value={body}
             onChange={e => setBody(e.target.value)}

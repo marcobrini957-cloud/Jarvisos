@@ -10,6 +10,7 @@ import Badge from '@/components/ui/Badge'
 import ScreenshotGallery from '@/components/ui/ScreenshotGallery'
 import SessionAnalyticsChart from '@/components/ui/SessionAnalyticsChart'
 import type { Trade } from '@/types'
+import { BE_THRESHOLD } from '@/lib/trading/stats'
 import {
   filterByPeriod, calcPnl, calcWinRate, calcAvgRR, calcMaxDrawdown,
   fmtPnl, fmtPips, fmtDate, fmtTime, MON, buildHeatmap, heatColor,
@@ -43,7 +44,7 @@ export default function TradingTab() {
     for (const tag of t.tags ?? []) {
       const s = tagStats.get(tag) ?? { wins: 0, total: 0 }
       s.total++
-      if ((t.net_profit ?? 0) > 0) s.wins++
+      if ((t.net_profit ?? 0) > BE_THRESHOLD) s.wins++
       tagStats.set(tag, s)
     }
   }
@@ -225,10 +226,10 @@ export default function TradingTab() {
           getValue={(p) => {
             const ops = filterByPeriod(balanceOps, p)
             const withdrawn = ops
-              .filter(t => (t.net_profit ?? 0) < 0)
+              .filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD)
               .reduce((s, t) => s + Math.abs(t.net_profit ?? 0), 0)
             const deposited = ops
-              .filter(t => (t.net_profit ?? 0) > 0)
+              .filter(t => (t.net_profit ?? 0) > BE_THRESHOLD)
               .reduce((s, t) => s + (t.net_profit ?? 0), 0)
             const label = deposited > 0
               ? `+€${deposited.toFixed(2)} deposited`

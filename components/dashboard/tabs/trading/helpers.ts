@@ -134,7 +134,7 @@ export function buildHeatmap(trades: Trade[]) {
         const d = new Date(t.open_time).getDay()
         return d === dayIndex
       })
-      const wins    = filtered.filter(t => (t.net_profit ?? 0) > 0)
+      const wins    = filtered.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD)
       const winRate = filtered.length > 0 ? wins.length / filtered.length : 0
       cells.push({ session: label, day, winRate, trades: filtered.length })
     }

@@ -656,3 +656,57 @@ animations/blur + backdrop-filter (main repaint cost on phones) +
 prefers-reduced-motion. Playwright audit: zero horizontal-overflow elements
 at 390px. Screenshots verified desktop+mobile via webkit (test acct password
 reset via GoTrue admin; welcome modal dismiss = click LET'S WIN).
+
+---
+# 2026-07-19 — Finishing the cut-off session: News tab, dictation, honest stats
+
+Yesterday's session hit the usage limit mid-work; this session completed and
+verified all of it.
+
+**Break-even unification (BE_THRESHOLD everywhere):** every remaining raw
+`net_profit > 0` win check now uses BE_THRESHOLD (±€10) — velquor/chat
+context builder, lib/intelligence.ts insights, trading heatmap + tag stats,
+TradingTab balance-ops filter. Win rates no longer count break-evens as wins
+anywhere.
+
+**Equity curve is deposit-aware:** /api/account/snapshots also sums
+symbol='BALANCE' trades in the period and returns netDeposits;
+EquityCurveChart shows "+€X (+Y%) trading" (delta minus funding) plus a
+muted "€Z deposited/withdrawn" note. A deposit is not a win.
+
+**Macro → News rename (complete sweep):** TabBar/Sidebar/MobileNav,
+MacroTab header "MARKET NEWS · RED FOLDERS ONLY", landing Nav +
+BeforeAfterMockup + AnimatedDashboard hero (also Ask VELQUOR → Analyst
+there, matching prod), FeedCard chip, pricing feature rows ("Red-folder
+news & economic calendar"), feature cards in all 4 locales (en/de/zh/es),
+and both AI system prompts ("check the News tab").
+
+**Event briefs (lib/news/eventBriefs.ts):** regex-matched one-line
+explainers per red-folder release — what the number is + what a hot/miss
+print does to USD/gold/Nasdaq. Rendered under every calendar row and in
+the NEXT RELEASE hero. Verified via mocked /api/macro (live feed had 0
+USD red folders on Sunday — correct empty state, not a bug).
+
+**Analyst prompt chips:** 4 gold pills under the empty state (Full trend
+analysis / Weakness audit / Psychology check / Risk review) — click drops
+the full prompt into the composer for editing.
+
+**Edge Report + Today's Focus:** portfolio-category insights filtered out
+(trading edge only, 4 shown); new computeStats facts — profit factor with
+health verdict, avg win vs avg loss, expectancy, longest W/L streaks (up
+to 10 facts). TodaysFocus says "Sundays cost you money", not "Suns".
+
+**Voice dictation (Journal):** components/ui/VoiceDictationButton.tsx
+(MediaRecorder, webm/mp4 fallback, elapsed timer, pulse dot) →
+POST /api/journal/transcribe → Groq whisper-large-v3-turbo (auto language
+for EN/DE monologues, 25MB cap, auth + 503 without GROQ_API_KEY). Appends
+transcript to the entry body. E2E PROVEN: synthesized spoken note via
+macOS `say` → POST through logged-in session → perfect transcript back.
+
+**Verification:** tsc clean, 64/64 tests, prod build green. Headless
+screenshots (recipe: chromium + Chrome executablePath, keys map to
+VISIBLE tab order — News=5, Analyst=9, Journal=4; modal opens via
+calendar day click): News briefs, Analyst chips, Journal Dictate button,
+Overview "+8.2% trading" label + Edge Report facts all confirmed. Known
+noise, not ours: /api/mt5-sync 500s = legacy MetaAPI polling (delete per
+TOMORROW.md #12), hydration warning on /login pre-exists.

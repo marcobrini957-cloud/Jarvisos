@@ -50,7 +50,8 @@ export function TodaysFocus({ allRows }: { allRows: Trade[] }) {
   const items = useMemo<FocusItem[]>(() => {
     const out: FocusItem[] = []
     const b = computeBreakdowns(allRows)
-    const todayDow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()]
+    const todayDow  = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()]
+    const todayFull = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()]
 
     // 1. Red-folder news still ahead today
     const upcoming = events
@@ -71,13 +72,13 @@ export function TodaysFocus({ allRows }: { allRows: Trade[] }) {
       if (dow.netPnl < 0) {
         out.push({
           tone:  'warn',
-          title: `${todayDow}s cost you money`,
+          title: `${todayFull}s cost you money`,
           body:  `€${dow.netPnl.toFixed(0)} over ${dow.trades} trades (${dow.winRate.toFixed(0)}% win rate). Size down or demand A+ setups today.`,
         })
       } else if (dow.winRate >= 55) {
         out.push({
           tone:  'good',
-          title: `${todayDow} is one of your better days`,
+          title: `${todayFull} is one of your better days`,
           body:  `+€${dow.netPnl.toFixed(0)} over ${dow.trades} trades (${dow.winRate.toFixed(0)}% win rate). Trade your plan.`,
         })
       }

@@ -17,7 +17,7 @@ const ALL_TABS = [
   { id: 1, label: 'Trading',    icon: '📈' },
   { id: 2, label: 'Portfolio',  icon: '💼' },
   { id: 3, label: 'Journal',    icon: '✍' },
-  { id: 4, label: 'Macro',      icon: '🌐' },
+  { id: 4, label: 'News',      icon: '🌐' },
   { id: 5, label: 'Discipline', icon: '🎯' },
   { id: 7, label: 'Tasks',       icon: '✅' },
   { id: 8, label: 'Copy',        icon: '⇄'  },

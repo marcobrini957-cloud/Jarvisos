@@ -19,7 +19,7 @@ const NAV_ITEMS = [
   { id: 2, icon: IconBuildingBank,    label: 'Portfolio'      },
   { id: 3, icon: IconNotebook,        label: 'Journal'        },
   null,
-  { id: 4, icon: IconWorld,           label: 'Macro'          },
+  { id: 4, icon: IconWorld,           label: 'News'          },
   { id: 5, icon: IconCheckbox,        label: 'Tasks'          },
   { id: 6, icon: IconFlame,           label: 'Habits'         },
   { id: 7, icon: IconClipboardList,   label: 'Weekly Review'  },

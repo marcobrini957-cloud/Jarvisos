@@ -22,6 +22,7 @@ const PERIODS = [
 export default function EquityCurveChart({ days = 30, height = 160, showStats = false }: Props) {
   const [period,  setPeriod]  = useState(days)
   const [points,  setPoints]  = useState<Point[]>([])
+  const [netDeposits, setNetDeposits] = useState(0)
   const [loading, setLoading] = useState(true)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; p: Point } | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
@@ -30,7 +31,7 @@ export default function EquityCurveChart({ days = 30, height = 160, showStats = 
     setLoading(true)
     fetch(`/api/account/snapshots?days=${period}`)
       .then(r => r.json())
-      .then(d => setPoints(d.points ?? []))
+      .then(d => { setPoints(d.points ?? []); setNetDeposits(d.netDeposits ?? 0) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [period])
@@ -115,8 +116,9 @@ export default function EquityCurveChart({ days = 30, height = 160, showStats = 
   const isUp     = endBal >= startBal
   const lineColor = isUp ? 'var(--gr2)' : 'var(--re)'
 
-  // Period P&L + max drawdown (peak-to-trough on balance)
-  const periodPnl = endBal - startBal
+  // Period P&L: balance delta MINUS funding — a deposit is not a win and a
+  // withdrawal is not a loss.
+  const periodPnl = endBal - startBal - netDeposits
   const periodPct = startBal > 0 ? (periodPnl / startBal) * 100 : 0
   let peak = points[0].balance, maxDd = 0
   for (const p of points) {
@@ -151,10 +153,15 @@ export default function EquityCurveChart({ days = 30, height = 160, showStats = 
             <span style={{ fontSize: '22px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', lineHeight: 1 }}>
               €{endBal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: lineColor }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: periodPnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
               {periodPnl >= 0 ? '+' : '−'}€{Math.abs(periodPnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              {' '}({periodPct >= 0 ? '+' : ''}{periodPct.toFixed(1)}%)
+              {' '}({periodPct >= 0 ? '+' : ''}{periodPct.toFixed(1)}%) trading
             </span>
+            {netDeposits !== 0 && (
+              <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
+                {netDeposits > 0 ? '+' : '−'}€{Math.abs(netDeposits).toLocaleString('en-US', { maximumFractionDigits: 0 })} {netDeposits > 0 ? 'deposited' : 'withdrawn'}
+              </span>
+            )}
             <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
               Max DD <span style={{ color: maxDd > 0 ? 'var(--re)' : 'var(--t2)', fontWeight: 600 }}>
                 −€{maxDd.toLocaleString('en-US', { maximumFractionDigits: 0 })} ({maxDdPct.toFixed(1)}%)

@@ -16,6 +16,26 @@ const CAPABILITIES = [
   { label: 'Portfolio & macro', sub: 'Holdings, news, market context' },
 ]
 
+// Click → the full prompt lands in the composer for the user to send/edit.
+const PROMPTS: { label: string; prompt: string }[] = [
+  {
+    label: 'Full trend analysis',
+    prompt: 'Run a full trend analysis on my trading: overall P&L trajectory, win rate by month, whether my performance is improving or degrading, which instruments and sessions drive the trend, and the single clearest change I should make next week.',
+  },
+  {
+    label: 'Weakness audit',
+    prompt: 'Audit my weaknesses: which setups, sessions, days, and emotional states lose me the most money? Rank the top three leaks by euro impact and tell me the concrete rule that would plug each one.',
+  },
+  {
+    label: 'Psychology check',
+    prompt: 'Analyse the link between my journal moods and my trading results. When do I trade my worst — and what early warning signs show up in my own data before a losing streak?',
+  },
+  {
+    label: 'Risk review',
+    prompt: 'Review my risk management: average win vs average loss, position sizing consistency, worst losing streak, and whether my stop placement matches my actual results. Where am I taking too much or too little risk?',
+  },
+]
+
 // Full-screen analyst chat. The intro plays once (localStorage-gated),
 // afterwards the empty state renders without the staggered animation.
 export default function VelquorTab() {
@@ -154,6 +174,27 @@ export default function VelquorTab() {
                     <p style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{c.label}</p>
                     <p style={{ fontSize: '11px', color: 'var(--t3)', margin: '3px 0 0', lineHeight: 1.45 }}>{c.sub}</p>
                   </div>
+                ))}
+              </div>
+
+              <div style={{ ...introStyle(3), display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', marginTop: '4px' }}>
+                {PROMPTS.map(p => (
+                  <button
+                    key={p.label}
+                    onClick={() => {
+                      setInput(p.prompt)
+                      inputRef.current?.focus()
+                    }}
+                    style={{
+                      padding: '7px 14px', borderRadius: '999px', fontSize: '11.5px', fontWeight: 600,
+                      background: 'transparent', border: '1px solid rgba(232,201,106,0.28)',
+                      color: 'var(--go2)', cursor: 'pointer', transition: 'all 0.12s',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,201,106,0.08)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    {p.label}
+                  </button>
                 ))}
               </div>
             </div>
