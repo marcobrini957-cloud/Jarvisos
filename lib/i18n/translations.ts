@@ -130,7 +130,7 @@ const F_PRO: Array<{ text: string; included: boolean }> = [
   { text: 'Behavior correlations',                  included: true  },
   { text: 'PDF trade reports',                      included: true  },
   { text: 'Prop firm tracker',                      included: true  },
-  { text: 'Trade copier (1 group, 1 slave)',         included: true  },
+  { text: 'Trade copier (1 group, 1 follower)',         included: true  },
   { text: 'Priority support',                       included: false },
 ]
 
@@ -147,7 +147,7 @@ const F_ULTRA: Array<{ text: string; included: boolean }> = [
   { text: 'Behavior correlations',                  included: true },
   { text: 'PDF trade reports',                      included: true },
   { text: 'Prop firm tracker',                      included: true },
-  { text: 'Trade copier (3 groups, 5 slaves each)', included: true },
+  { text: 'Trade copier (3 groups, 5 followers each)', included: true },
   { text: 'Priority support',                       included: true },
 ]
 
@@ -196,7 +196,7 @@ const en: LandingT = {
     subtitle: 'Auto-logging, AI behavior analysis, and trade copying — built together and working as one system.',
     items: [
       { title: 'Auto-synced from MT5', desc: 'Every trade, position, and P&L syncs from your MT5 account in real time. No manual entry, no CSV uploads, no spreadsheets. Connect once and it runs forever.' },
-      { title: 'Built-in Trade Copier', desc: 'Mirror every trade from your master MT5 to any number of slave accounts in under 2 seconds. Proportional or fixed lot sizing. Fully managed from your dashboard.' },
+      { title: 'Built-in Trade Copier', desc: 'Mirror every trade from your leader MT5 to any number of follower accounts in under 2 seconds. Proportional or fixed lot sizing. Fully managed from your dashboard.' },
       { title: 'AI behavior analysis', desc: 'VELQUOR correlates your behavior, your strategy, and your trading habits across every trade — and surfaces the exact combinations that win and the ones that lose.' },
       { title: 'Session & setup analytics', desc: 'Instantly see your win rate broken down by London, New York, and Asian session — and by every setup type you trade. Find your real edge in the numbers.' },
       { title: 'Live TradingView charts', desc: 'A full TradingView chart, live ticker tape, and market overview built straight into your dashboard. Watch Gold and NAS100 without leaving your journal.' },
@@ -298,7 +298,7 @@ const en: LandingT = {
     items: [
       { q: 'Do I have to give VELQUOR my MT5 password?', a: 'No. VELQUOR works through an Expert Advisor that runs inside your own MT5 terminal — your broker login never leaves your machine. The EA authenticates with a personal API key and pushes your trade data to your dashboard. You can revoke the key at any time.' },
       { q: 'Which brokers are supported?', a: 'Every broker that offers MetaTrader 5 — IC Markets, Pepperstone, Blueberry, Vantage, FTMO, Eightcap and hundreds more. If it runs MT5, it works with VELQUOR.' },
-      { q: 'How fast is the trade copier?', a: 'Signals travel from your master account to your slave accounts in about one to two seconds. Lot sizing is proportional or fixed — you choose per group — and every copy is logged with its execution time so you can audit it.' },
+      { q: 'How fast is the trade copier?', a: 'Signals travel from your leader account to your follower accounts in about one to two seconds. Lot sizing is proportional or fixed — you choose per group — and every copy is logged with its execution time so you can audit it.' },
       { q: 'Is my trading data safe?', a: 'Your data is stored on EU servers, isolated per account, and encrypted in transit. Nobody else can see your trades — and VELQUOR never has the ability to withdraw from or trade on your account by itself.' },
       { q: 'Do I need a credit card for the free plan?', a: 'No. The free plan is free forever — no card, no trial countdown. You get auto-sync, the journal, and core stats. Upgrade only when you want AI analysis, unlimited history, or the trade copier.' },
       { q: 'Can I use it during a prop firm challenge?', a: 'Yes — that is exactly what Prop Firm Mode is for. VELQUOR tracks your max daily loss, total drawdown, and profit target in real time, and warns you before you get close to breaking a rule.' },
@@ -356,7 +356,7 @@ const de: LandingT = {
     subtitle: 'Kein weiteres Handelsjournal. Ein vollständiges Betriebssystem für dein Trading-Business.',
     items: [
       { title: 'Auto-Sync von MT5', desc: 'Jeder Trade, jede Position, jede GuV synchronisiert in Echtzeit. Keine manuelle Eingabe, keine CSV-Uploads, keine Tabellen.' },
-      { title: 'Integrierter Trade-Copier', desc: 'Spiegle jeden Trade von deinem Master-MT5 auf beliebig viele Slave-Konten in unter 2 Sekunden. Proportionale oder feste Lots — komplett vom Dashboard aus verwaltet.' },
+      { title: 'Integrierter Trade-Copier', desc: 'Spiegle jeden Trade von deinem Leader-MT5 auf beliebig viele Follower-Konten in unter 2 Sekunden. Proportionale oder feste Lots — komplett vom Dashboard aus verwaltet.' },
       { title: 'KI-Verhaltensanalyse', desc: 'VELQUOR korreliert dein Verhalten, deine Strategie und deine Gewohnheiten über jeden Trade — und zeigt exakt die Kombinationen, die gewinnen und die, die verlieren.' },
       { title: 'Session- & Setup-Analyse', desc: 'Sieh sofort deine Gewinnrate nach London-, New York- und Asia-Session — und nach jedem Setup-Typ, den du tradest.' },
       { title: 'Live-TradingView-Charts', desc: 'Vollständiger TradingView-Chart, Live-Ticker und Marktübersicht direkt im Dashboard. Gold und NAS100 im Blick, ohne dein Journal zu verlassen.' },
@@ -458,7 +458,7 @@ const de: LandingT = {
     items: [
       { q: 'Muss ich VELQUOR mein MT5-Passwort geben?', a: 'Nein. VELQUOR arbeitet über einen Expert Advisor, der in deinem eigenen MT5-Terminal läuft — dein Broker-Login verlässt nie deinen Rechner. Der EA authentifiziert sich mit einem persönlichen API-Key und sendet deine Handelsdaten an dein Dashboard. Den Key kannst du jederzeit widerrufen.' },
       { q: 'Welche Broker werden unterstützt?', a: 'Jeder Broker mit MetaTrader 5 — IC Markets, Pepperstone, Blueberry, Vantage, FTMO, Eightcap und hunderte mehr. Wenn er MT5 anbietet, funktioniert er mit VELQUOR.' },
-      { q: 'Wie schnell ist der Trade-Copier?', a: 'Signale brauchen vom Master-Konto zu den Slave-Konten etwa ein bis zwei Sekunden. Lotgrößen sind proportional oder fest — du entscheidest pro Gruppe — und jede Kopie wird mit Ausführungszeit protokolliert.' },
+      { q: 'Wie schnell ist der Trade-Copier?', a: 'Signale brauchen vom Leader-Konto zu den Follower-Konten etwa ein bis zwei Sekunden. Lotgrößen sind proportional oder fest — du entscheidest pro Gruppe — und jede Kopie wird mit Ausführungszeit protokolliert.' },
       { q: 'Sind meine Trading-Daten sicher?', a: 'Deine Daten liegen auf EU-Servern, pro Konto isoliert und verschlüsselt übertragen. Niemand sonst sieht deine Trades — und VELQUOR kann niemals selbst von deinem Konto abheben oder darauf handeln.' },
       { q: 'Brauche ich eine Kreditkarte für den Free-Plan?', a: 'Nein. Der Free-Plan ist für immer kostenlos — keine Karte, kein Trial-Countdown. Du bekommst Auto-Sync, das Journal und Kern-Statistiken. Upgrade erst, wenn du KI-Analyse, unbegrenzte Historie oder den Trade-Copier willst.' },
       { q: 'Kann ich es während einer Prop-Firm-Challenge nutzen?', a: 'Ja — genau dafür gibt es den Prop-Firm-Modus. VELQUOR überwacht Max Daily Loss, Gesamt-Drawdown und Profitziel in Echtzeit und warnt dich, bevor du einer Regelverletzung nahekommst.' },

@@ -14,14 +14,14 @@ export interface CloudInfo {
 
 // ── Group Card ────────────────────────────────────────────────────────────────
 export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud: CloudInfo; onRefresh: () => void }) {
-  const [addAccountRole, setAddAccountRole] = useState<'master' | 'slave' | null>(null)
+  const [addAccountRole, setAddAccountRole] = useState<'leader' | 'follower' | null>(null)
   const [hostAccount,    setHostAccount]    = useState<CopyAccount | null>(null)
   const [toggling,       setToggling]       = useState(false)
   const [showLog,        setShowLog]        = useState(false)
   const [showEaConfig,   setShowEaConfig]   = useState(false)
 
-  const master = group.copy_accounts.find(a => a.role === 'master')
-  const slaves = group.copy_accounts.filter(a => a.role === 'slave')
+  const leader = group.copy_accounts.find(a => a.role === 'leader')
+  const followers = group.copy_accounts.filter(a => a.role === 'follower')
 
   async function toggleActive() {
     setToggling(true)
@@ -157,48 +157,48 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
         {/* Accounts */}
         <div style={{ padding: '16px 20px' }}>
 
-          {/* Master section */}
+          {/* Leader section */}
           <div style={{ marginBottom: '12px' }}>
             <div style={{
               fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em',
               marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             }}>
-              <span>MASTER ACCOUNT</span>
-              {!master && (
+              <span>LEADER ACCOUNT</span>
+              {!leader && (
                 <button
-                  onClick={() => setAddAccountRole('master')}
+                  onClick={() => setAddAccountRole('leader')}
                   style={{
                     fontSize: '10px', color: 'var(--ac)', background: 'none', border: 'none',
                     cursor: 'pointer', padding: 0, fontWeight: 600, letterSpacing: '0.06em',
                   }}
                 >
-                  + ADD MASTER
+                  + ADD LEADER
                 </button>
               )}
             </div>
 
-            {master ? (
+            {leader ? (
               <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '10px 14px', borderRadius: '10px',
                 background: 'rgba(122,79,255,0.06)', border: '1px solid rgba(122,79,255,0.15)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {statusDot(master.status, master.last_seen_at)}
+                  {statusDot(leader.status, leader.last_seen_at)}
                   <div>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {master.nickname || master.mt5_login}
-                      {isHosted(master) && cloudBadge}
+                      {leader.nickname || leader.mt5_login}
+                      {isHosted(leader) && cloudBadge}
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--t3)' }}>
-                      #{master.mt5_login}{master.mt5_server ? ` · ${master.mt5_server}` : ''} · {timeAgo(master.last_seen_at)}
+                      #{leader.mt5_login}{leader.mt5_server ? ` · ${leader.mt5_server}` : ''} · {timeAgo(leader.last_seen_at)}
                     </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  {hostButton(master)}
+                  {hostButton(leader)}
                   <button
-                    onClick={() => removeAccount(master.id)}
+                    onClick={() => removeAccount(leader.id)}
                     style={{ fontSize: '11px', color: '#FF3347', background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     Remove
@@ -211,71 +211,71 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                 background: 'var(--s2)', border: '1px dashed var(--bd)',
                 fontSize: '12px', color: 'var(--t3)',
               }}>
-                No master account — click <strong style={{ color: 'var(--ac)' }}>+ ADD MASTER</strong> above
+                No leader account — click <strong style={{ color: 'var(--ac)' }}>+ ADD LEADER</strong> above
               </div>
             )}
           </div>
 
-          {/* Slave section */}
+          {/* Follower section */}
           <div>
             <div style={{
               fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em',
               marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             }}>
-              <span>SLAVE ACCOUNTS ({slaves.length})</span>
+              <span>FOLLOWER ACCOUNTS ({followers.length})</span>
               <button
-                onClick={() => setAddAccountRole('slave')}
+                onClick={() => setAddAccountRole('follower')}
                 style={{
                   fontSize: '10px', color: 'var(--ac)', background: 'none', border: 'none',
                   cursor: 'pointer', padding: 0, fontWeight: 600, letterSpacing: '0.06em',
                 }}
               >
-                + ADD SLAVE
+                + ADD FOLLOWER
               </button>
             </div>
 
-            {slaves.length === 0 ? (
+            {followers.length === 0 ? (
               <div style={{
                 padding: '12px 14px', borderRadius: '10px', textAlign: 'center',
                 background: 'var(--s2)', border: '1px dashed var(--bd)',
                 fontSize: '12px', color: 'var(--t3)',
               }}>
-                No slave accounts yet
+                No follower accounts yet
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {slaves.map(slave => (
-                  <div key={slave.id} style={{
+                {followers.map(follower => (
+                  <div key={follower.id} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '10px 14px', borderRadius: '10px',
                     background: 'var(--s2)', border: '1px solid var(--bd)',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      {statusDot(slave.status, slave.last_seen_at)}
+                      {statusDot(follower.status, follower.last_seen_at)}
                       <div>
                         <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {slave.nickname || slave.mt5_login}
-                          {isHosted(slave) && cloudBadge}
+                          {follower.nickname || follower.mt5_login}
+                          {isHosted(follower) && cloudBadge}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--t3)' }}>
-                          #{slave.mt5_login}{slave.mt5_server ? ` · ${slave.mt5_server}` : ''} · {timeAgo(slave.last_seen_at)}
+                          #{follower.mt5_login}{follower.mt5_server ? ` · ${follower.mt5_server}` : ''} · {timeAgo(follower.last_seen_at)}
                         </div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      {hostButton(slave)}
+                      {hostButton(follower)}
                       <button
-                        onClick={() => toggleAccountStatus(slave)}
+                        onClick={() => toggleAccountStatus(follower)}
                         style={{
                           fontSize: '10px', padding: '4px 10px', borderRadius: '6px',
                           background: 'var(--s1)', border: '1px solid var(--bd)',
                           color: 'var(--t3)', cursor: 'pointer',
                         }}
                       >
-                        {slave.status === 'paused' ? 'Resume' : 'Pause'}
+                        {follower.status === 'paused' ? 'Resume' : 'Pause'}
                       </button>
                       <button
-                        onClick={() => removeAccount(slave.id)}
+                        onClick={() => removeAccount(follower.id)}
                         style={{ fontSize: '11px', color: '#FF3347', background: 'none', border: 'none', cursor: 'pointer' }}
                       >
                         ✕
@@ -290,7 +290,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
 
         {/* EA config snippet — only needed for self-hosted (own MetaTrader)
             accounts, so collapsed by default to keep the card clean */}
-        {(master || slaves.length > 0) && (
+        {(leader || followers.length > 0) && (
           <div style={{
             margin: '0 20px 16px', padding: '12px 14px', borderRadius: '10px',
             background: 'rgba(0,255,133,0.03)', border: '1px solid rgba(0,255,133,0.1)',
@@ -312,7 +312,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             </button>
             {showEaConfig && <div style={{ marginTop: '8px' }}>
             <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--t2)', lineHeight: '1.7' }}>
-              <div><span style={{ color: 'var(--t3)' }}>InpCopyMode</span> = <span style={{ color: '#FFD700' }}>COPY_MASTER</span> <span style={{ color: '#555' }}>// or COPY_SLAVE</span></div>
+              <div><span style={{ color: 'var(--t3)' }}>InpCopyMode</span> = <span style={{ color: '#FFD700' }}>COPY_LEADER</span> <span style={{ color: '#555' }}>// or COPY_FOLLOWER</span></div>
               <div><span style={{ color: 'var(--t3)' }}>InpCopyGroupId</span> = <span style={{ color: '#7A4FFF' }}>"{group.id}"</span></div>
               <div><span style={{ color: 'var(--t3)' }}>InpCopyLotMode</span> = <span style={{ color: '#FFD700' }}>
                 {group.lot_mode === 'fixed' ? 'LOT_FIXED' : 'LOT_PROPORTIONAL'}

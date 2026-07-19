@@ -929,7 +929,7 @@ export function AnimatedDashboard() {
                     <span style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--t3)', fontSize: '7px', fontWeight: 600, padding: '2.5px 9px', borderRadius: '5px' }}>Delete</span>
                   </span>
                 </div>
-                <p style={{ ...capsLabel, marginBottom: '4px', ...stag(2) }}>Master Account</p>
+                <p style={{ ...capsLabel, marginBottom: '4px', ...stag(2) }}>Leader Account</p>
                 <div style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '7px', padding: '7px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', ...stag(3) }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
                     <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--gr2)' }} />
@@ -941,8 +941,8 @@ export function AnimatedDashboard() {
                   <span style={{ color: 'var(--re)', fontSize: '7px', fontWeight: 600 }}>Remove</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', ...stag(4) }}>
-                  <p style={capsLabel}>Slave Accounts (2)</p>
-                  <span style={{ color: 'var(--ac)', fontSize: '7px', fontWeight: 700 }}>+ ADD SLAVE</span>
+                  <p style={capsLabel}>Follower Accounts (2)</p>
+                  <span style={{ color: 'var(--ac)', fontSize: '7px', fontWeight: 700 }}>+ ADD FOLLOWER</span>
                 </div>
                 {[
                   { name: 'Blueberry Second', meta: '#221040 · BlueberryMarkets-Live02 · 8s ago' },
@@ -965,7 +965,7 @@ export function AnimatedDashboard() {
                 {/* EA config */}
                 <p style={{ ...capsLabel, color: 'var(--gr2)', margin: '8px 0 4px', ...stag(7) }}>EA Configuration</p>
                 <div style={{ background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '7px', padding: '8px 11px', fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: '7px', lineHeight: 1.75, ...stag(8) }}>
-                  <p style={{ margin: 0, color: 'var(--t3)' }}>InpCopyMode <span style={{ color: 'var(--t2)' }}>=</span> <span style={{ color: 'var(--go2)', fontWeight: 700 }}>COPY_MASTER</span> <span style={{ color: 'rgba(255,255,255,0.25)' }}>// or COPY_SLAVE</span></p>
+                  <p style={{ margin: 0, color: 'var(--t3)' }}>InpCopyMode <span style={{ color: 'var(--t2)' }}>=</span> <span style={{ color: 'var(--go2)', fontWeight: 700 }}>COPY_LEADER</span> <span style={{ color: 'rgba(255,255,255,0.25)' }}>// or COPY_FOLLOWER</span></p>
                   <p style={{ margin: 0, color: 'var(--t3)' }}>InpCopyGroupId <span style={{ color: 'var(--t2)' }}>=</span> <span style={{ color: 'var(--gr2)' }}>&quot;4ab1cc05-7f5d-4920-ad7b-8c9fa28d422c&quot;</span></p>
                   <p style={{ margin: 0, color: 'var(--t3)' }}>InpCopyLotMode <span style={{ color: 'var(--t2)' }}>=</span> <span style={{ color: 'var(--go2)', fontWeight: 700 }}>LOT_PROPORTIONAL</span></p>
                   <p style={{ margin: 0, color: 'var(--t3)' }}>InpCopyLotMult <span style={{ color: 'var(--t2)' }}>=</span> <span style={{ color: 'var(--ac)' }}>0.5</span></p>

@@ -5,7 +5,7 @@
 #
 #   /sync ........ EA writes vq_sync.json (every write) → POST /sync
 #   copy out ..... EA writes vq_cout_*.json envelopes    → POST endpoint in each
-#   copy in ...... this loop polls GET /copy/poll (slaves) → writes vq_cin_signals.json
+#   copy in ...... this loop polls GET /copy/poll (followers) → writes vq_cin_signals.json
 #
 # curl + jq only, no extra runtime. Env: VQ_API_KEY, BRIDGE_URL.
 set -u
@@ -65,7 +65,7 @@ forward_copy_outbox() {
 copy_poll_loop() {
   local last_poll_code=""
   while true; do
-    if [ ! -s "$CONFIG_FILE" ] || [ "$(jq -r '.mode // "OFF"' "$CONFIG_FILE" 2>/dev/null)" != "SLAVE" ]; then
+    if [ ! -s "$CONFIG_FILE" ] || [ "$(jq -r '.mode // "OFF"' "$CONFIG_FILE" 2>/dev/null)" != "FOLLOWER" ]; then
       sleep 5; continue
     fi
     # Don't clobber an inbox the EA hasn't consumed yet.
@@ -100,7 +100,7 @@ copy_poll_loop() {
 
 last_sync_mt=""
 copy_poll_loop &
-# Fast local loop: file checks are cheap, and copy-out latency (master signal
+# Fast local loop: file checks are cheap, and copy-out latency (leader signal
 # → bridge) rides on this cadence.
 while true; do
   forward_sync

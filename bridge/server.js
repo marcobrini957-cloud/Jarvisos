@@ -134,18 +134,18 @@ async function authed(req, res) {
   return user;
 }
 
-// Slave-login lookup for /sync filtering (60 s cache, same shape as userCache)
-const slaveLoginCache = new Map(); // userId -> { logins: Set<number>, ts }
-async function isSlaveLogin(userId, loginNum) {
-  const hit = slaveLoginCache.get(userId);
+// Follower-login lookup for /sync filtering (60 s cache, same shape as userCache)
+const followerLoginCache = new Map(); // userId -> { logins: Set<number>, ts }
+async function isFollowerLogin(userId, loginNum) {
+  const hit = followerLoginCache.get(userId);
   if (hit && Date.now() - hit.ts < 60_000) return hit.logins.has(loginNum);
   const { data } = await supabase
     .from('copy_accounts')
     .select('mt5_login')
     .eq('user_id', userId)
-    .eq('role', 'slave');
+    .eq('role', 'follower');
   const logins = new Set((data || []).map(r => Number(r.mt5_login)));
-  slaveLoginCache.set(userId, { logins, ts: Date.now() });
+  followerLoginCache.set(userId, { logins, ts: Date.now() });
   return logins.has(loginNum);
 }
 
@@ -197,9 +197,9 @@ app.use((req, res, next) => {
 });
 
 // Rate limits — max reads live settings, so admin changes apply without restart.
-// Keyed per api-key + MT5 login: one user runs several cloud terminals (master +
-// slaves) on the same key, and a slave's copy polling must never starve the
-// master's /copy/signal posts.
+// Keyed per api-key + MT5 login: one user runs several cloud terminals (leader +
+// followers) on the same key, and a follower's copy polling must never starve the
+// leader's /copy/signal posts.
 const keyOrIp = (req) => {
   const key = typeof req.headers['x-api-key'] === 'string' ? req.headers['x-api-key'] : req.ip;
   const login = typeof req.headers['x-mt5-login'] === 'string' ? req.headers['x-mt5-login'] : '';
@@ -230,13 +230,13 @@ app.post('/sync', wrap(async (req, res) => {
     return res.status(426).json({ error: 'upgrade_required', min_version: settings.min_ea_version });
   }
 
-  // Heartbeat any copy-trading rows for this terminal: a quiet master would
+  // Heartbeat any copy-trading rows for this terminal: a quiet leader would
   // otherwise sit at 'pending' forever (signals/polls are the only other
   // touchpoints). Login comes from the X-Mt5-Login header (EA + sidecar).
   const mt5Login = req.headers['x-mt5-login'];
   const loginNum = mt5Login && /^\d{3,12}$/.test(String(mt5Login)) ? Number(mt5Login) : null;
   if (loginNum) {
-    // Heartbeat + live account figures — the only place slave balances are
+    // Heartbeat + live account figures — the only place follower balances are
     // stored (they're excluded from account_snapshots by design).
     const hb = { last_seen_at: new Date().toISOString(), status: 'active' };
     if (body.account) {
@@ -252,15 +252,15 @@ app.post('/sync', wrap(async (req, res) => {
       .in('status', ['pending', 'active']);
   }
 
-  // Copy-slave terminals sync only as heartbeat + copy plumbing: their
+  // Copy-follower terminals sync only as heartbeat + copy plumbing: their
   // balances and trades must NOT land in the user's journal/equity data
-  // (they'd blend with the master account and double-count every mirror).
-  if (loginNum && await isSlaveLogin(user.id, loginNum)) {
-    return res.json({ ok: true, slave: true });
+  // (they'd blend with the leader account and double-count every mirror).
+  if (loginNum && await isFollowerLogin(user.id, loginNum)) {
+    return res.json({ ok: true, follower: true });
   }
 
   // 1. account snapshot — tagged with the terminal's login so multi-terminal
-  // users (copy master + slaves on one API key) don't blend balances.
+  // users (copy leader + followers on one API key) don't blend balances.
   if (body.account) {
     const acc = body.account;
     await supabase.from('account_snapshots').insert({
@@ -306,29 +306,29 @@ app.post('/sync', wrap(async (req, res) => {
 
 // ─── Hot-path caches for /copy/signal (10 s TTL) ─────────────────────────────
 // Latency budget: every awaited Supabase round-trip here delays every mirror.
-// Staleness is bounded and safe — a just-added slave misses at most one
+// Staleness is bounded and safe — a just-added follower misses at most one
 // 10 s window, and lot-config edits apply within 10 s.
 const HOT_TTL = 10_000;
 const groupConfigCache = new Map(); // groupId -> { group, ts }
-const groupSlavesCache = new Map(); // groupId -> { slaves, ts }
-const masterAccCache   = new Map(); // `${userId}:${groupId}:${login}` -> { acc, ts }
+const groupFollowersCache = new Map(); // groupId -> { followers, ts }
+const leaderAccCache   = new Map(); // `${userId}:${groupId}:${login}` -> { acc, ts }
 
-async function cachedMasterAcc(userId, groupId, login) {
+async function cachedLeaderAcc(userId, groupId, login) {
   const key = `${userId}:${groupId}:${login}`;
-  const hit = masterAccCache.get(key);
+  const hit = leaderAccCache.get(key);
   if (hit && Date.now() - hit.ts < 60_000) return hit.acc;
-  const acc = await resolveCopyAccount(userId, groupId, login, 'master');
-  if (acc) masterAccCache.set(key, { acc, ts: Date.now() });
+  const acc = await resolveCopyAccount(userId, groupId, login, 'leader');
+  if (acc) leaderAccCache.set(key, { acc, ts: Date.now() });
   return acc;
 }
 
-const slaveAccCache = new Map(); // `${userId}:${groupId}:${login}` -> { acc, ts }
-async function cachedSlaveAcc(userId, groupId, login) {
+const followerAccCache = new Map(); // `${userId}:${groupId}:${login}` -> { acc, ts }
+async function cachedFollowerAcc(userId, groupId, login) {
   const key = `${userId}:${groupId}:${login}`;
-  const hit = slaveAccCache.get(key);
+  const hit = followerAccCache.get(key);
   if (hit && Date.now() - hit.ts < 60_000) return hit.acc;
-  const acc = await resolveCopyAccount(userId, groupId, login, 'slave');
-  if (acc) slaveAccCache.set(key, { acc, ts: Date.now() });
+  const acc = await resolveCopyAccount(userId, groupId, login, 'follower');
+  if (acc) followerAccCache.set(key, { acc, ts: Date.now() });
   return acc;
 }
 
@@ -346,21 +346,21 @@ async function cachedGroup(groupId, userId) {
   return group;
 }
 
-async function cachedSlaves(groupId) {
-  const hit = groupSlavesCache.get(groupId);
-  if (hit && Date.now() - hit.ts < HOT_TTL) return hit.slaves;
-  const { data: slaves } = await supabase
+async function cachedFollowers(groupId) {
+  const hit = groupFollowersCache.get(groupId);
+  if (hit && Date.now() - hit.ts < HOT_TTL) return hit.followers;
+  const { data: followers } = await supabase
     .from('copy_accounts')
     .select('id')
     .eq('group_id', groupId)
-    .eq('role', 'slave')
+    .eq('role', 'follower')
     .eq('status', 'active');
-  groupSlavesCache.set(groupId, { slaves: slaves || [], ts: Date.now() });
-  return slaves || [];
+  groupFollowersCache.set(groupId, { followers: followers || [], ts: Date.now() });
+  return followers || [];
 }
 
-// ─── POST /copy/signal — master broadcasts a new trade signal ─────────────────
-// The signal payload is handed to waiting slave long-polls IN MEMORY before
+// ─── POST /copy/signal — leader broadcasts a new trade signal ─────────────────
+// The signal payload is handed to waiting follower long-polls IN MEMORY before
 // anything touches the database; copy_signals/copy_log inserts happen right
 // after, off the response path, purely as the audit trail. If an ack races
 // ahead of its copy_log insert, the ack 403s and the sidecar retries it.
@@ -376,8 +376,8 @@ app.post('/copy/signal', wrap(async (req, res) => {
   if (!groupId)  return res.status(400).json({ error: 'missing_x_copy_group' });
   if (!mt5Login) return res.status(400).json({ error: 'missing_x_mt5_login' });
 
-  const masterAcc = await cachedMasterAcc(user.id, groupId, mt5Login);
-  if (!masterAcc) return res.status(403).json({ error: 'not_master_in_group' });
+  const leaderAcc = await cachedLeaderAcc(user.id, groupId, mt5Login);
+  if (!leaderAcc) return res.status(403).json({ error: 'not_leader_in_group' });
 
   const group = await cachedGroup(groupId, user.id);
   if (!group) return res.status(403).json({ error: 'group_inactive_or_not_found' });
@@ -387,23 +387,23 @@ app.post('/copy/signal', wrap(async (req, res) => {
     return res.status(400).json({ error: 'missing_signal_fields' });
   }
 
-  const slaves = await cachedSlaves(groupId);
+  const followers = await cachedFollowers(groupId);
   const sigId  = crypto.randomUUID();
 
   // Deliver instantly to any waiting long-poll, in the exact shape /copy/poll
   // returns, with pre-generated copy_log ids the EA will ack against.
-  const deliveries = slaves.map(s => ({
-    slaveId: s.id,
+  const deliveries = followers.map(s => ({
+    followerId: s.id,
     logId:   crypto.randomUUID(),
   }));
   for (const d of deliveries) {
-    notifySlave(d.slaveId, [{
+    notifyFollower(d.followerId, [{
       log_id:         d.logId,
       signal_type:    signal.type,
-      master_ticket:  Number(signal.ticket),
+      leader_ticket:  Number(signal.ticket),
       symbol:         signal.symbol,
       trade_type:     signal.trade_type,
-      master_lots:    signal.lot_size    ?? null,
+      leader_lots:    signal.lot_size    ?? null,
       open_price:     signal.open_price  ?? null,
       stop_loss:      signal.stop_loss   ?? 0,
       take_profit:    signal.take_profit ?? 0,
@@ -416,19 +416,19 @@ app.post('/copy/signal', wrap(async (req, res) => {
   }
 
   metrics.signals++;
-  res.json({ ok: true, signal_id: sigId, slaves_notified: slaves.length });
+  res.json({ ok: true, signal_id: sigId, followers_notified: followers.length });
 
   // Audit trail — after the response, but still awaited inside wrap so a DB
-  // failure is logged. Slaves not waiting right now pick the rows up via the
+  // failure is logged. Followers not waiting right now pick the rows up via the
   // pending-query fallback on their next poll.
   const { error: sigErr } = await supabase
     .from('copy_signals')
     .insert({
       id:                sigId,
       group_id:          groupId,
-      master_account_id: masterAcc.id,
+      leader_account_id: leaderAcc.id,
       signal_type:       signal.type,
-      master_ticket:     Number(signal.ticket),
+      leader_ticket:     Number(signal.ticket),
       symbol:            signal.symbol,
       trade_type:        signal.trade_type,
       lot_size:          signal.lot_size    ?? null,
@@ -445,7 +445,7 @@ app.post('/copy/signal', wrap(async (req, res) => {
   }
   if (deliveries.length > 0) {
     const { error: logErr } = await supabase.from('copy_log').insert(
-      deliveries.map(d => ({ id: d.logId, signal_id: sigId, slave_account_id: d.slaveId, status: 'pending' }))
+      deliveries.map(d => ({ id: d.logId, signal_id: sigId, follower_account_id: d.followerId, status: 'pending' }))
     );
     if (logErr) {
       metrics.errors++;
@@ -457,16 +457,16 @@ app.post('/copy/signal', wrap(async (req, res) => {
 
 // ─── Long-poll plumbing: /copy/signal wakes waiting /copy/poll requests ───────
 // Waiters resolve WITH the signal payloads, so a woken poll returns them
-// directly — zero database reads between master signal and slave delivery.
-const slaveWaiters = new Map(); // slaveAccountId -> Set<fn(payloads)>
-function notifySlave(slaveAccId, payloads) {
-  const set = slaveWaiters.get(slaveAccId);
+// directly — zero database reads between leader signal and follower delivery.
+const followerWaiters = new Map(); // followerAccountId -> Set<fn(payloads)>
+function notifyFollower(followerAccId, payloads) {
+  const set = followerWaiters.get(followerAccId);
   if (!set) return;
   for (const fn of set) fn(payloads);
 }
 // Arm BEFORE querying for pending rows, or a signal landing in between would
 // be missed and only delivered at the wait timeout.
-function armSlaveWaiter(slaveAccId, ms, req) {
+function armFollowerWaiter(followerAccId, ms, req) {
   let done = false;
   let resolveFn;
   const promise = new Promise(resolve => { resolveFn = resolve; });
@@ -474,36 +474,36 @@ function armSlaveWaiter(slaveAccId, ms, req) {
     if (done) return;
     done = true;
     clearTimeout(timer);
-    const set = slaveWaiters.get(slaveAccId);
-    if (set) { set.delete(finish); if (set.size === 0) slaveWaiters.delete(slaveAccId); }
+    const set = followerWaiters.get(followerAccId);
+    if (set) { set.delete(finish); if (set.size === 0) followerWaiters.delete(followerAccId); }
     resolveFn(payloads ?? null);
   };
   const timer = setTimeout(finish, ms);
-  if (!slaveWaiters.has(slaveAccId)) slaveWaiters.set(slaveAccId, new Set());
-  slaveWaiters.get(slaveAccId).add(finish);
+  if (!followerWaiters.has(followerAccId)) followerWaiters.set(followerAccId, new Set());
+  followerWaiters.get(followerAccId).add(finish);
   req.on('close', () => finish());
   return { promise, cancel: () => finish() };
 }
 
-async function fetchPendingSignals(slaveAccId) {
+async function fetchPendingSignals(followerAccId) {
   const { data: pending } = await supabase
     .from('copy_log')
     .select(`
       id,
       copy_signals(
-        id, signal_type, master_ticket, symbol, trade_type, lot_size,
+        id, signal_type, leader_ticket, symbol, trade_type, lot_size,
         open_price, stop_loss, take_profit, close_price,
         copy_groups(lot_mode, lot_fixed, lot_multiplier, max_lot)
       )
     `)
-    .eq('slave_account_id', slaveAccId)
+    .eq('follower_account_id', followerAccId)
     .eq('status', 'pending')
     .order('created_at', { ascending: true })
     .limit(10);
   return pending || [];
 }
 
-// ─── GET /copy/poll — slave polls for pending trade signals ───────────────────
+// ─── GET /copy/poll — follower polls for pending trade signals ───────────────────
 // ?wait=<seconds> (max 25) holds the request open until a signal arrives, so
 // sidecars sit in a blocking poll instead of hammering every few seconds.
 app.get('/copy/poll', wrap(async (req, res) => {
@@ -517,21 +517,21 @@ app.get('/copy/poll', wrap(async (req, res) => {
   const mt5Login = req.headers['x-mt5-login'];
   if (!groupId || !mt5Login) return res.status(400).json({ error: 'missing_headers' });
 
-  const slaveAcc = await cachedSlaveAcc(user.id, groupId, mt5Login);
-  if (!slaveAcc) return res.status(403).json({ error: 'not_slave_in_group' });
+  const followerAcc = await cachedFollowerAcc(user.id, groupId, mt5Login);
+  if (!followerAcc) return res.status(403).json({ error: 'not_follower_in_group' });
 
   // Heartbeat off the critical path — the poll must re-arm as fast as
   // possible so in-memory pushes find a waiter instead of falling back to DB.
   supabase
     .from('copy_accounts')
     .update({ status: 'active', last_seen_at: new Date().toISOString() })
-    .eq('id', slaveAcc.id)
+    .eq('id', followerAcc.id)
     .then(() => {}, () => {});
 
   const waitS = Math.min(Number(req.query.wait) || 0, 25);
-  const waiter = waitS > 0 ? armSlaveWaiter(slaveAcc.id, waitS * 1000, req) : null;
+  const waiter = waitS > 0 ? armFollowerWaiter(followerAcc.id, waitS * 1000, req) : null;
 
-  let pending = await fetchPendingSignals(slaveAcc.id);
+  let pending = await fetchPendingSignals(followerAcc.id);
   if (pending.length === 0 && waiter) {
     const pushed = await waiter.promise;
     if (req.destroyed) return;
@@ -542,7 +542,7 @@ app.get('/copy/poll', wrap(async (req, res) => {
     }
     // Timed out — one last catch-up query for rows that arrived while the
     // inbox was occupied or via other paths.
-    pending = await fetchPendingSignals(slaveAcc.id);
+    pending = await fetchPendingSignals(followerAcc.id);
   }
   waiter?.cancel();
 
@@ -552,10 +552,10 @@ app.get('/copy/poll', wrap(async (req, res) => {
     return {
       log_id:         p.id,
       signal_type:    s?.signal_type,
-      master_ticket:  s?.master_ticket,
+      leader_ticket:  s?.leader_ticket,
       symbol:         s?.symbol,
       trade_type:     s?.trade_type,
-      master_lots:    s?.lot_size,
+      leader_lots:    s?.lot_size,
       open_price:     s?.open_price,
       stop_loss:      s?.stop_loss,
       take_profit:    s?.take_profit,
@@ -571,17 +571,17 @@ app.get('/copy/poll', wrap(async (req, res) => {
   return res.json({ signals });
 }));
 
-// ─── POST /copy/ack — slave reports execution result ─────────────────────────
+// ─── POST /copy/ack — follower reports execution result ─────────────────────────
 app.post('/copy/ack', wrap(async (req, res) => {
   const user = await authed(req, res);
   if (!user) return;
 
-  const { log_id, status, slave_ticket, slave_lots, error_message } = req.body || {};
+  const { log_id, status, follower_ticket, follower_lots, error_message } = req.body || {};
   if (!log_id || !status) return res.status(400).json({ error: 'missing_fields' });
 
   const { data: logEntry } = await supabase
     .from('copy_log')
-    .select('id, slave_account_id, copy_accounts!inner(user_id)')
+    .select('id, follower_account_id, copy_accounts!inner(user_id)')
     .eq('id', log_id)
     .maybeSingle();
   if (!logEntry || logEntry.copy_accounts?.user_id !== user.id) {
@@ -592,8 +592,8 @@ app.post('/copy/ack', wrap(async (req, res) => {
   // never overwrite the real execution result already recorded.
   const { data: updated } = await supabase.from('copy_log').update({
     status:        status,
-    slave_ticket:  slave_ticket  ?? null,
-    slave_lots:    slave_lots    ?? null,
+    follower_ticket:  follower_ticket  ?? null,
+    follower_lots:    follower_lots    ?? null,
     error_message: error_message ?? null,
     executed_at:   new Date().toISOString(),
   }).eq('id', log_id).eq('status', 'pending').select('id');

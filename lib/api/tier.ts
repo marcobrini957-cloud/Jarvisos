@@ -15,7 +15,7 @@ export interface TierPlan {
   cloudTerminals:  number
   // Copy trading
   copyGroups:      number
-  copySlavesEach:  number
+  copyFollowersEach:  number
   // Feature flags
   aiCoaching:      boolean   // AI "Coach's Notes" (deterministic stats are always free)
   weeklyReviewAi:  boolean
@@ -25,19 +25,19 @@ export const PLANS: Record<Tier, TierPlan> = {
   free: {
     tier: 'free',
     aiProvider: 'groq',   aiModel: 'llama-3.1-8b-instant',
-    cloudTerminals: 0,    copyGroups: 0, copySlavesEach: 0,
+    cloudTerminals: 0,    copyGroups: 0, copyFollowersEach: 0,
     aiCoaching: false,    weeklyReviewAi: true, // free keeps the existing Groq weekly review
   },
   pro: {
     tier: 'pro',
     aiProvider: 'anthropic', aiModel: 'claude-haiku-4-5',
-    cloudTerminals: 1,       copyGroups: 1, copySlavesEach: 1,
+    cloudTerminals: 1,       copyGroups: 1, copyFollowersEach: 1,
     aiCoaching: true,        weeklyReviewAi: true,
   },
   ultra: {
     tier: 'ultra',
     aiProvider: 'anthropic', aiModel: 'claude-sonnet-4-6',
-    cloudTerminals: 3,       copyGroups: 3, copySlavesEach: 5,
+    cloudTerminals: 3,       copyGroups: 3, copyFollowersEach: 5,
     aiCoaching: true,        weeklyReviewAi: true,
   },
 }

@@ -30,7 +30,7 @@ function admin() {
 
 type Ctx = { params: Promise<{ id: string }> }
 
-// POST /api/copy/groups/[id]/accounts — add master or slave account to group
+// POST /api/copy/groups/[id]/accounts — add leader or follower account to group
 export async function POST(req: NextRequest, { params }: Ctx) {
   const userId = await getUserId()
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -53,36 +53,36 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   if (!role || !mt5_login) {
     return NextResponse.json({ error: 'role and mt5_login are required' }, { status: 400 })
   }
-  if (!['master', 'slave'].includes(role)) {
-    return NextResponse.json({ error: 'role must be master or slave' }, { status: 400 })
+  if (!['leader', 'follower'].includes(role)) {
+    return NextResponse.json({ error: 'role must be leader or follower' }, { status: 400 })
   }
 
-  // Enforce one master per group
-  if (role === 'master') {
+  // Enforce one leader per group
+  if (role === 'leader') {
     const { count } = await admin()
       .from('copy_accounts')
       .select('id', { count: 'exact', head: true })
       .eq('group_id', groupId)
-      .eq('role', 'master')
+      .eq('role', 'leader')
     if ((count ?? 0) > 0) {
-      return NextResponse.json({ error: 'Group already has a master account' }, { status: 409 })
+      return NextResponse.json({ error: 'Group already has a leader account' }, { status: 409 })
     }
   }
 
-  // Enforce slave limit based on subscription tier (shared helper, lazy-downgrade aware)
-  if (role === 'slave') {
+  // Enforce follower limit based on subscription tier (shared helper, lazy-downgrade aware)
+  if (role === 'follower') {
     const plan = await getUserPlan(userId)
-    const maxSlaves = plan.copySlavesEach
+    const maxFollowers = plan.copyFollowersEach
 
     const { count } = await admin()
       .from('copy_accounts')
       .select('id', { count: 'exact', head: true })
       .eq('group_id', groupId)
-      .eq('role', 'slave')
+      .eq('role', 'follower')
 
-    if ((count ?? 0) >= maxSlaves) {
+    if ((count ?? 0) >= maxFollowers) {
       return NextResponse.json(
-        { error: `Your plan allows a maximum of ${maxSlaves} slave account${maxSlaves > 1 ? 's' : ''} per group` },
+        { error: `Your plan allows a maximum of ${maxFollowers} follower account${maxFollowers > 1 ? 's' : ''} per group` },
         { status: 403 }
       )
     }

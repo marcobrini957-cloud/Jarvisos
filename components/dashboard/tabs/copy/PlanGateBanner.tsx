@@ -24,12 +24,12 @@ export function PlanGateBanner() {
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--t1)' }}>Pro</div>
-          <div style={{ fontSize: '11px', color: 'var(--t3)' }}>1 copy group · 1 slave</div>
+          <div style={{ fontSize: '11px', color: 'var(--t3)' }}>1 copy group · 1 follower</div>
         </div>
         <div style={{ width: 1, background: 'var(--bd)' }} />
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFD700' }}>Ultra</div>
-          <div style={{ fontSize: '11px', color: 'var(--t3)' }}>3 copy groups · 5 slaves each</div>
+          <div style={{ fontSize: '11px', color: 'var(--t3)' }}>3 copy groups · 5 followers each</div>
         </div>
       </div>
     </div>

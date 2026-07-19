@@ -30,7 +30,7 @@ const F_PRO: Feature[] = [
   { text: 'Behavior correlations',                  included: true  },
   { text: 'PDF trade reports',                      included: true  },
   { text: 'Prop firm tracker',                      included: true  },
-  { text: 'Trade copier (1 group, 1 slave)',         included: true  },
+  { text: 'Trade copier (1 group, 1 follower)',         included: true  },
   { text: 'Priority support',                       included: false },
 ]
 
@@ -44,7 +44,7 @@ const F_ULTRA: Feature[] = [
   { text: 'Behavior correlations',                  included: true },
   { text: 'PDF trade reports',                      included: true },
   { text: 'Prop firm tracker',                      included: true },
-  { text: 'Trade copier (3 groups, 5 slaves each)', included: true },
+  { text: 'Trade copier (3 groups, 5 followers each)', included: true },
   { text: 'Priority support',                       included: true },
 ]
 
@@ -86,7 +86,7 @@ const FAQ = [
   { q: 'How does the MT5 sync work?', a: 'You install a small Expert Advisor inside MT5. It pushes your trades to VELQUOR every 10 seconds. Your broker credentials never leave your machine.' },
   { q: 'Can I cancel anytime?', a: 'Yes. Cancel from your settings at any time — no questions asked. Your data is kept for 30 days after cancellation.' },
   { q: 'What brokers are supported?', a: 'Any MetaTrader 5 broker worldwide — IC Markets, Pepperstone, FTMO live accounts, Blueberry, and any other MT5 broker. Demo and live accounts both work.' },
-  { q: 'What is the trade copier?', a: 'VELQUOR\'s built-in copier mirrors every trade from your master MT5 to slave accounts in under 2 seconds. Pro includes 1 copy group with 1 slave. Ultra includes 3 groups with up to 5 slaves each.' },
+  { q: 'What is the trade copier?', a: 'VELQUOR\'s built-in copier mirrors every trade from your leader MT5 to follower accounts in under 2 seconds. Pro includes 1 copy group with 1 follower. Ultra includes 3 groups with up to 5 followers each.' },
   { q: 'Is my trading data private?', a: 'Your data is encrypted at rest and isolated per account with row-level security. The EA authenticates with a unique API key — nobody else can access your data.' },
 ]
 

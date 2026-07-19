@@ -16,8 +16,8 @@ w16() { # w16 <path> — reads stdin (UTF-8, LF), writes BOM + UTF-16LE CRLF
 
 mkdir -p "$MT5DIR/config" "$MT5DIR/MQL5/Presets"
 
-# Copy trading config — provisioner sets these for master/slave terminals.
-# Enum ints match ea/VelquorBridge.mq5: COPY_OFF=0 MASTER=1 SLAVE=2;
+# Copy trading config — provisioner sets these for leader/follower terminals.
+# Enum ints match ea/VelquorBridge.mq5: COPY_OFF=0 LEADER=1 FOLLOWER=2;
 # LOT_PROPORTIONAL=0 LOT_FIXED=1.
 VQ_COPY_MODE="${VQ_COPY_MODE:-0}"
 VQ_COPY_GROUP="${VQ_COPY_GROUP:-}"

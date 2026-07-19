@@ -41,7 +41,7 @@ export function SignalLog({ groupId }: { groupId: string }) {
 
   if (entries.length === 0) return (
     <div style={{ padding: '12px 0', textAlign: 'center', color: 'var(--t3)', fontSize: '12px' }}>
-      No activity yet — signals appear here once the master starts trading.
+      No activity yet — signals appear here once the leader starts trading.
     </div>
   )
 

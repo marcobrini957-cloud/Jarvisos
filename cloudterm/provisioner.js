@@ -51,7 +51,7 @@ const docker = (args) =>
       err ? reject(new Error(stderr || err.message)) : resolve(stdout.trim())));
 
 // Container per (user, slot). Slot '' / 'main' = the classic Instant Connect
-// terminal (legacy name, no suffix). Copy-trading slave/master terminals get
+// terminal (legacy name, no suffix). Copy-trading follower/leader terminals get
 // their own slot: velquor-term-<uid>--<slot>.
 const cleanId = (s) => String(s || '').replace(/[^a-zA-Z0-9-]/g, '');
 const containerName = (userId, slot) => {
@@ -65,10 +65,10 @@ async function runningTerminals() {
 }
 
 // Copy-mode envs for the entrypoint (enum ints match the EA:
-// COPY_OFF=0 MASTER=1 SLAVE=2; LOT_PROPORTIONAL=0 LOT_FIXED=1).
+// COPY_OFF=0 LEADER=1 FOLLOWER=2; LOT_PROPORTIONAL=0 LOT_FIXED=1).
 function copyEnv(copy) {
   if (!copy || !copy.mode || !copy.group_id) return [];
-  const mode = copy.mode === 'master' ? 1 : copy.mode === 'slave' ? 2 : 0;
+  const mode = copy.mode === 'leader' ? 1 : copy.mode === 'follower' ? 2 : 0;
   if (!mode) return [];
   return [
     `VQ_COPY_MODE=${mode}`,
@@ -116,9 +116,9 @@ app.use((req, res, next) => {
 // POST /provision
 // Body: { user_id, login, password, server, api_key, slot?, copy?, reuse_stored? }
 // - slot: extra terminal for copy trading (e.g. "c1a2b3c4"); omitted = main.
-// - copy: { mode: 'master'|'slave', group_id, lot_mode, lot_fixed, lot_mult, max_lot }
+// - copy: { mode: 'leader'|'follower', group_id, lot_mode, lot_fixed, lot_mult, max_lot }
 // - reuse_stored: restart the slot with its stored credentials (no password
-//   needed — used to flip an existing terminal into copy master/slave mode).
+//   needed — used to flip an existing terminal into copy leader/follower mode).
 app.post('/provision', async (req, res) => {
   try {
     const { user_id, login, password, server, api_key, slot, copy, reuse_stored } = req.body || {};

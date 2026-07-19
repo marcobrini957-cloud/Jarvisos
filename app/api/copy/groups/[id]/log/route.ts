@@ -49,9 +49,9 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
   const { data, error } = await admin()
     .from('copy_log')
     .select(`
-      id, status, slave_ticket, slave_lots, error_message, executed_at, created_at,
+      id, status, follower_ticket, follower_lots, error_message, executed_at, created_at,
       copy_accounts!inner(nickname, mt5_login, role),
-      copy_signals!inner(signal_type, master_ticket, symbol, trade_type, lot_size, open_price)
+      copy_signals!inner(signal_type, leader_ticket, symbol, trade_type, lot_size, open_price)
     `)
     .eq('copy_signals.group_id', groupId)
     .order('created_at', { ascending: false })

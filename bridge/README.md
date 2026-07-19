@@ -9,9 +9,9 @@ Runs on the Hetzner box behind nginx at `bridge.velquor.app`.
 |---|---|---|
 | `POST /sync` | EA | account snapshot + open/closed trades (batched upsert) |
 | `POST /disconnect` | EA | mark EA offline |
-| `POST /copy/signal` | master EA | broadcast trade signal to group |
-| `GET /copy/poll` | slave EA | fetch pending signals (+ lot config) |
-| `POST /copy/ack` | slave EA | report execution result |
+| `POST /copy/signal` | leader EA | broadcast trade signal to group |
+| `GET /copy/poll` | follower EA | fetch pending signals (+ lot config) |
+| `POST /copy/ack` | follower EA | report execution result |
 | `GET /health` | anyone | status/version/uptime (`?deep=1` also pings the DB) |
 | `GET /admin/stats` | admin console | metrics + live settings (Bearer `BRIDGE_ADMIN_TOKEN`) |
 | `POST /admin/reload` | admin console | force settings refresh + clear auth cache |

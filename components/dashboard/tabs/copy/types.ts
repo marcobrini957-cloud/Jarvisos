@@ -1,7 +1,7 @@
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface CopyAccount {
   id:           string
-  role:         'master' | 'slave'
+  role:         'leader' | 'follower'
   nickname:     string
   mt5_login:    string
   mt5_server:   string
@@ -24,15 +24,15 @@ export interface CopyGroup {
 export interface CopyLogEntry {
   id:            string
   status:        'success' | 'failed' | 'pending'
-  slave_ticket:  string | null
-  slave_lots:    number | null
+  follower_ticket:  string | null
+  follower_lots:    number | null
   error_message: string | null
   executed_at:   string | null
   created_at:    string
   copy_accounts: { nickname: string; mt5_login: string; role: string }
   copy_signals:  {
     signal_type:   'OPEN' | 'CLOSE'
-    master_ticket: number
+    leader_ticket: number
     symbol:        string
     trade_type:    string
     lot_size:      number

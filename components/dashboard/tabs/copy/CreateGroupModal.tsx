@@ -77,21 +77,21 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
 
           {sizing === 'mirror' && (
             <span style={{ fontSize: '10px', color: 'var(--t3)' }}>
-              Slaves copy every trade at exactly the master&apos;s lot size.
+              Followers copy every trade at exactly the leader&apos;s lot size.
             </span>
           )}
           {sizing === 'multiplier' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <span style={{ fontSize: '11px', color: 'var(--t3)' }}>LOT MULTIPLIER</span>
               <input value={lotMult} onChange={e => setLotMult(e.target.value)} type="number" step="0.01" min="0.01" style={inputStyle} />
-              <span style={{ fontSize: '10px', color: 'var(--t3)' }}>Slave lots = master lots × {lotMult || '1.0'}</span>
+              <span style={{ fontSize: '10px', color: 'var(--t3)' }}>Follower lots = leader lots × {lotMult || '1.0'}</span>
             </label>
           )}
           {sizing === 'fixed' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <span style={{ fontSize: '11px', color: 'var(--t3)' }}>FIXED LOT SIZE</span>
               <input value={lotFixed} onChange={e => setLotFixed(e.target.value)} type="number" step="0.01" min="0.01" style={inputStyle} />
-              <span style={{ fontSize: '10px', color: 'var(--t3)' }}>Slave always trades exactly {lotFixed || '0.01'} lots</span>
+              <span style={{ fontSize: '10px', color: 'var(--t3)' }}>Follower always trades exactly {lotFixed || '0.01'} lots</span>
             </label>
           )}
 

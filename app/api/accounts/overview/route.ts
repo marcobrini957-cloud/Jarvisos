@@ -5,7 +5,7 @@ import { getAuthUser } from '@/lib/api/auth'
 export interface AccountOverview {
   kind:      'primary' | 'copy'
   login:     number | null
-  role:      'master' | 'slave' | null
+  role:      'leader' | 'follower' | null
   status:    'live' | 'stale' | 'offline'
   balance:   number | null
   equity:    number | null
@@ -72,18 +72,18 @@ export async function GET() {
     const login = acc.mt5_login ? Number(acc.mt5_login) : null
     const group = acc.copy_groups as unknown as { name: string } | { name: string }[] | null
     const groupName = (Array.isArray(group) ? group[0]?.name : group?.name) ?? null
-    // The primary terminal doubles as copy master — don't list it twice,
+    // The primary terminal doubles as copy leader — don't list it twice,
     // just annotate the primary entry with its role.
     const primary = accounts.find(a => a.kind === 'primary' && a.login === login)
     if (primary) {
-      primary.role = acc.role as 'master' | 'slave'
+      primary.role = acc.role as 'leader' | 'follower'
       primary.groupName = groupName
       continue
     }
     accounts.push({
       kind:      'copy',
       login,
-      role:      acc.role as 'master' | 'slave',
+      role:      acc.role as 'leader' | 'follower',
       status:    liveness(acc.last_seen_at),
       balance:   acc.balance,
       equity:    acc.equity,

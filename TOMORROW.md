@@ -2,7 +2,7 @@
 
 State as of Sat 2026-07-18 evening: copy trading LIVE end-to-end (~0.3-0.55s
 delivery, burst-proven, EA 2.16), account switcher shipped, journal is
-master-only, terminals density-optimized. Everything below is what stands
+leader-only, terminals density-optimized. Everything below is what stands
 between this and a launchable product.
 
 ## A. Validate with live markets (Mon/Tue, needs open forex)
@@ -11,7 +11,7 @@ between this and a launchable product.
    TERM_CAPACITY (currently 4; likely 5-6 after optimization) and whether the
    CX23 resize can wait.
 2. **Real-trade copy validation** — Marco trades normally for a day with the
-   funded slave; check every mirror in Copy tab log: latency, lots 1:1,
+   funded follower; check every mirror in Copy tab log: latency, lots 1:1,
    closes matched. This is the go/no-go for calling copy trading DONE.
 3. **Weekday latency measure on forex** (BTCUSD weekend fills were 1-2s
    broker-side; EURUSD weekday should fill in ~50-300ms → total mirror
@@ -40,12 +40,12 @@ between this and a launchable product.
    screenshots for the MT5 WebRequest allowlist, and a live "waiting for
    first sync… ✓ Connected!" check (poll user_profiles.ea_last_seen).
    This is THE conversion lever for the EA path.
-8. **Copy tab: live positions card** — slave's open mirrors + balance
+8. **Copy tab: live positions card** — follower's open mirrors + balance
    (data already on copy_accounts + copy_log; Marco asked for visibility
-   without logging into the slave in MT5).
+   without logging into the follower in MT5).
 9. **Copy trading UX polish** — surface per-mirror status (executed/failed
    reason like margin) as human text in GroupCard; "failed: no money on
-   slave" should be readable by a non-dev.
+   follower" should be readable by a non-dev.
 
 ## D. Tightening (Marco: "internally change some stuff to finalize")
 10. Marco to list his internal changes — placeholder for his walkthrough.

@@ -8,7 +8,7 @@ import { resolveServerAddress } from '@/lib/brokers'
 import { accountSlot, provisioner, userSlots, bridgeConfigured } from '@/lib/api/copy-cloud'
 
 // Cloud-host a copy-trading account: provisions a dedicated VELQUOR terminal
-// (slot per account) running the EA in COPY_MASTER / COPY_SLAVE mode with the
+// (slot per account) running the EA in COPY_LEADER / COPY_FOLLOWER mode with the
 // group's lot settings. If the account is the user's already-connected main
 // terminal, that terminal is re-provisioned in copy mode using its stored
 // credentials — no password needed and no extra slot burned.
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   if (!group) return NextResponse.json({ error: 'Group not found' }, { status: 404 })
 
   const copy = {
-    mode: account.role as 'master' | 'slave',
+    mode: account.role as 'leader' | 'follower',
     group_id: account.group_id,
     lot_mode: group.lot_mode === 'fixed' ? 'fixed' : 'proportional',
     lot_fixed: group.lot_fixed ?? 0.01,
@@ -116,9 +116,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     const serverInput = String(body?.server ?? account.mt5_server ?? '').trim()
     if (!password || password.length > 64) {
       return NextResponse.json(
-        { error: account.role === 'slave'
-            ? 'The trading password is required — slaves place real trades.'
-            : 'Password required (the read-only investor password is enough for a master).' },
+        { error: account.role === 'follower'
+            ? 'The trading password is required — followers place real trades.'
+            : 'Password required (the read-only investor password is enough for a leader).' },
         { status: 400 },
       )
     }

@@ -13,18 +13,18 @@ import { BROKERS } from '@/lib/brokers'
 //     account number to correlate signals.
 export function AddAccountModal({
   groupId,
-  defaultRole = 'slave',
+  defaultRole = 'follower',
   mainLogin = null,
   onClose,
   onAdded,
 }: {
   groupId:      string
-  defaultRole?: 'master' | 'slave'
+  defaultRole?: 'leader' | 'follower'
   mainLogin?:   string | null   // login of the user's connected main terminal
   onClose:      () => void
   onAdded:      () => void
 }) {
-  const [role,      setRole]      = useState<'master' | 'slave'>(defaultRole)
+  const [role,      setRole]      = useState<'leader' | 'follower'>(defaultRole)
   const [method,    setMethod]    = useState<'cloud' | 'ea'>('cloud')
   const [mt5Login,  setMt5Login]  = useState('')
   const [mt5Server, setMt5Server] = useState('')
@@ -41,7 +41,7 @@ export function AddAccountModal({
     if (!login) { setError('MT5 account number required'); return }
     if (method === 'cloud' && !isMainAccount) {
       if (!mt5Server.trim()) { setError('Pick or enter your broker server'); return }
-      if (!password) { setError(role === 'slave' ? 'Trading password required — slaves place real trades' : 'Password required (investor password is enough for a master)'); return }
+      if (!password) { setError(role === 'follower' ? 'Trading password required — followers place real trades' : 'Password required (investor password is enough for a leader)'); return }
     }
     setLoading(true); setError('')
 
@@ -96,7 +96,7 @@ export function AddAccountModal({
           <div>
             <div style={{ fontSize: '11px', color: 'var(--t3)', marginBottom: '6px' }}>ROLE</div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              {(['master', 'slave'] as const).map(r => (
+              {(['leader', 'follower'] as const).map(r => (
                 <button
                   key={r} type="button"
                   onClick={() => setRole(r)}
@@ -109,14 +109,14 @@ export function AddAccountModal({
                     cursor:     'pointer', textTransform: 'uppercase', letterSpacing: '0.06em',
                   }}
                 >
-                  {r === 'master' ? 'Master' : 'Slave'}
+                  {r === 'leader' ? 'Leader' : 'Follower'}
                 </button>
               ))}
             </div>
             <div style={hint}>
-              {role === 'master'
+              {role === 'leader'
                 ? 'This account places the real trades — others will copy it.'
-                : "This account follows and copies the master's trades automatically."}
+                : "This account follows and copies the leader's trades automatically."}
             </div>
           </div>
 
@@ -194,18 +194,18 @@ export function AddAccountModal({
 
               <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
-                  {role === 'slave' ? 'TRADING PASSWORD' : 'PASSWORD'}
+                  {role === 'follower' ? 'TRADING PASSWORD' : 'PASSWORD'}
                 </span>
                 <input
                   value={password} onChange={e => setPassword(e.target.value)}
-                  placeholder={role === 'slave' ? 'Main/trading password' : 'Investor (read-only) password is enough'}
+                  placeholder={role === 'follower' ? 'Main/trading password' : 'Investor (read-only) password is enough'}
                   type="password" autoComplete="off"
                   style={inputStyle}
                 />
                 <span style={hint}>
-                  {role === 'slave'
-                    ? 'Slaves execute the copied trades, so the trading password is required.'
-                    : 'A master only reports its trades — the read-only investor password works.'}
+                  {role === 'follower'
+                    ? 'Followers execute the copied trades, so the trading password is required.'
+                    : 'A leader only reports its trades — the read-only investor password works.'}
                   {' '}Encrypted and stored only on our EU trade server, never in the database.
                 </span>
               </label>

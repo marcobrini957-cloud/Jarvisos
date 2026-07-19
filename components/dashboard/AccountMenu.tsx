@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 interface AccountOverview {
   kind:      'primary' | 'copy'
   login:     number | null
-  role:      'master' | 'slave' | null
+  role:      'leader' | 'follower' | null
   status:    'live' | 'stale' | 'offline'
   balance:   number | null
   equity:    number | null
@@ -114,7 +114,7 @@ export default function AccountMenu({
   const pillSynced  = showingPrimary ? status.syncedAt : selectedAcc?.lastSeen ?? null
   const pillLabel   = showingPrimary
     ? 'MT5'
-    : `${selectedAcc?.role === 'slave' ? 'COPY' : 'MT5'} ${selectedAcc?.login ?? ''}`
+    : `${selectedAcc?.role === 'follower' ? 'COPY' : 'MT5'} ${selectedAcc?.login ?? ''}`
 
   function choose(acc: AccountOverview) {
     setSelected(acc.login)
@@ -234,8 +234,8 @@ export default function AccountMenu({
                         {acc.login ?? '—'}
                       </span>
                       {acc.kind === 'primary' && <RoleBadge text="PRIMARY" tone="accent" />}
-                      {acc.role === 'master'  && <RoleBadge text="MASTER"  tone="gold" />}
-                      {acc.role === 'slave'   && <RoleBadge text="COPY"    tone="muted" />}
+                      {acc.role === 'leader'  && <RoleBadge text="LEADER"  tone="gold" />}
+                      {acc.role === 'follower'   && <RoleBadge text="COPY"    tone="muted" />}
                     </div>
                     <span style={{
                       color: 'var(--t3)', fontSize: '10px',

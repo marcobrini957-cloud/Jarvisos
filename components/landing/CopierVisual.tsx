@@ -22,9 +22,9 @@ export function CopierVisual() {
         </div>
       </div>
 
-      {/* Master */}
+      {/* Leader */}
       <div style={{ padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(255,184,48,0.03)' }}>
-        <p style={{ margin: '0 0 6px', color: '#FFB830', fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em' }}>MASTER</p>
+        <p style={{ margin: '0 0 6px', color: '#FFB830', fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em' }}>LEADER</p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00FF85', display: 'block', boxShadow: '0 0 5px #00FF85' }} />
@@ -46,14 +46,14 @@ export function CopierVisual() {
       }}>
         <span style={{ fontSize: '11px' }}>{execDone ? '✓' : '⚡'}</span>
         <span style={{ fontSize: '10px', fontWeight: 500, color: execDone ? '#00FF85' : '#FFB830' }}>
-          {signalActive && 'XAUUSD BUY 0.5 lots → broadcasting to slaves…'}
-          {execDone && 'All slaves executed — avg 1.8 seconds'}
+          {signalActive && 'XAUUSD BUY 0.5 lots → broadcasting to followers…'}
+          {execDone && 'All followers executed — avg 1.8 seconds'}
         </span>
       </div>
 
-      {/* Slaves */}
+      {/* Followers */}
       <div style={{ padding: '11px 16px' }}>
-        <p style={{ margin: '0 0 9px', color: 'rgba(255,255,255,0.28)', fontSize: '9px', fontWeight: 600, letterSpacing: '0.08em' }}>SLAVE ACCOUNTS (3)</p>
+        <p style={{ margin: '0 0 9px', color: 'rgba(255,255,255,0.28)', fontSize: '9px', fontWeight: 600, letterSpacing: '0.08em' }}>FOLLOWER ACCOUNTS (3)</p>
         {[
           { name: 'FTMO Demo #781234', status: 'active',  execLots: '0.5 lots' },
           { name: 'Hedge Fund #334-B', status: 'active',  execLots: '0.25 lots' },

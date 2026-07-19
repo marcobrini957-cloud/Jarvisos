@@ -57,7 +57,7 @@ export function HostAccountModal({
           Host in VELQUOR Cloud
         </div>
         <div style={{ fontSize: '12px', color: 'var(--t3)', marginBottom: '18px', lineHeight: 1.5 }}>
-          #{account.mt5_login} · {account.role === 'master' ? 'Master' : 'Slave'} — we run the terminal
+          #{account.mt5_login} · {account.role === 'leader' ? 'Leader' : 'Follower'} — we run the terminal
           for you, 24/7, nothing to install.
         </div>
 
@@ -95,18 +95,18 @@ export function HostAccountModal({
             </div>
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
-                {account.role === 'slave' ? 'TRADING PASSWORD' : 'PASSWORD'}
+                {account.role === 'follower' ? 'TRADING PASSWORD' : 'PASSWORD'}
               </span>
               <input
                 value={password} onChange={e => setPassword(e.target.value)}
-                placeholder={account.role === 'slave' ? 'Main/trading password' : 'Investor (read-only) password is enough'}
+                placeholder={account.role === 'follower' ? 'Main/trading password' : 'Investor (read-only) password is enough'}
                 type="password" autoComplete="off"
                 style={inputStyle}
               />
               <span style={{ fontSize: '10px', color: 'var(--t3)', lineHeight: 1.5 }}>
-                {account.role === 'slave'
-                  ? 'Slaves execute the copied trades, so the trading password is required.'
-                  : 'A master only reports its trades — the read-only investor password works.'}
+                {account.role === 'follower'
+                  ? 'Followers execute the copied trades, so the trading password is required.'
+                  : 'A leader only reports its trades — the read-only investor password works.'}
                 {' '}Encrypted and stored only on our EU trade server, never in the database.
               </span>
             </label>

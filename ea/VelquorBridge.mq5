@@ -13,14 +13,14 @@
 enum ENUM_COPY_MODE
 {
    COPY_OFF    = 0,  // OFF — standard sync only
-   COPY_MASTER = 1,  // MASTER — broadcast my trades to slaves
-   COPY_SLAVE  = 2,  // SLAVE — receive and execute copied trades
+   COPY_LEADER = 1,  // LEADER — broadcast my trades to followers
+   COPY_FOLLOWER  = 2,  // FOLLOWER — receive and execute copied trades
 };
 
 //── Lot sizing enum ───────────────────────────────────────────────────────────
 enum ENUM_LOT_MODE
 {
-   LOT_PROPORTIONAL = 0,  // Proportional — master lots × multiplier
+   LOT_PROPORTIONAL = 0,  // Proportional — leader lots × multiplier
    LOT_FIXED        = 1,  // Fixed lot — always use InpCopyLotFixed
 };
 
@@ -35,11 +35,11 @@ input bool           InpFileBridge  = false;                         // Cloud mo
 // ── Copy trading inputs ─────────────────────────────────────────────────────
 input ENUM_COPY_MODE InpCopyMode     = COPY_OFF;  // Copy Mode
 input string         InpCopyGroupId  = "";         // Copy Group ID (paste from VELQUOR dashboard)
-input ENUM_LOT_MODE  InpCopyLotMode  = LOT_PROPORTIONAL; // Slave lot sizing
-input double         InpCopyLotFixed = 0.01;       // Fixed lot size (slave, LOT_FIXED mode)
-input double         InpCopyLotMult  = 1.0;        // Lot multiplier (slave, LOT_PROPORTIONAL mode)
-input double         InpCopyMaxLot   = 10.0;       // Maximum lot per copied trade (slave)
-input int            InpCopyPollMs   = 100;        // Slave inbox check interval ms
+input ENUM_LOT_MODE  InpCopyLotMode  = LOT_PROPORTIONAL; // Follower lot sizing
+input double         InpCopyLotFixed = 0.01;       // Fixed lot size (follower, LOT_FIXED mode)
+input double         InpCopyLotMult  = 1.0;        // Lot multiplier (follower, LOT_PROPORTIONAL mode)
+input double         InpCopyMaxLot   = 10.0;       // Maximum lot per copied trade (follower)
+input int            InpCopyPollMs   = 100;        // Follower inbox check interval ms
 
 //── Globals ───────────────────────────────────────────────────────────────────
 string   g_syncUrl;
@@ -47,19 +47,19 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.16";
+string   g_eaVersion   = "2.17";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
-ulong    g_lastSyncMs  = 0;   // slave: throttles PostSync inside the fast timer
+ulong    g_lastSyncMs  = 0;   // follower: throttles PostSync inside the fast timer
 CTrade   g_trade;
 
-// Master: track tickets we have already signalled to avoid duplicates
+// Leader: track tickets we have already signalled to avoid duplicates
 ulong    g_signaledOpen[];
 ulong    g_signaledClose[];
 
-// Slave: local master_ticket → slave_ticket mapping
-long     g_masterTickets[];
-long     g_slaveTickets[];
+// Follower: local leader_ticket → follower_ticket mapping
+long     g_leaderTickets[];
+long     g_followerTickets[];
 int      g_mappingSize = 0;
 
 //+------------------------------------------------------------------+
@@ -90,22 +90,22 @@ int OnInit()
 
    ArrayResize(g_signaledOpen,  0);
    ArrayResize(g_signaledClose, 0);
-   ArrayResize(g_masterTickets, 0);
-   ArrayResize(g_slaveTickets,  0);
+   ArrayResize(g_leaderTickets, 0);
+   ArrayResize(g_followerTickets,  0);
 
    // One timer only — MQL5 has a single timer slot and every variant fires
-   // OnTimer(). Slaves need the fast cadence for copy polling; PostSync is
+   // OnTimer(). Followers need the fast cadence for copy polling; PostSync is
    // throttled to InpIntervalSec inside OnTimer.
-   if(InpCopyMode == COPY_SLAVE)
+   if(InpCopyMode == COPY_FOLLOWER)
       EventSetMillisecondTimer(InpCopyPollMs);
    else
       EventSetTimer(InpIntervalSec);
 
-   string modeStr = (InpCopyMode == COPY_MASTER) ? "MASTER" :
-                    (InpCopyMode == COPY_SLAVE)   ? "SLAVE"  : "OFF";
+   string modeStr = (InpCopyMode == COPY_LEADER) ? "LEADER" :
+                    (InpCopyMode == COPY_FOLLOWER)   ? "FOLLOWER"  : "OFF";
 
    // Cloud mode: publish copy config so the sidecar knows whether to poll the
-   // bridge for this terminal (slaves) and with which group/login/interval.
+   // bridge for this terminal (followers) and with which group/login/interval.
    if(InpFileBridge)
    {
       string cfg = "{";
@@ -137,12 +137,12 @@ void OnDeinit(const int reason)
 }
 
 //+------------------------------------------------------------------+
-// Fires every InpCopyPollMs on slaves (fast copy poll + throttled sync),
+// Fires every InpCopyPollMs on followers (fast copy poll + throttled sync),
 // every InpIntervalSec otherwise.
 //+------------------------------------------------------------------+
 void OnTimer()
 {
-   if(InpCopyMode == COPY_SLAVE)
+   if(InpCopyMode == COPY_FOLLOWER)
    {
       PollCopySignals();
       ulong nowMs = GetTickCount64();
@@ -157,14 +157,14 @@ void OnTimer()
 }
 
 //+------------------------------------------------------------------+
-// MASTER: fires immediately on every trade transaction
+// LEADER: fires immediately on every trade transaction
 //+------------------------------------------------------------------+
 void OnTradeTransaction(
    const MqlTradeTransaction& trans,
    const MqlTradeRequest&     request,
    const MqlTradeResult&      result)
 {
-   if(InpCopyMode != COPY_MASTER) return;
+   if(InpCopyMode != COPY_LEADER) return;
 
    // We care about deal events (position open/close)
    if(trans.type != TRADE_TRANSACTION_DEAL_ADD) return;
@@ -214,7 +214,7 @@ void OnTradeTransaction(
 }
 
 //+------------------------------------------------------------------+
-// MASTER: send a copy signal to the bridge
+// LEADER: send a copy signal to the bridge
 //+------------------------------------------------------------------+
 void SendCopySignal(
    const string signalType,
@@ -274,7 +274,7 @@ void SendCopySignal(
 }
 
 //+------------------------------------------------------------------+
-// SLAVE: poll bridge for pending signals and execute them
+// FOLLOWER: poll bridge for pending signals and execute them
 //+------------------------------------------------------------------+
 void PollCopySignals()
 {
@@ -355,7 +355,7 @@ void PollCopySignals()
 }
 
 //+------------------------------------------------------------------+
-// SLAVE: parse and execute one copy signal object
+// FOLLOWER: parse and execute one copy signal object
 //+------------------------------------------------------------------+
 void ProcessCopySignal(const string objStr)
 {
@@ -364,8 +364,8 @@ void ProcessCopySignal(const string objStr)
    string symbol     = JsonGetString(objStr, "symbol");
    string tradeType  = JsonGetString(objStr, "trade_type");
    string lotMode    = JsonGetString(objStr, "lot_mode");
-   long   masterTicket = (long)StringToInteger(JsonGetString(objStr, "master_ticket"));
-   double masterLots = StringToDouble(JsonGetString(objStr, "master_lots"));
+   long   leaderTicket = (long)StringToInteger(JsonGetString(objStr, "leader_ticket"));
+   double leaderLots = StringToDouble(JsonGetString(objStr, "leader_lots"));
    double openPrice  = StringToDouble(JsonGetString(objStr, "open_price"));
    double sl         = StringToDouble(JsonGetString(objStr, "stop_loss"));
    double tp         = StringToDouble(JsonGetString(objStr, "take_profit"));
@@ -380,27 +380,27 @@ void ProcessCopySignal(const string objStr)
    string brokerSymbol = NormalisedSymbol(symbol);
 
    string execStatus = "skipped";
-   long   slaveTicket = 0;
-   double slaveLots   = 0;
+   long   followerTicket = 0;
+   double followerLots   = 0;
    string errorMsg    = "";
 
    if(sigType == "open")
    {
       // Idempotency: fast redelivery (long-poll returns before our ack lands)
-      // must never open the same master trade twice. The comment scan in
-      // FindSlaveTicket catches it even across EA restarts.
-      long existing = FindSlaveTicket(masterTicket, brokerSymbol);
+      // must never open the same leader trade twice. The comment scan in
+      // FindFollowerTicket catches it even across EA restarts.
+      long existing = FindFollowerTicket(leaderTicket, brokerSymbol);
       if(existing > 0)
       {
          execStatus  = "executed";
-         slaveTicket = existing;
-         Print("CopyTrade OPEN duplicate delivery ignored: master=", masterTicket,
-               " already open as slave=", existing);
-         SendCopyAck(logId, execStatus, slaveTicket, slaveLots, "");
+         followerTicket = existing;
+         Print("CopyTrade OPEN duplicate delivery ignored: leader=", leaderTicket,
+               " already open as follower=", existing);
+         SendCopyAck(logId, execStatus, followerTicket, followerLots, "");
          return;
       }
 
-      // The slave terminal has likely never shown this symbol — without a
+      // The follower terminal has likely never shown this symbol — without a
       // Market Watch subscription there are no quotes and OrderSend fails
       // with 10021. Select it and wait briefly for the first tick.
       if(!EnsureSymbolReady(brokerSymbol))
@@ -408,34 +408,34 @@ void ProcessCopySignal(const string objStr)
          execStatus = "failed";
          errorMsg   = "No quotes for " + brokerSymbol + " (symbol select/tick timeout)";
          Print("CopyTrade OPEN failed: ", errorMsg);
-         SendCopyAck(logId, execStatus, slaveTicket, slaveLots, errorMsg);
+         SendCopyAck(logId, execStatus, followerTicket, followerLots, errorMsg);
          return;
       }
 
       // Calculate lot size
-      slaveLots = CalcLots(masterLots, lotMode, lotFixed, lotMult, maxLot);
+      followerLots = CalcLots(leaderLots, lotMode, lotFixed, lotMult, maxLot);
 
       // Adjust lot to broker constraints
       double minLot  = SymbolInfoDouble(brokerSymbol, SYMBOL_VOLUME_MIN);
       double maxBkLot= SymbolInfoDouble(brokerSymbol, SYMBOL_VOLUME_MAX);
       double lotStep = SymbolInfoDouble(brokerSymbol, SYMBOL_VOLUME_STEP);
-      if(lotStep > 0) slaveLots = MathRound(slaveLots / lotStep) * lotStep;
-      slaveLots = MathMax(minLot, MathMin(maxBkLot, slaveLots));
+      if(lotStep > 0) followerLots = MathRound(followerLots / lotStep) * lotStep;
+      followerLots = MathMax(minLot, MathMin(maxBkLot, followerLots));
 
-      string comment = "VQ:" + IntegerToString(masterTicket);
+      string comment = "VQ:" + IntegerToString(leaderTicket);
       bool ok = false;
       if(tradeType == "buy")
-         ok = g_trade.Buy(slaveLots, brokerSymbol, 0, sl, tp, comment);
+         ok = g_trade.Buy(followerLots, brokerSymbol, 0, sl, tp, comment);
       else if(tradeType == "sell")
-         ok = g_trade.Sell(slaveLots, brokerSymbol, 0, sl, tp, comment);
+         ok = g_trade.Sell(followerLots, brokerSymbol, 0, sl, tp, comment);
 
       if(ok)
       {
-         slaveTicket = (long)g_trade.ResultOrder();
-         StoreMapping(masterTicket, slaveTicket);
+         followerTicket = (long)g_trade.ResultOrder();
+         StoreMapping(leaderTicket, followerTicket);
          execStatus = "executed";
-         Print("CopyTrade OPEN: master=", masterTicket, " slave=", slaveTicket,
-               " ", symbol, " ", tradeType, " lots=", slaveLots);
+         Print("CopyTrade OPEN: leader=", leaderTicket, " follower=", followerTicket,
+               " ", symbol, " ", tradeType, " lots=", followerLots);
       }
       else
       {
@@ -446,16 +446,16 @@ void ProcessCopySignal(const string objStr)
    }
    else if(sigType == "close")
    {
-      // Find our position for this master ticket
-      long myTicket = FindSlaveTicket(masterTicket, symbol);
+      // Find our position for this leader ticket
+      long myTicket = FindFollowerTicket(leaderTicket, symbol);
       if(myTicket > 0)
       {
          if(g_trade.PositionClose((ulong)myTicket))
          {
-            slaveTicket = myTicket;
+            followerTicket = myTicket;
             execStatus  = "executed";
-            RemoveMapping(masterTicket);
-            Print("CopyTrade CLOSE: master=", masterTicket, " slave=", myTicket, " ", symbol);
+            RemoveMapping(leaderTicket);
+            Print("CopyTrade CLOSE: leader=", leaderTicket, " follower=", myTicket, " ", symbol);
          }
          else
          {
@@ -467,30 +467,30 @@ void ProcessCopySignal(const string objStr)
       else
       {
          execStatus = "skipped";
-         errorMsg   = "Slave position not found for master=" + IntegerToString(masterTicket);
+         errorMsg   = "Follower position not found for leader=" + IntegerToString(leaderTicket);
          Print("CopyTrade CLOSE skipped: ", errorMsg);
       }
    }
 
    // Send ACK to bridge
-   SendCopyAck(logId, execStatus, slaveTicket, slaveLots, errorMsg);
+   SendCopyAck(logId, execStatus, followerTicket, followerLots, errorMsg);
 }
 
 //+------------------------------------------------------------------+
-// SLAVE: send execution acknowledgement to bridge
+// FOLLOWER: send execution acknowledgement to bridge
 //+------------------------------------------------------------------+
 void SendCopyAck(
    const string logId,
    const string status,
-   const long   slaveTicket,
-   const double slaveLots,
+   const long   followerTicket,
+   const double followerLots,
    const string errorMsg)
 {
    string payload = "{";
    payload += "\"log_id\":\""      + logId                              + "\",";
    payload += "\"status\":\""      + status                             + "\",";
-   payload += "\"slave_ticket\":"  + IntegerToString(slaveTicket)       + ",";
-   payload += "\"slave_lots\":"    + DoubleToStr(slaveLots, 2)          + ",";
+   payload += "\"follower_ticket\":"  + IntegerToString(followerTicket)       + ",";
+   payload += "\"follower_lots\":"    + DoubleToStr(followerLots, 2)          + ",";
    payload += "\"error_message\":\"" + EscapeJson(errorMsg)             + "\"";
    payload += "}";
 
@@ -583,10 +583,10 @@ bool EnsureSymbolReady(const string symbol)
 }
 
 //+------------------------------------------------------------------+
-// Calculate slave lot size based on group config
+// Calculate follower lot size based on group config
 //+------------------------------------------------------------------+
 double CalcLots(
-   const double masterLots,
+   const double leaderLots,
    const string lotMode,
    const double lotFixed,
    const double lotMult,
@@ -598,23 +598,23 @@ double CalcLots(
    if(lotMode == "fixed" || InpCopyLotMode == LOT_FIXED)
       lots = (lotFixed > 0) ? lotFixed : InpCopyLotFixed;
    else
-      lots = masterLots * ((lotMult > 0) ? lotMult : InpCopyLotMult);
+      lots = leaderLots * ((lotMult > 0) ? lotMult : InpCopyLotMult);
 
    return MathMin(lots, (maxLot > 0) ? maxLot : InpCopyMaxLot);
 }
 
 //+------------------------------------------------------------------+
-// Find this slave's position ticket for a given master ticket
+// Find this follower's position ticket for a given leader ticket
 // Uses in-memory map first, then falls back to scanning open positions by comment
 //+------------------------------------------------------------------+
-long FindSlaveTicket(const long masterTicket, const string symbol)
+long FindFollowerTicket(const long leaderTicket, const string symbol)
 {
    // Check in-memory mapping first
    for(int i = 0; i < g_mappingSize; i++)
-      if(g_masterTickets[i] == masterTicket) return g_slaveTickets[i];
+      if(g_leaderTickets[i] == leaderTicket) return g_followerTickets[i];
 
-   // Fallback: scan open positions for VQ:{masterTicket} comment
-   string target = "VQ:" + IntegerToString(masterTicket);
+   // Fallback: scan open positions for VQ:{leaderTicket} comment
+   string target = "VQ:" + IntegerToString(leaderTicket);
    for(int i = 0; i < PositionsTotal(); i++)
    {
       ulong ticket = PositionGetTicket(i);
@@ -626,38 +626,38 @@ long FindSlaveTicket(const long masterTicket, const string symbol)
 }
 
 //+------------------------------------------------------------------+
-// In-memory mapping management (master→slave ticket)
+// In-memory mapping management (leader→follower ticket)
 //+------------------------------------------------------------------+
-void StoreMapping(const long masterTicket, const long slaveTicket)
+void StoreMapping(const long leaderTicket, const long followerTicket)
 {
-   ArrayResize(g_masterTickets, g_mappingSize + 1);
-   ArrayResize(g_slaveTickets,  g_mappingSize + 1);
-   g_masterTickets[g_mappingSize] = masterTicket;
-   g_slaveTickets[g_mappingSize]  = slaveTicket;
+   ArrayResize(g_leaderTickets, g_mappingSize + 1);
+   ArrayResize(g_followerTickets,  g_mappingSize + 1);
+   g_leaderTickets[g_mappingSize] = leaderTicket;
+   g_followerTickets[g_mappingSize]  = followerTicket;
    g_mappingSize++;
 }
 
-void RemoveMapping(const long masterTicket)
+void RemoveMapping(const long leaderTicket)
 {
    for(int i = 0; i < g_mappingSize; i++)
    {
-      if(g_masterTickets[i] == masterTicket)
+      if(g_leaderTickets[i] == leaderTicket)
       {
          for(int j = i; j < g_mappingSize - 1; j++)
          {
-            g_masterTickets[j] = g_masterTickets[j + 1];
-            g_slaveTickets[j]  = g_slaveTickets[j + 1];
+            g_leaderTickets[j] = g_leaderTickets[j + 1];
+            g_followerTickets[j]  = g_followerTickets[j + 1];
          }
          g_mappingSize--;
-         ArrayResize(g_masterTickets, g_mappingSize);
-         ArrayResize(g_slaveTickets,  g_mappingSize);
+         ArrayResize(g_leaderTickets, g_mappingSize);
+         ArrayResize(g_followerTickets,  g_mappingSize);
          return;
       }
    }
 }
 
 //+------------------------------------------------------------------+
-// Sent-ticket tracking for master (avoid duplicate signals)
+// Sent-ticket tracking for leader (avoid duplicate signals)
 //+------------------------------------------------------------------+
 bool TicketAlreadySignalled(const ulong ticket, const ulong& arr[])
 {

@@ -1,7 +1,7 @@
 <svg width="264" height="80" viewBox="0 0 264 80" xmlns="http://www.w3.org/2000/svg">
   <!-- VELQUOR wordmark: icon (80×80) + logotype -->
 
-  <!-- Icon — VQ mark scaled to 80×80 from the 400×400 master (scale 0.2) -->
+  <!-- Icon — VQ mark scaled to 80×80 from the 400×400 original (scale 0.2) -->
   <svg x="0" y="0" width="80" height="80" viewBox="0 0 400 400">
     <rect width="400" height="400" rx="72" fill="#0A0A0F"/>
     <path d="M 40 110 L 126 292 L 212 110"
