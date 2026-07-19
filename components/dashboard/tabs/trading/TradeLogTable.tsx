@@ -107,10 +107,11 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
                 </div>
               </div>
 
-              {/* ── Desktop row ── */}
+              {/* ── Desktop row — click anywhere to annotate (pen is just a hint) ── */}
               <div
                 className="hidden sm:flex items-center gap-3 px-4 py-3 transition-colors cursor-pointer group"
                 style={{ borderBottom:'1px solid var(--bd)', background: rowBg }}
+                onClick={() => onAnnotate(trade)}
                 onMouseEnter={e => (e.currentTarget.style.background = hoverBg)}
                 onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
 
