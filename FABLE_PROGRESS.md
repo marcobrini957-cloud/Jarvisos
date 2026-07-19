@@ -812,3 +812,33 @@ Max DD) and DailyPnLChart (30 days, green/red day count, touch tooltip).
 Both are viewBox SVGs → fully fluid at 390px, verified with screenshots.
 Mobile Overview now: header → stat cards → win ring → Equity Curve →
 Daily P&L → Daily Risk → Today's Focus → Edge Report.
+
+---
+# 2026-07-19 (5) — URGENT: trade annotation modal invisible (client demo)
+
+Marco: pen/edit on Trading tab trades dead on PC + mobile. Root cause was
+NOT the modal or the API — `.vq-tab-in` (tab entrance animation, wraps
+every tab in DashboardShell) had `animation-fill-mode: both`, which
+retains the final keyframe's `transform: translateY(0)` forever. Retained
+transform = the tab wrapper becomes the containing block for ALL
+position:fixed descendants → TradeAnnotationModal, its overlay, journal
+EntryModal, screenshot lightbox all centered inside the 5552px tab
+content instead of the viewport (measured: modal top at 1606px in a
+900px viewport). Overlay dimmed only the content area (topbar stayed
+bright) — that asymmetry was the tell.
+
+Fix: fill-mode `backwards` (globals.css) — transform drops when the
+0.22s entrance ends; identical visuals, no retained containing block.
+NEVER change it back to both/forwards; comment in CSS explains.
+
+Verified: Playwright (chrome channel) desktop 1440px pen-click + iPhone 13
+card-tap, local AND production after deploy 9e55ef2 — modal centered,
+rationale saves (PATCH 200, row checked in DB via service role), test
+rows cleaned after. Note: Turbopack dev served stale CSS through TWO
+restarts — needed `rm -rf .next` before the change showed up.
+
+E2E infra this session: /tmp/vq-e2e/*.mjs (playwright-core + system
+Chrome, no browser download). Cookie consent localStorage value is
+'all'/'essential' — NOT 'accepted' (wrong value = banner intercepts
+clicks). Test account fable-mobiletest has a known password now, stored
+in Claude's local memory, not here (repo is public).
