@@ -125,6 +125,7 @@ export default function LoginPage() {
         password,
         options: {
           data: { display_name: displayName || 'Trader' },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
       if (authError) setError(authError.message)

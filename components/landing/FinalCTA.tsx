@@ -35,7 +35,7 @@ export function FinalCTA() {
         <p style={{ color: 'var(--t2)', fontSize: '15px', lineHeight: 1.7, maxWidth: '560px', margin: '0 auto 32px' }}>
           {c.subtitle}
         </p>
-        <Link href="/login" style={{
+        <Link href="/login?mode=signup" style={{
           display: 'inline-block', background: '#fff', color: '#000',
           fontSize: '15px', fontWeight: 700, padding: '15px 36px', borderRadius: '10px',
           letterSpacing: '-0.01em', transition: 'transform 0.15s, box-shadow 0.15s',
