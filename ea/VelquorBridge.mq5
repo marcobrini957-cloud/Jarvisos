@@ -4,7 +4,7 @@
 //|  Place in: MQL5/Experts/VelquorBridge.mq5                        |
 //+------------------------------------------------------------------+
 #property copyright "VELQUOR"
-#property version   "2.19"
+#property version   "2.20"
 #property strict
 
 #include <Trade\Trade.mqh>
@@ -48,7 +48,7 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.19";
+string   g_eaVersion   = "2.20";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // follower: throttles PostSync inside the fast timer
@@ -683,17 +683,9 @@ void RemoveShot(const int idx)
    ArrayResize(g_shots, last);
 }
 
-// Close shots must keep the entry on screen: ~260 visible bars at scale 2 /
-// 1280px wide, so pick the smallest timeframe whose bar count fits.
-ENUM_TIMEFRAMES FitTimeframe(const datetime openT, const datetime closeT)
-{
-   long dur = (long)(closeT - openT);
-   if(dur <= 240 * 60)    return PERIOD_M1;   // ≤ 4h
-   if(dur <= 240 * 300)   return PERIOD_M5;   // ≤ 20h
-   if(dur <= 240 * 900)   return PERIOD_M15;  // ≤ 2.5d
-   if(dur <= 240 * 3600)  return PERIOD_H1;   // ≤ 10d
-   return PERIOD_H4;
-}
+// Fixed timeframe for every shot (open and close) so all screenshots share one
+// consistent, branded look. M15 frames typical intraday trades cleanly.
+#define SHOT_TIMEFRAME PERIOD_M15
 
 // MT5 does not render OBJPROP_TEXT of an HLINE on the chart (object list only),
 // so a level line's meaning is invisible. This draws a real OBJ_TEXT word label
@@ -715,7 +707,7 @@ void DrawLevelLabel(const long cid, const string name, const datetime t,
 // ChartSetSymbolPeriod on it would deinit/reinit this EA mid-session.
 bool CaptureShot(PendingShot &s)
 {
-   ENUM_TIMEFRAMES tf = s.isClose ? FitTimeframe(s.openTime, s.closeTime) : PERIOD_M5;
+   ENUM_TIMEFRAMES tf = SHOT_TIMEFRAME;
    if(!EnsureSymbolReady(s.symbol)) return false;
 
    long cid = ChartOpen(s.symbol, tf);
@@ -770,6 +762,20 @@ bool CaptureShot(PendingShot &s)
          ObjectSetInteger(cid, "vq_open_t", OBJPROP_STYLE, STYLE_DOT);
       }
    }
+
+   // VELQUOR watermark — bottom-right, Inter (the landing-page wordmark font,
+   // bundled into the terminal image; desktop MT5 without Inter falls back to
+   // its default sans). Subtle slate so it brands without fighting the candles.
+   ObjectCreate(cid, "vq_wm", OBJ_LABEL, 0, 0, 0);
+   ObjectSetInteger(cid, "vq_wm", OBJPROP_CORNER, CORNER_RIGHT_LOWER);
+   ObjectSetInteger(cid, "vq_wm", OBJPROP_ANCHOR, ANCHOR_RIGHT_LOWER);
+   ObjectSetInteger(cid, "vq_wm", OBJPROP_XDISTANCE, 14);
+   ObjectSetInteger(cid, "vq_wm", OBJPROP_YDISTANCE, 12);
+   ObjectSetString(cid,  "vq_wm", OBJPROP_TEXT, "VELQUOR");
+   ObjectSetString(cid,  "vq_wm", OBJPROP_FONT, "Inter");
+   ObjectSetInteger(cid, "vq_wm", OBJPROP_FONTSIZE, 15);
+   ObjectSetInteger(cid, "vq_wm", OBJPROP_COLOR, C'124,135,152');
+   ObjectSetInteger(cid, "vq_wm", OBJPROP_BACK, false);
 
    ChartRedraw(cid);
    Sleep(300);   // one paint cycle — screenshot of an unpainted chart is black

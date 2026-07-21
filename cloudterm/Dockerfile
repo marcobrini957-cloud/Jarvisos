@@ -41,6 +41,11 @@ RUN bash -c 'Xvfb :99 -screen 0 1024x768x16 & sleep 2; \
       || { iconv -f UTF-16LE -t UTF-8 MQL5/compile.log; exit 1; }; }
 WORKDIR /
 
+# Bundle the Inter Bold face (landing-page wordmark font) so the screenshot
+# watermark renders in-brand. Wine GDI loads any TTF dropped into the Windows
+# Fonts directory, registering it under the family name "Inter".
+COPY Inter-Bold.ttf "/wine/drive_c/windows/Fonts/Inter-Bold.ttf"
+
 COPY sidecar.sh /sidecar.sh
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /sidecar.sh /entrypoint.sh
