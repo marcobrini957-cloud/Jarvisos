@@ -85,10 +85,15 @@ export function guessAssetType(name: string, ticker: string): string {
 
 const ISIN_RE = /^[A-Z]{2}[A-Z0-9]{10}$/
 
-export function CsvImportModal({ onClose, onImport }: {
+export function CsvImportModal({ onClose, onImport, mode = 'add', existingTickers }: {
   onClose:  () => void
   onImport: (rows: CsvRow[]) => Promise<void>
+  mode?:    'add' | 'update'
+  /** Normalised (UPPERCASE) tickers already in the portfolio — drives New/Update badges. */
+  existingTickers?: Set<string>
 }) {
+  const isUpdate = mode === 'update'
+  const isExisting = (t: string) => !!existingTickers?.has(t.trim().toUpperCase())
   const [step,      setStep]      = useState<'upload' | 'preview'>('upload')
   const [rows,      setRows]      = useState<CsvRow[]>([])
   const [resolving, setResolving] = useState(false)
@@ -205,10 +210,14 @@ export function CsvImportModal({ onClose, onImport }: {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid var(--bd)' }}>
           <div>
             <p style={{ fontWeight: 700, color: 'var(--t1)', fontSize: '15px' }}>
-              {step === 'upload' ? 'Import Portfolio CSV' : `Preview — ${rows.filter(r => !r.skip).length} holdings`}
+              {step === 'upload'
+                ? (isUpdate ? 'Update Portfolio from CSV' : 'Import Portfolio CSV')
+                : `Preview — ${rows.filter(r => !r.skip).length} holdings`}
             </p>
             <p style={{ fontSize: '11px', color: 'var(--t3)', marginTop: '2px' }}>
-              {step === 'upload' ? 'Trade Republic · eToro · Degiro · any broker export' : 'Uncheck rows you don\'t want to import'}
+              {step === 'upload'
+                ? (isUpdate ? 'Refreshes matching holdings · adds only new tickers · never duplicates' : 'Trade Republic · eToro · Degiro · any broker export')
+                : (isUpdate ? 'Uncheck any row you don\'t want to apply' : 'Uncheck rows you don\'t want to import')}
             </p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '20px', cursor: 'pointer' }}>×</button>
@@ -294,9 +303,16 @@ export function CsvImportModal({ onClose, onImport }: {
                   <input type="checkbox" checked={!row.skip}
                     onChange={() => setRows(prev => prev.map((r, j) => j === i ? { ...r, skip: !r.skip } : r))}
                     style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--ac)' }} />
-                  <input value={row.ticker}
-                    onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, ticker: e.target.value.toUpperCase() } : r))}
-                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px', padding: '5px 8px', color: 'var(--t1)', fontSize: '12px', fontWeight: 600, width: '100%' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
+                    {isUpdate && (
+                      isExisting(row.ticker)
+                        ? <span style={{ alignSelf: 'flex-start', fontSize: '9px', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--ac)', background: 'rgba(77,143,255,0.14)', border: '1px solid rgba(77,143,255,0.3)', borderRadius: '4px', padding: '1px 5px' }}>UPDATE</span>
+                        : <span style={{ alignSelf: 'flex-start', fontSize: '9px', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--gr2)', background: 'rgba(52,199,89,0.14)', border: '1px solid rgba(52,199,89,0.3)', borderRadius: '4px', padding: '1px 5px' }}>NEW</span>
+                    )}
+                    <input value={row.ticker}
+                      onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, ticker: e.target.value.toUpperCase() } : r))}
+                      style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px', padding: '5px 8px', color: 'var(--t1)', fontSize: '12px', fontWeight: 600, width: '100%' }} />
+                  </div>
                   <input value={row.name}
                     onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, name: e.target.value } : r))}
                     style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px', padding: '5px 8px', color: 'var(--t2)', fontSize: '12px', width: '100%' }} />
@@ -329,10 +345,22 @@ export function CsvImportModal({ onClose, onImport }: {
               style={{ flex: 1, padding: '10px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: '8px', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
               ← Back
             </button>
-            <button onClick={handleImport} disabled={importing || rows.filter(r => !r.skip).length === 0}
-              style={{ flex: 2, padding: '10px', background: 'var(--gr)', border: 'none', borderRadius: '8px', color: 'white', fontSize: '13px', fontWeight: 600, cursor: importing ? 'not-allowed' : 'pointer', opacity: importing ? 0.7 : 1 }}>
-              {importing ? 'Importing…' : `Import ${rows.filter(r => !r.skip).length} holding${rows.filter(r => !r.skip).length !== 1 ? 's' : ''}`}
-            </button>
+            {(() => {
+              const active   = rows.filter(r => !r.skip)
+              const newCount = active.filter(r => !isExisting(r.ticker)).length
+              const updCount = active.length - newCount
+              const label = importing
+                ? (isUpdate ? 'Updating…' : 'Importing…')
+                : isUpdate
+                  ? `Update — ${newCount} new, ${updCount} updated`
+                  : `Import ${active.length} holding${active.length !== 1 ? 's' : ''}`
+              return (
+                <button onClick={handleImport} disabled={importing || active.length === 0}
+                  style={{ flex: 2, padding: '10px', background: 'var(--gr)', border: 'none', borderRadius: '8px', color: 'white', fontSize: '13px', fontWeight: 600, cursor: importing ? 'not-allowed' : 'pointer', opacity: importing ? 0.7 : 1 }}>
+                  {label}
+                </button>
+              )
+            })()}
           </div>
         )}
       </div>

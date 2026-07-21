@@ -16,11 +16,12 @@ export default function PortfolioTab() {
   const {
     holdings, loading, priceLoading, priceError, eurUsdRate,
     totalValueEur, totalCostEur, totalPnlEur, totalPnlPct,
-    addHolding, updateHolding, deleteHolding, reload,
+    addHolding, updateHolding, upsertHoldings, deleteHolding, reload,
   } = usePortfolio()
 
   const [modal,      setModal]      = useState<{ open: boolean; existing?: HoldingWithPrice }>({ open: false })
-  const [csvModal,   setCsvModal]   = useState(false)
+  const [csvModal,   setCsvModal]   = useState<false | 'add' | 'update'>(false)
+  const [csvResult,  setCsvResult]  = useState<string | null>(null)
   const [sortBy,     setSortBy]     = useState<'default' | 'pnl' | 'alloc'>('default')
   const [selectMode, setSelectMode] = useState(false)
   const [selected,   setSelected]   = useState<Set<string>>(new Set())
@@ -46,6 +47,8 @@ export default function PortfolioTab() {
     setDeleting(false)
   }
 
+  const existingTickers = new Set(holdings.map(h => h.ticker.trim().toUpperCase()))
+
   async function handleCsvImport(rows: CsvRow[]) {
     for (const row of rows) {
       await addHolding({
@@ -57,6 +60,19 @@ export default function PortfolioTab() {
         currency:      'EUR',
       })
     }
+    setCsvResult(`Imported ${rows.length} holding${rows.length !== 1 ? 's' : ''}.`)
+  }
+
+  async function handleCsvUpdate(rows: CsvRow[]) {
+    const { added, updated } = await upsertHoldings(rows.map(row => ({
+      ticker:        row.ticker,
+      name:          row.name,
+      asset_type:    row.asset_type,
+      quantity:      row.quantity,
+      avg_buy_price: row.avg_buy_price,
+      currency:      'EUR',
+    })))
+    setCsvResult(`Portfolio updated — ${added} added, ${updated} refreshed. No duplicates created.`)
   }
 
   const sortedHoldings = [...holdings].sort((a, b) => {
@@ -102,6 +118,16 @@ export default function PortfolioTab() {
 
   return (
     <div className="flex flex-col gap-4">
+
+      {/* CSV result banner */}
+      {csvResult && (
+        <div className="flex items-center justify-between px-4 py-3 rounded-lg"
+          style={{ background: 'rgba(52,199,89,0.08)', border: '1px solid rgba(52,199,89,0.25)' }}>
+          <p style={{ color: 'var(--gr2)', fontSize: '13px', fontWeight: 600 }}>{csvResult}</p>
+          <button onClick={() => setCsvResult(null)}
+            style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '18px', cursor: 'pointer', lineHeight: 1, flexShrink: 0 }}>×</button>
+        </div>
+      )}
 
       {/* Price error banner */}
       {priceError && !priceLoading && (
@@ -198,10 +224,16 @@ export default function PortfolioTab() {
                     style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: '6px', color: 'var(--t2)', cursor: 'pointer' }}>
                     Select
                   </button>
-                  <button onClick={() => setCsvModal(true)}
+                  <button onClick={() => setCsvModal('add')}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
                     style={{ background: 'var(--s3)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '12px', cursor: 'pointer' }}>
                     ↑ CSV
+                  </button>
+                  <button onClick={() => setCsvModal('update')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
+                    title="Upload a CSV to refresh existing holdings and add new ones — never creates duplicates"
+                    style={{ background: 'var(--s3)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '12px', cursor: 'pointer' }}>
+                    ⟳ Update
                   </button>
                   <button onClick={() => setModal({ open: true })}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
@@ -458,8 +490,10 @@ export default function PortfolioTab() {
 
       {csvModal && (
         <CsvImportModal
+          mode={csvModal === 'update' ? 'update' : 'add'}
+          existingTickers={existingTickers}
           onClose={() => setCsvModal(false)}
-          onImport={handleCsvImport}
+          onImport={csvModal === 'update' ? handleCsvUpdate : handleCsvImport}
         />
       )}
     </div>

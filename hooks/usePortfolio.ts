@@ -156,6 +156,56 @@ export function usePortfolio() {
     await loadHoldings()
   }
 
+  // CSV re-import: match rows to existing active holdings by ticker. Existing
+  // tickers get their quantity/price/name refreshed (asset_type is left alone so
+  // a guessed type never clobbers the user's own categorisation); unseen tickers
+  // are inserted. Never creates a duplicate, even if the file lists a ticker twice.
+  async function upsertHoldings(rows: {
+    ticker: string; name: string; asset_type: string
+    quantity: number; avg_buy_price: number; currency: string
+  }[]): Promise<{ added: number; updated: number }> {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { added: 0, updated: 0 }
+
+    const { data: existing } = await supabase
+      .from('portfolio_holdings')
+      .select('id, ticker')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+
+    const norm = (t: string) => t.trim().toUpperCase()
+    const byTicker = new Map<string, string>()   // ticker → id
+    for (const h of (existing ?? []) as { id: string; ticker: string }[]) {
+      byTicker.set(norm(h.ticker), h.id)
+    }
+
+    let added = 0, updated = 0
+    for (const r of rows) {
+      const key = norm(r.ticker)
+      const id  = byTicker.get(key)
+      if (id) {
+        await supabase.from('portfolio_holdings')
+          .update({ name: r.name, quantity: r.quantity, avg_buy_price: r.avg_buy_price, currency: r.currency })
+          .eq('id', id)
+        updated++
+      } else {
+        const { data: ins } = await supabase.from('portfolio_holdings')
+          .insert({
+            ticker: key, name: r.name, asset_type: r.asset_type,
+            quantity: r.quantity, avg_buy_price: r.avg_buy_price, currency: r.currency,
+            is_active: true, user_id: user.id,
+          })
+          .select('id').single()
+        // Register the new id so a second row with the same ticker updates it
+        // instead of inserting a second copy.
+        if (ins) { byTicker.set(key, (ins as { id: string }).id); added++ }
+      }
+    }
+    await loadHoldings()
+    return { added, updated }
+  }
+
   async function deleteHolding(id: string) {
     const supabase = createClient()
     await supabase.from('portfolio_holdings').update({ is_active: false }).eq('id', id)
@@ -167,6 +217,6 @@ export function usePortfolio() {
   return {
     holdings, loading, priceLoading, priceError, eurUsdRate,
     totalValueEur, totalCostEur, totalPnlEur, totalPnlPct,
-    addHolding, updateHolding, deleteHolding, reload: loadHoldings,
+    addHolding, updateHolding, upsertHoldings, deleteHolding, reload: loadHoldings,
   }
 }
