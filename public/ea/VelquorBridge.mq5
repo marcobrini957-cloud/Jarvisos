@@ -4,7 +4,7 @@
 //|  Place in: MQL5/Experts/VelquorBridge.mq5                        |
 //+------------------------------------------------------------------+
 #property copyright "VELQUOR"
-#property version   "2.20"
+#property version   "2.21"
 #property strict
 
 #include <Trade\Trade.mqh>
@@ -48,7 +48,7 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.20";
+string   g_eaVersion   = "2.21";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // follower: throttles PostSync inside the fast timer
@@ -683,9 +683,44 @@ void RemoveShot(const int idx)
    ArrayResize(g_shots, last);
 }
 
-// Fixed timeframe for every shot (open and close) so all screenshots share one
-// consistent, branded look. M15 frames typical intraday trades cleanly.
-#define SHOT_TIMEFRAME PERIOD_M15
+// A "pip" adapted per instrument: point×10 gives 0.0001 on 5-digit forex,
+// 0.01 on 3-digit JPY, and 0.1 on 2-digit gold (XAUUSD) — so a 20-pip gold
+// scalp is a ~$2 move, matching how the desk thinks about pips.
+double PipSize(const string sym)
+{
+   double pt = SymbolInfoDouble(sym, SYMBOL_POINT);
+   return pt > 0 ? pt * 10.0 : 0;
+}
+
+// Pick the chart timeframe from how far price travelled on the trade: small
+// moves get a fine timeframe (candle detail), big moves a coarse one (the whole
+// swing fits with context). A duration floor keeps the entry on screen for slow
+// trades (~200 bars fit at scale 2 / 1280px), and the coarser of the two wins.
+ENUM_TIMEFRAMES FitTimeframe(const string sym, const double entryPx,
+                             const double exitPx, const datetime openT, const datetime closeT)
+{
+   double pip  = PipSize(sym);
+   double pips = (pip > 0 && exitPx > 0) ? MathAbs(exitPx - entryPx) / pip : 0;
+
+   ENUM_TIMEFRAMES byRange =
+        pips <= 40   ? PERIOD_M1    // ≤ ~40 pips   (gold ≤ ~$4)
+      : pips <= 100  ? PERIOD_M5    // ≤ ~100 pips  (gold ≤ ~$10)
+      : pips <= 250  ? PERIOD_M15   // ≤ ~250 pips  (gold ≤ ~$25)
+      : pips <= 600  ? PERIOD_M30   // ≤ ~600 pips  (gold ≤ ~$60)
+      : pips <= 1500 ? PERIOD_H1
+      :                PERIOD_H4;
+
+   long durMin = (long)((closeT - openT) / 60);
+   ENUM_TIMEFRAMES byDuration =
+        durMin <= 200   ? PERIOD_M1
+      : durMin <= 1000  ? PERIOD_M5
+      : durMin <= 3000  ? PERIOD_M15
+      : durMin <= 6000  ? PERIOD_M30
+      : durMin <= 12000 ? PERIOD_H1
+      :                   PERIOD_H4;
+
+   return PeriodSeconds(byDuration) > PeriodSeconds(byRange) ? byDuration : byRange;
+}
 
 // MT5 does not render OBJPROP_TEXT of an HLINE on the chart (object list only),
 // so a level line's meaning is invisible. This draws a real OBJ_TEXT word label
@@ -707,7 +742,11 @@ void DrawLevelLabel(const long cid, const string name, const datetime t,
 // ChartSetSymbolPeriod on it would deinit/reinit this EA mid-session.
 bool CaptureShot(PendingShot &s)
 {
-   ENUM_TIMEFRAMES tf = SHOT_TIMEFRAME;
+   // Open shots have no range yet (exit unknown) → a steady M5 for entry context;
+   // close shots adapt to the trade's pip range.
+   ENUM_TIMEFRAMES tf = s.isClose
+      ? FitTimeframe(s.symbol, s.entryPrice, s.exitPrice, s.openTime, s.closeTime)
+      : PERIOD_M5;
    if(!EnsureSymbolReady(s.symbol)) return false;
 
    long cid = ChartOpen(s.symbol, tf);
