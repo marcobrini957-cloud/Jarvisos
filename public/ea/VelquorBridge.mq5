@@ -4,7 +4,7 @@
 //|  Place in: MQL5/Experts/VelquorBridge.mq5                        |
 //+------------------------------------------------------------------+
 #property copyright "VELQUOR"
-#property version   "2.18"
+#property version   "2.19"
 #property strict
 
 #include <Trade\Trade.mqh>
@@ -48,7 +48,7 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.18";
+string   g_eaVersion   = "2.19";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // follower: throttles PostSync inside the fast timer
@@ -695,6 +695,22 @@ ENUM_TIMEFRAMES FitTimeframe(const datetime openT, const datetime closeT)
    return PERIOD_H4;
 }
 
+// MT5 does not render OBJPROP_TEXT of an HLINE on the chart (object list only),
+// so a level line's meaning is invisible. This draws a real OBJ_TEXT word label
+// sitting on the line at the given time anchor, extending right so it never
+// clips the price axis.
+void DrawLevelLabel(const long cid, const string name, const datetime t,
+                    const double price, const string text, const color clr)
+{
+   ObjectCreate(cid, name, OBJ_TEXT, 0, t, price);
+   ObjectSetString(cid,  name, OBJPROP_TEXT, text);
+   ObjectSetInteger(cid, name, OBJPROP_COLOR, clr);
+   ObjectSetInteger(cid, name, OBJPROP_FONTSIZE, 10);
+   ObjectSetString(cid,  name, OBJPROP_FONT, "Arial Bold");
+   ObjectSetInteger(cid, name, OBJPROP_ANCHOR, ANCHOR_LEFT_LOWER);
+   ObjectSetInteger(cid, name, OBJPROP_BACK, false);
+}
+
 // Renders the shot on a throwaway chart — never the EA's own chart, because
 // ChartSetSymbolPeriod on it would deinit/reinit this EA mid-session.
 bool CaptureShot(PendingShot &s)
@@ -725,23 +741,34 @@ bool CaptureShot(PendingShot &s)
    ChartSetInteger(cid, CHART_COLOR_CHART_DOWN, C'226,75,74');
    ChartSetInteger(cid, CHART_COLOR_CANDLE_BEAR,C'226,75,74');
 
+   // Anchor labels a couple bars in from the left edge so they sit on the price
+   // line, readable, without overrunning the right price axis.
+   int firstBar = (int)ChartGetInteger(cid, CHART_FIRST_VISIBLE_BAR);
+   datetime leftT = iTime(s.symbol, tf, firstBar > 2 ? firstBar - 2 : 0);
+   if(leftT <= 0) leftT = (s.isClose ? s.openTime : s.closeTime);
+   int digits = (int)SymbolInfoInteger(s.symbol, SYMBOL_DIGITS);
+
    if(s.entryPrice > 0)
    {
       ObjectCreate(cid, "vq_entry", OBJ_HLINE, 0, 0, s.entryPrice);
       ObjectSetInteger(cid, "vq_entry", OBJPROP_COLOR, C'88,166,255');
       ObjectSetInteger(cid, "vq_entry", OBJPROP_WIDTH, 2);
-      ObjectSetString(cid,  "vq_entry", OBJPROP_TEXT, "Entry " + DoubleToStr(s.entryPrice, (int)SymbolInfoInteger(s.symbol, SYMBOL_DIGITS)));
+      DrawLevelLabel(cid, "vq_entry_lbl", leftT, s.entryPrice,
+                     "Entry " + DoubleToStr(s.entryPrice, digits), C'88,166,255');
    }
    if(s.isClose && s.exitPrice > 0)
    {
       ObjectCreate(cid, "vq_exit", OBJ_HLINE, 0, 0, s.exitPrice);
       ObjectSetInteger(cid, "vq_exit", OBJPROP_COLOR, C'240,180,41');
       ObjectSetInteger(cid, "vq_exit", OBJPROP_WIDTH, 2);
-      ObjectSetString(cid,  "vq_exit", OBJPROP_TEXT, "Exit " + DoubleToStr(s.exitPrice, (int)SymbolInfoInteger(s.symbol, SYMBOL_DIGITS)));
+      DrawLevelLabel(cid, "vq_exit_lbl", leftT, s.exitPrice,
+                     "Exit " + DoubleToStr(s.exitPrice, digits), C'240,180,41');
       if(s.openTime > 0)
+      {
          ObjectCreate(cid, "vq_open_t", OBJ_VLINE, 0, s.openTime, 0);
-      ObjectSetInteger(cid, "vq_open_t", OBJPROP_COLOR, C'48,54,61');
-      ObjectSetInteger(cid, "vq_open_t", OBJPROP_STYLE, STYLE_DOT);
+         ObjectSetInteger(cid, "vq_open_t", OBJPROP_COLOR, C'48,54,61');
+         ObjectSetInteger(cid, "vq_open_t", OBJPROP_STYLE, STYLE_DOT);
+      }
    }
 
    ChartRedraw(cid);
