@@ -17,7 +17,7 @@ export function PnlDonut({ profit, loss }: { profit: number; loss: number }) {
   const red   = 'var(--re)'
   const centerCol = pf >= 1 ? green : red
   const glow  = pf >= 1 ? 'rgba(0,232,122,0.4)' : 'rgba(255,61,80,0.4)'
-  const pfLabel = pf === Infinity ? '∞' : pf.toFixed(1)
+  const pfLabel = pf === Infinity ? '∞' : pf.toFixed(2)
 
   return (
     <div style={{ position: 'relative', width: '56px', height: '56px', flexShrink: 0 }}

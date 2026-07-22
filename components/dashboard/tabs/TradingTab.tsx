@@ -222,12 +222,12 @@ export default function TradingTab() {
             if (total === 0) return <>No closed trades {phrase} yet — take some trades in this timeframe and your win rate will appear here.</>
             const decisive = wins + losses
             const quality  = rate >= 65 ? 'That’s a strong hit-rate.' : rate >= 50 ? 'That’s a solid, positive hit-rate.' : 'That’s below 50% — you’re relying on your winners being bigger than your losers.'
-            return <>Of your {decisive} decisive trade{decisive !== 1 ? 's' : ''} {phrase}, <strong style={{ color: 'var(--t1)' }}>{wins} won and {losses} lost</strong>{breakeven > 0 ? <> ({breakeven} broke even, which don&apos;t count)</> : null} — a win rate of <strong style={{ color: rate >= 50 ? 'var(--gr2)' : 'var(--re)' }}>{rate.toFixed(1)}%</strong>. {quality}</>
+            return <>Of your {decisive} decisive trade{decisive !== 1 ? 's' : ''} {phrase}, <strong style={{ color: 'var(--t1)' }}>{wins} won and {losses} lost</strong>{breakeven > 0 ? <> ({breakeven} broke even, which don&apos;t count)</> : null} — a win rate of <strong style={{ color: rate >= 50 ? 'var(--gr2)' : 'var(--re)' }}>{rate.toFixed(0)}%</strong>. {quality}</>
           }}
           getValue={(p) => {
             const { rate, wins, losses, breakeven, total } = calcWinRate(filterByPeriod(trades, p))
             const label = breakeven > 0 ? `${wins}W · ${breakeven}BE · ${losses}L` : `${wins}W · ${losses}L`
-            return { value: total > 0 ? `${rate.toFixed(1)}%` : '—', change: label, changePositive: rate >= 50 ? true : rate === 0 ? null : false }
+            return { value: total > 0 ? `${rate.toFixed(0)}%` : '—', change: label, changePositive: rate >= 50 ? true : rate === 0 ? null : false }
           }}
           getVisual={(p) => {
             const { rate, total } = calcWinRate(filterByPeriod(trades, p))
