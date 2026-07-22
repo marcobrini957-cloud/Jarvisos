@@ -305,15 +305,15 @@ export default function TradingTab() {
           getInfo={(p) => {
             const { green, totalDays, pct } = calcConsistency(filterByPeriod(trades, p))
             const phrase = PERIOD_PHRASE[p]
-            if (totalDays === 0) return <>No trading days {phrase} yet — once you trade, this shows how many of your days finish green.</>
+            if (totalDays === 0) return <>You have no closed trades {phrase} yet, so there are no trading days to measure here.</>
             const cap = phrase.charAt(0).toUpperCase() + phrase.slice(1)
-            return <>Consistency is the share of your <strong style={{ color: 'var(--t1)' }}>trading days that finished in profit</strong>. {cap}, {green} of your {totalDays} day{totalDays !== 1 ? 's' : ''} ended green — <strong style={{ color: pct >= 50 ? 'var(--gr2)' : 'var(--re)' }}>{pct.toFixed(0)}%</strong>. Steady green days matter more to prop firms and your equity curve than one big winning day.</>
+            return <>This looks only at the <strong style={{ color: 'var(--t1)' }}>days you actually traded</strong> — not every calendar day. {cap} you closed trades on <strong style={{ color: 'var(--t1)' }}>{totalDays}</strong> separate day{totalDays !== 1 ? 's' : ''}, and <strong style={{ color: pct >= 50 ? 'var(--gr2)' : 'var(--re)' }}>{green}</strong> of them finished in profit — a day counts as green when that day&apos;s trades add up to a net gain. That&apos;s <strong style={{ color: pct >= 50 ? 'var(--gr2)' : 'var(--re)' }}>{pct.toFixed(0)}%</strong>. It rewards being green regularly rather than letting one big day carry everything. (Days you didn&apos;t trade are ignored.)</>
           }}
           getValue={(p) => {
             const { green, totalDays, pct } = calcConsistency(filterByPeriod(trades, p))
             return {
               value:          totalDays > 0 ? `${pct.toFixed(0)}%` : '—',
-              change:         totalDays > 0 ? `${green}/${totalDays} days green` : 'No trading days',
+              change:         totalDays > 0 ? `${green}/${totalDays} traded days green` : 'No trading days',
               changePositive: totalDays === 0 ? null : pct >= 50 ? true : false,
             }
           }}
