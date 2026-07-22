@@ -4,7 +4,7 @@
 //|  Place in: MQL5/Experts/VelquorBridge.mq5                        |
 //+------------------------------------------------------------------+
 #property copyright "VELQUOR"
-#property version   "2.21"
+#property version   "2.22"
 #property strict
 
 #include <Trade\Trade.mqh>
@@ -48,7 +48,7 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.21";
+string   g_eaVersion   = "2.22";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // follower: throttles PostSync inside the fast timer
@@ -702,21 +702,23 @@ ENUM_TIMEFRAMES FitTimeframe(const string sym, const double entryPx,
    double pip  = PipSize(sym);
    double pips = (pip > 0 && exitPx > 0) ? MathAbs(exitPx - entryPx) / pip : 0;
 
+   // Thresholds tightened ~20% vs 2.21 so the trade fills more of the frame
+   // (Marco: "most trades look little — zoom in ~20%").
    ENUM_TIMEFRAMES byRange =
-        pips <= 40   ? PERIOD_M1    // ≤ ~40 pips   (gold ≤ ~$4)
-      : pips <= 100  ? PERIOD_M5    // ≤ ~100 pips  (gold ≤ ~$10)
-      : pips <= 250  ? PERIOD_M15   // ≤ ~250 pips  (gold ≤ ~$25)
-      : pips <= 600  ? PERIOD_M30   // ≤ ~600 pips  (gold ≤ ~$60)
-      : pips <= 1500 ? PERIOD_H1
+        pips <= 32   ? PERIOD_M1    // ≤ ~32 pips   (gold ≤ ~$3.2)
+      : pips <= 80   ? PERIOD_M5    // ≤ ~80 pips   (gold ≤ ~$8)
+      : pips <= 200  ? PERIOD_M15   // ≤ ~200 pips  (gold ≤ ~$20)
+      : pips <= 480  ? PERIOD_M30   // ≤ ~480 pips  (gold ≤ ~$48)
+      : pips <= 1200 ? PERIOD_H1
       :                PERIOD_H4;
 
    long durMin = (long)((closeT - openT) / 60);
    ENUM_TIMEFRAMES byDuration =
-        durMin <= 200   ? PERIOD_M1
-      : durMin <= 1000  ? PERIOD_M5
-      : durMin <= 3000  ? PERIOD_M15
-      : durMin <= 6000  ? PERIOD_M30
-      : durMin <= 12000 ? PERIOD_H1
+        durMin <= 160   ? PERIOD_M1
+      : durMin <= 800   ? PERIOD_M5
+      : durMin <= 2400  ? PERIOD_M15
+      : durMin <= 4800  ? PERIOD_M30
+      : durMin <= 9600  ? PERIOD_H1
       :                   PERIOD_H4;
 
    return PeriodSeconds(byDuration) > PeriodSeconds(byRange) ? byDuration : byRange;
@@ -757,20 +759,20 @@ bool CaptureShot(PendingShot &s)
    for(int k = 0; k < 20 && !SeriesInfoInteger(s.symbol, tf, SERIES_SYNCHRONIZED); k++)
       Sleep(100);
 
-   // VELQUOR dark look, entry/exit levels marked
+   // VELQUOR look: pure-black background, clean green/red candles, zoomed in.
    ChartSetInteger(cid, CHART_SHOW_GRID, false);
    ChartSetInteger(cid, CHART_MODE, CHART_CANDLES);
    ChartSetInteger(cid, CHART_AUTOSCROLL, true);
    ChartSetInteger(cid, CHART_SHIFT, true);
-   ChartSetInteger(cid, CHART_SCALE, 2);
+   ChartSetInteger(cid, CHART_SCALE, 3);                       // 2 → 3: ~20% more zoomed
    ChartSetInteger(cid, CHART_SHOW_VOLUMES, CHART_VOLUME_HIDE);
-   ChartSetInteger(cid, CHART_COLOR_BACKGROUND, C'13,17,23');
-   ChartSetInteger(cid, CHART_COLOR_FOREGROUND, C'139,148,158');
-   ChartSetInteger(cid, CHART_COLOR_GRID,       C'33,38,45');
-   ChartSetInteger(cid, CHART_COLOR_CHART_UP,   C'99,153,52');
-   ChartSetInteger(cid, CHART_COLOR_CANDLE_BULL,C'99,153,52');
-   ChartSetInteger(cid, CHART_COLOR_CHART_DOWN, C'226,75,74');
-   ChartSetInteger(cid, CHART_COLOR_CANDLE_BEAR,C'226,75,74');
+   ChartSetInteger(cid, CHART_COLOR_BACKGROUND, C'0,0,0');     // pure black
+   ChartSetInteger(cid, CHART_COLOR_FOREGROUND, C'150,150,160');
+   ChartSetInteger(cid, CHART_COLOR_GRID,       C'0,0,0');
+   ChartSetInteger(cid, CHART_COLOR_CHART_UP,   C'41,204,106');  // clean green
+   ChartSetInteger(cid, CHART_COLOR_CANDLE_BULL,C'41,204,106');
+   ChartSetInteger(cid, CHART_COLOR_CHART_DOWN, C'255,71,71');   // clean red
+   ChartSetInteger(cid, CHART_COLOR_CANDLE_BEAR,C'255,71,71');
 
    // Anchor labels a couple bars in from the left edge so they sit on the price
    // line, readable, without overrunning the right price axis.
@@ -802,19 +804,8 @@ bool CaptureShot(PendingShot &s)
       }
    }
 
-   // VELQUOR watermark — bottom-right, Inter (the landing-page wordmark font,
-   // bundled into the terminal image; desktop MT5 without Inter falls back to
-   // its default sans). Subtle slate so it brands without fighting the candles.
-   ObjectCreate(cid, "vq_wm", OBJ_LABEL, 0, 0, 0);
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_CORNER, CORNER_RIGHT_LOWER);
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_ANCHOR, ANCHOR_RIGHT_LOWER);
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_XDISTANCE, 14);
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_YDISTANCE, 12);
-   ObjectSetString(cid,  "vq_wm", OBJPROP_TEXT, "VELQUOR");
-   ObjectSetString(cid,  "vq_wm", OBJPROP_FONT, "Inter");
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_FONTSIZE, 15);
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_COLOR, C'124,135,152');
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_BACK, false);
+   // Branding: the VELQUOR logo is composited bottom-left by the bridge on
+   // every screenshot (sharp), so no in-chart watermark is drawn here.
 
    ChartRedraw(cid);
    Sleep(300);   // one paint cycle — screenshot of an unpainted chart is black

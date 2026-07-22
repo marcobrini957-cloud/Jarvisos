@@ -13,6 +13,19 @@ const {
 const VERSION    = '2.0.0';
 const STARTED_AT = new Date();
 
+// VELQUOR logo, composited bottom-left onto every chart screenshot.
+// Pre-rendered once at boot: 104px mark + a transparent margin so a
+// `southwest` gravity composite insets it neatly off the corner.
+// If the asset is missing/unreadable, screenshots simply ship un-branded.
+let LOGO_BUF = null;
+sharp(__dirname + '/vq-logo.png')
+  .resize(104, 104, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  .extend({ top: 0, right: 0, bottom: 22, left: 24, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  .png()
+  .toBuffer()
+  .then(buf => { LOGO_BUF = buf; })
+  .catch(err => { console.error('logo preload failed:', err.message); });
+
 // ─── Structured logging (JSON lines — pm2/journald friendly) ─────────────────
 function log(level, msg, meta) {
   const line = { ts: new Date().toISOString(), level, msg, ...(meta || {}) };
@@ -341,10 +354,9 @@ app.post('/screenshot',
 
     let jpeg;
     try {
-      jpeg = await sharp(req.body)
-        .resize({ width: 1280, withoutEnlargement: true })
-        .jpeg({ quality: 78 })
-        .toBuffer();
+      const pipeline = sharp(req.body).resize({ width: 1280, withoutEnlargement: true });
+      if (LOGO_BUF) pipeline.composite([{ input: LOGO_BUF, gravity: 'southwest' }]);
+      jpeg = await pipeline.jpeg({ quality: 78 }).toBuffer();
     } catch {
       return res.status(400).json({ error: 'bad_image' });
     }

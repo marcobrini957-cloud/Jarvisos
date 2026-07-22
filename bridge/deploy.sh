@@ -25,7 +25,7 @@ HOST="${BRIDGE_HOST:?Set BRIDGE_HOST=user@server-ip}"
 DIR=/opt/velquor-bridge
 
 echo "→ uploading bridge to $HOST:$DIR"
-scp server.js lib.js package.json pm2.config.js "$HOST:$DIR/"
+scp server.js lib.js package.json pm2.config.js vq-logo.png "$HOST:$DIR/"
 
 echo "→ installing deps + (re)starting pm2"
 ssh "$HOST" "set -e
