@@ -82,69 +82,66 @@ export default function PeriodMetricCard({
         </div>
       )}
 
-      {/* Title + period selector (reserve right space for the eye) */}
-      <div className="flex items-center justify-between gap-2 flex-wrap" style={{ paddingRight: infoNode ? '22px' : 0 }}>
-        <p className="label-caps">{title}</p>
+      {/* Title (eye is pinned to the corner above) */}
+      <p className="label-caps" style={{ paddingRight: infoNode ? '22px' : 0 }}>{title}</p>
 
-        <div className="flex items-center" style={{ gap: '1px', background: 'var(--s3)', borderRadius: '6px', padding: '2px' }}>
-          {periods.map(p => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              title={PERIOD_LABELS[p]}
-              style={{
-                fontSize:     '10px',
-                fontWeight:   period === p ? 600 : 400,
-                padding:      '2px 7px',
-                borderRadius: '4px',
-                border:       'none',
-                cursor:       'pointer',
-                background:   period === p ? barColor : 'transparent',
-                color:        period === p ? 'white'   : 'var(--t3)',
-                transition:   'all 0.12s',
-                lineHeight:   '16px',
-              }}
-              onMouseEnter={e => { if (period !== p) e.currentTarget.style.color = 'var(--t2)' }}
-              onMouseLeave={e => { if (period !== p) e.currentTarget.style.color = 'var(--t3)' }}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
+      {/* Period selector — its own line, directly under the title */}
+      <div className="flex items-center self-start" style={{ gap: '1px', background: 'var(--s3)', borderRadius: '6px', padding: '2px' }}>
+        {periods.map(p => (
+          <button
+            key={p}
+            onClick={() => setPeriod(p)}
+            title={PERIOD_LABELS[p]}
+            style={{
+              fontSize:     '10px',
+              fontWeight:   period === p ? 600 : 400,
+              padding:      '2px 7px',
+              borderRadius: '4px',
+              border:       'none',
+              cursor:       'pointer',
+              background:   period === p ? barColor : 'transparent',
+              color:        period === p ? 'white'   : 'var(--t3)',
+              transition:   'all 0.12s',
+              lineHeight:   '16px',
+            }}
+            onMouseEnter={e => { if (period !== p) e.currentTarget.style.color = 'var(--t2)' }}
+            onMouseLeave={e => { if (period !== p) e.currentTarget.style.color = 'var(--t3)' }}
+          >
+            {p}
+          </button>
+        ))}
       </div>
 
-      {/* Big number */}
-      <p
-        className="num"
-        style={{
-          color:         valueColor,
-          fontSize:      '26px',
-          fontWeight:    700,
-          lineHeight:    1.1,
-          letterSpacing: '-0.04em',
-        }}
-      >
-        {value}
-      </p>
+      {/* Text on the left, chart on the right */}
+      <div className="flex items-center justify-between gap-3" style={{ marginTop: '2px' }}>
+        <div className="flex flex-col gap-1" style={{ minWidth: 0 }}>
+          {/* Big number */}
+          <p
+            className="num"
+            style={{
+              color:         valueColor,
+              fontSize:      '26px',
+              fontWeight:    700,
+              lineHeight:    1.1,
+              letterSpacing: '-0.04em',
+            }}
+          >
+            {value}
+          </p>
 
-      {/* Change */}
-      {change && (
-        <p style={{
-          fontSize: '12px',
-          color: isPositive ? 'var(--gr2)' : isNegative ? 'var(--re)' : 'var(--t3)',
-          marginTop: '-4px',
-        }}>
-          {change}
-        </p>
-      )}
-
-      {/* Chart sits directly under the text and is pinned to the bottom, so every
-          card's circle lines up at the same height across the whole row. */}
-      {visual && (
-        <div style={{ marginTop: 'auto', paddingTop: '12px', display: 'flex', justifyContent: 'flex-start' }}>
-          {visual}
+          {/* Change */}
+          {change && (
+            <p style={{
+              fontSize: '12px',
+              color: isPositive ? 'var(--gr2)' : isNegative ? 'var(--re)' : 'var(--t3)',
+            }}>
+              {change}
+            </p>
+          )}
         </div>
-      )}
+
+        {visual && <div style={{ flexShrink: 0 }}>{visual}</div>}
+      </div>
     </div>
   )
 }
