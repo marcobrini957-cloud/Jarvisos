@@ -154,7 +154,7 @@ export default function PortfolioTab() {
         <MetricCard
           title="Total Value"
           value={loading ? '—' : fmtEur(totalValueEur)}
-          change={priceLoading ? 'Fetching live prices…' : priceError ? 'Cost basis only' : `EUR/USD: ${eurUsdRate.toFixed(4)}`}
+          change={priceLoading ? 'Fetching live prices…' : priceError ? 'Cost basis only' : 'Live market value'}
           changePositive={null}
           barColor="var(--go2)"
         />

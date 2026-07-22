@@ -24,6 +24,7 @@ import { EquityCurve } from './trading/EquityCurve'
 import { PositionSizeCalc } from './trading/PositionSizeCalc'
 import { ReportDownloadBar } from './trading/ReportDownloadBar'
 import { AdvancedChart } from '@/components/widgets/TradingViewWidget'
+import { TradeCalendar } from './overview/TradeCalendar'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -243,9 +244,12 @@ export default function TradingTab() {
         />
       </div>
 
-      {/* Equity Curve — capped so it doesn't stretch across a wide desktop */}
-      <div style={{ maxWidth: '860px' }}>
+      {/* Equity Curve + Daily P&L Calendar — side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
         <EquityCurve trades={trades} />
+        <Panel title="Daily P&L Calendar" accent="var(--gr)" className="h-full">
+          <TradeCalendar allRows={allRows} />
+        </Panel>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
