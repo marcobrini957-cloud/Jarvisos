@@ -113,37 +113,38 @@ export default function PeriodMetricCard({
         </div>
       </div>
 
-      {/* Number + change on the left, optional visual (ring/donut) on the right */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-col gap-2" style={{ minWidth: 0 }}>
-          {/* Big number */}
-          <p
-            className="num"
-            style={{
-              color:         valueColor,
-              fontSize:      '26px',
-              fontWeight:    700,
-              lineHeight:    1.1,
-              letterSpacing: '-0.04em',
-            }}
-          >
-            {value}
-          </p>
+      {/* Big number */}
+      <p
+        className="num"
+        style={{
+          color:         valueColor,
+          fontSize:      '26px',
+          fontWeight:    700,
+          lineHeight:    1.1,
+          letterSpacing: '-0.04em',
+        }}
+      >
+        {value}
+      </p>
 
-          {/* Change */}
-          {change && (
-            <p style={{
-              fontSize: '12px',
-              color: isPositive ? 'var(--gr2)' : isNegative ? 'var(--re)' : 'var(--t3)',
-              marginTop: '-4px',
-            }}>
-              {change}
-            </p>
-          )}
+      {/* Change */}
+      {change && (
+        <p style={{
+          fontSize: '12px',
+          color: isPositive ? 'var(--gr2)' : isNegative ? 'var(--re)' : 'var(--t3)',
+          marginTop: '-4px',
+        }}>
+          {change}
+        </p>
+      )}
+
+      {/* Chart sits directly under the text and is pinned to the bottom, so every
+          card's circle lines up at the same height across the whole row. */}
+      {visual && (
+        <div style={{ marginTop: 'auto', paddingTop: '12px', display: 'flex', justifyContent: 'flex-start' }}>
+          {visual}
         </div>
-
-        {visual && <div style={{ flexShrink: 0 }}>{visual}</div>}
-      </div>
+      )}
     </div>
   )
 }
