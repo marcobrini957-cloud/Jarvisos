@@ -18,6 +18,8 @@ interface PeriodMetricCardProps {
   getVisual?:     (period: Period) => ReactNode
   /** Optional plain-English explanation shown via an eye/info popover. */
   info?:          ReactNode
+  /** Like `info`, but recomputed per period so the text reflects live data. */
+  getInfo?:       (period: Period) => ReactNode
   /** Optional heading for the info popover. */
   infoTitle?:     string
   defaultPeriod?: Period
@@ -31,13 +33,15 @@ export default function PeriodMetricCard({
   getValue,
   getVisual,
   info,
+  getInfo,
   infoTitle,
   defaultPeriod = 'M',
   className = '',
 }: PeriodMetricCardProps) {
   const [period, setPeriod] = useState<Period>(defaultPeriod)
   const { value, change, changePositive } = getValue(period)
-  const visual = getVisual?.(period)
+  const visual   = getVisual?.(period)
+  const infoNode = getInfo ? getInfo(period) : info
 
   const isPositive    = changePositive === true
   const isNegative    = changePositive === false
@@ -71,11 +75,17 @@ export default function PeriodMetricCard({
         }} />
       )}
 
-      {/* Title + period selector + info eye (top-right corner) */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      {/* Info eye — pinned to the absolute top-right corner of the card */}
+      {infoNode && (
+        <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 3 }}>
+          <InfoTip title={infoTitle ?? title} text={infoNode} />
+        </div>
+      )}
+
+      {/* Title + period selector (reserve right space for the eye) */}
+      <div className="flex items-center justify-between gap-2 flex-wrap" style={{ paddingRight: infoNode ? '22px' : 0 }}>
         <p className="label-caps">{title}</p>
 
-        <div className="flex items-center gap-1.5">
         <div className="flex items-center" style={{ gap: '1px', background: 'var(--s3)', borderRadius: '6px', padding: '2px' }}>
           {periods.map(p => (
             <button
@@ -100,8 +110,6 @@ export default function PeriodMetricCard({
               {p}
             </button>
           ))}
-        </div>
-          {info && <InfoTip title={infoTitle ?? title} text={info} />}
         </div>
       </div>
 

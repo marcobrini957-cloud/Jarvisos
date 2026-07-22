@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTrades, tradeResult } from '@/hooks/useTrades'
 import { useAccountSnapshot } from '@/hooks/useAccountSnapshot'
-import PeriodMetricCard from '@/components/ui/PeriodMetricCard'
+import PeriodMetricCard, { type Period } from '@/components/ui/PeriodMetricCard'
 import { LogoMark } from '@/components/ui/LogoMark'
 import Panel from '@/components/ui/Panel'
 import Badge from '@/components/ui/Badge'
@@ -27,6 +27,12 @@ import { WinRing } from './overview/WinRing'
 import { PnlDonut } from './trading/PnlDonut'
 
 // ── Component ─────────────────────────────────────────────────────────────────
+
+// Timeframe wording for the personalised info popovers.
+const PERIOD_PHRASE: Record<Period, string> = {
+  D: 'today', W: 'this week', M: 'this month', Q: 'this quarter', Y: 'this year',
+}
+const eur = (v: number) => `€${Math.abs(v).toFixed(2)}`
 
 export default function TradingTab() {
   const { trades, allRows, openPositions, stats, loading } = useTrades(2000)
@@ -185,7 +191,16 @@ export default function TradingTab() {
         <PeriodMetricCard
           title="P&L"
           barColor="var(--gr)"
-          info={<>Your total profit or loss across all closed trades in the selected period. In the donut, <strong style={{ color: 'var(--gr2)' }}>green</strong> is money made on winning trades and <strong style={{ color: 'var(--re)' }}>red</strong> is money lost on losers. The centre number is your <strong style={{ color: 'var(--t1)' }}>profit factor</strong> (profit ÷ loss): 1.5 means you earned €1.50 for every €1 lost — above 1.0 is profitable.</>}
+          getInfo={(p) => {
+            const t      = filterByPeriod(trades, p)
+            const profit = t.reduce((s, x) => s + Math.max(0, x.net_profit ?? 0), 0)
+            const loss   = Math.abs(t.reduce((s, x) => s + Math.min(0, x.net_profit ?? 0), 0))
+            const pnl    = profit - loss
+            const pf     = loss > 0 ? profit / loss : profit > 0 ? Infinity : 0
+            const phrase = PERIOD_PHRASE[p]
+            if (t.length === 0) return <>You have no closed trades {phrase} yet, so there&apos;s nothing to show here for this timeframe.</>
+            return <>Across your {t.length} trade{t.length !== 1 ? 's' : ''} {phrase}, you&apos;re {pnl >= 0 ? 'up' : 'down'} <strong style={{ color: pnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{eur(pnl)}</strong>. The donut splits that into <strong style={{ color: 'var(--gr2)' }}>{eur(profit)} won</strong> (green) and <strong style={{ color: 'var(--re)' }}>{eur(loss)} lost</strong> (red). The centre number is your profit factor, <strong style={{ color: 'var(--t1)' }}>{pf === Infinity ? '∞' : pf.toFixed(2)}</strong>{pf === Infinity ? <> — you have no losing trades {phrase}.</> : <> — you made €{pf.toFixed(2)} for every €1 you lost.</>}</>
+          }}
           getValue={(p) => {
             const t   = filterByPeriod(trades, p)
             const pnl = calcPnl(t)
@@ -201,7 +216,14 @@ export default function TradingTab() {
         <PeriodMetricCard
           title="Win Rate"
           barColor="var(--ac)"
-          info={<>The share of your decisive trades that were winners — wins ÷ (wins + losses). Break-even trades are ignored. The ring fills to your win %: <strong style={{ color: 'var(--gr2)' }}>green</strong> at 65%+, <strong style={{ color: 'var(--am2)' }}>amber</strong> 50–64%, <strong style={{ color: 'var(--re)' }}>red</strong> below 50%.</>}
+          getInfo={(p) => {
+            const { rate, wins, losses, breakeven, total } = calcWinRate(filterByPeriod(trades, p))
+            const phrase = PERIOD_PHRASE[p]
+            if (total === 0) return <>No closed trades {phrase} yet — take some trades in this timeframe and your win rate will appear here.</>
+            const decisive = wins + losses
+            const quality  = rate >= 65 ? 'That’s a strong hit-rate.' : rate >= 50 ? 'That’s a solid, positive hit-rate.' : 'That’s below 50% — you’re relying on your winners being bigger than your losers.'
+            return <>Of your {decisive} decisive trade{decisive !== 1 ? 's' : ''} {phrase}, <strong style={{ color: 'var(--t1)' }}>{wins} won and {losses} lost</strong>{breakeven > 0 ? <> ({breakeven} broke even, which don&apos;t count)</> : null} — a win rate of <strong style={{ color: rate >= 50 ? 'var(--gr2)' : 'var(--re)' }}>{rate.toFixed(1)}%</strong>. {quality}</>
+          }}
           getValue={(p) => {
             const { rate, wins, losses, breakeven, total } = calcWinRate(filterByPeriod(trades, p))
             const label = breakeven > 0 ? `${wins}W · ${breakeven}BE · ${losses}L` : `${wins}W · ${losses}L`
@@ -215,7 +237,16 @@ export default function TradingTab() {
         <PeriodMetricCard
           title="Real R:R"
           barColor="var(--am)"
-          info={<>Your average <strong style={{ color: 'var(--t1)' }}>realised</strong> reward-to-risk. For every €1 you risked (entry → stop-loss), this is how much you actually made or lost on average. 1.5+ is the target; a negative number means you&apos;re cutting winners shorter than your losers. Needs a stop-loss set on the trade.</>}
+          getInfo={(p) => {
+            const t      = filterByPeriod(trades, p)
+            const rr     = calcAvgRR(t)
+            const withSL = t.filter(x => x.stop_loss && x.open_price && x.close_price).length
+            const phrase = PERIOD_PHRASE[p]
+            if (withSL === 0) return <>None of your trades {phrase} have a stop-loss logged, so your realised reward-to-risk can&apos;t be measured for this timeframe yet.</>
+            const verb  = rr >= 0 ? 'made' : 'lost'
+            const judge = rr >= 1.5 ? 'Above your 1.5 target — your winners are outpacing your risk.' : rr >= 0 ? 'Below the 1.5 target — room to let winners run or tighten stops.' : 'Negative — your losers are bigger than your winners on average.'
+            return <>Across {withSL} trade{withSL !== 1 ? 's' : ''} with a stop-loss {phrase}, for every €1 you risked you {verb} <strong style={{ color: rr >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{Math.abs(rr).toFixed(2)}R</strong> on average (a {rr >= 0 ? '+' : ''}{rr.toFixed(2)}R return). {judge}</>
+          }}
           getValue={(p) => {
             const rr = calcAvgRR(filterByPeriod(trades, p))
             const hasData = trades.filter(t => t.stop_loss && t.open_price && t.close_price).length > 0
@@ -229,7 +260,12 @@ export default function TradingTab() {
         <PeriodMetricCard
           title="Max Drawdown"
           barColor="var(--re)"
-          info={<>Your worst single-day loss in the selected period — the biggest drop from a high to the following low. It shows how much heat your account took at its worst. Lower is better; €0.00 means you had no losing days.</>}
+          getInfo={(p) => {
+            const dd     = calcMaxDrawdown(filterByPeriod(trades, p))
+            const phrase = PERIOD_PHRASE[p]
+            if (dd >= 0) return <>You had no losing days {phrase} — no drawdown to show for this timeframe. Nice.</>
+            return <>Your worst single day {phrase} lost <strong style={{ color: 'var(--re)' }}>{eur(dd)}</strong>. This is the most your account dropped in one day — a gut-check on how much heat you took at your worst.</>
+          }}
           getValue={(p) => {
             const dd = calcMaxDrawdown(filterByPeriod(trades, p))
             return { value: dd < 0 ? `€${Math.abs(dd).toFixed(2)}` : '€0.00', change: dd < 0 ? 'Worst single day' : 'No losing days', changePositive: dd === 0 ? true : false }
@@ -238,7 +274,14 @@ export default function TradingTab() {
         <PeriodMetricCard
           title="Withdrawn"
           barColor="var(--am)"
-          info={<>Money you&apos;ve taken out of the account in the selected period (payouts / withdrawals). If you also paid money in, the deposited amount is noted underneath. This is separate from trading P&amp;L.</>}
+          getInfo={(p) => {
+            const ops       = filterByPeriod(balanceOps, p)
+            const withdrawn = ops.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).reduce((s, t) => s + Math.abs(t.net_profit ?? 0), 0)
+            const deposited = ops.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).reduce((s, t) => s + (t.net_profit ?? 0), 0)
+            const phrase    = PERIOD_PHRASE[p]
+            if (withdrawn === 0 && deposited === 0) return <>No deposits or withdrawals {phrase}. This card only moves when you pay money in or take profits out — it&apos;s separate from your trading P&amp;L.</>
+            return <>{withdrawn > 0 ? <>You&apos;ve withdrawn <strong style={{ color: 'var(--am2)' }}>{eur(withdrawn)}</strong> {phrase}.</> : <>No withdrawals {phrase}.</>}{deposited > 0 ? <> You also deposited {eur(deposited)}.</> : null} This is separate from your trading P&amp;L.</>
+          }}
           getValue={(p) => {
             const ops = filterByPeriod(balanceOps, p)
             const withdrawn = ops
