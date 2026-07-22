@@ -71,13 +71,11 @@ export default function PeriodMetricCard({
         }} />
       )}
 
-      {/* Title + period selector */}
+      {/* Title + period selector + info eye (top-right corner) */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-1.5">
-          <p className="label-caps">{title}</p>
-          {info && <InfoTip title={infoTitle ?? title} text={info} />}
-        </div>
+        <p className="label-caps">{title}</p>
 
+        <div className="flex items-center gap-1.5">
         <div className="flex items-center" style={{ gap: '1px', background: 'var(--s3)', borderRadius: '6px', padding: '2px' }}>
           {periods.map(p => (
             <button
@@ -102,6 +100,8 @@ export default function PeriodMetricCard({
               {p}
             </button>
           ))}
+        </div>
+          {info && <InfoTip title={infoTitle ?? title} text={info} />}
         </div>
       </div>
 
