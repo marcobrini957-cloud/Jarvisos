@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { Trade } from '@/types'
 import { MON } from './helpers'
+import { useCandles } from '@/hooks/useCandles'
 
 // ── MT5 Trade Map ─────────────────────────────────────────────────────────────
 // A price × time map built entirely from the user's real MT5 fills — no external
@@ -47,6 +48,11 @@ export function MT5TradeMap({
   const sym = symbols.includes(symbol) ? symbol : (symbols[0] ?? '')
   const since = periodStart(period)
 
+  // Real broker candles streamed from the EA (empty until that pipeline is live).
+  const tf = period === 'all' ? 'H1' : 'M15'
+  const { candles: rawCandles } = useCandles(sym, tf)
+  const candles = useMemo(() => rawCandles.filter(c => c.time * 1000 >= since), [rawCandles, since])
+
   const closed = useMemo(() =>
     trades
       .filter(t => t.symbol === sym && t.open_price && t.close_price && t.open_time && t.close_time)
@@ -83,6 +89,10 @@ export function MT5TradeMap({
   for (const t of open) {
     prices.push(t.open_price!)
     timesArr.push(new Date(t.open_time!).getTime(), nowMs)
+  }
+  for (const c of candles) {
+    prices.push(c.high, c.low)
+    timesArr.push(c.time * 1000)
   }
 
   const hasData = prices.length > 0
@@ -184,6 +194,25 @@ export function MT5TradeMap({
               )
             })}
 
+            {/* Real MT5 candles (backdrop) — only when the EA is streaming them */}
+            {candles.length > 1 && (() => {
+              const cwd = Math.max(1, (cW / candles.length) * 0.66)
+              return candles.map(c => {
+                const x  = xOf(c.time * 1000)
+                const up = c.close >= c.open
+                const col = up ? 'rgba(0,232,122,0.45)' : 'rgba(255,61,80,0.45)'
+                const yO = yOf(c.open), yC = yOf(c.close)
+                const bodyY = Math.min(yO, yC)
+                const bodyH = Math.max(1, Math.abs(yO - yC))
+                return (
+                  <g key={`c-${c.time}`}>
+                    <line x1={x} y1={yOf(c.high)} x2={x} y2={yOf(c.low)} stroke={col} strokeWidth="1" />
+                    <rect x={x - cwd / 2} y={bodyY} width={cwd} height={bodyH} fill={col} />
+                  </g>
+                )
+              })
+            })()}
+
             {/* Open positions — dashed entry level + pulsing dot */}
             {open.map(t => {
               const x = xOf(new Date(t.open_time!).getTime())
@@ -281,7 +310,9 @@ export function MT5TradeMap({
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ color: '#00E87A' }}>●</span> Exit win</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ color: '#FF3D50' }}>●</span> Exit loss</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ color: 'var(--am2)' }}>◉</span> Live position</span>
-        <span style={{ marginLeft: 'auto', color: 'var(--t3)' }}>Your real MT5 fills · click a trade for its chart</span>
+        <span style={{ marginLeft: 'auto', color: 'var(--t3)' }}>
+          {candles.length > 1 ? `Live ${tf} candles from your MT5 · click a trade for its chart` : 'Your real MT5 fills · click a trade for its chart'}
+        </span>
       </div>
 
       {/* Screenshot strip — the setups behind these trades */}

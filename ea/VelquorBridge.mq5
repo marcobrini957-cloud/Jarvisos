@@ -32,6 +32,9 @@ input int            InpHistoryDays = 30;                            // Days of 
 input bool           InpDebugMode   = false;                         // Print debug logs
 input bool           InpFileBridge  = false;                         // Cloud mode: write payload to file (sidecar forwards it)
 input bool           InpAutoScreenshot = true;                       // Auto chart screenshot on trade open/close
+input bool           InpSendCandles    = true;                        // Stream OHLC candles for the web Trade Map
+input int            InpCandleBars     = 320;                         // M15 bars to send per active symbol
+input int            InpCandleSec      = 60;                          // Candle send throttle (seconds)
 
 // ── Copy trading inputs ─────────────────────────────────────────────────────
 input ENUM_COPY_MODE InpCopyMode     = COPY_OFF;  // Copy Mode
@@ -48,10 +51,11 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.22";
+string   g_eaVersion   = "2.23";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // follower: throttles PostSync inside the fast timer
+ulong    g_lastCandleMs = 0;  // throttles candle streaming inside BuildPayload
 CTrade   g_trade;
 
 // Leader: track tickets we have already signalled to avoid duplicates
@@ -1088,6 +1092,88 @@ void PostDisconnect()
 //+------------------------------------------------------------------+
 // Build JSON payload with account, open positions and closed trades
 //+------------------------------------------------------------------+
+// Candle streaming — real OHLC bars for the active symbols so the web Trade Map
+// can draw the broker's candles behind the user's trades.
+//+------------------------------------------------------------------+
+void AddUniqueSym(string &arr[], int &count, string val, int maxSyms)
+{
+   if(val == "" || count >= maxSyms) return;
+   for(int i = 0; i < count; i++) if(arr[i] == val) return;
+   ArrayResize(arr, count + 1);
+   arr[count] = val;
+   count++;
+}
+
+string TfName(ENUM_TIMEFRAMES tf)
+{
+   if(tf == PERIOD_M15) return "M15";
+   if(tf == PERIOD_H1)  return "H1";
+   if(tf == PERIOD_D1)  return "D1";
+   return "";
+}
+
+// Append OHLC objects for one symbol/timeframe. Returns bars appended.
+int AppendRates(string &out, string sym, ENUM_TIMEFRAMES tf, int bars, bool &first)
+{
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   int got = CopyRates(sym, tf, 0, bars, rates);
+   if(got <= 0) return 0;
+   string tfn = TfName(tf);
+   int    dg  = (int)SymbolInfoInteger(sym, SYMBOL_DIGITS);
+   for(int i = 0; i < got; i++)
+   {
+      if(!first) out += ",";
+      first = false;
+      out += "{";
+      out += "\"symbol\":\""    + EscapeJson(sym) + "\",";
+      out += "\"timeframe\":\"" + tfn + "\",";
+      out += "\"ts\":"          + IntegerToString((long)rates[i].time) + ",";
+      out += "\"o\":"           + DoubleToStr(rates[i].open,  dg) + ",";
+      out += "\"h\":"           + DoubleToStr(rates[i].high,  dg) + ",";
+      out += "\"l\":"           + DoubleToStr(rates[i].low,   dg) + ",";
+      out += "\"c\":"           + DoubleToStr(rates[i].close, dg);
+      out += "}";
+   }
+   return got;
+}
+
+string BuildCandles()
+{
+   string syms[]; int sc = 0;
+   const int maxSyms = 6;
+
+   // Active symbols: open positions first, then recently traded, then chart.
+   for(int i = 0; i < PositionsTotal(); i++)
+   {
+      ulong tk = PositionGetTicket(i);
+      if(tk == 0) continue;
+      AddUniqueSym(syms, sc, PositionGetString(POSITION_SYMBOL), maxSyms);
+   }
+   datetime fromTime = TimeCurrent() - (datetime)(InpHistoryDays * 86400);
+   HistorySelect(fromTime, TimeCurrent());
+   int dt = HistoryDealsTotal();
+   for(int i = dt - 1; i >= 0 && sc < maxSyms; i--)
+   {
+      ulong dk = HistoryDealGetTicket(i);
+      if(dk == 0) continue;
+      AddUniqueSym(syms, sc, HistoryDealGetString(dk, DEAL_SYMBOL), maxSyms);
+   }
+   if(sc == 0) AddUniqueSym(syms, sc, Symbol(), maxSyms);
+
+   string out = "\"candles\":[";
+   bool first = true;
+   int  h1Bars = (InpCandleBars < 240) ? InpCandleBars : 240;
+   for(int i = 0; i < sc; i++)
+   {
+      AppendRates(out, syms[i], PERIOD_M15, InpCandleBars, first);
+      AppendRates(out, syms[i], PERIOD_H1,  h1Bars,        first);
+   }
+   out += "]";
+   return out;
+}
+
+//+------------------------------------------------------------------+
 string BuildPayload()
 {
    string out = "{";
@@ -1219,8 +1305,17 @@ string BuildPayload()
       out += "\"close_time\":"  + IntegerToString(closeTime);
       out += "}";
    }
+   out += "]";
 
-   out += "]}";
+   // candles — throttled so we don't re-send the same bars every sync
+   if(InpSendCandles && (GetTickCount64() - g_lastCandleMs >= (ulong)InpCandleSec * 1000))
+   {
+      out += ",";
+      out += BuildCandles();
+      g_lastCandleMs = GetTickCount64();
+   }
+
+   out += "}";
    return out;
 }
 

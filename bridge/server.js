@@ -312,6 +312,38 @@ app.post('/sync', wrap(async (req, res) => {
     }
   }
 
+  // 3b. candles — OHLC bars streamed by the EA (CopyRates) so the web Trade Map
+  // can draw the broker's real candles behind the user's trades. Optional block;
+  // bounded and best-effort (a failure here never fails the sync).
+  if (Array.isArray(body.candles) && body.candles.length > 0) {
+    const candleRows = body.candles
+      .slice(0, 6000)
+      .filter(c => c && c.symbol && c.timeframe && Number.isFinite(c.ts))
+      .map(c => ({
+        user_id:   user.id,
+        symbol:    String(c.symbol),
+        timeframe: String(c.timeframe),
+        ts:        Math.floor(Number(c.ts)),
+        open:      Number(c.o),
+        high:      Number(c.h),
+        low:       Number(c.l),
+        close:     Number(c.c),
+        updated_at: new Date().toISOString(),
+      }))
+      .filter(c => Number.isFinite(c.open) && Number.isFinite(c.high) && Number.isFinite(c.low) && Number.isFinite(c.close))
+    if (candleRows.length > 0) {
+      const { error: cErr } = await supabase
+        .from('mt5_candles')
+        .upsert(candleRows, { onConflict: 'user_id,symbol,timeframe,ts' })
+      if (cErr) {
+        metrics.errors++;
+        metrics.last_error = `candles upsert: ${cErr.message}`;
+        metrics.last_error_at = new Date().toISOString();
+        log('warn', 'candles upsert failed', { user: user.id, count: candleRows.length, error: cErr.message });
+      }
+    }
+  }
+
   // 4. EA heartbeat on the profile
   await supabase.from('user_profiles').update({
     ea_connected: true,
