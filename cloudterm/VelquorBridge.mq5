@@ -1166,8 +1166,12 @@ string BuildCandles()
    int  h1Bars = (InpCandleBars < 240) ? InpCandleBars : 240;
    for(int i = 0; i < sc; i++)
    {
-      AppendRates(out, syms[i], PERIOD_M15, InpCandleBars, first);
-      AppendRates(out, syms[i], PERIOD_H1,  h1Bars,        first);
+      // Cloud terminals trim Market Watch — make sure the symbol is selected so
+      // CopyRates can actually return bars.
+      SymbolSelect(syms[i], true);
+      int m = AppendRates(out, syms[i], PERIOD_M15, InpCandleBars, first);
+      int h = AppendRates(out, syms[i], PERIOD_H1,  h1Bars,        first);
+      if(InpDebugMode) Print("Candles ", syms[i], " M15=", m, " H1=", h);
    }
    out += "]";
    return out;
@@ -1308,12 +1312,16 @@ string BuildPayload()
    out += "]";
 
    // candles — throttled so we don't re-send the same bars every sync
-   if(InpSendCandles && (GetTickCount64() - g_lastCandleMs >= (ulong)InpCandleSec * 1000))
+   bool candleDue = (GetTickCount64() - g_lastCandleMs >= (ulong)InpCandleSec * 1000);
+   if(InpSendCandles && candleDue)
    {
       out += ",";
       out += BuildCandles();
       g_lastCandleMs = GetTickCount64();
    }
+   else if(InpDebugMode)
+      Print("Candles skipped: send=", InpSendCandles, " due=", candleDue,
+            " dt=", (long)(GetTickCount64() - g_lastCandleMs));
 
    out += "}";
    return out;
