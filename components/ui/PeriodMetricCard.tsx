@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
+import { InfoTip } from './InfoTip'
 
 export type Period = 'D' | 'W' | 'M' | 'Q' | 'Y'
 
@@ -15,6 +16,10 @@ interface PeriodMetricCardProps {
   getValue:       (period: Period) => { value: string; change?: string; changePositive?: boolean | null }
   /** Optional graphic (ring, donut, …) rendered to the right of the number. */
   getVisual?:     (period: Period) => ReactNode
+  /** Optional plain-English explanation shown via an eye/info popover. */
+  info?:          ReactNode
+  /** Optional heading for the info popover. */
+  infoTitle?:     string
   defaultPeriod?: Period
   className?:     string
 }
@@ -25,6 +30,8 @@ export default function PeriodMetricCard({
   periods = ['D', 'W', 'M', 'Q', 'Y'],
   getValue,
   getVisual,
+  info,
+  infoTitle,
   defaultPeriod = 'M',
   className = '',
 }: PeriodMetricCardProps) {
@@ -66,7 +73,10 @@ export default function PeriodMetricCard({
 
       {/* Title + period selector */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <p className="label-caps">{title}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="label-caps">{title}</p>
+          {info && <InfoTip title={infoTitle ?? title} text={info} />}
+        </div>
 
         <div className="flex items-center" style={{ gap: '1px', background: 'var(--s3)', borderRadius: '6px', padding: '2px' }}>
           {periods.map(p => (

@@ -185,6 +185,7 @@ export default function TradingTab() {
         <PeriodMetricCard
           title="P&L"
           barColor="var(--gr)"
+          info={<>Your total profit or loss across all closed trades in the selected period. In the donut, <strong style={{ color: 'var(--gr2)' }}>green</strong> is money made on winning trades and <strong style={{ color: 'var(--re)' }}>red</strong> is money lost on losers. The centre number is your <strong style={{ color: 'var(--t1)' }}>profit factor</strong> (profit ÷ loss): 1.5 means you earned €1.50 for every €1 lost — above 1.0 is profitable.</>}
           getValue={(p) => {
             const t   = filterByPeriod(trades, p)
             const pnl = calcPnl(t)
@@ -200,6 +201,7 @@ export default function TradingTab() {
         <PeriodMetricCard
           title="Win Rate"
           barColor="var(--ac)"
+          info={<>The share of your decisive trades that were winners — wins ÷ (wins + losses). Break-even trades are ignored. The ring fills to your win %: <strong style={{ color: 'var(--gr2)' }}>green</strong> at 65%+, <strong style={{ color: 'var(--am2)' }}>amber</strong> 50–64%, <strong style={{ color: 'var(--re)' }}>red</strong> below 50%.</>}
           getValue={(p) => {
             const { rate, wins, losses, breakeven, total } = calcWinRate(filterByPeriod(trades, p))
             const label = breakeven > 0 ? `${wins}W · ${breakeven}BE · ${losses}L` : `${wins}W · ${losses}L`
@@ -213,6 +215,7 @@ export default function TradingTab() {
         <PeriodMetricCard
           title="Real R:R"
           barColor="var(--am)"
+          info={<>Your average <strong style={{ color: 'var(--t1)' }}>realised</strong> reward-to-risk. For every €1 you risked (entry → stop-loss), this is how much you actually made or lost on average. 1.5+ is the target; a negative number means you&apos;re cutting winners shorter than your losers. Needs a stop-loss set on the trade.</>}
           getValue={(p) => {
             const rr = calcAvgRR(filterByPeriod(trades, p))
             const hasData = trades.filter(t => t.stop_loss && t.open_price && t.close_price).length > 0
@@ -226,6 +229,7 @@ export default function TradingTab() {
         <PeriodMetricCard
           title="Max Drawdown"
           barColor="var(--re)"
+          info={<>Your worst single-day loss in the selected period — the biggest drop from a high to the following low. It shows how much heat your account took at its worst. Lower is better; €0.00 means you had no losing days.</>}
           getValue={(p) => {
             const dd = calcMaxDrawdown(filterByPeriod(trades, p))
             return { value: dd < 0 ? `€${Math.abs(dd).toFixed(2)}` : '€0.00', change: dd < 0 ? 'Worst single day' : 'No losing days', changePositive: dd === 0 ? true : false }
@@ -234,6 +238,7 @@ export default function TradingTab() {
         <PeriodMetricCard
           title="Withdrawn"
           barColor="var(--am)"
+          info={<>Money you&apos;ve taken out of the account in the selected period (payouts / withdrawals). If you also paid money in, the deposited amount is noted underneath. This is separate from trading P&amp;L.</>}
           getValue={(p) => {
             const ops = filterByPeriod(balanceOps, p)
             const withdrawn = ops
