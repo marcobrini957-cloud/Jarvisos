@@ -232,7 +232,7 @@ export default function PortfolioTab() {
                   <button onClick={() => setCsvModal('update')}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
                     title="Upload a CSV to refresh existing holdings and add new ones — never creates duplicates"
-                    style={{ background: 'var(--s3)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '12px', cursor: 'pointer' }}>
+                    style={{ background: 'var(--am)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
                     ⟳ Update
                   </button>
                   <button onClick={() => setModal({ open: true })}
