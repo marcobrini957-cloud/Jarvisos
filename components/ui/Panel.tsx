@@ -7,9 +7,12 @@ interface PanelProps {
   action?:    ReactNode
   noPadding?: boolean
   accent?:    string
+  /** Make the content area flex-fill the panel height (for charts that should
+      grow to fill the box). */
+  fill?:      boolean
 }
 
-export default function Panel({ title, children, className = '', action, noPadding = false, accent }: PanelProps) {
+export default function Panel({ title, children, className = '', action, noPadding = false, accent, fill = false }: PanelProps) {
   return (
     <div
       className={`rounded-xl flex flex-col ${className}`}
@@ -46,7 +49,7 @@ export default function Panel({ title, children, className = '', action, noPaddi
         </div>
       )}
 
-      <div className={noPadding ? '' : 'p-4'}>
+      <div className={`${noPadding ? '' : 'p-4'} ${fill ? 'flex-1 flex flex-col min-h-0' : ''}`}>
         {children}
       </div>
     </div>
