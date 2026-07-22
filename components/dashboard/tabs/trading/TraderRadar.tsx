@@ -1,11 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import { BE_THRESHOLD } from '@/hooks/useTrades'
 import type { Trade } from '@/types'
 
 // ── FIFA-style Trader Radar ───────────────────────────────────────────────────
 
 export function TraderRadar({ closed }: { closed: Trade[] }) {
+  const [showLegend, setShowLegend] = useState(false)
   const N  = 6
   // Give the hex generous room so labels never clip
   const W  = 600, H = 520
@@ -22,8 +24,9 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
   const grossWin  = closed.reduce((s, t) => s + Math.max(0, t.net_profit ?? 0), 0)
   const grossLoss = Math.abs(closed.reduce((s, t) => s + Math.min(0, t.net_profit ?? 0), 0))
   const pf        = grossLoss > 0 ? grossWin / grossLoss : grossWin > 0 ? 3 : 1
-  // PF 1.0 = breakeven (score 33), PF 2.0 = good (score 67), PF 3.0+ = elite (score 100)
-  const pfScore   = Math.min(100, (pf / 3) * 100)
+  // Industry-norm curve: PF 1.0 = breakeven (33), 1.75 = good (67), 2.5+ = elite (100).
+  // Linear: score = 33 + (PF − 1) × 44.67, clamped 0–100.
+  const pfScore   = Math.min(100, Math.max(0, 33 + (pf - 1) * (67 / 1.5)))
 
   // 3. Avg realized R:R — quality of entry & exit
   const rrTrades = closed.filter(t => t.stop_loss && t.open_price && t.close_price && t.trade_type)
@@ -60,6 +63,8 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
   const mindsetScore  = Math.min(100, Math.max(0, 100 - (tiltRate * 60 + revengeRate * 40) * 100))
 
   // Axes: order = top, TR, BR, bottom, BL, TL (clockwise from 12 o'clock)
+  // `has` = this skill has enough logged data to score honestly. Un-logged skills
+  // are shown as "—" and EXCLUDED from the OVR (rather than silently counting 50).
   const axes = [
     {
       id: 'wr',
@@ -67,13 +72,15 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
       value: `${winRate.toFixed(0)}%`,
       sub:   `${wins}W · ${losses}L`,
       score: winRate,
+      has:   (wins + losses) > 0,
     },
     {
       id: 'pf',
       label: 'PROFIT FACTOR',
       value: `${pf.toFixed(2)}×`,
-      sub:   pf >= 2 ? 'elite edge' : pf >= 1.5 ? 'solid edge' : pf >= 1 ? 'marginal' : 'losing',
+      sub:   pf >= 1.75 ? 'elite edge' : pf >= 1.25 ? 'solid edge' : pf >= 1 ? 'marginal' : 'losing',
       score: pfScore,
+      has:   closed.length > 0 && (grossWin > 0 || grossLoss > 0),
     },
     {
       id: 'rr',
@@ -81,6 +88,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
       value: avgRR !== null ? `${avgRR >= 0 ? '+' : ''}${avgRR.toFixed(2)}R` : '—',
       sub:   rrTrades.length > 0 ? `${rrTrades.length} trades w/ SL` : 'add SL to trades',
       score: rrScore,
+      has:   rrTrades.length > 0,
     },
     {
       id: 'disc',
@@ -88,6 +96,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
       value: planTrades.length > 0 ? `${discScore.toFixed(0)}%` : '—',
       sub:   planTrades.length > 0 ? `${planTrades.length} annotated` : 'log plan adherence',
       score: discScore,
+      has:   planTrades.length > 0,
     },
     {
       id: 'risk',
@@ -95,6 +104,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
       value: `${riskScore.toFixed(0)}%`,
       sub:   `${slTrades.length}/${closed.length} with SL`,
       score: riskScore,
+      has:   closed.length > 0,
     },
     {
       id: 'mind',
@@ -104,10 +114,14 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         ? tiltTrades.length === 0 ? 'no tilt detected' : `${tiltTrades.length} tilt sessions`
         : 'log emotions',
       score: mindsetScore,
+      has:   emotionTrades.length > 0 || revengeCount > 0,
     },
   ]
 
-  const ovr      = Math.round(axes.reduce((s, a) => s + a.score, 0) / N)
+  const scored = axes.filter(a => a.has)
+  const ovr    = scored.length > 0
+    ? Math.round(scored.reduce((s, a) => s + a.score, 0) / scored.length)
+    : 0
   const scoreCol = (s: number) => s >= 70 ? '#4ade80' : s >= 45 ? '#facc15' : '#f87171'
   const ovrColor = scoreCol(ovr)
 
@@ -122,7 +136,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
     return pts.map((p, k) => `${k === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z'
   }
   const dataPath = () => {
-    const pts = axes.map((a, i) => pt(i, Math.max(0.04, a.score / 100)))
+    const pts = axes.map((a, i) => pt(i, a.has ? Math.max(0.04, a.score / 100) : 0.04))
     return pts.map((p, k) => `${k === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z'
   }
 
@@ -238,7 +252,15 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
 
         {/* ── Vertex dots ── */}
         {axes.map((a, i) => {
-          const p   = pt(i, Math.max(0.04, a.score / 100))
+          const p   = pt(i, a.has ? Math.max(0.04, a.score / 100) : 0.04)
+          // Un-logged skills render as a faint hollow dot near the centre.
+          if (!a.has) {
+            return (
+              <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)}
+                r="4" fill="rgba(2,6,23,0.95)" stroke="rgba(255,255,255,0.22)"
+                strokeWidth="1.5" strokeDasharray="2 2" />
+            )
+          }
           const col = scoreCol(a.score)
           return (
             <g key={i} filter="url(#dglow2)">
@@ -253,7 +275,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         {/* ── Axis labels — 3 lines: name / value / context ── */}
         {axes.map((a, i) => {
           const { lx, ly, anchor } = labelCfg[i]
-          const col = scoreCol(a.score)
+          const col = a.has ? scoreCol(a.score) : 'rgba(255,255,255,0.38)'
           return (
             <g key={a.id}>
               {/* metric name */}
@@ -296,6 +318,12 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         {/* Score */}
         <text x={cx} y={cy + 22} textAnchor="middle" fontSize="40"
           fill={ovrColor} fontFamily="monospace" fontWeight="900">{ovr}</text>
+        {/* How many skills actually counted toward the OVR */}
+        {scored.length < N && (
+          <text x={cx} y={cy + 64} textAnchor="middle" fontSize="9"
+            fill="rgba(255,255,255,0.30)" fontFamily="system-ui"
+            style={{ letterSpacing: '0.10em' }}>{scored.length}/{N} SKILLS SCORED</text>
+        )}
       </svg>
 
       {/* ── Score breakdown pills — flex-wrap so 6-col on desktop, 3-col on mobile ── */}
@@ -304,8 +332,9 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         gap: '6px', width: '100%', maxWidth: '560px', marginTop: '8px',
       }}>
         {axes.map(a => {
-          const col = scoreCol(a.score)
-          const bg  = a.score >= 70
+          const col = a.has ? scoreCol(a.score) : 'rgba(255,255,255,0.38)'
+          const bg  = !a.has
+            ? 'rgba(255,255,255,0.02)' : a.score >= 70
             ? 'rgba(74,222,128,0.08)' : a.score >= 45
             ? 'rgba(77,143,255,0.08)' : 'rgba(248,113,113,0.08)'
           return (
@@ -313,7 +342,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
               padding: '8px 12px', borderRadius: '8px',
               background: bg, border: `1px solid ${col}25`,
-              minWidth: '80px', flex: '1 1 80px',
+              minWidth: '80px', flex: '1 1 80px', opacity: a.has ? 1 : 0.7,
             }}>
               <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.30)', letterSpacing: '0.08em', textAlign: 'center', whiteSpace: 'nowrap' }}>
                 {a.label}
@@ -327,6 +356,46 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
             </div>
           )
         })}
+      </div>
+
+      {/* ── "How it's graded" legend — client-ready explainer ── */}
+      <div style={{ width: '100%', maxWidth: '560px', marginTop: '14px' }}>
+        <button
+          onClick={() => setShowLegend(v => !v)}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+            width: '100%', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer',
+            background: 'var(--s2)', border: '1px solid var(--bd2)',
+            color: 'var(--t2)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em',
+          }}
+        >
+          <span>{showLegend ? 'Hide' : 'How is this graded?'}</span>
+          <span style={{ fontSize: '9px', color: 'var(--t3)', transform: showLegend ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▾</span>
+        </button>
+
+        {showLegend && (
+          <div style={{ marginTop: '10px', padding: '14px 16px', borderRadius: '10px', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <p style={{ color: 'var(--t3)', fontSize: '11px', lineHeight: 1.6 }}>
+              Your <strong style={{ color: 'var(--t1)' }}>OVR</strong> is the average of the skills below, each scored 0–100.
+              Skills you haven&apos;t logged data for show <span style={{ color: 'var(--t2)' }}>“—”</span> and are left out of the average — they don&apos;t drag your score down.
+              Colours: <span style={{ color: '#4ade80' }}>green ≥ 70</span> · <span style={{ color: '#facc15' }}>amber 45–69</span> · <span style={{ color: '#f87171' }}>red &lt; 45</span>.
+            </p>
+
+            {[
+              { label: 'Win Rate',      how: 'Your win % directly. Wins ÷ (wins + losses); breakeven trades excluded.' },
+              { label: 'Profit Factor', how: 'Gross profit ÷ gross loss. PF 1.0 = breakeven (33), 1.75 = strong (67), 2.5+ = elite (100).' },
+              { label: 'Avg R:R',       how: 'Average realised reward-to-risk per trade. −1R = 0, break-even = 33, +2R = 100. Needs a stop-loss on trades.' },
+              { label: 'Discipline',    how: 'Share of trades where you followed your plan. Log “followed plan” when annotating a trade.' },
+              { label: 'Risk Mgmt',     how: '% of trades with a stop-loss (70% weight) plus absence of “No SL / Oversize” tags (30% weight).' },
+              { label: 'Mindset',       how: 'Starts at 100, penalised for FOMO / anxious / tired emotions and revenge-trade tags. Log emotions to activate.' },
+            ].map(item => (
+              <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>{item.label}</span>
+                <span style={{ color: 'var(--t3)', fontSize: '11px', lineHeight: 1.5 }}>{item.how}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
