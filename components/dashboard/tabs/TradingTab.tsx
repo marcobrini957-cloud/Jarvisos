@@ -17,11 +17,9 @@ import {
 } from './trading/helpers'
 import { TradeAnnotationModal } from './trading/TradeAnnotationModal'
 import { TradeLogTable } from './trading/TradeLogTable'
-import { VelquorChat } from './trading/VelquorChat'
 import { TradingInsights } from './trading/TradingInsights'
 import { YourEdge } from './trading/YourEdge'
 import { EquityCurve } from './trading/EquityCurve'
-import { PositionSizeCalc } from './trading/PositionSizeCalc'
 import { ReportDownloadBar } from './trading/ReportDownloadBar'
 import { AdvancedChart } from '@/components/widgets/TradingViewWidget'
 import { TradeCalendar } from './overview/TradeCalendar'
@@ -418,8 +416,6 @@ export default function TradingTab() {
               </div>
             </div>
           </Panel>
-
-          <PositionSizeCalc />
         </div>
       </div>
 
@@ -459,7 +455,6 @@ export default function TradingTab() {
 
       {/* Statistical Analysis — full analytics panel */}
       <TradingInsights trades={trades} allRows={allRows} />
-      <VelquorChat trades={trades} />
 
       {/* Session Heatmap — kept for visual quick reference */}
       {/* Analytics — session / symbol / direction breakdown */}
