@@ -23,6 +23,8 @@ import { EquityCurve } from './trading/EquityCurve'
 import { ReportDownloadBar } from './trading/ReportDownloadBar'
 import { AdvancedChart } from '@/components/widgets/TradingViewWidget'
 import { TradeCalendar } from './overview/TradeCalendar'
+import { WinRing } from './overview/WinRing'
+import { PnlDonut } from './trading/PnlDonut'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -188,6 +190,12 @@ export default function TradingTab() {
             const pnl = calcPnl(t)
             return { value: fmtPnl(pnl), change: `${t.length} trade${t.length !== 1 ? 's' : ''}`, changePositive: pnl >= 0 ? true : false }
           }}
+          getVisual={(p) => {
+            const t      = filterByPeriod(trades, p)
+            const profit = t.reduce((s, x) => s + Math.max(0, x.net_profit ?? 0), 0)
+            const loss   = Math.abs(t.reduce((s, x) => s + Math.min(0, x.net_profit ?? 0), 0))
+            return <PnlDonut profit={profit} loss={loss} />
+          }}
         />
         <PeriodMetricCard
           title="Win Rate"
@@ -196,6 +204,10 @@ export default function TradingTab() {
             const { rate, wins, losses, breakeven, total } = calcWinRate(filterByPeriod(trades, p))
             const label = breakeven > 0 ? `${wins}W · ${breakeven}BE · ${losses}L` : `${wins}W · ${losses}L`
             return { value: total > 0 ? `${rate.toFixed(1)}%` : '—', change: label, changePositive: rate >= 50 ? true : rate === 0 ? null : false }
+          }}
+          getVisual={(p) => {
+            const { rate, total } = calcWinRate(filterByPeriod(trades, p))
+            return total > 0 ? <WinRing wr={rate} /> : null
           }}
         />
         <PeriodMetricCard
