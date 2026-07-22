@@ -21,7 +21,7 @@ import { TradingInsights } from './trading/TradingInsights'
 import { YourEdge } from './trading/YourEdge'
 import { EquityCurve } from './trading/EquityCurve'
 import { ReportDownloadBar } from './trading/ReportDownloadBar'
-import { AdvancedChart } from '@/components/widgets/TradingViewWidget'
+import { TradeChart } from './trading/TradeChart'
 import { TradeCalendar } from './overview/TradeCalendar'
 import { WinRing } from './overview/WinRing'
 import { PnlDonut } from './trading/PnlDonut'
@@ -196,11 +196,9 @@ export default function TradingTab() {
         </Panel>
       )}
 
-      {/* Live chart — official TradingView embed */}
-      <Panel title="Live Chart" noPadding>
-        <div className="tv-chart-wrap">
-          <AdvancedChart symbol="OANDA:XAUUSD" height="100%" />
-        </div>
+      {/* Live chart — candles with your real entries & exits plotted */}
+      <Panel title="Live Chart — Your Trades" noPadding accent="var(--ac)">
+        <TradeChart trades={trades} />
       </Panel>
 
       {/* Metrics with period selectors */}
