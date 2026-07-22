@@ -26,6 +26,7 @@ import { TradeCalendar } from './overview/TradeCalendar'
 import { WinRing } from './overview/WinRing'
 import { PnlDonut } from './trading/PnlDonut'
 import { MetricRing } from './trading/MetricRing'
+import { MT5TradeMap } from './trading/MT5TradeMap'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -196,11 +197,20 @@ export default function TradingTab() {
         </Panel>
       )}
 
-      {/* Live chart — official TradingView embed */}
+      {/* Live chart — official TradingView embed (market view) */}
       <Panel title="Live Chart" noPadding>
         <div className="tv-chart-wrap">
           <AdvancedChart symbol="OANDA:XAUUSD" height="100%" />
         </div>
+      </Panel>
+
+      {/* MT5-native Trade Map — your real fills on a price × time axis */}
+      <Panel title="Your Trades — MT5 Trade Map" noPadding accent="var(--ac)">
+        <MT5TradeMap
+          trades={trades}
+          openPositions={openPositions}
+          onViewScreenshot={setScreenshotViewing}
+        />
       </Panel>
 
       {/* Metrics with period selectors */}
