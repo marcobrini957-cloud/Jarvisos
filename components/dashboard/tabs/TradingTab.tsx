@@ -25,6 +25,7 @@ import { AdvancedChart } from '@/components/widgets/TradingViewWidget'
 import { TradeCalendar } from './overview/TradeCalendar'
 import { WinRing } from './overview/WinRing'
 import { PnlDonut } from './trading/PnlDonut'
+import { MetricRing } from './trading/MetricRing'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -256,6 +257,15 @@ export default function TradingTab() {
               changePositive: !hasData ? null : rr >= 1.5 ? true : false,
             }
           }}
+          getVisual={(p) => {
+            const t      = filterByPeriod(trades, p)
+            const withSL = t.filter(x => x.stop_loss && x.open_price && x.close_price).length
+            if (withSL === 0) return null
+            const rr    = calcAvgRR(t)
+            const score = Math.min(100, Math.max(0, (rr + 1) / 3 * 100))
+            const [color, glow] = rr >= 1.5 ? ['var(--gr2)', 'rgba(0,232,122,0.45)'] : rr >= 0 ? ['var(--am2)', 'rgba(240,168,64,0.45)'] : ['var(--re)', 'rgba(255,61,80,0.45)']
+            return <MetricRing pct={score} color={color} glow={glow} center={rr.toFixed(2)} sub="R" />
+          }}
         />
         <PeriodMetricCard
           title="Max Drawdown"
@@ -269,6 +279,12 @@ export default function TradingTab() {
           getValue={(p) => {
             const dd = calcMaxDrawdown(filterByPeriod(trades, p))
             return { value: dd < 0 ? `€${Math.abs(dd).toFixed(2)}` : '€0.00', change: dd < 0 ? 'Worst single day' : 'No losing days', changePositive: dd === 0 ? true : false }
+          }}
+          getVisual={(p) => {
+            const dd = calcMaxDrawdown(filterByPeriod(trades, p))
+            if (dd >= 0) return <MetricRing pct={100} color="var(--gr2)" glow="rgba(0,232,122,0.45)" center="0%" sub="of bal" />
+            const pct = currentBalance > 0 ? Math.abs(dd) / currentBalance * 100 : null
+            return <MetricRing pct={pct != null ? Math.min(100, pct) : 30} color="var(--re)" glow="rgba(255,61,80,0.45)" center={pct != null ? `${pct < 10 ? pct.toFixed(1) : pct.toFixed(0)}%` : '—'} sub="of bal" />
           }}
         />
         <PeriodMetricCard
@@ -298,6 +314,15 @@ export default function TradingTab() {
               change: label,
               changePositive: null,
             }
+          }}
+          getVisual={(p) => {
+            const ops       = filterByPeriod(balanceOps, p)
+            const withdrawn = ops.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).reduce((s, t) => s + Math.abs(t.net_profit ?? 0), 0)
+            const deposited = ops.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).reduce((s, t) => s + (t.net_profit ?? 0), 0)
+            const total     = withdrawn + deposited
+            if (total === 0) return <MetricRing pct={0} color="var(--am2)" glow="rgba(240,168,64,0.30)" />
+            // Amber slice = withdrawn, green remainder = deposited.
+            return <MetricRing pct={(withdrawn / total) * 100} color="var(--am2)" glow="rgba(240,168,64,0.45)" track="var(--gr2)" />
           }}
         />
       </div>
