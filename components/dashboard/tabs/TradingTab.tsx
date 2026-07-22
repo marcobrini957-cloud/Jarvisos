@@ -12,7 +12,7 @@ import SessionAnalyticsChart from '@/components/ui/SessionAnalyticsChart'
 import type { Trade } from '@/types'
 import { BE_THRESHOLD } from '@/lib/trading/stats'
 import {
-  filterByPeriod, calcPnl, calcWinRate, calcAvgRR, calcMaxDrawdown,
+  filterByPeriod, calcPnl, calcWinRate, calcMaxDrawdown,
   fmtPnl, fmtPips, fmtDate, fmtTime, MON, buildHeatmap, heatColor,
 } from './trading/helpers'
 import { TradeAnnotationModal } from './trading/TradeAnnotationModal'
@@ -35,11 +35,27 @@ const PERIOD_PHRASE: Record<Period, string> = {
 }
 const eur = (v: number) => `€${Math.abs(v).toFixed(2)}`
 
+// Consistency = share of trading days that closed in profit (style-agnostic).
+function calcConsistency(trades: Trade[]): { green: number; totalDays: number; pct: number } {
+  const byDay = new Map<string, number>()
+  for (const t of trades) {
+    if (!t.close_time) continue
+    const d = t.close_time.split('T')[0]
+    byDay.set(d, (byDay.get(d) ?? 0) + (t.net_profit ?? 0))
+  }
+  const totalDays = byDay.size
+  const green     = [...byDay.values()].filter(v => v > 0).length
+  return { green, totalDays, pct: totalDays > 0 ? (green / totalDays) * 100 : 0 }
+}
+
 export default function TradingTab() {
   const { trades, allRows, openPositions, stats, loading } = useTrades(2000)
   const { snapshot } = useAccountSnapshot()
   const currentBalance = snapshot?.balance ?? 0
   const balanceOps = allRows.filter(t => t.symbol === 'BALANCE')
+  // Cash flow (all-time) — an account fact, kept out of the performance KPI row.
+  const totalWithdrawn = balanceOps.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).reduce((s, t) => s + Math.abs(t.net_profit ?? 0), 0)
+  const totalDeposited = balanceOps.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).reduce((s, t) => s + (t.net_profit ?? 0), 0)
   const [annotating,       setAnnotating]       = useState<Trade | null>(null)
   const [screenshotViewing, setScreenshotViewing] = useState<string | null>(null)
 
@@ -236,35 +252,31 @@ export default function TradingTab() {
           }}
         />
         <PeriodMetricCard
-          title="Real R:R"
+          title="Expectancy"
           barColor="var(--am)"
           getInfo={(p) => {
             const t      = filterByPeriod(trades, p)
-            const rr     = calcAvgRR(t)
-            const withSL = t.filter(x => x.stop_loss && x.open_price && x.close_price).length
             const phrase = PERIOD_PHRASE[p]
-            if (withSL === 0) return <>None of your trades {phrase} have a stop-loss logged, so your realised reward-to-risk can&apos;t be measured for this timeframe yet.</>
-            const verb  = rr >= 0 ? 'made' : 'lost'
-            const judge = rr >= 1.5 ? 'Above your 1.5 target — your winners are outpacing your risk.' : rr >= 0 ? 'Below the 1.5 target — room to let winners run or tighten stops.' : 'Negative — your losers are bigger than your winners on average.'
-            return <>Across {withSL} trade{withSL !== 1 ? 's' : ''} with a stop-loss {phrase}, for every €1 you risked you {verb} <strong style={{ color: rr >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{Math.abs(rr).toFixed(2)}R</strong> on average (a {rr >= 0 ? '+' : ''}{rr.toFixed(2)}R return). {judge}</>
+            if (t.length === 0) return <>No closed trades {phrase} yet, so there&apos;s no expectancy to show for this timeframe.</>
+            const exp = calcPnl(t) / t.length
+            return <>Expectancy is what you earn on an <strong style={{ color: 'var(--t1)' }}>average trade</strong> — it blends your win rate and your win/loss sizes into one honest number, so it&apos;s fair to every style. Across your {t.length} trade{t.length !== 1 ? 's' : ''} {phrase}, you {exp >= 0 ? 'made' : 'lost'} <strong style={{ color: exp >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{eur(exp)}</strong> per trade on average. {exp >= 0 ? 'Positive means you have a real edge — a wide stop with a high win rate counts just as much as a tight stop with a low one.' : 'Negative means the average trade is currently costing you money.'}</>
           }}
           getValue={(p) => {
-            const rr = calcAvgRR(filterByPeriod(trades, p))
-            const hasData = trades.filter(t => t.stop_loss && t.open_price && t.close_price).length > 0
-            return {
-              value:          hasData ? rr.toFixed(2) : '—',
-              change:         !hasData ? 'No SL data' : rr >= 1.5 ? 'Above target' : rr >= 0 ? 'Below 1.5 target' : 'Negative — cutting losses short',
-              changePositive: !hasData ? null : rr >= 1.5 ? true : false,
-            }
+            const t = filterByPeriod(trades, p)
+            if (t.length === 0) return { value: '—', change: 'No trades', changePositive: null }
+            const exp = calcPnl(t) / t.length
+            return { value: `${exp >= 0 ? '+' : '-'}€${Math.abs(exp).toFixed(2)}`, change: `avg per trade · ${t.length}`, changePositive: exp > 0 ? true : exp < 0 ? false : null }
           }}
           getVisual={(p) => {
-            const t      = filterByPeriod(trades, p)
-            const withSL = t.filter(x => x.stop_loss && x.open_price && x.close_price).length
-            if (withSL === 0) return null
-            const rr    = calcAvgRR(t)
-            const score = Math.min(100, Math.max(0, (rr + 1) / 3 * 100))
-            const [color, glow] = rr >= 1.5 ? ['var(--gr2)', 'rgba(0,232,122,0.45)'] : rr >= 0 ? ['var(--am2)', 'rgba(240,168,64,0.45)'] : ['var(--re)', 'rgba(255,61,80,0.45)']
-            return <MetricRing pct={score} color={color} glow={glow} center={rr.toFixed(2)} sub="R" />
+            const t       = filterByPeriod(trades, p)
+            const wins    = t.filter(x => (x.net_profit ?? 0) >  BE_THRESHOLD)
+            const losses  = t.filter(x => (x.net_profit ?? 0) < -BE_THRESHOLD)
+            const avgWin  = wins.length   ? wins.reduce((s, x) => s + (x.net_profit ?? 0), 0) / wins.length : 0
+            const avgLoss = losses.length ? Math.abs(losses.reduce((s, x) => s + (x.net_profit ?? 0), 0)) / losses.length : 0
+            const tot     = avgWin + avgLoss
+            if (tot === 0) return null
+            // Green slice = average win size, red = average loss size (the payoff balance).
+            return <MetricRing pct={(avgWin / tot) * 100} color="var(--gr2)" glow="rgba(0,232,122,0.45)" track="var(--re)" />
           }}
         />
         <PeriodMetricCard
@@ -288,41 +300,28 @@ export default function TradingTab() {
           }}
         />
         <PeriodMetricCard
-          title="Withdrawn"
-          barColor="var(--am)"
+          title="Consistency"
+          barColor="var(--ac)"
           getInfo={(p) => {
-            const ops       = filterByPeriod(balanceOps, p)
-            const withdrawn = ops.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).reduce((s, t) => s + Math.abs(t.net_profit ?? 0), 0)
-            const deposited = ops.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).reduce((s, t) => s + (t.net_profit ?? 0), 0)
-            const phrase    = PERIOD_PHRASE[p]
-            if (withdrawn === 0 && deposited === 0) return <>No deposits or withdrawals {phrase}. This card only moves when you pay money in or take profits out — it&apos;s separate from your trading P&amp;L.</>
-            return <>{withdrawn > 0 ? <>You&apos;ve withdrawn <strong style={{ color: 'var(--am2)' }}>{eur(withdrawn)}</strong> {phrase}.</> : <>No withdrawals {phrase}.</>}{deposited > 0 ? <> You also deposited {eur(deposited)}.</> : null} This is separate from your trading P&amp;L.</>
+            const { green, totalDays, pct } = calcConsistency(filterByPeriod(trades, p))
+            const phrase = PERIOD_PHRASE[p]
+            if (totalDays === 0) return <>No trading days {phrase} yet — once you trade, this shows how many of your days finish green.</>
+            const cap = phrase.charAt(0).toUpperCase() + phrase.slice(1)
+            return <>Consistency is the share of your <strong style={{ color: 'var(--t1)' }}>trading days that finished in profit</strong>. {cap}, {green} of your {totalDays} day{totalDays !== 1 ? 's' : ''} ended green — <strong style={{ color: pct >= 50 ? 'var(--gr2)' : 'var(--re)' }}>{pct.toFixed(0)}%</strong>. Steady green days matter more to prop firms and your equity curve than one big winning day.</>
           }}
           getValue={(p) => {
-            const ops = filterByPeriod(balanceOps, p)
-            const withdrawn = ops
-              .filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD)
-              .reduce((s, t) => s + Math.abs(t.net_profit ?? 0), 0)
-            const deposited = ops
-              .filter(t => (t.net_profit ?? 0) > BE_THRESHOLD)
-              .reduce((s, t) => s + (t.net_profit ?? 0), 0)
-            const label = deposited > 0
-              ? `+€${deposited.toFixed(2)} deposited`
-              : ops.length === 0 ? 'No activity' : 'Trading profits only'
+            const { green, totalDays, pct } = calcConsistency(filterByPeriod(trades, p))
             return {
-              value: withdrawn > 0 ? `€${withdrawn.toFixed(2)}` : '€0.00',
-              change: label,
-              changePositive: null,
+              value:          totalDays > 0 ? `${pct.toFixed(0)}%` : '—',
+              change:         totalDays > 0 ? `${green}/${totalDays} days green` : 'No trading days',
+              changePositive: totalDays === 0 ? null : pct >= 50 ? true : false,
             }
           }}
           getVisual={(p) => {
-            const ops       = filterByPeriod(balanceOps, p)
-            const withdrawn = ops.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).reduce((s, t) => s + Math.abs(t.net_profit ?? 0), 0)
-            const deposited = ops.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).reduce((s, t) => s + (t.net_profit ?? 0), 0)
-            const total     = withdrawn + deposited
-            if (total === 0) return <MetricRing pct={0} color="var(--am2)" glow="rgba(240,168,64,0.30)" />
-            // Amber slice = withdrawn, green remainder = deposited.
-            return <MetricRing pct={(withdrawn / total) * 100} color="var(--am2)" glow="rgba(240,168,64,0.45)" track="var(--gr2)" />
+            const { totalDays, pct } = calcConsistency(filterByPeriod(trades, p))
+            if (totalDays === 0) return null
+            const [color, glow] = pct >= 60 ? ['var(--gr2)', 'rgba(0,232,122,0.45)'] : pct >= 40 ? ['var(--am2)', 'rgba(240,168,64,0.45)'] : ['var(--re)', 'rgba(255,61,80,0.45)']
+            return <MetricRing pct={pct} color={color} glow={glow} center={`${pct.toFixed(0)}%`} sub="green" />
           }}
         />
       </div>
@@ -499,6 +498,24 @@ export default function TradingTab() {
                   ))}
                 </div>
               </div>
+
+              {/* Cash flow — deposits / withdrawals (account fact, not performance) */}
+              {(totalWithdrawn > 0 || totalDeposited > 0) && (
+                <>
+                  <div style={{ height:'1px', background:'var(--bd)' }}/>
+                  <div>
+                    <p style={{ color:'var(--t3)', fontSize:'11px', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.04em' }}>Cash Flow (all-time)</p>
+                    <div className="flex items-center justify-between mb-1">
+                      <span style={{ color:'var(--t2)', fontSize:'12px' }}>Deposited</span>
+                      <span className="num" style={{ color:'var(--gr2)', fontSize:'13px', fontWeight:600 }}>€{totalDeposited.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span style={{ color:'var(--t2)', fontSize:'12px' }}>Withdrawn</span>
+                      <span className="num" style={{ color:'var(--am2)', fontSize:'13px', fontWeight:600 }}>€{totalWithdrawn.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </Panel>
         </div>
