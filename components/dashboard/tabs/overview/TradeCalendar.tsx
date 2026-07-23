@@ -139,6 +139,7 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
 
   const selectedTrades = selectedDate ? (dailyTrades.get(selectedDate) ?? []) : []
 
+  const monthTotal = Array.from(dailyPnl.values()).reduce((s, v) => s + v, 0)
   const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
   // Chunk the month into calendar weeks (each a 7-slot row, null = padding day).
@@ -152,34 +153,41 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
   const dateOf = (dayNum: number) => `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
-      {/* Month navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '28px', padding: '2px 0 6px' }}>
+      {/* Month navigation + monthly total */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '0 0 2px' }}>
         <button onClick={prevMonth} aria-label="Previous month" style={{
           background: 'transparent', border: 'none', color: 'var(--t1)', cursor: 'pointer',
-          fontSize: '22px', lineHeight: 1, padding: '4px 8px',
+          fontSize: '17px', lineHeight: 1, padding: '4px 6px',
         }}>←</button>
-        <span style={{ fontSize: '17px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em', minWidth: '150px', textAlign: 'center' }}>
-          {monthLabel}
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '128px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em' }}>
+            {monthLabel}
+          </span>
+          {dailyPnl.size > 0 && (
+            <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '-0.01em', marginTop: '1px', color: monthTotal >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
+              {fmtSigned(monthTotal)}
+            </span>
+          )}
+        </div>
         <button onClick={nextMonth} aria-label="Next month" disabled={isCurrentMonth} style={{
           background: 'transparent', border: 'none',
           color: isCurrentMonth ? 'var(--bd3)' : 'var(--t1)',
           cursor: isCurrentMonth ? 'default' : 'pointer',
-          fontSize: '22px', lineHeight: 1, padding: '4px 8px',
+          fontSize: '17px', lineHeight: 1, padding: '4px 6px',
         }}>→</button>
       </div>
 
       {/* Day headers — Sunday first */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
         {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-          <div key={d} style={{ textAlign: 'center', fontSize: '12px', color: 'var(--t3)', fontWeight: 500, paddingBottom: '6px' }}>{d}</div>
+          <div key={d} style={{ textAlign: 'center', fontSize: '10px', color: 'var(--t3)', fontWeight: 500, paddingBottom: '3px' }}>{d}</div>
         ))}
       </div>
 
       {/* Weeks — each row of days followed by its Week total bar */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
         {weeks.map((week, wi) => {
           const weekPnl = week.reduce<number>((s, dn) => s + (dn != null ? (dailyPnl.get(dateOf(dn)) ?? 0) : 0), 0)
           const weekHasData = week.some(dn => dn != null && dailyPnl.has(dateOf(dn)))
@@ -190,7 +198,7 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
                 {week.map((dayNum, di) => {
                   if (dayNum == null) {
-                    return <div key={`e${di}`} style={{ minHeight: '78px', border: '1px solid rgba(255,255,255,0.05)' }} />
+                    return <div key={`e${di}`} style={{ minHeight: '54px', border: '1px solid rgba(255,255,255,0.05)' }} />
                   }
                   const dateStr    = dateOf(dayNum)
                   const pnl        = dailyPnl.get(dateStr)
@@ -217,25 +225,25 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
                       key={dayNum}
                       onClick={() => { if (has) setSelectedDate(prev => prev === dateStr ? null : dateStr) }}
                       style={{
-                        minHeight: '78px', padding: '8px 9px', background: bg,
+                        minHeight: '54px', padding: '5px 6px', background: bg,
                         border: isSelected
                           ? '1.5px solid rgba(77,143,255,0.8)'
                           : isToday
                             ? '1.5px solid rgba(77,143,255,0.55)'
                             : '1px solid rgba(255,255,255,0.05)',
-                        display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px',
+                        display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px',
                         cursor: has ? 'pointer' : 'default', transition: 'background 0.12s',
                       }}>
-                      <span style={{ fontSize: '14px', fontWeight: 600, lineHeight: 1, color: has ? 'var(--t1)' : 'var(--t3)' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, lineHeight: 1, color: has ? 'var(--t1)' : 'var(--t3)' }}>
                         {dayNum}
                       </span>
                       {has && (
                         <>
-                          <span style={{ fontSize: '14px', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.01em', color: 'var(--t1)' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.02em', color: 'var(--t1)' }}>
                             {fmtMoney(pnl!)}
                           </span>
                           {winPct != null && (
-                            <span style={{ fontSize: '12px', color: 'var(--t3)', lineHeight: 1 }}>{winPct}%</span>
+                            <span style={{ fontSize: '9px', color: 'var(--t3)', lineHeight: 1 }}>{winPct}%</span>
                           )}
                         </>
                       )}
@@ -247,18 +255,18 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
               {/* Week total bar — only for weeks that contain trading days */}
               {weekHasData && (
                 <div style={{
-                  marginTop: '8px',
+                  marginTop: '5px',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '14px 18px', borderRadius: '10px',
+                  padding: '8px 12px', borderRadius: '8px',
                   background: weekPnl >= 0 ? 'rgba(0,232,122,0.045)' : 'rgba(255,61,80,0.05)',
                   border: `1px solid ${weekPnl >= 0 ? 'rgba(0,232,122,0.12)' : 'rgba(255,61,80,0.14)'}`,
                 }}>
-                  <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--t3)' }}>Week total</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.02em', color: weekPnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--t3)' }}>Week total</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '-0.02em', color: weekPnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
                       {fmtSigned(weekPnl)}
                     </span>
-                    <span style={{ fontSize: '16px', color: 'var(--t3)', lineHeight: 1 }}>›</span>
+                    <span style={{ fontSize: '13px', color: 'var(--t3)', lineHeight: 1 }}>›</span>
                   </div>
                 </div>
               )}
