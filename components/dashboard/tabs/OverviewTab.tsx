@@ -13,7 +13,7 @@ import { generateInsights }   from '@/lib/intelligence'
 import { formatValue }        from '@/lib/utils/formatting'
 import Panel                  from '@/components/ui/Panel'
 import SessionClock           from '@/components/ui/SessionClock'
-import EquityCurveChart       from '@/components/ui/EquityCurveChart'
+import { EquityCurve }        from './trading/EquityCurve'
 import DailyPnLChart          from '@/components/ui/DailyPnLChart'
 import { useUserProfile }     from '@/context/UserProfileContext'
 import { useIsMobile, greeting, fmtEur, fmtPnl, fullDate } from './overview/helpers'
@@ -184,9 +184,7 @@ export default function OverviewTab() {
       ══════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-stretch">
         <div className="lg:col-span-3">
-          <Panel title="Net Worth" accent="var(--gr2)" className="h-full">
-            <EquityCurveChart days={30} height={130} showStats portfolioValue={totalValueEur} />
-          </Panel>
+          <EquityCurve trades={trades} />
         </div>
         <div className="lg:col-span-2">
           <Panel title="Daily P&L — 30 Days" accent="var(--ac)" className="h-full">
