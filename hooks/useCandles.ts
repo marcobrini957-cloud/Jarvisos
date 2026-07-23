@@ -42,8 +42,9 @@ export function useCandles(symbol: string, timeframe: string, limit = 800) {
     }
 
     load()
-    // Refresh periodically so the current bar keeps up (cheap: one small query).
-    const id = setInterval(load, 20_000)
+    // Refresh often so the current (live) bar keeps up — the EA restreams every
+    // ~60s and this query is cheap, so a 10s poll makes the chart feel live.
+    const id = setInterval(load, 10_000)
     return () => { cancelled = true; clearInterval(id) }
   }, [symbol, timeframe, limit])
 

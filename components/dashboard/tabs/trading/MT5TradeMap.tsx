@@ -13,6 +13,10 @@ import { useCandles } from '@/hooks/useCandles'
 
 type MapPeriod = 'today' | 'week' | 'all'
 
+// TradingView's signature candle palette — the "very nice" teal-green / coral-red.
+const TV_UP = '#26a69a'
+const TV_DOWN = '#ef5350'
+
 const screenshotOf = (t: Trade) => t.screenshot_close_url || t.screenshot_open_url || t.screenshot_user_url || null
 
 function periodStart(p: MapPeriod): number {
@@ -73,7 +77,8 @@ export function MT5TradeMap({
 
   // ── Geometry ──────────────────────────────────────────────────────────────
   const W = 800, H = 300
-  const PAD = { t: 18, r: 16, b: 26, l: 58 }
+  // Price scale on the RIGHT, like TradingView.
+  const PAD = { t: 14, r: 56, b: 24, l: 10 }
   const cW = W - PAD.l - PAD.r
   const cH = H - PAD.t - PAD.b
 
@@ -98,7 +103,7 @@ export function MT5TradeMap({
   const hasData = prices.length > 0
   const pMinRaw = hasData ? Math.min(...prices) : 0
   const pMaxRaw = hasData ? Math.max(...prices) : 1
-  const pPad    = (pMaxRaw - pMinRaw) * 0.12 || 1
+  const pPad    = (pMaxRaw - pMinRaw) * 0.08 || 1
   const pMin = pMinRaw - pPad, pMax = pMaxRaw + pPad
   const tMin = hasData ? Math.min(...timesArr) : since
   const tMaxRaw = hasData ? Math.max(...timesArr) : nowMs
@@ -170,16 +175,31 @@ export function MT5TradeMap({
         </div>
       ) : (
         <div style={{ position: 'relative', padding: '4px 6px 0' }}>
+          <style>{`@keyframes vqLivePulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+          {candles.length > 1 && (
+            <div style={{ position: 'absolute', top: '10px', right: '14px', zIndex: 2, display: 'flex', alignItems: 'center',
+              gap: '5px', padding: '3px 8px', borderRadius: '6px',
+              background: 'rgba(38,166,154,0.12)', border: '1px solid rgba(38,166,154,0.32)' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: TV_UP,
+                boxShadow: `0 0 6px ${TV_UP}`, animation: 'vqLivePulse 1.4s ease-in-out infinite' }} />
+              <span style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.09em', color: '#5ad6ca' }}>LIVE</span>
+            </div>
+          )}
           <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}
             onMouseLeave={() => setHover(null)}>
-            {/* Grid + price axis */}
+            {/* Vertical gridlines (TradingView-style) */}
+            {[0.25, 0.5, 0.75].map(f => {
+              const x = PAD.l + f * cW
+              return <line key={`v${f}`} x1={x} y1={PAD.t} x2={x} y2={H - PAD.b} stroke="rgba(255,255,255,0.035)" strokeWidth="1" />
+            })}
+            {/* Horizontal grid + right-side price scale */}
             {[0, 0.25, 0.5, 0.75, 1].map(f => {
               const p = pMax - f * (pMax - pMin)
               const y = PAD.t + f * cH
               return (
                 <g key={f}>
-                  <line x1={PAD.l} y1={y} x2={W - PAD.r} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-                  <text x={PAD.l - 8} y={y + 3} textAnchor="end" fontSize="9" fill="rgba(104,129,168,0.6)" fontFamily="monospace">{fmtPrice(p)}</text>
+                  <line x1={PAD.l} y1={y} x2={W - PAD.r} y2={y} stroke="rgba(255,255,255,0.045)" strokeWidth="1" />
+                  <text x={W - PAD.r + 5} y={y + 3} textAnchor="start" fontSize="9" fill="rgba(120,140,170,0.7)" fontFamily="monospace">{fmtPrice(p)}</text>
                 </g>
               )
             })}
@@ -194,23 +214,45 @@ export function MT5TradeMap({
               )
             })}
 
-            {/* Real MT5 candles (backdrop) — only when the EA is streaming them */}
+            {/* Real MT5 candles — TradingView-style, only when the EA is streaming them */}
             {candles.length > 1 && (() => {
-              const cwd = Math.max(1, (cW / candles.length) * 0.66)
+              const cwd = Math.min(9, Math.max(1.5, (cW / candles.length) * 0.72))
               return candles.map(c => {
                 const x  = xOf(c.time * 1000)
                 const up = c.close >= c.open
-                const col = up ? 'rgba(0,232,122,0.45)' : 'rgba(255,61,80,0.45)'
+                const col = up ? TV_UP : TV_DOWN
                 const yO = yOf(c.open), yC = yOf(c.close)
                 const bodyY = Math.min(yO, yC)
                 const bodyH = Math.max(1, Math.abs(yO - yC))
                 return (
-                  <g key={`c-${c.time}`}>
+                  <g key={`c-${c.time}`} opacity="0.92">
                     <line x1={x} y1={yOf(c.high)} x2={x} y2={yOf(c.low)} stroke={col} strokeWidth="1" />
-                    <rect x={x - cwd / 2} y={bodyY} width={cwd} height={bodyH} fill={col} />
+                    <rect x={x - cwd / 2} y={bodyY} width={cwd} height={bodyH} fill={col} rx="0.5" />
                   </g>
                 )
               })
+            })()}
+
+            {/* Live last-price line + right-axis tag + pulsing dot (TradingView signature) */}
+            {candles.length > 1 && (() => {
+              const last = candles[candles.length - 1]
+              const up = last.close >= last.open
+              const col = up ? TV_UP : TV_DOWN
+              const y = yOf(last.close)
+              const x = xOf(last.time * 1000)
+              const tagW = PAD.r - 2, tagH = 15
+              return (
+                <g pointerEvents="none">
+                  <line x1={PAD.l} y1={y} x2={W - PAD.r} y2={y} stroke={col} strokeWidth="1" strokeDasharray="4,3" opacity="0.55" />
+                  <rect x={W - PAD.r} y={y - tagH / 2} width={tagW} height={tagH} rx="2.5" fill={col} />
+                  <text x={W - PAD.r + tagW / 2} y={y + 3.5} textAnchor="middle" fontSize="9.5" fontWeight="700" fill="#fff" fontFamily="monospace">{fmtPrice(last.close)}</text>
+                  <circle cx={x} cy={y} r="7" fill={col} opacity="0.22">
+                    <animate attributeName="r" values="4;9;4" dur="1.6s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.3;0;0.3" dur="1.6s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx={x} cy={y} r="2.6" fill={col} stroke="#000" strokeWidth="0.75" />
+                </g>
+              )
             })()}
 
             {/* Open positions — dashed entry level + pulsing dot */}
@@ -225,7 +267,7 @@ export function MT5TradeMap({
                     <animate attributeName="r" values="6;11;6" dur="1.8s" repeatCount="indefinite" />
                   </circle>
                   <circle cx={x} cy={y} r="4.5" fill="var(--am2)" stroke="#000" strokeWidth="1.5" />
-                  <text x={W - PAD.r} y={y - 5} textAnchor="end" fontSize="9" fontFamily="monospace" fill="var(--am2)">
+                  <text x={W - PAD.r - 5} y={y - 5} textAnchor="end" fontSize="9" fontFamily="monospace" fill="var(--am2)">
                     OPEN {up ? '+' : '-'}€{Math.abs(t.net_profit ?? 0).toFixed(0)}
                   </text>
                 </g>
