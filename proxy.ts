@@ -16,6 +16,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/icon') ||
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml' ||
+    pathname === '/manifest.webmanifest' ||
     pathname.startsWith('/ea') ||
     pathname.startsWith('/brand') ||
     pathname.startsWith('/trailer') ||
