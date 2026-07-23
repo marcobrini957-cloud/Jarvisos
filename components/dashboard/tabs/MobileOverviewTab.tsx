@@ -12,7 +12,7 @@ import { useUserProfile }     from '@/context/UserProfileContext'
 import { generateInsights }   from '@/lib/intelligence'
 import { formatValue }        from '@/lib/utils/formatting'
 import InsightCard            from '@/components/ui/InsightCard'
-import { EquityCurve }        from './trading/EquityCurve'
+import { NetWorthCurve }      from './trading/NetWorthCurve'
 import DailyPnLChart          from '@/components/ui/DailyPnLChart'
 import { buildEdgeFacts, Fact } from './overview/EdgeReport'
 import SessionClock           from '@/components/ui/SessionClock'
@@ -254,8 +254,8 @@ export default function MobileOverviewTab() {
         </div>
       </div>
 
-      {/* ── Equity Curve (same component as desktop / Trading tab) ── */}
-      <EquityCurve trades={trades} />
+      {/* ── Net Worth (MT5 balance + portfolio, over time) ── */}
+      <NetWorthCurve portfolioValue={totalValueEur} />
 
       {/* ── Daily P&L — 30 days ────────────────────────────────── */}
       <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid var(--bd2)' }}>
