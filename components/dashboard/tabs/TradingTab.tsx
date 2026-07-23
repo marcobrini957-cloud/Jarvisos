@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useTrades, tradeResult } from '@/hooks/useTrades'
-import { useAccountSnapshot } from '@/hooks/useAccountSnapshot'
 import PeriodMetricCard, { type Period } from '@/components/ui/PeriodMetricCard'
 import { LogoMark } from '@/components/ui/LogoMark'
 import Panel from '@/components/ui/Panel'
@@ -12,7 +11,7 @@ import SessionAnalyticsChart from '@/components/ui/SessionAnalyticsChart'
 import type { Trade } from '@/types'
 import { BE_THRESHOLD } from '@/lib/trading/stats'
 import {
-  filterByPeriod, calcPnl, calcWinRate, calcMaxDrawdown,
+  filterByPeriod, calcPnl, calcWinRate, calcPips,
   fmtPnl, fmtPips, fmtDate, fmtTime, MON, buildHeatmap, heatColor,
 } from './trading/helpers'
 import { TradeAnnotationModal } from './trading/TradeAnnotationModal'
@@ -50,8 +49,6 @@ function calcConsistency(trades: Trade[]): { green: number; totalDays: number; p
 
 export default function TradingTab() {
   const { trades, allRows, openPositions, stats, loading } = useTrades(2000)
-  const { snapshot } = useAccountSnapshot()
-  const currentBalance = snapshot?.balance ?? 0
   const balanceOps = allRows.filter(t => t.symbol === 'BALANCE')
   // Cash flow (all-time) — an account fact, kept out of the performance KPI row.
   const totalWithdrawn = balanceOps.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).reduce((s, t) => s + Math.abs(t.net_profit ?? 0), 0)
@@ -278,23 +275,34 @@ export default function TradingTab() {
           }}
         />
         <PeriodMetricCard
-          title="Max Drawdown"
-          barColor="var(--re)"
+          title="Overall Pips"
+          barColor="var(--cy)"
           getInfo={(p) => {
-            const dd     = calcMaxDrawdown(filterByPeriod(trades, p))
+            const t      = filterByPeriod(trades, p)
             const phrase = PERIOD_PHRASE[p]
-            if (dd >= 0) return <>You had no losing days {phrase} — no drawdown to show for this timeframe. Nice.</>
-            return <>Your worst single day {phrase} lost <strong style={{ color: 'var(--re)' }}>{eur(dd)}</strong>. This is the most your account dropped in one day — a gut-check on how much heat you took at your worst.</>
+            const sized  = t.filter(x => x.lot_size && x.net_profit != null)
+            if (sized.length === 0) return <>No sized trades {phrase} yet, so there are no pips to tally for this timeframe.</>
+            const pips = calcPips(t)
+            return <>Pips here are <strong style={{ color: 'var(--t1)' }}>size-normalised</strong> and work the same on any instrument — EURUSD, Nasdaq, gold, whatever. The rule: <strong style={{ color: 'var(--t1)' }}>€100 on a 0.10 lot = 100 pips</strong> (i.e. €10 per pip on a full lot). Across your {sized.length} trade{sized.length !== 1 ? 's' : ''} {phrase}, you banked <strong style={{ color: pips >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{pips >= 0 ? '+' : ''}{pips.toFixed(1)} pips</strong>. It strips out position size so a big lot and a small lot are judged on the move you caught, not the euros.</>
           }}
           getValue={(p) => {
-            const dd = calcMaxDrawdown(filterByPeriod(trades, p))
-            return { value: dd < 0 ? `€${Math.abs(dd).toFixed(2)}` : '€0.00', change: dd < 0 ? 'Worst single day' : 'No losing days', changePositive: dd === 0 ? true : false }
+            const t     = filterByPeriod(trades, p)
+            const sized = t.filter(x => x.lot_size && x.net_profit != null)
+            if (sized.length === 0) return { value: '—', change: 'No sized trades', changePositive: null }
+            const pips = calcPips(t)
+            return { value: fmtPips(pips), change: `across ${sized.length} trade${sized.length !== 1 ? 's' : ''}`, changePositive: pips > 0 ? true : pips < 0 ? false : null }
           }}
           getVisual={(p) => {
-            const dd = calcMaxDrawdown(filterByPeriod(trades, p))
-            if (dd >= 0) return <MetricRing pct={100} color="var(--gr2)" glow="rgba(0,232,122,0.45)" center="0%" sub="of bal" />
-            const pct = currentBalance > 0 ? Math.abs(dd) / currentBalance * 100 : null
-            return <MetricRing pct={pct != null ? Math.min(100, pct) : 30} color="var(--re)" glow="rgba(255,61,80,0.45)" center={pct != null ? `${pct < 10 ? pct.toFixed(1) : pct.toFixed(0)}%` : '—'} sub="of bal" />
+            const t         = filterByPeriod(trades, p)
+            const sized     = t.filter(x => x.lot_size && x.net_profit != null)
+            if (sized.length === 0) return null
+            const wonPips   = sized.reduce((s, x) => s + Math.max(0, (x.net_profit ?? 0) / (x.lot_size! * 10)), 0)
+            const lostPips  = sized.reduce((s, x) => s + Math.abs(Math.min(0, (x.net_profit ?? 0) / (x.lot_size! * 10))), 0)
+            const tot       = wonPips + lostPips
+            if (tot === 0) return null
+            const net       = wonPips - lostPips
+            // Green arc = pips won, red = pips given back — the pip payoff balance.
+            return <MetricRing pct={(wonPips / tot) * 100} color="var(--gr2)" glow="rgba(0,232,122,0.45)" track="var(--re)" center={`${net >= 0 ? '+' : ''}${Math.round(net)}`} sub="pips" />
           }}
         />
         <PeriodMetricCard

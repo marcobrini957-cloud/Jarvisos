@@ -91,6 +91,22 @@ export function calcMaxDrawdown(trades: Trade[]): number {
   return vals.length > 0 ? Math.min(0, ...vals) : 0
 }
 
+// Universal, instrument-agnostic pips.
+// Marco's mental model: €100 profit on a 0.10 lot = 100 pips. That's exactly a
+// dollar-per-pip of €1 at 0.10 lots, i.e. €10 per pip on a full 1.00 lot — the
+// standard-lot convention. So pips = net_profit / (lot_size × 10). This makes a
+// pip mean the same thing on EURUSD, Nasdaq, gold or anything else: it's how many
+// "€10-per-full-lot" units you banked, size-normalised. No per-symbol pip tables.
+export function tradePips(t: Trade): number | null {
+  if (t.net_profit == null || !t.lot_size) return null
+  return t.net_profit / (t.lot_size * 10)
+}
+
+// Sum of size-normalised pips across a set of trades (skips ones we can't size).
+export function calcPips(trades: Trade[]): number {
+  return trades.reduce((s, t) => s + (tradePips(t) ?? 0), 0)
+}
+
 export function fmtPnl(n: number | null): string {
   if (n === null) return '—'
   return `${n >= 0 ? '+' : '-'}€${Math.abs(n).toFixed(2)}`
