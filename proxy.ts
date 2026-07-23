@@ -28,6 +28,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/agb') ||
     pathname.startsWith('/dev') ||
     pathname.startsWith('/api/dev') ||
+    pathname.startsWith('/api/cron') ||
     pathname.startsWith('/api/market') ||
     pathname.startsWith('/api/macro')
 
