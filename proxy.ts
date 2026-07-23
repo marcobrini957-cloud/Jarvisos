@@ -4,8 +4,10 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  const isRoot = pathname === '/'
+
   const isPublic =
-    pathname === '/' ||
+    isRoot ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/auth/') ||
     pathname.startsWith('/onboarding') ||
@@ -24,7 +26,8 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/api/market') ||
     pathname.startsWith('/api/macro')
 
-  if (isPublic) {
+  // Public paths (except the landing root) need no session lookup.
+  if (isPublic && !isRoot) {
     return NextResponse.next()
   }
 
@@ -50,6 +53,17 @@ export async function proxy(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
+
+  // Landing page: send already-signed-in users straight to the app.
+  // Signed-out visitors still get the marketing site.
+  if (isRoot) {
+    if (user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
+    return response
+  }
 
   if (!user) {
     // API callers get a proper 401 instead of an HTML login redirect
