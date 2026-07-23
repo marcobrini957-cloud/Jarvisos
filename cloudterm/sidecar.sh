@@ -20,13 +20,17 @@ INBOX="$FILES_DIR/vq_cin_signals.json"
 log() { echo "{\"ts\":\"$(date -Is)\",\"sidecar\":\"$1\"}"; }
 log "up: watching $FILES_DIR -> $BRIDGE_URL"
 
-post_json() { # post_json <path> <bodyfile-or-string>  -> echoes http code
-  curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
+post_json() { # post_json <path> <body>  -> echoes http code
+  # Body goes in via stdin, NOT as a curl argv: Linux caps a single exec
+  # argument at MAX_ARG_STRLEN (128 KiB). Candle payloads run ~180 KB, so
+  # passing the body as "$2" made execve fail with E2BIG -> curl never ran
+  # -> http=000. printf is a shell builtin (no exec, no arg limit).
+  printf '%s' "$2" | curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
     -X POST "$BRIDGE_URL$1" \
     -H "Content-Type: application/json" \
     -H "X-Api-Key: $VQ_API_KEY" \
     "${@:3}" \
-    --data-binary "$2" 2>/dev/null || echo 000
+    --data-binary @- 2>/dev/null || echo 000
 }
 
 forward_sync() {
