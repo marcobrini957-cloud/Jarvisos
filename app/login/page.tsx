@@ -31,6 +31,11 @@ const GOOGLE_CLIENT_ID =
 // a code change (GIS also auto-falls-back if the script fails to load).
 const GIS_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_GIS !== 'off'
 
+// Only run the native flow on hosts registered as Authorized JS origins on the
+// Google client. Vercel preview URLs (*.vercel.app) aren't — Google forbids
+// wildcards — so there we fall back to the supabase redirect flow.
+const GIS_ALLOWED_HOSTS = new Set(['velquor.app', 'localhost', '127.0.0.1'])
+
 type GoogleIdApi = {
   initialize(cfg: {
     client_id: string
@@ -160,6 +165,7 @@ export default function LoginPage() {
   // Load Google Identity Services once and wire up the native ID-token flow.
   useEffect(() => {
     if (!GIS_ENABLED) return
+    if (!GIS_ALLOWED_HOSTS.has(window.location.hostname)) return
     let cancelled = false
     ;(async () => {
       try {
