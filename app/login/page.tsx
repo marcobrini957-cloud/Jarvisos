@@ -25,11 +25,11 @@ const GOOGLE_CLIENT_ID =
   process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
   || '42227403634-tnt1qj65togu9s067ugfgek9jciru5d5.apps.googleusercontent.com'
 
-// Kept OFF until velquor.app + http://localhost:3000 are added as Authorized
-// JavaScript origins on the Google OAuth client. Until then the native button
-// would error on click, so we fall back to the supabase redirect flow. Flip on
-// with NEXT_PUBLIC_GOOGLE_GIS=on once the origins are saved.
-const GIS_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_GIS === 'on'
+// ON by default now that velquor.app + http://localhost:3000 are Authorized
+// JavaScript origins on the Google OAuth client. Escape hatch: set
+// NEXT_PUBLIC_GOOGLE_GIS=off to fall back to the supabase redirect flow without
+// a code change (GIS also auto-falls-back if the script fails to load).
+const GIS_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_GIS !== 'off'
 
 type GoogleIdApi = {
   initialize(cfg: {
