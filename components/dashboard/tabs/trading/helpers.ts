@@ -68,29 +68,6 @@ export function calcWinRate(trades: Trade[]): { rate: number; wins: number; loss
   }
 }
 
-export function calcAvgRR(trades: Trade[]): number {
-  const valid = trades.filter(t => t.stop_loss && t.open_price && t.close_price && t.trade_type)
-  if (valid.length === 0) return 0
-  const sum = valid.reduce((s, t) => {
-    const dir      = t.trade_type === 'buy' ? 1 : -1
-    const realized = dir * ((t.close_price ?? 0) - (t.open_price ?? 0))
-    const risk     = Math.abs((t.open_price ?? 0) - (t.stop_loss ?? 0))
-    return s + (risk > 0 ? realized / risk : 0)
-  }, 0)
-  return sum / valid.length
-}
-
-export function calcMaxDrawdown(trades: Trade[]): number {
-  const byDay = new Map<string, number>()
-  for (const t of trades) {
-    if (!t.close_time) continue
-    const day = t.close_time.split('T')[0]
-    byDay.set(day, (byDay.get(day) ?? 0) + (t.net_profit ?? 0))
-  }
-  const vals = Array.from(byDay.values())
-  return vals.length > 0 ? Math.min(0, ...vals) : 0
-}
-
 // Universal, instrument-agnostic pips.
 // Marco's mental model: €100 profit on a 0.10 lot = 100 pips. That's exactly a
 // dollar-per-pip of €1 at 0.10 lots, i.e. €10 per pip on a full 1.00 lot — the

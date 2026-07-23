@@ -49,8 +49,3 @@ export function resolveServerAddress(input: string): string | null {
   }
   return null
 }
-
-// Public catalog for the connect UI (no secrets).
-export function brokerCatalog(): Broker[] {
-  return BROKERS
-}

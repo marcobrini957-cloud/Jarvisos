@@ -84,32 +84,6 @@ export function TradingViewWidget({
   )
 }
 
-export function TickerTape() {
-  return (
-    <div style={{ borderBottom: '1px solid var(--bd)', background: 'var(--bg)', overflow: 'hidden', height: '40px' }}>
-      <TradingViewWidget
-        script="embed-widget-ticker-tape"
-        height={40}
-        config={{
-          symbols: [
-            { proName: 'OANDA:XAUUSD',    title: 'Gold' },
-            { proName: 'CAPITALCOM:US100', title: 'NAS100' },
-            { proName: 'OANDA:EURUSD',    title: 'EUR/USD' },
-            { proName: 'FOREXCOM:SPXUSD', title: 'S&P 500' },
-            { proName: 'CAPITALCOM:DE40', title: 'DAX' },
-            { proName: 'BITSTAMP:BTCUSD', title: 'BTC' },
-          ],
-          showSymbolLogo: true,
-          colorTheme: 'dark',
-          isTransparent: true,
-          displayMode: 'adaptive',
-          locale: 'en',
-        }}
-      />
-    </div>
-  )
-}
-
 export function AdvancedChart({ symbol = 'OANDA:XAUUSD', interval = '5', height = 480 }: { symbol?: string; interval?: string; height?: number | string }) {
   return (
     <TradingViewWidget
