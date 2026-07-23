@@ -76,6 +76,23 @@ async function makeNonce(): Promise<{ raw: string; hashed: string }> {
   return { raw, hashed }
 }
 
+// Turn raw Supabase auth errors into guidance. Key case: a user who signed up
+// with Google later tries email+password (they never set one) — Supabase returns
+// a generic "invalid credentials", so we nudge them toward the Google button.
+function friendlyAuthError(msg: string, mode: 'signin' | 'signup'): string {
+  const m = msg.toLowerCase()
+  if (m.includes('email not confirmed')) {
+    return 'Please confirm your email first — check your inbox for the confirmation link we sent.'
+  }
+  if (mode === 'signin' && (m.includes('invalid login') || m.includes('invalid credentials'))) {
+    return 'Wrong email or password. If you signed up with Google, use "Continue with Google" above instead.'
+  }
+  if (mode === 'signup' && (m.includes('already registered') || m.includes('already exists') || m.includes('user already'))) {
+    return 'An account with this email already exists. Try signing in — or use "Continue with Google" if you signed up that way.'
+  }
+  return msg
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('signin')
@@ -238,7 +255,7 @@ export default function LoginPage() {
     try {
       const supabase = createClient()
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
-      if (authError) setError(authError.message)
+      if (authError) setError(friendlyAuthError(authError.message, 'signin'))
       else router.replace('/dashboard')
     } finally {
       setLoading(false)
@@ -259,7 +276,7 @@ export default function LoginPage() {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       })
-      if (authError) setError(authError.message)
+      if (authError) setError(friendlyAuthError(authError.message, 'signup'))
       else setSignedUp(true)
     } finally {
       setLoading(false)
