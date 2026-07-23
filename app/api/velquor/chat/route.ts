@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUserId } from '@/lib/api/auth'
+import { withinAiLimit } from '@/lib/api/aiRateLimit'
 import { BE_THRESHOLD } from '@/lib/trading/stats'
 
 export const maxDuration = 60
@@ -133,6 +134,7 @@ export async function POST(req: NextRequest) {
   try {
     const userId = await getAuthUserId()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!(await withinAiLimit(userId, 'velquor-chat'))) return NextResponse.json({ error: 'Daily AI limit reached — try again tomorrow.' }, { status: 429 })
 
     const { message, history = [] } = await req.json()
     if (!message) return NextResponse.json({ error: 'No message' }, { status: 400 })

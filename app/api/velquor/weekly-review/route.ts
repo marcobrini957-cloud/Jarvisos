@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUserId } from '@/lib/api/auth'
+import { withinAiLimit } from '@/lib/api/aiRateLimit'
 
 export const maxDuration = 60
 
@@ -11,6 +12,7 @@ export async function POST(req: NextRequest) {
   try {
     const userId = await getAuthUserId()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!(await withinAiLimit(userId, 'weekly-review', 50))) return NextResponse.json({ error: 'Daily AI limit reached — try again tomorrow.' }, { status: 429 })
 
     const { wins, losses, lessons, goals, mood, energy, week } = await req.json()
 

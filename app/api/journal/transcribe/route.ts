@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { getAuthUser } from '@/lib/api/auth'
+import { withinAiLimit } from '@/lib/api/aiRateLimit'
 
 export const maxDuration = 60
 
@@ -10,6 +11,7 @@ export const maxDuration = 60
 export async function POST(req: NextRequest) {
   const user = await getAuthUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await withinAiLimit(user.id, 'transcribe'))) return NextResponse.json({ error: 'Daily limit reached — try again tomorrow.' }, { status: 429 })
 
   if (!process.env.GROQ_API_KEY) {
     return NextResponse.json({ error: 'Transcription not configured' }, { status: 503 })

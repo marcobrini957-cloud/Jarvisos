@@ -3,6 +3,7 @@ import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { fetchFFCalendar, todaysEvents, highImpactForTrading } from '@/lib/forex-factory/calendar'
 import { getAuthUser } from '@/lib/api/auth'
+import { withinAiLimit } from '@/lib/api/aiRateLimit'
 
 export const maxDuration = 60
 
@@ -41,6 +42,7 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient()
     const user = await getAuthUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!(await withinAiLimit(user.id, 'macro', 50))) return NextResponse.json({ error: 'Daily AI limit reached — try again tomorrow.' }, { status: 429 })
 
     // Fetch context data in parallel
     const [calendarEvents, tradesResult, portfolioResult] = await Promise.all([
