@@ -7,7 +7,8 @@ interface Point { date: string; balance: number; equity: number }
 interface Props {
   days?:      number
   height?:    number
-  showStats?: boolean   // header row: current value, period P&L, max drawdown + period switcher
+  showStats?: boolean       // header row: current value, period P&L, max drawdown + switcher
+  portfolioValue?: number   // current portfolio holdings (EUR) — folded in as the net-worth baseline
 }
 
 function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)) }
@@ -19,12 +20,30 @@ const PERIODS = [
   { label: '1Y', days: 365 },
 ] as const
 
-export default function EquityCurveChart({ days = 30, height = 160, showStats = false }: Props) {
+// Catmull-Rom → cubic Bézier: a smooth, natural curve through every point.
+function smoothLine(pts: { x: number; y: number }[]): string {
+  if (pts.length < 2) return ''
+  if (pts.length === 2) return `M ${pts[0].x},${pts[0].y} L ${pts[1].x},${pts[1].y}`
+  const t = 0.16
+  let d = `M ${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i]
+    const p1 = pts[i]
+    const p2 = pts[i + 1]
+    const p3 = pts[i + 2] ?? p2
+    const c1x = p1.x + (p2.x - p0.x) * t, c1y = p1.y + (p2.y - p0.y) * t
+    const c2x = p2.x - (p3.x - p1.x) * t, c2y = p2.y - (p3.y - p1.y) * t
+    d += ` C ${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`
+  }
+  return d
+}
+
+export default function EquityCurveChart({ days = 30, height = 160, showStats = false, portfolioValue = 0 }: Props) {
   const [period,  setPeriod]  = useState(days)
   const [points,  setPoints]  = useState<Point[]>([])
   const [netDeposits, setNetDeposits] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; p: Point } | null>(null)
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; date: string; value: number } | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
@@ -38,49 +57,9 @@ export default function EquityCurveChart({ days = 30, height = 160, showStats = 
 
   const W = 800
   const H = height
-  const PAD_L = 8
-  const PAD_R = 8
-  const PAD_T = 16
-  const PAD_B = 28
-
+  const PAD_L = 8, PAD_R = 8, PAD_T = 16, PAD_B = 28
   const innerW = W - PAD_L - PAD_R
   const innerH = H - PAD_T - PAD_B
-
-  function buildPath(pts: Point[], key: 'balance' | 'equity', minVal: number, maxVal: number) {
-    if (pts.length < 2) return ''
-    const range = maxVal - minVal || 1
-    return pts.map((p, i) => {
-      const x = PAD_L + (i / (pts.length - 1)) * innerW
-      const y = PAD_T + (1 - (p[key] - minVal) / range) * innerH
-      return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`
-    }).join(' ')
-  }
-
-  function buildArea(pts: Point[], key: 'balance' | 'equity', minVal: number, maxVal: number) {
-    if (pts.length < 2) return ''
-    const range = maxVal - minVal || 1
-    const line = pts.map((p, i) => {
-      const x = PAD_L + (i / (pts.length - 1)) * innerW
-      const y = PAD_T + (1 - (p[key] - minVal) / range) * innerH
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    }).join(' L ')
-    const lastX = PAD_L + innerW
-    const firstX = PAD_L
-    const bottom = PAD_T + innerH
-    return `M ${firstX},${bottom} L ${line} L ${lastX},${bottom} Z`
-  }
-
-  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
-    if (!svgRef.current || points.length < 2) return
-    const rect = svgRef.current.getBoundingClientRect()
-    const rawX = (e.clientX - rect.left) * (W / rect.width) - PAD_L
-    const idx = clamp(Math.round((rawX / innerW) * (points.length - 1)), 0, points.length - 1)
-    const p = points[idx]
-    const x = PAD_L + (idx / (points.length - 1)) * innerW
-    const range = maxVal - minVal || 1
-    const y = PAD_T + (1 - (p.balance - minVal) / range) * innerH
-    setTooltip({ x, y, p })
-  }
 
   if (loading) {
     return (
@@ -93,57 +72,68 @@ export default function EquityCurveChart({ days = 30, height = 160, showStats = 
   if (points.length < 2) {
     return (
       <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '6px' }}>
-        <span style={{ color: 'var(--t3)', fontSize: '12px' }}>Equity curve appears once your account syncs</span>
+        <span style={{ color: 'var(--t3)', fontSize: '12px' }}>Net worth appears once your account syncs</span>
       </div>
     )
   }
 
-  const allValues = points.flatMap(p => [p.balance, p.equity])
-  const minVal = Math.min(...allValues)
-  const maxVal = Math.max(...allValues)
-  const padding = (maxVal - minVal) * 0.08 || 50
+  // Net worth = account equity (balance + floating) + current portfolio holdings.
+  // We have no historical portfolio snapshots, so the holdings value is folded in
+  // as a constant baseline — the shape tracks trading, the total is your net worth.
+  const series = points.map(p => p.equity + portfolioValue)
+  const n = series.length
+
+  const minVal = Math.min(...series)
+  const maxVal = Math.max(...series)
+  const padding = (maxVal - minVal) * 0.12 || 50
   const lo = minVal - padding
   const hi = maxVal + padding
-  const range = hi - lo
+  const range = hi - lo || 1
 
-  const balancePath = buildPath(points, 'balance', lo, hi)
-  const equityPath  = buildPath(points, 'equity',  lo, hi)
-  const areaPath    = buildArea(points, 'balance', lo, hi)
+  const xOf = (i: number) => PAD_L + (i / (n - 1)) * innerW
+  const yOf = (v: number) => PAD_T + (1 - (v - lo) / range) * innerH
+  const coords = series.map((v, i) => ({ x: xOf(i), y: yOf(v) }))
 
-  // First vs last for colour
-  const startBal = points[0].balance
-  const endBal   = points[points.length - 1].balance
-  const isUp     = endBal >= startBal
+  const linePath = smoothLine(coords)
+  const bottom = PAD_T + innerH
+  const areaPath = linePath ? `${linePath} L ${xOf(n - 1).toFixed(1)},${bottom} L ${xOf(0).toFixed(1)},${bottom} Z` : ''
+
+  const startVal = series[0]
+  const endVal   = series[n - 1]
+  const isUp     = endVal >= startVal
   const lineColor = isUp ? 'var(--gr2)' : 'var(--re)'
 
-  // Period P&L: balance delta MINUS funding — a deposit is not a win and a
-  // withdrawal is not a loss.
-  const periodPnl = endBal - startBal - netDeposits
-  const periodPct = startBal > 0 ? (periodPnl / startBal) * 100 : 0
-  let peak = points[0].balance, maxDd = 0
-  for (const p of points) {
-    if (p.balance > peak) peak = p.balance
-    maxDd = Math.max(maxDd, peak - p.balance)
-  }
+  // Period P&L: equity delta MINUS funding — a deposit is not a win, a withdrawal
+  // not a loss. (Portfolio is a constant baseline, so it nets out of the delta.)
+  const periodPnl = (points[n - 1].equity - points[0].equity) - netDeposits
+  const periodPct = startVal > 0 ? (periodPnl / startVal) * 100 : 0
+
+  let peak = series[0], maxDd = 0
+  for (const v of series) { if (v > peak) peak = v; maxDd = Math.max(maxDd, peak - v) }
   const maxDdPct = peak > 0 ? (maxDd / peak) * 100 : 0
 
-  // Y axis tick values
-  const tickCount = 3
-  const ticks = Array.from({ length: tickCount }, (_, i) =>
-    lo + (i / (tickCount - 1)) * range
-  ).reverse()
+  // Y axis ticks
+  const ticks = Array.from({ length: 3 }, (_, i) => lo + (i / 2) * range).reverse()
 
-  // X axis labels — sample ~4 evenly
+  // X axis labels — ~4 evenly
   const xLabels: { label: string; x: number }[] = []
-  const step = Math.max(1, Math.floor(points.length / 4))
-  for (let i = 0; i < points.length; i += step) {
-    const p = points[i]
-    const x = PAD_L + (i / (points.length - 1)) * innerW
-    const d = new Date(p.date)
-    xLabels.push({ label: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), x })
+  const step = Math.max(1, Math.floor(n / 4))
+  for (let i = 0; i < n; i += step) {
+    const d = new Date(points[i].date)
+    xLabels.push({ label: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), x: xOf(i) })
   }
 
-  const gradId = `eq-grad-${isUp ? 'up' : 'dn'}`
+  const gradId = `nw-grad-${isUp ? 'up' : 'dn'}`
+
+  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+    if (!svgRef.current || n < 2) return
+    const rect = svgRef.current.getBoundingClientRect()
+    const rawX = (e.clientX - rect.left) * (W / rect.width) - PAD_L
+    const idx = clamp(Math.round((rawX / innerW) * (n - 1)), 0, n - 1)
+    setTooltip({ x: xOf(idx), y: yOf(series[idx]), date: points[idx].date, value: series[idx] })
+  }
+
+  const eur2 = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
@@ -151,15 +141,15 @@ export default function EquityCurveChart({ days = 30, height = 160, showStats = 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '10px', gap: '10px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '22px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', lineHeight: 1 }}>
-              €{endBal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              €{eur2(endVal)}
             </span>
             <span style={{ fontSize: '12px', fontWeight: 700, color: periodPnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
-              {periodPnl >= 0 ? '+' : '−'}€{Math.abs(periodPnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {periodPnl >= 0 ? '+' : '−'}€{eur2(Math.abs(periodPnl))}
               {' '}({periodPct >= 0 ? '+' : ''}{periodPct.toFixed(1)}%) trading
             </span>
-            {netDeposits !== 0 && (
+            {portfolioValue > 0 && (
               <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
-                {netDeposits > 0 ? '+' : '−'}€{Math.abs(netDeposits).toLocaleString('en-US', { maximumFractionDigits: 0 })} {netDeposits > 0 ? 'deposited' : 'withdrawn'}
+                incl. €{portfolioValue.toLocaleString('en-US', { maximumFractionDigits: 0 })} portfolio
               </span>
             )}
             <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
@@ -195,14 +185,14 @@ export default function EquityCurveChart({ days = 30, height = 160, showStats = 
       >
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor={lineColor} stopOpacity="0.18" />
+            <stop offset="0%"   stopColor={lineColor} stopOpacity="0.20" />
             <stop offset="100%" stopColor={lineColor} stopOpacity="0"    />
           </linearGradient>
         </defs>
 
         {/* Grid lines */}
         {ticks.map((v, i) => {
-          const y = PAD_T + (1 - (v - lo) / range) * innerH
+          const y = yOf(v)
           return (
             <g key={i}>
               <line x1={PAD_L} x2={W - PAD_R} y1={y} y2={y}
@@ -217,12 +207,8 @@ export default function EquityCurveChart({ days = 30, height = 160, showStats = 
         {/* Area fill */}
         <path d={areaPath} fill={`url(#${gradId})`} />
 
-        {/* Equity line (dotted, subtle) */}
-        <path d={equityPath} stroke="rgba(255,255,255,0.12)" strokeWidth="1"
-          fill="none" strokeDasharray="3,3" />
-
-        {/* Balance line */}
-        <path d={balancePath} stroke={lineColor} strokeWidth="1.5" fill="none"
+        {/* Net worth line */}
+        <path d={linePath} stroke={lineColor} strokeWidth="2" fill="none"
           strokeLinejoin="round" strokeLinecap="round" />
 
         {/* X axis labels */}
@@ -237,7 +223,7 @@ export default function EquityCurveChart({ days = 30, height = 160, showStats = 
           <>
             <line x1={tooltip.x} x2={tooltip.x} y1={PAD_T} y2={PAD_T + innerH}
               stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3,2" />
-            <circle cx={tooltip.x} cy={tooltip.y} r="3" fill={lineColor}
+            <circle cx={tooltip.x} cy={tooltip.y} r="3.5" fill={lineColor}
               stroke="var(--s1)" strokeWidth="1.5" />
           </>
         )}
@@ -245,7 +231,7 @@ export default function EquityCurveChart({ days = 30, height = 160, showStats = 
 
       {/* Tooltip bubble */}
       {tooltip && (() => {
-        const pct  = ((tooltip.p.balance - startBal) / startBal * 100)
+        const pct  = startVal > 0 ? ((tooltip.value - startVal) / startVal * 100) : 0
         const pctStr = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`
         return (
           <div style={{
@@ -264,15 +250,10 @@ export default function EquityCurveChart({ days = 30, height = 160, showStats = 
             boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
           }}>
             <div style={{ color: 'var(--t3)', fontSize: '10px', marginBottom: '3px' }}>
-              {new Date(tooltip.p.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              {new Date(tooltip.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </div>
-            <div style={{ fontWeight: 600 }}>€{tooltip.p.balance.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+            <div style={{ fontWeight: 600 }}>€{eur2(tooltip.value)}</div>
             <div style={{ color: isUp ? 'var(--gr2)' : 'var(--re)', fontSize: '10px' }}>{pctStr} from start</div>
-            {tooltip.p.equity !== tooltip.p.balance && (
-              <div style={{ color: 'var(--t3)', fontSize: '10px', marginTop: '2px' }}>
-                Equity €{tooltip.p.equity.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            )}
           </div>
         )
       })()}

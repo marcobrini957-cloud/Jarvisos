@@ -254,10 +254,10 @@ export default function MobileOverviewTab() {
         </div>
       </div>
 
-      {/* ── Equity Curve (same data as desktop, period-selectable) ── */}
+      {/* ── Net Worth (same data as desktop, period-selectable) ── */}
       <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid var(--bd2)' }}>
-        <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>Equity Curve</span>
-        <EquityCurveChart days={30} height={140} showStats />
+        <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>Net Worth</span>
+        <EquityCurveChart days={30} height={140} showStats portfolioValue={totalValueEur} />
       </div>
 
       {/* ── Daily P&L — 30 days ────────────────────────────────── */}

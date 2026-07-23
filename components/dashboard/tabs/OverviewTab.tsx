@@ -184,8 +184,8 @@ export default function OverviewTab() {
       ══════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-stretch">
         <div className="lg:col-span-3">
-          <Panel title="Equity Curve" accent="var(--gr2)" className="h-full">
-            <EquityCurveChart days={30} height={130} showStats />
+          <Panel title="Net Worth" accent="var(--gr2)" className="h-full">
+            <EquityCurveChart days={30} height={130} showStats portfolioValue={totalValueEur} />
           </Panel>
         </div>
         <div className="lg:col-span-2">
