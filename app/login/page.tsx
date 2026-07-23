@@ -16,6 +16,61 @@ const LoginDashboardPreview = dynamic(
   () => import('@/components/login/LoginDashboardPreview').then(m => m.LoginDashboardPreview)
 )
 
+// ── Google Identity Services (native ID-token flow) ─────────────────────────
+// Runs Google sign-in on velquor.app itself instead of redirecting through
+// supabase.co, so Google's consent screen shows our own domain — no custom-domain
+// add-on required. Supabase already trusts this (web) client ID, so the ID token
+// exchanges directly via signInWithIdToken.
+const GOOGLE_CLIENT_ID =
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+  || '42227403634-tnt1qj65togu9s067ugfgek9jciru5d5.apps.googleusercontent.com'
+
+// Kept OFF until velquor.app + http://localhost:3000 are added as Authorized
+// JavaScript origins on the Google OAuth client. Until then the native button
+// would error on click, so we fall back to the supabase redirect flow. Flip on
+// with NEXT_PUBLIC_GOOGLE_GIS=on once the origins are saved.
+const GIS_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_GIS === 'on'
+
+type GoogleIdApi = {
+  initialize(cfg: {
+    client_id: string
+    callback: (res: { credential: string }) => void
+    nonce?: string
+    use_fedcm_for_prompt?: boolean
+    cancel_on_tap_outside?: boolean
+  }): void
+  renderButton(parent: HTMLElement, opts: Record<string, unknown>): void
+  prompt(): void
+}
+declare global {
+  interface Window { google?: { accounts?: { id?: GoogleIdApi } } }
+}
+
+function loadGis(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.google?.accounts?.id) return resolve()
+    const existing = document.getElementById('gis-script')
+    if (existing) { existing.addEventListener('load', () => resolve()); return }
+    const s = document.createElement('script')
+    s.id = 'gis-script'
+    s.src = 'https://accounts.google.com/gsi/client'
+    s.async = true
+    s.defer = true
+    s.onload = () => resolve()
+    s.onerror = () => reject(new Error('Google sign-in failed to load'))
+    document.head.appendChild(s)
+  })
+}
+
+// Google embeds a HASHED nonce in the ID token; we hand Supabase the RAW one and
+// it re-hashes to verify — guards against token replay.
+async function makeNonce(): Promise<{ raw: string; hashed: string }> {
+  const raw = crypto.randomUUID() + crypto.randomUUID()
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw))
+  const hashed = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('')
+  return { raw, hashed }
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('signin')
@@ -30,6 +85,11 @@ export default function LoginPage() {
   const [displayName, setDisplayName] = useState('')
   const [signedUp,    setSignedUp]    = useState(false)
   const [resetSent,   setResetSent]   = useState(false)
+
+  // Google Identity Services
+  const googleBtnRef = useRef<HTMLDivElement>(null)
+  const nonceRef     = useRef<string>('')
+  const [gisReady, setGisReady] = useState(false)
 
   // Root layout locks overflow:hidden for the dashboard — unlock so the form
   // stays reachable on small phones (and under the cookie banner)
@@ -78,6 +138,71 @@ export default function LoginPage() {
       setLoading(false)
     }
   }
+
+  // Native Google flow: exchange the ID token from GIS for a Supabase session.
+  async function handleGoogleCredential(response: { credential: string }) {
+    setError('')
+    setLoading(true)
+    try {
+      const supabase = createClient()
+      const { error: authError } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: response.credential,
+        nonce: nonceRef.current,
+      })
+      if (authError) setError(authError.message)
+      else router.replace('/dashboard')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Load Google Identity Services once and wire up the native ID-token flow.
+  useEffect(() => {
+    if (!GIS_ENABLED) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { raw, hashed } = await makeNonce()
+        nonceRef.current = raw
+        await loadGis()
+        if (cancelled) return
+        const id = window.google?.accounts?.id
+        if (!id) return
+        id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCredential,
+          nonce: hashed,
+          use_fedcm_for_prompt: true,
+          cancel_on_tap_outside: true,
+        })
+        setGisReady(true)
+        id.prompt() // Google One Tap
+      } catch {
+        // GIS unavailable → the fallback redirect button stays usable.
+      }
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // (Re)render Google's button whenever the Google area is visible.
+  useEffect(() => {
+    if (!gisReady || signedUp || mode === 'reset') return
+    const id = window.google?.accounts?.id
+    const el = googleBtnRef.current
+    if (!id || !el) return
+    el.innerHTML = ''
+    id.renderButton(el, {
+      type: 'standard',
+      theme: 'filled_black',
+      size: 'large',
+      text: mode === 'signup' ? 'signup_with' : 'signin_with',
+      shape: 'pill',
+      logo_alignment: 'center',
+      width: 336,
+    })
+  }, [gisReady, mode, signedUp])
 
   function switchMode(m: Mode) {
     setMode(m)
@@ -283,32 +408,37 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Google OAuth — shown on signin/signup, not reset */}
+          {/* Google sign-in — native GIS button (shows velquor.app), with the
+              supabase redirect flow as an automatic fallback if GIS can't load */}
           {!signedUp && mode !== 'reset' && (
             <>
-              <button
-                onClick={handleGoogleSignIn}
-                disabled={loading}
-                style={{
-                  width: '100%', padding: '12px 16px',
-                  background: 'var(--s2)', border: '1px solid var(--bd2)',
-                  borderRadius: '10px', cursor: loading ? 'default' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                  color: 'var(--t1)', fontSize: '14px', fontWeight: 500,
-                  transition: 'border-color 0.15s',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--bd3)')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--bd2)')}
-              >
-                {/* Google G logo */}
-                <svg width="18" height="18" viewBox="0 0 18 18">
-                  <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
-                  <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
-                  <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/>
-                  <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/>
-                </svg>
-                Continue with Google
-              </button>
+              {gisReady ? (
+                <div ref={googleBtnRef} style={{ display: 'flex', justifyContent: 'center', minHeight: '44px' }} />
+              ) : (
+                <button
+                  onClick={handleGoogleSignIn}
+                  disabled={loading}
+                  style={{
+                    width: '100%', padding: '12px 16px',
+                    background: 'var(--s2)', border: '1px solid var(--bd2)',
+                    borderRadius: '10px', cursor: loading ? 'default' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                    color: 'var(--t1)', fontSize: '14px', fontWeight: 500,
+                    transition: 'border-color 0.15s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--bd3)')}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--bd2)')}
+                >
+                  {/* Google G logo */}
+                  <svg width="18" height="18" viewBox="0 0 18 18">
+                    <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+                    <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+                    <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"/>
+                    <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/>
+                  </svg>
+                  Continue with Google
+                </button>
+              )}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ flex: 1, height: '1px', background: 'var(--bd)' }} />
