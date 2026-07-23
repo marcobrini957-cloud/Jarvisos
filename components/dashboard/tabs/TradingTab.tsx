@@ -262,17 +262,6 @@ export default function TradingTab() {
             const exp = calcPnl(t) / t.length
             return { value: `${exp >= 0 ? '+' : '-'}€${Math.abs(exp).toFixed(2)}`, change: `avg per trade · ${t.length}`, changePositive: exp > 0 ? true : exp < 0 ? false : null }
           }}
-          getVisual={(p) => {
-            const t       = filterByPeriod(trades, p)
-            const wins    = t.filter(x => (x.net_profit ?? 0) >  BE_THRESHOLD)
-            const losses  = t.filter(x => (x.net_profit ?? 0) < -BE_THRESHOLD)
-            const avgWin  = wins.length   ? wins.reduce((s, x) => s + (x.net_profit ?? 0), 0) / wins.length : 0
-            const avgLoss = losses.length ? Math.abs(losses.reduce((s, x) => s + (x.net_profit ?? 0), 0)) / losses.length : 0
-            const tot     = avgWin + avgLoss
-            if (tot === 0) return null
-            // Green slice = average win size, red = average loss size (the payoff balance).
-            return <MetricRing pct={(avgWin / tot) * 100} color="var(--gr2)" glow="rgba(0,232,122,0.45)" track="var(--re)" />
-          }}
         />
         <PeriodMetricCard
           title="Overall Pips"
