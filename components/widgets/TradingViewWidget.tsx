@@ -110,7 +110,7 @@ export function TickerTape() {
   )
 }
 
-export function AdvancedChart({ symbol = 'OANDA:XAUUSD', height = 480 }: { symbol?: string; height?: number | string }) {
+export function AdvancedChart({ symbol = 'OANDA:XAUUSD', interval = '5', height = 480 }: { symbol?: string; interval?: string; height?: number | string }) {
   return (
     <TradingViewWidget
       script="embed-widget-advanced-chart"
@@ -119,7 +119,7 @@ export function AdvancedChart({ symbol = 'OANDA:XAUUSD', height = 480 }: { symbo
       config={{
         autosize: true,
         symbol,
-        interval: '60',
+        interval,
         timezone: 'Europe/Vienna',
         theme: 'dark',
         style: '1',

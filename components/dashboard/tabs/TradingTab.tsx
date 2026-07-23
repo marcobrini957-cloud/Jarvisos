@@ -21,7 +21,7 @@ import { TradingInsights } from './trading/TradingInsights'
 import { YourEdge } from './trading/YourEdge'
 import { EquityCurve } from './trading/EquityCurve'
 import { ReportDownloadBar } from './trading/ReportDownloadBar'
-import { AdvancedChart } from '@/components/widgets/TradingViewWidget'
+import { LiveChart } from './trading/LiveChart'
 import { TradeCalendar } from './overview/TradeCalendar'
 import { WinRing } from './overview/WinRing'
 import { PnlDonut } from './trading/PnlDonut'
@@ -197,11 +197,9 @@ export default function TradingTab() {
         </Panel>
       )}
 
-      {/* Live chart — official TradingView embed (market view) */}
-      <Panel title="Live Chart" noPadding>
-        <div className="tv-chart-wrap">
-          <AdvancedChart symbol="OANDA:XAUUSD" height="100%" />
-        </div>
+      {/* Live chart — real-time TradingView data, follows your instrument, all timeframes */}
+      <Panel title="Live Chart" noPadding accent="var(--gr)">
+        <LiveChart trades={trades} openPositions={openPositions} />
       </Panel>
 
       {/* MT5-native Trade Map — your real fills on a price × time axis */}
