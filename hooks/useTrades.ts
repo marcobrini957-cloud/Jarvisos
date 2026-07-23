@@ -66,13 +66,22 @@ export function useTrades(limit = 50) {
   // overlap — e.g. OverviewTab unmounting while MobileOverviewTab mounts on phones.
   useEffect(() => {
     const supabase = createClient()
-    const channel  = supabase
-      .channel(`trades-realtime-${Math.random().toString(36).slice(2)}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trades' }, () => {
-        load()
-      })
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    let cancelled = false
+    // Scope the stream to the signed-in user's own rows. Supabase realtime does
+    // NOT enforce RLS on postgres_changes by default, so without this filter every
+    // client would be woken by (and could infer) other users' trade activity.
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (cancelled || !user) return
+      channel = supabase
+        .channel(`trades-realtime-${Math.random().toString(36).slice(2)}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'trades', filter: `user_id=eq.${user.id}` }, () => {
+          load()
+        })
+        .subscribe()
+    })()
+    return () => { cancelled = true; if (channel) supabase.removeChannel(channel) }
   }, [load])
 
   // Also reload on manual mt5-synced event (belt-and-suspenders)

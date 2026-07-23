@@ -89,6 +89,10 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
   )
 }
 
+// €-money helpers — full number with thousands separators, matching the mock.
+const fmtMoney  = (v: number) => `€${Math.round(Math.abs(v)).toLocaleString('en-US')}`
+const fmtSigned = (v: number) => `${v >= 0 ? '+' : '-'}€${Math.round(Math.abs(v)).toLocaleString('en-US')}`
+
 export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
   const now   = new Date()
   const today = now.toISOString().split('T')[0]
@@ -113,8 +117,8 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
   const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth()
 
   const daysInMonth    = new Date(viewYear, viewMonth + 1, 0).getDate()
-  const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay()
-  const startOffset    = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
+  // Sunday-first layout (matches the mock: Sun … Sat).
+  const startOffset    = new Date(viewYear, viewMonth, 1).getDay()
 
   // Build daily map and per-day trade list for selected month
   const { dailyPnl, dailyTrades } = useMemo(() => {
@@ -133,143 +137,130 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
     return { dailyPnl: pnlMap, dailyTrades: tradesMap }
   }, [allRows, viewYear, viewMonth])
 
-  const maxAbs     = Math.max(1, ...Array.from(dailyPnl.values()).map(Math.abs))
-  const totalPnl   = Array.from(dailyPnl.values()).reduce((s, v) => s + v, 0)
-  const profitDays = Array.from(dailyPnl.values()).filter(v => v >  BE_THRESHOLD).length
-  const lossDays   = Array.from(dailyPnl.values()).filter(v => v < -BE_THRESHOLD).length
-  const beDays     = Array.from(dailyPnl.values()).filter(v => v >= -BE_THRESHOLD && v <= BE_THRESHOLD).length
-
   const selectedTrades = selectedDate ? (dailyTrades.get(selectedDate) ?? []) : []
 
   const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
+  // Chunk the month into calendar weeks (each a 7-slot row, null = padding day).
+  const cells: (number | null)[] = []
+  for (let i = 0; i < startOffset; i++) cells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
+  while (cells.length % 7 !== 0) cells.push(null)
+  const weeks: (number | null)[][] = []
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
+
+  const dateOf = (dayNum: number) => `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
 
       {/* Month navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <button onClick={prevMonth} style={{
-          background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: '8px',
-          width: '32px', height: '32px', color: 'var(--t2)', cursor: 'pointer', fontSize: '16px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.12s',
-        }}>‹</button>
-        <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '28px', padding: '2px 0 6px' }}>
+        <button onClick={prevMonth} aria-label="Previous month" style={{
+          background: 'transparent', border: 'none', color: 'var(--t1)', cursor: 'pointer',
+          fontSize: '22px', lineHeight: 1, padding: '4px 8px',
+        }}>←</button>
+        <span style={{ fontSize: '17px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em', minWidth: '150px', textAlign: 'center' }}>
           {monthLabel}
         </span>
-        <button onClick={nextMonth} style={{
-          background: isCurrentMonth ? 'transparent' : 'var(--s3)',
-          border: '1px solid var(--bd2)', borderRadius: '8px',
-          width: '32px', height: '32px',
-          color: isCurrentMonth ? 'var(--bd3)' : 'var(--t2)',
-          cursor: isCurrentMonth ? 'default' : 'pointer', fontSize: '16px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.12s',
-        }}>›</button>
+        <button onClick={nextMonth} aria-label="Next month" disabled={isCurrentMonth} style={{
+          background: 'transparent', border: 'none',
+          color: isCurrentMonth ? 'var(--bd3)' : 'var(--t1)',
+          cursor: isCurrentMonth ? 'default' : 'pointer',
+          fontSize: '22px', lineHeight: 1, padding: '4px 8px',
+        }}>→</button>
       </div>
 
-      {/* Summary bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'rgba(0,232,122,0.7)', display: 'inline-block', boxShadow: '0 0 6px rgba(0,232,122,0.55)' }} />
-            <span style={{ fontSize: '11px', color: 'var(--t2)' }}>{profitDays} green</span>
-          </div>
-          {beDays > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'rgba(232,201,106,0.7)', display: 'inline-block', boxShadow: '0 0 6px rgba(232,201,106,0.45)' }} />
-              <span style={{ fontSize: '11px', color: 'var(--go2)' }}>{beDays} BE</span>
-            </div>
-          )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'rgba(255,61,80,0.7)', display: 'inline-block', boxShadow: '0 0 6px rgba(255,61,80,0.55)' }} />
-            <span style={{ fontSize: '11px', color: 'var(--t2)' }}>{lossDays} red</span>
-          </div>
-        </div>
-        <span style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '-0.025em', color: totalPnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
-          {totalPnl >= 0 ? '+' : ''}€{totalPnl.toFixed(2)}
-        </span>
-      </div>
-
-      {/* Day headers */}
-      <div className="calendar-header-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
-        {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
-          <div key={d} style={{ textAlign: 'center', fontSize: '11px', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.04em', paddingBottom: '4px' }}>{d}</div>
+      {/* Day headers — Sunday first */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+          <div key={d} style={{ textAlign: 'center', fontSize: '12px', color: 'var(--t3)', fontWeight: 500, paddingBottom: '6px' }}>{d}</div>
         ))}
       </div>
 
-      {/* Day grid */}
-      <div className="calendar-day-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: '46px', gap: '4px' }}>
-        {Array.from({ length: startOffset }).map((_, i) => <div key={`e${i}`} />)}
-        {Array.from({ length: daysInMonth }, (_, i) => {
-          const dayNum   = i + 1
-          const dateStr  = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
-          const pnl      = dailyPnl.get(dateStr)
-          const isToday  = dateStr === today
-          const isFuture = dateStr > today
-          const isSelected = dateStr === selectedDate
-          const has      = pnl !== undefined
-          const intensity = has ? Math.min(1, Math.abs(pnl!) / maxAbs) : 0
-
-          const isBreakEven = has && pnl! >= -BE_THRESHOLD && pnl! <= BE_THRESHOLD
-          const isWinDay    = has && pnl! >  BE_THRESHOLD
-          const isLossDay   = has && pnl! < -BE_THRESHOLD
-
-          let bg: string, txtCol: string, border: string, shadow = 'none'
-          if (!has) {
-            bg     = isFuture ? 'transparent' : 'rgba(255,255,255,0.02)'
-            txtCol = isFuture ? 'var(--bd3)' : 'var(--t3)'
-            border = 'transparent'
-          } else if (isBreakEven) {
-            bg     = 'rgba(232,201,106,0.1)'
-            txtCol = 'var(--go2)'
-            border = 'rgba(232,201,106,0.28)'
-            shadow = 'none'
-          } else if (isWinDay) {
-            bg     = `rgba(0,232,122,${0.08 + intensity * 0.28})`
-            txtCol = 'var(--gr2)'
-            border = `rgba(0,232,122,${0.15 + intensity * 0.2})`
-            shadow = intensity > 0.3 ? `0 0 12px rgba(0,232,122,${0.15 + intensity * 0.3})` : 'none'
-          } else {
-            bg     = `rgba(255,61,80,${0.08 + intensity * 0.28})`
-            txtCol = 'var(--re2)'
-            border = `rgba(255,61,80,${0.15 + intensity * 0.2})`
-            shadow = intensity > 0.3 ? `0 0 12px rgba(255,61,80,${0.15 + intensity * 0.3})` : 'none'
-          }
-
-          const absVal = Math.abs(pnl ?? 0)
-          const pnlStr = absVal >= 1000 ? `${pnl! >= 0 ? '+' : '-'}€${(absVal / 1000).toFixed(1)}k`
-                       : absVal >= 1    ? `${pnl! >= 0 ? '+' : '-'}€${Math.round(absVal)}`
-                       : ''
+      {/* Weeks — each row of days followed by its Week total bar */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {weeks.map((week, wi) => {
+          const weekPnl = week.reduce<number>((s, dn) => s + (dn != null ? (dailyPnl.get(dateOf(dn)) ?? 0) : 0), 0)
+          const weekHasData = week.some(dn => dn != null && dailyPnl.has(dateOf(dn)))
 
           return (
-            <div
-              key={dayNum}
-              onClick={() => {
-                if (!has) return
-                setSelectedDate(prev => prev === dateStr ? null : dateStr)
-              }}
-              style={{
-                borderRadius: '7px', background: bg,
-                border: isSelected
-                  ? '2px solid rgba(77,143,255,0.8)'
-                  : isToday
-                    ? '1.5px solid rgba(77,143,255,0.6)'
-                    : `1px solid ${border}`,
-                boxShadow: isSelected
-                  ? '0 0 0 3px rgba(77,143,255,0.15)'
-                  : isToday
-                    ? '0 0 0 3px rgba(77,143,255,0.1)'
-                    : shadow,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px',
-                transition: 'all 0.12s',
-                cursor: has ? 'pointer' : 'default',
-              }}>
-              <span style={{ fontSize: '11px', fontWeight: isToday || isSelected ? 700 : 400, lineHeight: 1, color: isSelected ? 'var(--ac)' : isToday ? 'var(--ac)' : has ? txtCol : 'var(--t3)' }}>
-                {dayNum}
-              </span>
-              {has && pnlStr && (
-                <span className="calendar-pnl-label" style={{ fontSize: '10px', fontWeight: 700, color: txtCol, lineHeight: 1, letterSpacing: '-0.02em' }}>
-                  {pnlStr}
-                </span>
+            <div key={wi}>
+              {/* Row of 7 day cells */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+                {week.map((dayNum, di) => {
+                  if (dayNum == null) {
+                    return <div key={`e${di}`} style={{ minHeight: '78px', border: '1px solid rgba(255,255,255,0.05)' }} />
+                  }
+                  const dateStr    = dateOf(dayNum)
+                  const pnl        = dailyPnl.get(dateStr)
+                  const list       = dailyTrades.get(dateStr) ?? []
+                  const isToday    = dateStr === today
+                  const isSelected = dateStr === selectedDate
+                  const has        = pnl !== undefined
+
+                  const isWinDay  = has && pnl! >  BE_THRESHOLD
+                  const isLossDay = has && pnl! < -BE_THRESHOLD
+
+                  // Per-day win rate over decisive trades (wins vs losses).
+                  const decisive = list.filter(t => Math.abs(t.net_profit ?? 0) > BE_THRESHOLD)
+                  const wins     = decisive.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length
+                  const winPct   = decisive.length > 0 ? Math.round((wins / decisive.length) * 100) : null
+
+                  const bg = isWinDay  ? 'rgba(0,232,122,0.09)'
+                           : isLossDay ? 'rgba(255,61,80,0.10)'
+                           : has       ? 'rgba(232,201,106,0.08)'  // break-even day
+                           : 'transparent'
+
+                  return (
+                    <div
+                      key={dayNum}
+                      onClick={() => { if (has) setSelectedDate(prev => prev === dateStr ? null : dateStr) }}
+                      style={{
+                        minHeight: '78px', padding: '8px 9px', background: bg,
+                        border: isSelected
+                          ? '1.5px solid rgba(77,143,255,0.8)'
+                          : isToday
+                            ? '1.5px solid rgba(77,143,255,0.55)'
+                            : '1px solid rgba(255,255,255,0.05)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px',
+                        cursor: has ? 'pointer' : 'default', transition: 'background 0.12s',
+                      }}>
+                      <span style={{ fontSize: '14px', fontWeight: 600, lineHeight: 1, color: has ? 'var(--t1)' : 'var(--t3)' }}>
+                        {dayNum}
+                      </span>
+                      {has && (
+                        <>
+                          <span style={{ fontSize: '14px', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.01em', color: 'var(--t1)' }}>
+                            {fmtMoney(pnl!)}
+                          </span>
+                          {winPct != null && (
+                            <span style={{ fontSize: '12px', color: 'var(--t3)', lineHeight: 1 }}>{winPct}%</span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Week total bar — only for weeks that contain trading days */}
+              {weekHasData && (
+                <div style={{
+                  marginTop: '8px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '14px 18px', borderRadius: '10px',
+                  background: weekPnl >= 0 ? 'rgba(0,232,122,0.045)' : 'rgba(255,61,80,0.05)',
+                  border: `1px solid ${weekPnl >= 0 ? 'rgba(0,232,122,0.12)' : 'rgba(255,61,80,0.14)'}`,
+                }}>
+                  <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--t3)' }}>Week total</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 700, letterSpacing: '-0.02em', color: weekPnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
+                      {fmtSigned(weekPnl)}
+                    </span>
+                    <span style={{ fontSize: '16px', color: 'var(--t3)', lineHeight: 1 }}>›</span>
+                  </div>
+                </div>
               )}
             </div>
           )

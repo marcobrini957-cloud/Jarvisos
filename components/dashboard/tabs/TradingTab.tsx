@@ -335,7 +335,7 @@ export default function TradingTab() {
       {/* Equity Curve + Daily P&L Calendar — side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
         <EquityCurve trades={trades} />
-        <Panel title="Daily P&L Calendar" accent="var(--gr)" className="h-full">
+        <Panel title="Trading Calendar" accent="var(--gr)" className="h-full">
           <TradeCalendar allRows={allRows} />
         </Panel>
       </div>

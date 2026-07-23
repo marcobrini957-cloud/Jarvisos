@@ -199,7 +199,7 @@ export default function OverviewTab() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
 
         <div className="lg:col-span-2">
-          <Panel title="Daily P&L Calendar" accent="var(--gr)" className="h-full">
+          <Panel title="Trading Calendar" accent="var(--gr)" className="h-full">
             <TradeCalendar allRows={allRows} />
           </Panel>
         </div>
