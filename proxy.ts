@@ -13,6 +13,10 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/onboarding') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
+    pathname.startsWith('/icon') ||
+    pathname === '/robots.txt' ||
+    pathname === '/sitemap.xml' ||
+    pathname.startsWith('/ea') ||
     pathname.startsWith('/brand') ||
     pathname.startsWith('/trailer') ||
     pathname.startsWith('/pricing') ||
