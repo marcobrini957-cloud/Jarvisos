@@ -26,7 +26,6 @@ BEGIN
   ] LOOP
     IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = t) THEN
       EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
-      EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', t);
       EXECUTE format('DROP POLICY IF EXISTS "authenticated_only" ON %I', t);
       EXECUTE format('DROP POLICY IF EXISTS "own_data" ON %I', t);
       EXECUTE format(
