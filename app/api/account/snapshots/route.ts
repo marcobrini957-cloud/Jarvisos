@@ -2,46 +2,38 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/api/auth'
 
-// Returns daily equity curve data (last snapshot per day, last 90 days)
+// Daily net-worth points (one per day = last snapshot of that day, via the
+// account_networth_daily RPC so a high-frequency account isn't truncated by the
+// 1000-row REST cap). Accepts either ?year=YYYY (Jan 1 → Jan 1 next year) or the
+// legacy ?days=N rolling window.
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
-  const days = Math.min(parseInt(searchParams.get('days') ?? '90', 10), 365)
+  const yearParam = searchParams.get('year')
 
   const supabase = await createClient()
   const user = await getAuthUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const since = new Date(Date.now() - days * 86_400_000).toISOString()
-
-  const [{ data, error }, { data: balanceRows }] = await Promise.all([
-    supabase
-      .from('account_snapshots')
-      .select('balance, equity, snapshot_at')
-      .eq('user_id', user.id)
-      .gte('snapshot_at', since)
-      .order('snapshot_at', { ascending: true }),
-    // Deposits/withdrawals in the period — the curve must not read funding
-    // as trading performance.
-    supabase
-      .from('trades')
-      .select('net_profit')
-      .eq('user_id', user.id)
-      .eq('symbol', 'BALANCE')
-      .gte('close_time', since),
-  ])
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  if (!data?.length) return NextResponse.json({ points: [], netDeposits: 0 })
-
-  const netDeposits = (balanceRows ?? []).reduce((s, r) => s + (r.net_profit ?? 0), 0)
-
-  // Keep one point per day (last of day)
-  const byDay = new Map<string, { date: string; balance: number; equity: number }>()
-  for (const row of data) {
-    const d = row.snapshot_at.slice(0, 10)
-    byDay.set(d, { date: d, balance: row.balance, equity: row.equity })
+  let from: string, to: string
+  if (yearParam && /^\d{4}$/.test(yearParam)) {
+    const y = parseInt(yearParam, 10)
+    from = `${y}-01-01T00:00:00Z`
+    to   = `${y + 1}-01-01T00:00:00Z`
+  } else {
+    const days = Math.min(parseInt(searchParams.get('days') ?? '90', 10), 366)
+    from = new Date(Date.now() - days * 86_400_000).toISOString()
+    to   = new Date(Date.now() + 86_400_000).toISOString()
   }
 
-  const points = Array.from(byDay.values())
-  return NextResponse.json({ points, netDeposits: +netDeposits.toFixed(2) })
+  const { data, error } = await supabase.rpc('account_networth_daily', {
+    p_user_id: user.id, p_from: from, p_to: to,
+  })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  const points = (data ?? []).map((r: { day: string; balance: number; equity: number }) => ({
+    date: r.day, balance: Number(r.balance), equity: Number(r.equity),
+  }))
+
+  return NextResponse.json({ points })
 }

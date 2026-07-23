@@ -5,21 +5,15 @@ import Panel from '@/components/ui/Panel'
 import { MON } from './helpers'
 
 // ── Net Worth Curve ───────────────────────────────────────────────────────────
-// Absolute net worth over time = MT5 account balance (daily snapshots) + current
-// portfolio holdings value. Same look as the Equity Curve; different data — this
-// tracks total money, not trading P&L. Portfolio has no stored history yet, so
-// today's holdings value is used as a constant baseline (the shape follows the
-// trading account; the total is your net worth).
+// Absolute net worth over a calendar year = MT5 account equity (daily snapshots)
+// + current portfolio holdings value. Toggle the year at the top; the axis always
+// runs January → end of year (→ today for the current year). Same look as the
+// Equity Curve. Portfolio has no stored history yet, so today's holdings value is
+// a constant baseline (total is accurate; the shape follows the trading account).
 
-type NwPeriod = { label: string; days: number }
-const PERIODS: NwPeriod[] = [
-  { label: '1W', days: 7 },
-  { label: '1M', days: 30 },
-  { label: '3M', days: 90 },
-  { label: '1Y', days: 365 },
-]
+interface SnapPoint { date: string; equity: number; ms: number }
 
-interface SnapPoint { date: string; balance: number }
+const FIRST_YEAR = 2024   // earliest togglable year (buttons show even with no data)
 
 function smoothPath(pts: { x: number; y: number }[]): string {
   if (pts.length === 0) return ''
@@ -43,27 +37,37 @@ const eur2 = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2
 const eur0 = (v: number) => v.toLocaleString('en-US', { maximumFractionDigits: 0 })
 
 export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number }) {
-  const [periodDays, setPeriodDays] = useState(30)
-  const [points, setPoints] = useState<SnapPoint[]>([])
+  const currentYear = new Date().getUTCFullYear()
+  const years = useMemo(() => {
+    const out: number[] = []
+    for (let y = FIRST_YEAR; y <= currentYear; y++) out.push(y)
+    return out
+  }, [currentYear])
+
+  const [year, setYear] = useState(currentYear)
+  const [raw, setRaw] = useState<{ date: string; equity: number }[]>([])
   const [loading, setLoading] = useState(true)
-  const [hover, setHover] = useState<{ idx: number; x: number; y: number } | null>(null)
+  const [hover, setHover] = useState<{ x: number; y: number; idx: number } | null>(null)
   const svgRef  = useRef<SVGSVGElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const [dims, setDims] = useState({ w: 800, h: 260 })
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    fetch(`/api/account/snapshots?days=${periodDays}`)
+    setLoading(true); setHover(null)
+    fetch(`/api/account/snapshots?year=${year}`)
       .then(r => r.json())
-      .then(d => { if (!cancelled) setPoints((d.points ?? []).map((p: { date: string; balance: number }) => ({ date: p.date, balance: p.balance }))) })
-      .catch(() => {})
+      .then(d => { if (!cancelled) setRaw(d.points ?? []) })
+      .catch(() => { if (!cancelled) setRaw([]) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [periodDays])
+  }, [year])
 
-  // Net worth series (absolute) = daily MT5 balance + current portfolio value
-  const series = useMemo(() => points.map(p => p.balance + portfolioValue), [points, portfolioValue])
+  const points: SnapPoint[] = useMemo(() =>
+    raw.map(p => ({ date: p.date, equity: p.equity, ms: Date.parse(`${p.date}T00:00:00Z`) })),
+    [raw]
+  )
+  const series = useMemo(() => points.map(p => p.equity + portfolioValue), [points, portfolioValue])
   const n = series.length
 
   useEffect(() => {
@@ -76,27 +80,27 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
     return () => ro.disconnect()
   }, [n])
 
-  const periodButtons = (
-    <div style={{ display: 'flex', gap: '3px' }}>
-      {PERIODS.map(p => (
-        <button key={p.label}
-          onClick={() => { setPeriodDays(p.days); setHover(null) }}
+  const yearButtons = (
+    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
+      {years.map(y => (
+        <button key={y}
+          onClick={() => setYear(y)}
           style={{
             padding: '3px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer',
             fontSize: '11px', fontWeight: 600,
-            background: periodDays === p.days ? 'var(--ac)' : 'var(--s3)',
-            color:      periodDays === p.days ? 'white'     : 'var(--t3)',
+            background: year === y ? 'var(--ac)' : 'var(--s3)',
+            color:      year === y ? 'white'     : 'var(--t3)',
             transition: 'all 0.12s',
           }}
         >
-          {p.label}
+          {y}
         </button>
       ))}
     </div>
   )
 
   const shell = (body: React.ReactNode) => (
-    <Panel title="Net Worth" accent="var(--gr2)" fill className="h-full" action={periodButtons}>
+    <Panel title="Net Worth" accent="var(--gr2)" fill className="h-full" action={yearButtons}>
       {body}
     </Panel>
   )
@@ -109,7 +113,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
   if (n < 2) {
     return shell(<div style={{ flex: 1, minHeight: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: 'var(--s2)', borderRadius: '10px', border: '1px dashed var(--bd2)' }}>
-      <span style={{ color: 'var(--t3)', fontSize: '13px' }}>Net worth appears once your account syncs</span>
+      <span style={{ color: 'var(--t3)', fontSize: '13px' }}>No account data for {year}</span>
     </div>)
   }
 
@@ -119,13 +123,8 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
   const changePct = startVal > 0 ? (change / startVal) * 100 : 0
   const isUp = change >= 0
 
-  // Peak + max drawdown (absolute)
-  let peak = series[0], maxDD = 0, peakIdx = 0
-  for (let i = 0; i < n; i++) {
-    if (series[i] > peak) { peak = series[i]; peakIdx = i }
-    const dd = peak - series[i]
-    if (dd > maxDD) maxDD = dd
-  }
+  let peak = series[0], maxDD = 0
+  for (let i = 0; i < n; i++) { if (series[i] > peak) peak = series[i]; const dd = peak - series[i]; if (dd > maxDD) maxDD = dd }
 
   const minVal = Math.min(...series)
   const maxVal = Math.max(...series)
@@ -139,30 +138,42 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
   const cH = H - PAD.t - PAD.b
   const bottom = PAD.t + cH
 
-  const xOf = (i: number) => PAD.l + (n > 1 ? i / (n - 1) : 0.5) * cW
-  const yOf = (v: number) => PAD.t + (1 - (v - lo) / range) * cH
+  // Calendar-year x-axis: Jan 1 → Dec 31 (→ now for the current year).
+  const xStart = Date.UTC(year, 0, 1)
+  const xEnd   = year === currentYear ? Date.now() : Date.UTC(year, 11, 31, 23, 59, 59)
+  const xSpan  = Math.max(1, xEnd - xStart)
+  const xOfMs = (ms: number) => PAD.l + Math.max(0, Math.min(1, (ms - xStart) / xSpan)) * cW
+  const yOf   = (v: number) => PAD.t + (1 - (v - lo) / range) * cH
 
   const lineColor = isUp ? '#00E87A' : '#FF3D50'
   const fillColor = isUp ? '#00CC6A' : '#FF3D50'
 
-  const coords = series.map((v, i) => ({ x: xOf(i), y: yOf(v) }))
+  const coords = points.map((p, i) => ({ x: xOfMs(p.ms), y: yOf(series[i]) }))
   const linePath = smoothPath(coords)
-  const areaPath = `${linePath} L${xOf(n - 1).toFixed(1)},${bottom.toFixed(1)} L${xOf(0).toFixed(1)},${bottom.toFixed(1)} Z`
+  const lastX = coords[n - 1].x, firstX = coords[0].x
+  const areaPath = `${linePath} L${lastX.toFixed(1)},${bottom.toFixed(1)} L${firstX.toFixed(1)},${bottom.toFixed(1)} Z`
+
+  // Month gridlines / labels across the year
+  const months: { x: number; label: string }[] = []
+  for (let m = 0; m < 12; m++) {
+    const ms = Date.UTC(year, m, 1)
+    if (ms > xEnd) break
+    months.push({ x: xOfMs(ms), label: MON[m] })
+  }
 
   function onMouseMove(e: React.MouseEvent<SVGSVGElement>) {
     const svg = svgRef.current
     if (!svg || n < 2) return
     const rect = svg.getBoundingClientRect()
     const vbX = ((e.clientX - rect.left) / rect.width) * W
-    const frac = Math.max(0, Math.min(1, (vbX - PAD.l) / cW))
-    const idx = Math.round(frac * (n - 1))
-    setHover({ idx, x: xOf(idx), y: yOf(series[idx]) })
+    let best = 0, bestD = Infinity
+    for (let i = 0; i < n; i++) { const d = Math.abs(coords[i].x - vbX); if (d < bestD) { bestD = d; best = i } }
+    setHover({ idx: best, x: coords[best].x, y: coords[best].y })
   }
 
   const activeVal = hover !== null ? series[hover.idx] : endVal
-  const activeDate = hover !== null ? points[hover.idx].date : points[n - 1].date
-  const aD = activeDate ? new Date(activeDate) : null
-  const activeDateStr = aD ? `${aD.getUTCDate()} ${MON[aD.getUTCMonth()]} ${aD.getUTCFullYear()}` : ''
+  const aD = new Date((hover !== null ? points[hover.idx] : points[n - 1]).ms)
+  const activeDateStr = `${aD.getUTCDate()} ${MON[aD.getUTCMonth()]} ${aD.getUTCFullYear()}`
 
   const yTicks = [maxVal, (maxVal + minVal) / 2, minVal]
 
@@ -187,7 +198,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
       </div>
       <div style={{ display: 'flex', gap: '20px', paddingBottom: '2px' }}>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '3px' }}>Change</p>
+          <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '3px' }}>{year} change</p>
           <p style={{ color: isUp ? 'var(--gr2)' : 'var(--re)', fontSize: '14px', fontWeight: 600 }}>
             {isUp ? '+' : '−'}€{eur0(Math.abs(change))} ({changePct >= 0 ? '+' : ''}{changePct.toFixed(1)}%)
           </p>
@@ -210,7 +221,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
     {/* SVG chart */}
     <div ref={wrapRef} style={{ flex: 1, minHeight: '160px', position: 'relative' }}>
       <svg
-        key={periodDays}
+        key={year}
         ref={svgRef}
         width="100%" height="100%" viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
@@ -225,9 +236,9 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
           </linearGradient>
         </defs>
 
-        {/* Grid */}
-        {[0.25, 0.5, 0.75].map(v => (
-          <line key={v} x1={PAD.l} y1={PAD.t + v * cH} x2={W - PAD.r} y2={PAD.t + v * cH}
+        {/* Month gridlines */}
+        {months.map((m, i) => (
+          <line key={i} x1={m.x} y1={PAD.t} x2={m.x} y2={bottom}
             stroke="rgba(255,255,255,0.04)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
         ))}
 
@@ -240,7 +251,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
 
         {/* Final dot */}
         {(hover === null || hover.idx !== n - 1) && (
-          <circle cx={xOf(n - 1)} cy={yOf(endVal)} r="4.5" fill={lineColor} stroke="#000" strokeWidth="2" />
+          <circle cx={lastX} cy={yOf(endVal)} r="4.5" fill={lineColor} stroke="#000" strokeWidth="2" />
         )}
 
         {/* Y-axis labels (absolute €) */}
@@ -254,15 +265,15 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
         {/* Hover crosshair + tooltip */}
         {hover !== null && (() => {
           const val = series[hover.idx]
-          const d = points[hover.idx].date ? new Date(points[hover.idx].date) : null
-          const dateStr = d ? `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}` : ''
+          const d = new Date(points[hover.idx].ms)
+          const dateStr = `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}`
           const tipW = 168, tipH = 50
           const isRight = hover.x > W - PAD.r - tipW - 20
           const tx = isRight ? hover.x - tipW - 12 : hover.x + 12
           const ty = Math.max(PAD.t, Math.min(hover.y - tipH / 2, H - PAD.b - tipH))
           return (
             <g>
-              <line x1={hover.x} y1={PAD.t} x2={hover.x} y2={H - PAD.b}
+              <line x1={hover.x} y1={PAD.t} x2={hover.x} y2={bottom}
                 stroke="rgba(255,255,255,0.1)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
               <circle cx={hover.x} cy={hover.y} r="10" fill={lineColor} opacity="0.1" />
               <circle cx={hover.x} cy={hover.y} r="5" fill={lineColor} stroke="#000" strokeWidth="2" />
@@ -275,17 +286,14 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
       </svg>
     </div>
 
-    {/* X-axis date labels */}
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px', flex: 'none',
-      paddingLeft: `${PAD.l}px`, paddingRight: `${PAD.r}px` }}>
-      {[0, Math.floor((n - 1) / 2), n - 1].map(i => {
-        const d = points[i]?.date ? new Date(points[i].date) : null
-        return (
-          <span key={i} style={{ fontSize: '9px', color: 'var(--t3)', fontFamily: 'monospace' }}>
-            {d ? `${d.getUTCDate()} ${MON[d.getUTCMonth()]}` : ''}
-          </span>
-        )
-      })}
+    {/* Month labels across the year */}
+    <div style={{ position: 'relative', height: '12px', marginTop: '5px', flex: 'none' }}>
+      {months.map((m, i) => (
+        <span key={i} style={{ position: 'absolute', left: `${(m.x / W) * 100}%`, transform: 'translateX(-50%)',
+          fontSize: '9px', color: 'var(--t3)', fontFamily: 'monospace' }}>
+          {m.label}
+        </span>
+      ))}
     </div>
   </>)
 }
