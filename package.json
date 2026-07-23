@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/sync-ea.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "sync:ea": "node scripts/sync-ea.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

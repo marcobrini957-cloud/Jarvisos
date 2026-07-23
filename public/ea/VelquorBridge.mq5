@@ -4,7 +4,7 @@
 //|  Place in: MQL5/Experts/VelquorBridge.mq5                        |
 //+------------------------------------------------------------------+
 #property copyright "VELQUOR"
-#property version   "2.21"
+#property version   "2.22"
 #property strict
 
 #include <Trade\Trade.mqh>
@@ -32,6 +32,9 @@ input int            InpHistoryDays = 30;                            // Days of 
 input bool           InpDebugMode   = false;                         // Print debug logs
 input bool           InpFileBridge  = false;                         // Cloud mode: write payload to file (sidecar forwards it)
 input bool           InpAutoScreenshot = true;                       // Auto chart screenshot on trade open/close
+input bool           InpSendCandles    = true;                        // Stream OHLC candles for the web Trade Map
+input int            InpCandleBars     = 320;                         // M15 bars to send per active symbol
+input int            InpCandleSec      = 60;                          // Candle send throttle (seconds)
 
 // ── Copy trading inputs ─────────────────────────────────────────────────────
 input ENUM_COPY_MODE InpCopyMode     = COPY_OFF;  // Copy Mode
@@ -48,10 +51,11 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.21";
+string   g_eaVersion   = "2.23";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // follower: throttles PostSync inside the fast timer
+ulong    g_lastCandleMs = 0;  // throttles candle streaming inside BuildPayload
 CTrade   g_trade;
 
 // Leader: track tickets we have already signalled to avoid duplicates
@@ -702,21 +706,23 @@ ENUM_TIMEFRAMES FitTimeframe(const string sym, const double entryPx,
    double pip  = PipSize(sym);
    double pips = (pip > 0 && exitPx > 0) ? MathAbs(exitPx - entryPx) / pip : 0;
 
+   // Thresholds tightened ~20% vs 2.21 so the trade fills more of the frame
+   // (Marco: "most trades look little — zoom in ~20%").
    ENUM_TIMEFRAMES byRange =
-        pips <= 40   ? PERIOD_M1    // ≤ ~40 pips   (gold ≤ ~$4)
-      : pips <= 100  ? PERIOD_M5    // ≤ ~100 pips  (gold ≤ ~$10)
-      : pips <= 250  ? PERIOD_M15   // ≤ ~250 pips  (gold ≤ ~$25)
-      : pips <= 600  ? PERIOD_M30   // ≤ ~600 pips  (gold ≤ ~$60)
-      : pips <= 1500 ? PERIOD_H1
+        pips <= 32   ? PERIOD_M1    // ≤ ~32 pips   (gold ≤ ~$3.2)
+      : pips <= 80   ? PERIOD_M5    // ≤ ~80 pips   (gold ≤ ~$8)
+      : pips <= 200  ? PERIOD_M15   // ≤ ~200 pips  (gold ≤ ~$20)
+      : pips <= 480  ? PERIOD_M30   // ≤ ~480 pips  (gold ≤ ~$48)
+      : pips <= 1200 ? PERIOD_H1
       :                PERIOD_H4;
 
    long durMin = (long)((closeT - openT) / 60);
    ENUM_TIMEFRAMES byDuration =
-        durMin <= 200   ? PERIOD_M1
-      : durMin <= 1000  ? PERIOD_M5
-      : durMin <= 3000  ? PERIOD_M15
-      : durMin <= 6000  ? PERIOD_M30
-      : durMin <= 12000 ? PERIOD_H1
+        durMin <= 160   ? PERIOD_M1
+      : durMin <= 800   ? PERIOD_M5
+      : durMin <= 2400  ? PERIOD_M15
+      : durMin <= 4800  ? PERIOD_M30
+      : durMin <= 9600  ? PERIOD_H1
       :                   PERIOD_H4;
 
    return PeriodSeconds(byDuration) > PeriodSeconds(byRange) ? byDuration : byRange;
@@ -757,20 +763,20 @@ bool CaptureShot(PendingShot &s)
    for(int k = 0; k < 20 && !SeriesInfoInteger(s.symbol, tf, SERIES_SYNCHRONIZED); k++)
       Sleep(100);
 
-   // VELQUOR dark look, entry/exit levels marked
+   // VELQUOR look: pure-black background, clean green/red candles, zoomed in.
    ChartSetInteger(cid, CHART_SHOW_GRID, false);
    ChartSetInteger(cid, CHART_MODE, CHART_CANDLES);
    ChartSetInteger(cid, CHART_AUTOSCROLL, true);
    ChartSetInteger(cid, CHART_SHIFT, true);
-   ChartSetInteger(cid, CHART_SCALE, 2);
+   ChartSetInteger(cid, CHART_SCALE, 3);                       // 2 → 3: ~20% more zoomed
    ChartSetInteger(cid, CHART_SHOW_VOLUMES, CHART_VOLUME_HIDE);
-   ChartSetInteger(cid, CHART_COLOR_BACKGROUND, C'13,17,23');
-   ChartSetInteger(cid, CHART_COLOR_FOREGROUND, C'139,148,158');
-   ChartSetInteger(cid, CHART_COLOR_GRID,       C'33,38,45');
-   ChartSetInteger(cid, CHART_COLOR_CHART_UP,   C'99,153,52');
-   ChartSetInteger(cid, CHART_COLOR_CANDLE_BULL,C'99,153,52');
-   ChartSetInteger(cid, CHART_COLOR_CHART_DOWN, C'226,75,74');
-   ChartSetInteger(cid, CHART_COLOR_CANDLE_BEAR,C'226,75,74');
+   ChartSetInteger(cid, CHART_COLOR_BACKGROUND, C'0,0,0');     // pure black
+   ChartSetInteger(cid, CHART_COLOR_FOREGROUND, C'150,150,160');
+   ChartSetInteger(cid, CHART_COLOR_GRID,       C'0,0,0');
+   ChartSetInteger(cid, CHART_COLOR_CHART_UP,   C'41,204,106');  // clean green
+   ChartSetInteger(cid, CHART_COLOR_CANDLE_BULL,C'41,204,106');
+   ChartSetInteger(cid, CHART_COLOR_CHART_DOWN, C'255,71,71');   // clean red
+   ChartSetInteger(cid, CHART_COLOR_CANDLE_BEAR,C'255,71,71');
 
    // Anchor labels a couple bars in from the left edge so they sit on the price
    // line, readable, without overrunning the right price axis.
@@ -802,19 +808,8 @@ bool CaptureShot(PendingShot &s)
       }
    }
 
-   // VELQUOR watermark — bottom-right, Inter (the landing-page wordmark font,
-   // bundled into the terminal image; desktop MT5 without Inter falls back to
-   // its default sans). Subtle slate so it brands without fighting the candles.
-   ObjectCreate(cid, "vq_wm", OBJ_LABEL, 0, 0, 0);
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_CORNER, CORNER_RIGHT_LOWER);
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_ANCHOR, ANCHOR_RIGHT_LOWER);
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_XDISTANCE, 14);
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_YDISTANCE, 12);
-   ObjectSetString(cid,  "vq_wm", OBJPROP_TEXT, "VELQUOR");
-   ObjectSetString(cid,  "vq_wm", OBJPROP_FONT, "Inter");
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_FONTSIZE, 15);
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_COLOR, C'124,135,152');
-   ObjectSetInteger(cid, "vq_wm", OBJPROP_BACK, false);
+   // Branding: the VELQUOR logo is composited bottom-left by the bridge on
+   // every screenshot (sharp), so no in-chart watermark is drawn here.
 
    ChartRedraw(cid);
    Sleep(300);   // one paint cycle — screenshot of an unpainted chart is black
@@ -1097,6 +1092,92 @@ void PostDisconnect()
 //+------------------------------------------------------------------+
 // Build JSON payload with account, open positions and closed trades
 //+------------------------------------------------------------------+
+// Candle streaming — real OHLC bars for the active symbols so the web Trade Map
+// can draw the broker's candles behind the user's trades.
+//+------------------------------------------------------------------+
+void AddUniqueSym(string &arr[], int &count, string val, int maxSyms)
+{
+   if(val == "" || count >= maxSyms) return;
+   for(int i = 0; i < count; i++) if(arr[i] == val) return;
+   ArrayResize(arr, count + 1);
+   arr[count] = val;
+   count++;
+}
+
+string TfName(ENUM_TIMEFRAMES tf)
+{
+   if(tf == PERIOD_M15) return "M15";
+   if(tf == PERIOD_H1)  return "H1";
+   if(tf == PERIOD_D1)  return "D1";
+   return "";
+}
+
+// Append OHLC objects for one symbol/timeframe. Returns bars appended.
+int AppendRates(string &out, string sym, ENUM_TIMEFRAMES tf, int bars, bool &first)
+{
+   MqlRates rates[];
+   ArraySetAsSeries(rates, true);
+   int got = CopyRates(sym, tf, 0, bars, rates);
+   if(got <= 0) return 0;
+   string tfn = TfName(tf);
+   int    dg  = (int)SymbolInfoInteger(sym, SYMBOL_DIGITS);
+   for(int i = 0; i < got; i++)
+   {
+      if(!first) out += ",";
+      first = false;
+      out += "{";
+      out += "\"symbol\":\""    + EscapeJson(sym) + "\",";
+      out += "\"timeframe\":\"" + tfn + "\",";
+      out += "\"ts\":"          + IntegerToString((long)rates[i].time) + ",";
+      out += "\"o\":"           + DoubleToStr(rates[i].open,  dg) + ",";
+      out += "\"h\":"           + DoubleToStr(rates[i].high,  dg) + ",";
+      out += "\"l\":"           + DoubleToStr(rates[i].low,   dg) + ",";
+      out += "\"c\":"           + DoubleToStr(rates[i].close, dg);
+      out += "}";
+   }
+   return got;
+}
+
+string BuildCandles()
+{
+   string syms[]; int sc = 0;
+   const int maxSyms = 6;
+
+   // Active symbols: open positions first, then recently traded, then chart.
+   for(int i = 0; i < PositionsTotal(); i++)
+   {
+      ulong tk = PositionGetTicket(i);
+      if(tk == 0) continue;
+      AddUniqueSym(syms, sc, PositionGetString(POSITION_SYMBOL), maxSyms);
+   }
+   datetime fromTime = TimeCurrent() - (datetime)(InpHistoryDays * 86400);
+   HistorySelect(fromTime, TimeCurrent());
+   int dt = HistoryDealsTotal();
+   for(int i = dt - 1; i >= 0 && sc < maxSyms; i--)
+   {
+      ulong dk = HistoryDealGetTicket(i);
+      if(dk == 0) continue;
+      AddUniqueSym(syms, sc, HistoryDealGetString(dk, DEAL_SYMBOL), maxSyms);
+   }
+   if(sc == 0) AddUniqueSym(syms, sc, Symbol(), maxSyms);
+
+   string out = "\"candles\":[";
+   bool first = true;
+   int  h1Bars = (InpCandleBars < 240) ? InpCandleBars : 240;
+   for(int i = 0; i < sc; i++)
+   {
+      // Cloud terminals trim Market Watch — make sure the symbol is selected so
+      // CopyRates can actually return bars.
+      SymbolSelect(syms[i], true);
+      int m = AppendRates(out, syms[i], PERIOD_M15, InpCandleBars, first);
+      int h = AppendRates(out, syms[i], PERIOD_H1,  h1Bars,        first);
+      if(InpDebugMode) Print("Candles ", syms[i], " M15=", m, " H1=", h);
+   }
+   out += "]";
+   return out;
+}
+
+//+------------------------------------------------------------------+
 string BuildPayload()
 {
    string out = "{";
@@ -1228,8 +1309,21 @@ string BuildPayload()
       out += "\"close_time\":"  + IntegerToString(closeTime);
       out += "}";
    }
+   out += "]";
 
-   out += "]}";
+   // candles — throttled so we don't re-send the same bars every sync
+   bool candleDue = (GetTickCount64() - g_lastCandleMs >= (ulong)InpCandleSec * 1000);
+   if(InpSendCandles && candleDue)
+   {
+      out += ",";
+      out += BuildCandles();
+      g_lastCandleMs = GetTickCount64();
+   }
+   else if(InpDebugMode)
+      Print("Candles skipped: send=", InpSendCandles, " due=", candleDue,
+            " dt=", (long)(GetTickCount64() - g_lastCandleMs));
+
+   out += "}";
    return out;
 }
 
