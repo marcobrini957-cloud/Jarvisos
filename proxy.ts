@@ -30,7 +30,8 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/api/dev') ||
     pathname.startsWith('/api/cron') ||
     pathname.startsWith('/api/market') ||
-    pathname.startsWith('/api/macro')
+    pathname.startsWith('/api/macro') ||
+    pathname.startsWith('/api/go')     // outbound affiliate redirect — never gate a click behind login
 
   // Public paths (except the landing root) need no session lookup.
   if (isPublic && !isRoot) {

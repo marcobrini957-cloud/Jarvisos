@@ -2,12 +2,15 @@
 
 import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 
+export type Tier = 'free' | 'pro' | 'ultra'
+
 export interface UserProfile {
   display_name:  string
   avatar_color:  string
   avatar_url:    string | null
   timezone:      string
   currency:      string
+  tier:          Tier
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -16,6 +19,7 @@ const DEFAULT_PROFILE: UserProfile = {
   avatar_url:    null,
   timezone:      'Europe/Vienna',
   currency:      'EUR',
+  tier:          'free',
 }
 
 interface UserProfileContextValue {
@@ -38,7 +42,7 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
     fetch('/api/user/profile')
       .then(r => r.json())
       .then((data: UserProfile) => {
-        if (data && data.display_name) setProfile(data)
+        if (data && data.display_name) setProfile({ ...DEFAULT_PROFILE, ...data })
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -54,7 +58,8 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
         body:    JSON.stringify(partial),
       })
       const data = await res.json() as UserProfile
-      if (res.ok && data.display_name) setProfile(data)
+      // PATCH doesn't echo tier — keep the resolved tier from the current profile.
+      if (res.ok && data.display_name) setProfile(prev => ({ ...prev, ...data, tier: prev.tier }))
     } catch {
       // Keep optimistic update
     }

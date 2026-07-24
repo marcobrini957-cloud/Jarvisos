@@ -21,6 +21,7 @@ const ALL_TABS = [
   { id: 5, label: 'Discipline', icon: '🎯' },
   { id: 7, label: 'Tasks',       icon: '✅' },
   { id: 8, label: 'Copy',        icon: '⇄'  },
+  { id: 9, label: 'Partners',    icon: '🎁' },
   { id: 6, label: 'Analyst', icon: '✦', isGold: true },
 ]
 

@@ -68,9 +68,9 @@ export function CookieConsent() {
       }}>
         <style>{`@keyframes vq-consent-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }`}</style>
         <p style={{ margin: 0, color: 'var(--t2)', fontSize: '13px', lineHeight: 1.6 }}>
-          Velquor uses only <strong style={{ color: 'var(--t1)' }}>essential cookies</strong> — your login
-          session and this choice. No ads, no tracking. Third-party market widgets (TradingView) in the
-          dashboard load only if you accept them.{' '}
+          Velquor runs on <strong style={{ color: 'var(--t1)' }}>essential cookies</strong> — your login
+          session and this choice. Free accounts see partner offers, but personalized ads and third-party
+          widgets (TradingView) load <strong style={{ color: 'var(--t1)' }}>only if you accept</strong>.{' '}
           <Link href="/privacy" style={{ color: 'var(--ac)', textDecoration: 'none' }}>Privacy Policy</Link>
         </p>
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>

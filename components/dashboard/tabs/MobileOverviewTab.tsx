@@ -17,6 +17,7 @@ import DailyPnLChart          from '@/components/ui/DailyPnLChart'
 import { buildEdgeFacts, Fact } from './overview/EdgeReport'
 import SessionClock           from '@/components/ui/SessionClock'
 import DailyMaxLoss           from '@/components/ui/DailyMaxLoss'
+import AdSlot                 from '@/components/dashboard/AdSlot'
 import type { Trade }         from '@/types'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -201,6 +202,9 @@ export default function MobileOverviewTab() {
           </div>
         </div>
       </div>
+
+      {/* Free-tier house ad (mobile has no side rail) — hidden for paid users */}
+      <AdSlot seed={2} />
 
       {/* ── Balance + Today P&L (2 col) ────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>

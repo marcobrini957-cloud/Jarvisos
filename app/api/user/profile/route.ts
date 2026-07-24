@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse }  from 'next/server'
 import { getAuthUser } from '@/lib/api/auth'
+import { getUserTier } from '@/lib/api/tier'
 
 const DEFAULT_PROFILE = {
   display_name:  'Trader',
@@ -26,6 +27,9 @@ export async function GET() {
       .eq('id', user.id)
       .single()
 
+    // Effective tier (honors reward expiry) — drives ad slots + ad-free upsell.
+    const tier = await getUserTier(user.id)
+
     // Fallback name from Google/OAuth metadata when DB still has default
     const metaName: string =
       user.user_metadata?.full_name ||
@@ -44,6 +48,7 @@ export async function GET() {
       avatar_url:   data?.avatar_url   ?? null,
       timezone:     data?.timezone     ?? DEFAULT_PROFILE.timezone,
       currency:     data?.currency     ?? DEFAULT_PROFILE.currency,
+      tier,
     })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

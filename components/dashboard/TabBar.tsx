@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   IconLayoutDashboard, IconChartCandle, IconBriefcase, IconNotebook,
   IconWorld, IconTargetArrow, IconChecklist, IconArrowsRightLeft,
-  IconSparkles, IconSettings,
+  IconSparkles, IconSettings, IconGift,
 } from '@tabler/icons-react'
 
 const TABS: { id: number; label: string; icon: React.ComponentType<{ size?: number; stroke?: number }>; isGold?: boolean }[] = [
@@ -16,6 +16,7 @@ const TABS: { id: number; label: string; icon: React.ComponentType<{ size?: numb
   { id: 5, label: 'Discipline',  icon: IconTargetArrow     },
   { id: 7, label: 'Tasks',       icon: IconChecklist       },
   { id: 8, label: 'Copy',        icon: IconArrowsRightLeft },
+  { id: 9, label: 'Partners',    icon: IconGift            },
   { id: 6, label: 'Analyst', icon: IconSparkles, isGold: true },
 ]
 

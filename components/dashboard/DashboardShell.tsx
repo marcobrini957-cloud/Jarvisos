@@ -14,8 +14,10 @@ import DisciplineTab  from './tabs/DisciplineTab'
 import VelquorTab     from './tabs/VelquorTab'
 import TasksTab        from './tabs/TasksTab'
 import CopyTradingTab  from './tabs/CopyTradingTab'
+import PartnersTab     from './tabs/PartnersTab'
 import SettingsTab     from './tabs/SettingsTab'
 import WelcomeGreeting from './WelcomeGreeting'
+import PartnerRail     from './PartnerRail'
 
 const TAB_COMPONENTS: Record<number, React.ComponentType> = {
   0: OverviewTab,
@@ -27,6 +29,7 @@ const TAB_COMPONENTS: Record<number, React.ComponentType> = {
   6: VelquorTab,
   7: TasksTab,
   8: CopyTradingTab,
+  9: PartnersTab,
 }
 
 export default function DashboardShell() {
@@ -42,7 +45,7 @@ export default function DashboardShell() {
 
   // Keyboard tab switching: 1–9 jump to tabs in bar order (skipped while typing)
   useEffect(() => {
-    const TAB_ORDER = [0, 1, 2, 3, 4, 5, 7, 8, 6] // matches TabBar layout
+    const TAB_ORDER = [0, 1, 2, 3, 4, 5, 7, 8, 9, 6] // matches TabBar layout
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return
       const el = document.activeElement as HTMLElement | null
@@ -93,16 +96,24 @@ export default function DashboardShell() {
           />
         </div>
 
-        {/* Main content — padded bottom on mobile for the nav bar */}
-        <main
-          className="flex-1 overflow-y-auto overflow-x-hidden dashboard-main sm:pb-0 pb-24"
-          style={{ padding: 'clamp(16px, 2vw, 28px)' }}
-        >
-          {/* keyed wrapper re-mounts on tab change → vq-tab-in entrance plays */}
-          <div key={showSettings ? 'settings' : activeTab} className="vq-tab-in">
-            {showSettings ? <SettingsTab /> : <ActiveTab />}
-          </div>
-        </main>
+        {/* Content row: main + (free-user) partner rail on wide screens */}
+        <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          {/* Main content — padded bottom on mobile for the nav bar */}
+          <main
+            className="flex-1 overflow-y-auto overflow-x-hidden dashboard-main sm:pb-0 pb-24"
+            style={{ padding: 'clamp(16px, 2vw, 28px)' }}
+          >
+            {/* keyed wrapper re-mounts on tab change → vq-tab-in entrance plays */}
+            <div key={showSettings ? 'settings' : activeTab} className="vq-tab-in">
+              {showSettings ? <SettingsTab /> : <ActiveTab />}
+            </div>
+          </main>
+
+          {/* Free-tier affiliate rail — hidden on the Partners tab (redundant) */}
+          {!showSettings && activeTab !== 9 && (
+            <PartnerRail className="hidden lg:flex lg:flex-col" />
+          )}
+        </div>
 
         {/* Mobile bottom nav — hidden on desktop */}
         <div className="block sm:hidden">
