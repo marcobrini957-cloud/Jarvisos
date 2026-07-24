@@ -43,7 +43,7 @@ export const PARTNERS: Partner[] = [
     headline:  'Award-winning low-spread MT5 broker',
     blurb:     'Raw spreads from 0.0 pips, fast execution and the MT5 setup Velquor connects to natively.',
     ctaLabel:  'Open an account',
-    url:       'https://blueberrymarkets.com/?ref=TODO_REAL_AFFILIATE_CODE',
+    url:       'https://portal.blueberrymarkets.com/en/sign-up?referralCode=kgdgyxnbws',
     badge:     'Editor’s pick',
     accent:    '#4C8DFF',
     featured:  true,
