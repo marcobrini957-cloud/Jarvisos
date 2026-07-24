@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useTrades, tradeResult } from '@/hooks/useTrades'
+import { useAccountSnapshot } from '@/hooks/useAccountSnapshot'
 import PeriodMetricCard, { type Period } from '@/components/ui/PeriodMetricCard'
 import { LogoMark } from '@/components/ui/LogoMark'
 import Panel from '@/components/ui/Panel'
@@ -49,6 +50,8 @@ function calcConsistency(trades: Trade[]): { green: number; totalDays: number; p
 
 export default function TradingTab() {
   const { trades, allRows, openPositions, stats, loading } = useTrades(2000)
+  const { snapshot } = useAccountSnapshot()
+  const balance = snapshot?.balance ?? 0
   const balanceOps = allRows.filter(t => t.symbol === 'BALANCE')
   // Cash flow (all-time) — an account fact, kept out of the performance KPI row.
   const totalWithdrawn = balanceOps.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).reduce((s, t) => s + Math.abs(t.net_profit ?? 0), 0)
@@ -247,20 +250,24 @@ export default function TradingTab() {
           }}
         />
         <PeriodMetricCard
-          title="Expectancy"
+          title="Return"
           barColor="var(--am)"
           getInfo={(p) => {
             const t      = filterByPeriod(trades, p)
             const phrase = PERIOD_PHRASE[p]
-            if (t.length === 0) return <>No closed trades {phrase} yet, so there&apos;s no expectancy to show for this timeframe.</>
-            const exp = calcPnl(t) / t.length
-            return <>Expectancy is what you earn on an <strong style={{ color: 'var(--t1)' }}>average trade</strong> — it blends your win rate and your win/loss sizes into one honest number, so it&apos;s fair to every style. Across your {t.length} trade{t.length !== 1 ? 's' : ''} {phrase}, you {exp >= 0 ? 'made' : 'lost'} <strong style={{ color: exp >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{eur(exp)}</strong> per trade on average. {exp >= 0 ? 'Positive means you have a real edge — a wide stop with a high win rate counts just as much as a tight stop with a low one.' : 'Negative means the average trade is currently costing you money.'}</>
+            if (t.length === 0) return <>No closed trades {phrase} yet, so there&apos;s no return to show for this timeframe.</>
+            const pnl = calcPnl(t)
+            if (balance <= 0) return <>Across your {t.length} trade{t.length !== 1 ? 's' : ''} {phrase} you {pnl >= 0 ? 'made' : 'lost'} <strong style={{ color: pnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{eur(pnl)}</strong>. Connect your MT5 account so we know your balance and can show this as a percentage return.</>
+            const pct = (pnl / balance) * 100
+            return <>Return is your net P&amp;L over this period as a <strong style={{ color: 'var(--t1)' }}>percentage of your account balance</strong>, so it&apos;s comparable whatever your account size. Across your {t.length} trade{t.length !== 1 ? 's' : ''} {phrase}, you {pnl >= 0 ? 'made' : 'lost'} <strong style={{ color: pnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{eur(pnl)}</strong> — a <strong style={{ color: pct >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{pct >= 0 ? '+' : ''}{pct.toFixed(2)}%</strong> return on your {eur(balance)} balance.</>
           }}
           getValue={(p) => {
             const t = filterByPeriod(trades, p)
             if (t.length === 0) return { value: '—', change: 'No trades', changePositive: null }
-            const exp = calcPnl(t) / t.length
-            return { value: `${exp >= 0 ? '+' : '-'}€${Math.abs(exp).toFixed(2)}`, change: `avg per trade · ${t.length}`, changePositive: exp > 0 ? true : exp < 0 ? false : null }
+            const pnl = calcPnl(t)
+            if (balance <= 0) return { value: fmtPnl(pnl), change: `${t.length} trade${t.length !== 1 ? 's' : ''} · connect MT5 for %`, changePositive: pnl > 0 ? true : pnl < 0 ? false : null }
+            const pct = (pnl / balance) * 100
+            return { value: `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`, change: `${fmtPnl(pnl)} · ${t.length} trade${t.length !== 1 ? 's' : ''}`, changePositive: pct > 0 ? true : pct < 0 ? false : null }
           }}
         />
         <PeriodMetricCard
