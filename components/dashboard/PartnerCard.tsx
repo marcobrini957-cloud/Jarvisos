@@ -70,13 +70,13 @@ export default function PartnerCard({
             {partner.headline}
           </div>
         </div>
-        {partner.badge && (
+        {(partner.award ?? partner.plan) && (
           <span style={{
             flexShrink: 0, fontSize: '10px', fontWeight: 700, letterSpacing: '0.02em',
             padding: '3px 8px', borderRadius: '999px',
             background: `${accent}1f`, color: accent, whiteSpace: 'nowrap',
           }}>
-            {partner.badge}
+            {partner.award ?? partner.plan}
           </span>
         )}
       </div>
