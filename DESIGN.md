@@ -29,23 +29,64 @@ trio is the template signature; Inter-from-Google is the fingerprint on top.
 
 ---
 
-## 1. North star — **TBD (Marco)**
+## 1. North star
 
-> One sentence. A trader lands for three seconds — what should they feel?
+> **It should feel premium in a way he has not felt before — not a site that
+> makes him think "I have seen this design before."**
 
-*(to fill in)*
+That single line is the acceptance test for every screen. It has a sharp
+consequence: **recognisability is failure.** Anything a trader can place —
+a known template, a known font, a competitor's palette — fails it by
+definition, however well executed.
 
-**Reference sites** — 3–5, each with the axis it is being referenced for
-(layout / type / density / colour / motion), so competing references don't get
-averaged into mush:
+### Reference: FTMO (`Downloads/…FTMO.html`, extracted 2026-07-25)
 
-| # | Site | Referenced for | Notes |
-|---|---|---|---|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
+Take the **architecture**. Reject the **identity**.
 
-**Anti-references** — sites that look generic, and why:
+**What is worth taking — their surface system is alpha-on-black, not solid greys:**
+
+| Role | FTMO token | Value |
+|---|---|---|
+| Background | `--color-background-primary` | `#ffffff0a` (white 4%) |
+| | `--color-background-secondary` | `#ffffff14` (8%) |
+| | `--color-background-tertiary` | `#ffffff1f` (12%) |
+| Border | `--color-border-primary` | `#ffffff14` |
+| | `--color-border-secondary` | `#ffffff1f` |
+| | `--color-border-tertiary` | `#ffffff3d` (24%) |
+| Text | content-primary / secondary / tertiary | `#fff` / `#ffffffb8` (72%) / `#ffffff7a` (48%) |
+| Interaction | hover / highlighted / pressed | `#ffffff14` → `#ffffff1f` → `#ffffff29` |
+
+Everything is one hue (white) at graded alpha. It composites correctly over any
+background, gives a coherent elevation model for free, and is strictly better
+than VELQUOR's current hardcoded solid surfaces (`#0C0C0C` / `#131313` /
+`#1A1A1A`), which only work on pure black and have no interaction states.
+
+Also worth taking:
+- **Semantic naming** (`content-*`, `background-*`, `border-*`, `button-*-hover`)
+  rather than literal colour names.
+- **Badge pattern**: semantic colour at 15% alpha (`…26`) behind full-strength text.
+- **Radii scale**: 4 / 6 / 8 / 12 / 16 / 24 / 32px.
+- **4px spacing base** (`--spacing: .25rem`).
+- They run **Tailwind v4 CSS-first with `@theme`** — the same stack we chose, so
+  this maps directly.
+
+**What must be rejected, and why:**
+
+| FTMO choice | Value | Why we cannot use it |
+|---|---|---|
+| Primary typeface | **Poppins** (Google) | One of the most-used fonts on the web. Geometric sans, the default of every crypto/fintech template. |
+| Body typeface | **Roboto** (Google) | The Android system font. |
+| Primary blue | `#0781FE` | Effectively the blue VELQUOR already uses (`#4D8FFF`), and it is *their* uniform — the most recognised prop-firm site among exactly our audience. |
+| Semantic set | success `#00C951`, danger `#FB2C36`, warning `#FF6900`, info `#0781FE` | Fine as *structure*; the specific hues are theirs. Ours should be derived from our own accent. |
+
+Adopting their palette **and** their fonts would make VELQUOR read as an FTMO
+clone to the one audience most able to spot it. That is the north star failing
+in the most literal way possible.
+
+### Still needed
+
+**Anti-references** — sites Marco finds generic, and why. Faster signal than
+positives.
 
 | # | Site | What's wrong with it |
 |---|---|---|
@@ -115,13 +156,52 @@ furniture in the way.
 
 ## 4. Inputs still needed from Marco
 
-1. §1 north star + reference table + anti-references (screenshots).
-2. **Font files + license** for the chosen typeface. Ideally a display cut and a
-   text cut, plus a mono for figures if the family has one.
-3. **Design tokens**, if extractable from a reference: colour ramps, type scale,
-   spacing, radii.
-4. **Brand assets**: logo source (vector), wordmark, any existing brand guide.
-5. Any competitor VELQUOR must explicitly *not* resemble.
+1. **Typeface decision** (below) — blocks Stage 0.
+2. **Accent colour direction** — see §4.2.
+3. Anti-references.
+4. **Brand assets**: logo source (vector), wordmark.
+
+### 4.1 Typeface — the single biggest lever
+
+The font is what makes a site unplaceable. Inter says "Next.js template",
+Poppins says "startup landing page", Roboto says "Android". None of them can
+satisfy the north star no matter how good the layout is.
+
+Constraint from our density choice: it must hold up at **11–13px in dense
+tables**, and its **figures must be tabular** — plenty of beautiful display
+faces collapse at terminal sizes.
+
+Three directions, cheapest to most premium. Marco verifies pricing/licensing:
+
+| Direction | Text face | Figures | Character |
+|---|---|---|---|
+| **A — Terminal-native** | ABC Diatype or GT America | **Berkeley Mono** for every number | A real terminal. The mono figures are the identity; nothing in the retail-trading space looks like it. |
+| **B — Swiss precision** | Suisse Int'l or Neue Haas Grotesk | Same family's tabular cut | Quiet, expensive, institutional. Reads like a bank rather than a startup. |
+| **C — Contemporary** | PP Neue Montreal or Roobert | PP Supply Mono | Distinctive without being loud; more affordable licensing. |
+
+Recommendation: **A**. A characterful mono carrying every figure is the fastest
+route to "I have not seen this before" in a product that is 70% numbers, and it
+reinforces terminal density rather than fighting it. The text face then only has
+to handle labels and prose.
+
+Whatever is chosen: **self-hosted `woff2`, no `next/font/google`.**
+
+### 4.2 Accent colour
+
+FTMO's blue is out (§1). The current `#4D8FFF` is the same blue and equally
+generic — it is the default accent of essentially every dark dashboard.
+
+Green and red are **reserved for P&L** and cannot also be the brand colour, or
+the interface starts lying about state. So the accent has to sit outside the
+P&L axis. Options to react to:
+
+- A warm metal — brass / amber, distinct from every blue competitor.
+- A cold near-white / silver, letting P&L green-red be the only colour on screen.
+- A single saturated non-blue (deep teal, oxblood) used sparingly as brand.
+
+Recommendation: **near-white accent with P&L as the only chromatic colour.**
+Maximum restraint, reads instantly as instrument rather than app, and it is the
+option no competitor is taking.
 
 ---
 
