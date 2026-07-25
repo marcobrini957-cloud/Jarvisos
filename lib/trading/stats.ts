@@ -6,6 +6,7 @@ export interface TradeStats {
   weekPnl:         number
   winRate:         number
   totalTrades:     number
+  decidedTrades:   number     // wins + losses; the denominator behind winRate/expectancy
   avgRR:           number
   maxDrawdown:     number
   xauWinRate:      number
@@ -138,6 +139,7 @@ export function computeStats(allRows: Trade[]): TradeStats {
     weekPnl:         parseFloat(weekPnl.toFixed(2)),
     winRate:         parseFloat(winRate.toFixed(1)),
     totalTrades:     realClosed.length,
+    decidedTrades:   decisive,
     avgRR:           parseFloat(avgRR.toFixed(2)),
     maxDrawdown:     parseFloat(maxDrawdown.toFixed(2)),
     xauWinRate:      parseFloat(xauWR.toFixed(1)),

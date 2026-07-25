@@ -1,28 +1,29 @@
 'use client'
 
 import { useState } from 'react'
+import Icon, { type IconName } from '@/components/ui/Icon'
 
 // Primary tabs shown in the bottom bar (5 max)
-const PRIMARY_TABS = [
-  { id: 0, label: 'Home',       icon: '⌂'  },
-  { id: 1, label: 'Trading',    icon: '📈' },
-  { id: 6, label: 'Analyst', icon: '✦', isGold: true },
-  { id: 3, label: 'Journal',    icon: '✍' },
-  { id: -1, label: 'More',      icon: '⋯'  },
+const PRIMARY_TABS: { id: number; label: string; icon: IconName; isGold?: boolean }[] = [
+  { id: 0,  label: 'Home',    icon: 'home'    },
+  { id: 1,  label: 'Trading', icon: 'chart'   },
+  { id: 6,  label: 'Analyst', icon: 'spark', isGold: true },
+  { id: 3,  label: 'Journal', icon: 'journal' },
+  { id: -1, label: 'More',    icon: 'more'    },
 ]
 
 // All tabs for the "More" drawer
-const ALL_TABS = [
-  { id: 0, label: 'Overview',   icon: '⌂'  },
-  { id: 1, label: 'Trading',    icon: '📈' },
-  { id: 2, label: 'Portfolio',  icon: '💼' },
-  { id: 3, label: 'Journal',    icon: '✍' },
-  { id: 4, label: 'News',      icon: '🌐' },
-  { id: 5, label: 'Discipline', icon: '🎯' },
-  { id: 7, label: 'Tasks',       icon: '✅' },
-  { id: 8, label: 'Copy',        icon: '⇄'  },
-  { id: 9, label: 'Partners',    icon: '🎁' },
-  { id: 6, label: 'Analyst', icon: '✦', isGold: true },
+const ALL_TABS: { id: number; label: string; icon: IconName; isGold?: boolean }[] = [
+  { id: 0, label: 'Overview',   icon: 'home'        },
+  { id: 1, label: 'Trading',    icon: 'chart'       },
+  { id: 2, label: 'Portfolio',  icon: 'briefcase'   },
+  { id: 3, label: 'Journal',    icon: 'journal'     },
+  { id: 4, label: 'News',       icon: 'globe'       },
+  { id: 5, label: 'Discipline', icon: 'target'      },
+  { id: 7, label: 'Tasks',      icon: 'checkSquare' },
+  { id: 8, label: 'Copy',       icon: 'swap'        },
+  { id: 9, label: 'Partners',   icon: 'gift'        },
+  { id: 6, label: 'Analyst',    icon: 'spark', isGold: true },
 ]
 
 interface Props {
@@ -100,7 +101,9 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
               fontSize: '12px', cursor: 'pointer',
             }}
           >
-            ⚙ Settings
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
+              <Icon name="settings" size={14} /> Settings
+            </span>
           </button>
         </div>
 
@@ -126,7 +129,7 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
                   transition: 'all 0.12s',
                 }}
               >
-                <span style={{ fontSize: '20px', lineHeight: 1 }}>{tab.icon}</span>
+                <Icon name={tab.icon} size={19} />
                 <span style={{
                   fontSize: '11px', fontWeight: isActive ? 600 : 400,
                   color: isActive
@@ -180,7 +183,7 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
                 fontSize: '20px', lineHeight: 1,
                 filter: isActive && tab.isGold ? 'drop-shadow(0 0 6px rgba(212,160,52,0.6))' : 'none',
               }}>
-                {tab.icon}
+                <Icon name={tab.icon} size={16} />
               </span>
               <span style={{
                 fontSize: '10px', fontWeight: isActive ? 600 : 400,

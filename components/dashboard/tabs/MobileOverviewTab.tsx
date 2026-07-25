@@ -19,6 +19,7 @@ import SessionClock           from '@/components/ui/SessionClock'
 import DailyMaxLoss           from '@/components/ui/DailyMaxLoss'
 import AdSlot                 from '@/components/dashboard/AdSlot'
 import type { Trade }         from '@/types'
+import Icon from '@/components/ui/Icon'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -175,8 +176,8 @@ export default function MobileOverviewTab() {
                 </div>
               )}
               {journalStreak >= 1 && (
-                <span style={{ fontSize: '12px', fontWeight: 700, color: journalStreak >= 7 ? 'var(--go2)' : 'var(--gr2)' }}>
-                  {journalStreak >= 7 ? '🔥' : '✓'} {journalStreak}d
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 500, color: 'var(--t2)' }}>
+                  <Icon name="journal" size={11} /> {journalStreak}d
                 </span>
               )}
             </div>
@@ -191,7 +192,9 @@ export default function MobileOverviewTab() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
             {overdueTasks.length > 0 && (
               <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--re)', background: 'rgba(255,61,80,0.1)', padding: '3px 9px', borderRadius: '6px', border: '1px solid rgba(255,61,80,0.2)' }}>
-                ⚠ {overdueTasks.length} overdue
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                  <Icon name="alert" size={11} /> {overdueTasks.length} overdue
+                </span>
               </span>
             )}
           </div>

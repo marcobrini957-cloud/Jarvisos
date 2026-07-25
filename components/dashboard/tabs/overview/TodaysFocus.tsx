@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { computeBreakdowns } from '@/lib/trading/breakdowns'
+import { eurSigned } from '@/lib/utils/formatting'
 import type { Trade } from '@/types'
+
+// Significance gates — a weekday only earns a callout once there is enough
+// history behind it and the money involved is worth acting on.
+const DOW_MIN_TRADES = 8
+const DOW_MIN_DAMAGE = 25   // EUR
 
 interface FFEvent {
   title:    string
@@ -66,20 +72,22 @@ export function TodaysFocus({ allRows }: { allRows: Trade[] }) {
       })
     }
 
-    // 2. Today's weekday — only if the data says it's a problem or an edge
+    // 2. Today's weekday — only when the sample is big enough AND the damage is
+    //    real. A −€2 result over 6 trades is noise; calling that out as "this
+    //    day costs you money" trains the trader to ignore the panel.
     const dow = b.byDayOfWeek.find(s => s.key === todayDow)
-    if (dow && dow.trades >= 5) {
-      if (dow.netPnl < 0) {
+    if (dow && dow.trades >= DOW_MIN_TRADES) {
+      if (dow.netPnl < -DOW_MIN_DAMAGE) {
         out.push({
           tone:  'warn',
           title: `${todayFull}s cost you money`,
-          body:  `€${dow.netPnl.toFixed(0)} over ${dow.trades} trades (${dow.winRate.toFixed(0)}% win rate). Size down or demand A+ setups today.`,
+          body:  `${eurSigned(dow.netPnl)} over ${dow.trades} trades (${dow.winRate.toFixed(0)}% win rate). Size down or demand A+ setups today.`,
         })
-      } else if (dow.winRate >= 55) {
+      } else if (dow.netPnl > DOW_MIN_DAMAGE && dow.winRate >= 55) {
         out.push({
           tone:  'good',
           title: `${todayFull} is one of your better days`,
-          body:  `+€${dow.netPnl.toFixed(0)} over ${dow.trades} trades (${dow.winRate.toFixed(0)}% win rate). Trade your plan.`,
+          body:  `${eurSigned(dow.netPnl)} over ${dow.trades} trades (${dow.winRate.toFixed(0)}% win rate). Trade your plan.`,
         })
       }
     }
@@ -91,16 +99,16 @@ export function TodaysFocus({ allRows }: { allRows: Trade[] }) {
       out.push({
         tone:  'info',
         title: `Your edge window: ${String(h).padStart(2, '0')}:00–${String((h + 1) % 24).padStart(2, '0')}:00`,
-        body:  `+€${goodHours[0].netPnl.toFixed(0)} across ${goodHours[0].trades} entries — your most profitable entry hour.`,
+        body:  `${eurSigned(goodHours[0].netPnl)} across ${goodHours[0].trades} entries — your most profitable entry hour.`,
       })
     }
 
     // 4. The single most damaging pattern in the data
-    if (b.worstCombo && b.worstCombo.netPnl < 0) {
+    if (b.worstCombo && b.worstCombo.netPnl < -DOW_MIN_DAMAGE) {
       out.push({
         tone:  'warn',
         title: 'Pattern to avoid',
-        body:  `${b.worstCombo.label}: €${b.worstCombo.netPnl.toFixed(0)} over ${b.worstCombo.trades} trades (${b.worstCombo.winRate.toFixed(0)}% win rate).`,
+        body:  `${b.worstCombo.label}: ${eurSigned(b.worstCombo.netPnl)} over ${b.worstCombo.trades} trades (${b.worstCombo.winRate.toFixed(0)}% win rate).`,
       })
     }
 

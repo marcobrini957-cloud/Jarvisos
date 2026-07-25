@@ -91,7 +91,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
 
 // €-money helpers — full number with thousands separators, matching the mock.
 const fmtMoney  = (v: number) => `€${Math.round(Math.abs(v)).toLocaleString('en-US')}`
-const fmtSigned = (v: number) => `${v >= 0 ? '+' : '-'}€${Math.round(Math.abs(v)).toLocaleString('en-US')}`
+const fmtSigned = (v: number) => `${v >= 0 ? '+' : '−'}€${Math.round(Math.abs(v)).toLocaleString('en-US')}`
 
 export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
   const now   = new Date()
@@ -239,8 +239,13 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
                       </span>
                       {has && (
                         <>
-                          <span style={{ fontSize: '11px', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-0.02em', color: 'var(--t1)' }}>
-                            {fmtMoney(pnl!)}
+                          {/* Signed: a red tint alone left "€175" ambiguous —
+                              a losing day must read as a loss on its own. */}
+                          <span className="num" style={{
+                            fontSize: '11px', fontWeight: 600, lineHeight: 1.1,
+                            color: pnl! >= 0 ? 'var(--gr2)' : 'var(--re)',
+                          }}>
+                            {fmtSigned(pnl!)}
                           </span>
                           {winPct != null && (
                             <span style={{ fontSize: '9px', color: 'var(--t3)', lineHeight: 1 }}>{winPct}%</span>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { eur } from '@/lib/utils/formatting'
 
 interface AccountOverview {
   kind:      'primary' | 'copy'
@@ -28,7 +29,9 @@ const DOT_COLOR = { live: 'var(--gr2)', stale: 'var(--go2)', offline: 'var(--t3)
 
 function fmtEur(n: number | null): string {
   if (n === null || n === undefined) return '—'
-  return '€' + n.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  // Same grouping as the dashboard hero — the top bar used to render de-AT
+  // (€2 358,19) directly above an en-US (€2,358.19) copy of the same balance.
+  return eur(n)
 }
 
 function timeAgo(iso: string | null): string {

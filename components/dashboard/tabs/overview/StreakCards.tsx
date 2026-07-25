@@ -2,11 +2,87 @@
 
 import { useMemo } from 'react'
 import { BE_THRESHOLD } from '@/hooks/useTrades'
+import Icon, { type IconName } from '@/components/ui/Icon'
 import type { Trade } from '@/types'
+
+// ── Run strip ─────────────────────────────────────────────────────────────────
+// The last N outcomes as tick marks, oldest → newest. A count on its own says
+// "3"; the strip shows what the 3 is made of and what came before it.
+
+type Outcome = 'win' | 'loss' | 'flat' | 'none'
+
+const TICK_COLOR: Record<Outcome, string> = {
+  win:  'var(--gr)',
+  loss: 'var(--re)',
+  flat: 'var(--bd3)',
+  none: 'var(--bd)',
+}
+
+function RunStrip({ run }: { run: Outcome[] }) {
+  return (
+    <div style={{ display: 'flex', gap: '2px', alignItems: 'flex-end', height: '14px' }}>
+      {run.map((o, i) => (
+        <span
+          key={i}
+          style={{
+            width: '3px',
+            height: o === 'none' ? '4px' : o === 'flat' ? '6px' : '14px',
+            borderRadius: '1px',
+            background: TICK_COLOR[o],
+            opacity: o === 'none' ? 0.5 : 1,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function StreakRow({ icon, label, value, unit, run, tone }: {
+  icon:  IconName
+  label: string
+  value: number
+  unit:  string
+  run:   Outcome[]
+  tone:  'positive' | 'negative' | 'neutral'
+}) {
+  const valueColor =
+    tone === 'positive' ? 'var(--gr2)' :
+    tone === 'negative' ? 'var(--re)'  : 'var(--t2)'
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+      padding: '11px 0', borderBottom: '1px solid var(--bd)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+        <span style={{ color: 'var(--t3)' }}><Icon name={icon} size={14} /></span>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ fontSize: '12px', color: 'var(--t1)', lineHeight: 1.3, fontWeight: 500 }}>{label}</p>
+          <p style={{ fontSize: '10.5px', color: 'var(--t3)', lineHeight: 1.3 }}>{unit}</p>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+        <RunStrip run={run} />
+        <span className="num" style={{
+          fontSize: '20px', fontWeight: 600, color: valueColor,
+          minWidth: '22px', textAlign: 'right', lineHeight: 1,
+        }}>
+          {value}
+        </span>
+      </div>
+    </div>
+  )
+}
 
 // ── Streak Card ───────────────────────────────────────────────────────────────
 
-export function StreakCard({ trades, journalStreak, habitStreak }: { trades: Trade[]; journalStreak: number; habitStreak: number }) {
+export function StreakCard({ trades, journalStreak, habitStreak, journalDays, habitDays }: {
+  trades:        Trade[]
+  journalStreak: number
+  habitStreak:   number
+  journalDays?:  boolean[]   // last 7 days, oldest → newest
+  habitDays?:    boolean[]
+}) {
   // Wins + break-evens in a row — only a real loss (< -BE_THRESHOLD) resets
   const tradeStreak = useMemo(() => {
     let streak = 0
@@ -26,67 +102,62 @@ export function StreakCard({ trades, journalStreak, habitStreak }: { trades: Tra
     return streak
   }, [trades])
 
-  const isLosing = lossStreak > 0 && tradeStreak === 0
+  // last 12 outcomes, oldest → newest
+  const tradeRun = useMemo<Outcome[]>(() => {
+    const recent = trades.slice(-12).map<Outcome>(t => {
+      const p = t.net_profit ?? 0
+      return p > BE_THRESHOLD ? 'win' : p < -BE_THRESHOLD ? 'loss' : 'flat'
+    })
+    return [...Array(Math.max(0, 12 - recent.length)).fill('none' as Outcome), ...recent]
+  }, [trades])
 
-  const items = [
-    {
-      label:   isLosing ? 'Loss run' : 'Win streak',
-      value:   isLosing ? lossStreak : tradeStreak,
-      unit:    isLosing ? 'losses in a row' : 'trades without a loss',
-      icon:    isLosing ? '⚠️' : tradeStreak >= 5 ? '🔥' : '📈',
-      bg:      isLosing ? 'rgba(255,61,80,0.08)'      : tradeStreak >= 3 ? 'rgba(0,232,122,0.07)'     : 'rgba(255,255,255,0.03)',
-      border:  isLosing ? 'rgba(255,61,80,0.2)'       : tradeStreak >= 3 ? 'rgba(0,232,122,0.18)'     : 'var(--bd2)',
-      numCol:  isLosing ? 'var(--re)'                 : tradeStreak >= 3 ? 'var(--gr2)'               : 'var(--t2)',
-    },
-    {
-      label:   'Journal streak',
-      value:   journalStreak,
-      unit:    journalStreak === 1 ? 'day in a row' : 'days in a row',
-      icon:    journalStreak >= 7 ? '🔥' : '✍',
-      bg:      journalStreak >= 7 ? 'rgba(232,201,106,0.08)' : journalStreak >= 3 ? 'rgba(0,232,122,0.06)' : 'rgba(255,255,255,0.03)',
-      border:  journalStreak >= 7 ? 'rgba(232,201,106,0.25)' : journalStreak >= 3 ? 'rgba(0,232,122,0.15)' : 'var(--bd2)',
-      numCol:  journalStreak >= 7 ? 'var(--go2)' : journalStreak >= 3 ? 'var(--gr2)' : 'var(--t2)',
-    },
-    {
-      label:   'Habit streak',
-      value:   habitStreak,
-      unit:    habitStreak === 1 ? 'day in a row' : 'days in a row',
-      icon:    habitStreak >= 7 ? '🔥' : '💪',
-      bg:      habitStreak >= 7 ? 'rgba(232,201,106,0.08)' : habitStreak >= 3 ? 'rgba(160,100,255,0.07)' : 'rgba(255,255,255,0.03)',
-      border:  habitStreak >= 7 ? 'rgba(232,201,106,0.25)' : habitStreak >= 3 ? 'rgba(160,100,255,0.2)'  : 'var(--bd2)',
-      numCol:  habitStreak >= 7 ? 'var(--go2)' : habitStreak >= 3 ? 'var(--pu)' : 'var(--t2)',
-    },
-  ]
+  const toRun = (days?: boolean[]): Outcome[] => {
+    const d = (days ?? []).slice(-7).map<Outcome>(v => (v ? 'win' : 'none'))
+    return [...Array(Math.max(0, 7 - d.length)).fill('none' as Outcome), ...d]
+  }
+
+  const isLosing = lossStreak > 0 && tradeStreak === 0
 
   return (
     <div style={{
-      borderRadius: '12px', padding: '16px 18px',
-      background: 'rgba(232,201,106,0.04)',
-      border: '1px solid rgba(232,201,106,0.14)',
+      borderRadius: '12px', padding: '4px 16px 6px',
+      background: 'var(--s1)', border: '1px solid var(--bd2)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '14px' }}>
-        <span style={{ fontSize: '16px', lineHeight: 1 }}>🔥</span>
-        <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--go2)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>Streaks</span>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '13px 0 4px',
+      }}>
+        <span className="label-caps">Streaks</span>
+        <span style={{ fontSize: '10px', color: 'var(--t3)' }}>
+          {isLosing ? 'last 12 trades' : 'current run'}
+        </span>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {items.map(item => (
-          <div key={item.label} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '10px 12px', borderRadius: '9px',
-            background: item.bg, border: `1px solid ${item.border}`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '16px', lineHeight: 1 }}>{item.icon}</span>
-              <div>
-                <p style={{ fontSize: '11px', color: 'var(--t3)', lineHeight: 1, marginBottom: '2px' }}>{item.label}</p>
-                <p style={{ fontSize: '10px', color: 'var(--t3)', lineHeight: 1 }}>{item.unit}</p>
-              </div>
-            </div>
-            <span style={{ fontSize: '26px', fontWeight: 800, color: item.numCol, letterSpacing: '-0.04em', lineHeight: 1 }}>
-              {item.value}
-            </span>
-          </div>
-        ))}
+
+      <StreakRow
+        icon={isLosing ? 'trendDown' : 'streak'}
+        label={isLosing ? 'Loss run' : 'Win streak'}
+        value={isLosing ? lossStreak : tradeStreak}
+        unit={isLosing ? 'losses in a row' : 'trades without a loss'}
+        run={tradeRun}
+        tone={isLosing ? 'negative' : tradeStreak >= 3 ? 'positive' : 'neutral'}
+      />
+      <StreakRow
+        icon="journal"
+        label="Journal streak"
+        value={journalStreak}
+        unit={journalStreak === 1 ? 'day in a row' : 'days in a row'}
+        run={toRun(journalDays)}
+        tone={journalStreak >= 3 ? 'positive' : 'neutral'}
+      />
+      <div style={{ borderBottom: 'none' }}>
+        <StreakRow
+          icon="habit"
+          label="Habit streak"
+          value={habitStreak}
+          unit={habitStreak === 1 ? 'day in a row' : 'days in a row'}
+          run={toRun(habitDays)}
+          tone={habitStreak >= 3 ? 'positive' : 'neutral'}
+        />
       </div>
     </div>
   )
@@ -110,17 +181,23 @@ export function StreakBadge({ trades }: { trades: Trade[] }) {
     return { wins, losses }
   }, [trades])
 
+  const pill: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: '6px',
+    padding: '4px 10px', borderRadius: '6px',
+    fontSize: '11.5px', fontWeight: 600, letterSpacing: '-0.01em',
+  }
+
   if (streak.wins >= 2) return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '8px', background: 'rgba(0,232,122,0.1)', border: '1px solid rgba(0,232,122,0.2)' }}>
-      <span style={{ fontSize: '14px' }}>🔥</span>
-      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--gr2)' }}>{streak.wins}-trade win streak</span>
-    </div>
+    <span style={{ ...pill, background: 'rgba(0,232,122,0.08)', border: '1px solid rgba(0,232,122,0.18)', color: 'var(--gr2)' }}>
+      <Icon name="streak" size={12} />
+      {streak.wins}-trade win streak
+    </span>
   )
   if (streak.losses >= 2) return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '8px', background: 'rgba(255,61,80,0.1)', border: '1px solid rgba(255,61,80,0.25)' }}>
-      <span style={{ fontSize: '14px' }}>⚠️</span>
-      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--re)' }}>{streak.losses} losses in a row — consider stepping back</span>
-    </div>
+    <span style={{ ...pill, background: 'rgba(255,61,80,0.08)', border: '1px solid rgba(255,61,80,0.2)', color: 'var(--re)' }}>
+      <Icon name="alert" size={12} />
+      {streak.losses} losses in a row — consider stepping back
+    </span>
   )
   return null
 }

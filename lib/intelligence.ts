@@ -1,6 +1,7 @@
 import type { Trade, JournalEntry, Task } from '@/types'
 import { BE_THRESHOLD } from '@/lib/trading/stats'
 import type { HoldingWithPrice } from '@/hooks/usePortfolio'
+import { eurSigned } from '@/lib/utils/formatting'
 
 export interface VelquorInsight {
   id:        string
@@ -143,11 +144,11 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
 
   if (todayPnL <= -dailyLimit) {
     push({ category: 'warning', source: 'trades', priority: 'high',
-      message: `🔴 Daily loss limit reached (€${dailyLimit}). No more trades today. Come back tomorrow with a fresh mindset.`,
+      message: `Daily loss limit reached (€${dailyLimit}). No more trades today. Come back tomorrow with a fresh mindset.`,
       valueEur: todayPnL, action: 'Stop trading for today' })
   } else if (todayPnL < -(dailyLimit * 0.8)) {
     push({ category: 'warning', source: 'trades', priority: 'high',
-      message: `⚠️ You are 80% of your daily loss limit (€${dailyLimit}). One more losing trade triggers a lock for today.`,
+      message: `You are 80% of your daily loss limit (€${dailyLimit}). One more losing trade triggers a lock for today.`,
       valueEur: todayPnL })
   }
 
@@ -213,24 +214,29 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
     }
   }
 
-  // Average Realized R:R — actual exit vs entry in units of initial risk
-  const rrTrades = closed.filter(t => t.stop_loss && t.open_price && t.close_price && t.trade_type)
-  if (rrTrades.length >= 5) {
-    const avgRR = rrTrades.reduce((s, t) => {
-      const dir      = t.trade_type === 'buy' ? 1 : -1
-      const realized = dir * ((t.close_price ?? 0) - (t.open_price ?? 0))
-      const risk     = Math.abs((t.open_price ?? 0) - (t.stop_loss ?? 0))
-      return s + (risk > 0 ? realized / risk : 0)
-    }, 0) / rrTrades.length
+  // Payoff ratio — average winner vs average loser, in euros.
+  //
+  // This replaces an "Average Realized R:R" insight that measured exits in
+  // units of initial risk. That number was only computable on trades that
+  // carried a stop loss (70 of 351 on a real account), yet was worded as if it
+  // described every trade — and it contradicted the payoff ratio displayed
+  // beside it in the same panel (R:R 0.03 vs €44/€71 = 0.62). Payoff ratio uses
+  // every decided trade and cannot disagree with itself.
+  const winners = closed.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD)
+  const losers  = closed.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD)
+  if (winners.length >= 5 && losers.length >= 5) {
+    const avgWin  = winners.reduce((s, t) => s + (t.net_profit ?? 0), 0) / winners.length
+    const avgLoss = Math.abs(losers.reduce((s, t) => s + (t.net_profit ?? 0), 0) / losers.length)
+    const payoff  = avgLoss > 0 ? avgWin / avgLoss : 0
 
-    if (avgRR < 1.5) {
+    if (payoff < 1) {
       push({ category: 'trading', source: 'trades', priority: 'medium',
-        message: `Realized R:R is ${avgRR.toFixed(2)}. Target is 1.5 — you may be closing winners too early or letting losers run.`,
-        valuePct: avgRR })
-    } else if (avgRR >= 2.0) {
+        message: `Your average loss (€${avgLoss.toFixed(0)}) is bigger than your average win (€${avgWin.toFixed(0)}) — a payoff ratio of ${payoff.toFixed(2)}. You need a ${(100 / (1 + payoff)).toFixed(0)}% win rate just to break even.`,
+        valuePct: payoff })
+    } else if (payoff >= 1.5) {
       push({ category: 'trading', source: 'trades', priority: 'low',
-        message: `Realized R:R at ${avgRR.toFixed(2)} — solid trade execution. You are letting winners run.`,
-        valuePct: avgRR })
+        message: `Your average win (€${avgWin.toFixed(0)}) is ${payoff.toFixed(2)}× your average loss (€${avgLoss.toFixed(0)}) — you are letting winners run.`,
+        valuePct: payoff })
     }
   }
 
@@ -304,13 +310,22 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
                            avg: ts.reduce((sum, t) => sum + (t.net_profit ?? 0), 0) / ts.length }))
       .filter(v => v.stats.decided >= 3)
     if (eligible.length >= 1) {
-      const sorted = [...eligible].sort((a, b) => b.stats.wr - a.stats.wr)
+      // Rank by money, not win rate. Sorting on win rate once crowned a setup
+      // that won half its trades while averaging −€15.31 as "your best setup" —
+      // advice to do more of the thing that was losing money.
+      const sorted = [...eligible].sort((a, b) => b.avg - a.avg)
       const bestS  = sorted[0]
       const worstS = sorted[sorted.length - 1]
 
-      push({ category: 'trading', source: 'trades', priority: bestS.stats.wr >= 65 ? 'low' : 'medium',
-        message: `Your best setup is "${bestS.key}" — ${bestS.stats.wr.toFixed(0)}% of decided trades won across ${bestS.count} trades, averaging €${bestS.avg.toFixed(2)} per trade.${sorted.length > 1 ? ` Weakest: "${worstS.key}" at ${worstS.stats.wr.toFixed(0)}%.` : ''}`,
-        valuePct: bestS.stats.wr, valueEur: bestS.avg })
+      if (bestS.avg > 0) {
+        push({ category: 'trading', source: 'trades', priority: 'low',
+          message: `Your most profitable setup is "${bestS.key}" — ${eurSigned(bestS.avg, 2)} per trade across ${bestS.count} trades (${bestS.stats.wr.toFixed(0)}% of decided trades won).${sorted.length > 1 && worstS.avg < 0 ? ` Your costliest is "${worstS.key}" at ${eurSigned(worstS.avg, 2)} per trade.` : ''}`,
+          valuePct: bestS.stats.wr, valueEur: bestS.avg })
+      } else {
+        push({ category: 'trading', source: 'trades', priority: 'medium',
+          message: `None of your tagged setups is profitable yet — the best is "${bestS.key}" at ${eurSigned(bestS.avg, 2)} per trade across ${bestS.count} trades. Cut the weakest before adding size anywhere.`,
+          valuePct: bestS.stats.wr, valueEur: bestS.avg })
+      }
     }
   }
 

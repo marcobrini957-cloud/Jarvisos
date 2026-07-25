@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { computeBreakdowns, type Segment } from '@/lib/trading/breakdowns'
 import { computeStats } from '@/lib/trading/stats'
+import { eurSigned } from '@/lib/utils/formatting'
 import type { Trade } from '@/types'
 import type { VelquorInsight } from '@/lib/intelligence'
 import InsightCard from '@/components/ui/InsightCard'
@@ -37,13 +38,16 @@ function prettySession(key: string): string {
   return key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 }
 
-function bestOf(segs: Segment[]): Segment | null {
-  const eligible = segs.filter(s => s.trades >= 4)
+/** Top segment by net P&L — but only if it actually made money. Ranking a
+ *  losing segment "best" (a setup averaging −€15/trade was once labelled
+ *  "Best setup") tells the trader to do more of what is costing them. */
+function bestOf(segs: Segment[], minTrades = 4): Segment | null {
+  const eligible = segs.filter(s => s.trades >= minTrades && s.netPnl > 0)
   if (eligible.length === 0) return null
   return eligible.reduce((a, b) => (b.netPnl > a.netPnl ? b : a))
 }
-function worstOf(segs: Segment[]): Segment | null {
-  const eligible = segs.filter(s => s.trades >= 4)
+function worstOf(segs: Segment[], minTrades = 4): Segment | null {
+  const eligible = segs.filter(s => s.trades >= minTrades && s.netPnl < 0)
   if (eligible.length === 0) return null
   return eligible.reduce((a, b) => (b.netPnl < a.netPnl ? b : a))
 }
@@ -60,10 +64,10 @@ export function buildEdgeFacts(allRows: Trade[]): EdgeFact[] {
   const bestSetup   = bestOf(b.bySetup)
 
   const facts: EdgeFact[] = []
-  if (bestSymbol)  facts.push({ label: 'Best instrument',  value: bestSymbol.key,  sub: `+€${bestSymbol.netPnl.toFixed(0)} · ${bestSymbol.winRate.toFixed(0)}% WR · ${bestSymbol.trades} trades`, color: 'var(--gr2)' })
-  if (worstSymbol && worstSymbol.netPnl < 0) facts.push({ label: 'Worst instrument', value: worstSymbol.key, sub: `€${worstSymbol.netPnl.toFixed(0)} · ${worstSymbol.winRate.toFixed(0)}% WR · ${worstSymbol.trades} trades`, color: 'var(--re)' })
-  if (bestSession) facts.push({ label: 'Best session',     value: prettySession(bestSession.key), sub: `+€${bestSession.netPnl.toFixed(0)} · ${bestSession.winRate.toFixed(0)}% WR`, color: 'var(--gr2)' })
-  if (bestSetup)   facts.push({ label: 'Best setup',       value: bestSetup.key,   sub: `avg €${bestSetup.expectancy.toFixed(0)} per trade`, color: 'var(--gr2)' })
+  if (bestSymbol)  facts.push({ label: 'Best instrument',  value: bestSymbol.key,  sub: `${eurSigned(bestSymbol.netPnl)} · ${bestSymbol.winRate.toFixed(0)}% WR · ${bestSymbol.trades} trades`, color: 'var(--gr2)' })
+  if (worstSymbol) facts.push({ label: 'Worst instrument', value: worstSymbol.key, sub: `${eurSigned(worstSymbol.netPnl)} · ${worstSymbol.winRate.toFixed(0)}% WR · ${worstSymbol.trades} trades`, color: 'var(--re)' })
+  if (bestSession) facts.push({ label: 'Best session',     value: prettySession(bestSession.key), sub: `${eurSigned(bestSession.netPnl)} · ${bestSession.winRate.toFixed(0)}% WR`, color: 'var(--gr2)' })
+  if (bestSetup)   facts.push({ label: 'Best setup',       value: bestSetup.key,   sub: `${eurSigned(bestSetup.expectancy)} per trade · ${bestSetup.trades} trades`, color: 'var(--gr2)' })
   if (s && s.totalTrades >= 5) {
     facts.push({
       label: 'Profit factor',
@@ -79,8 +83,10 @@ export function buildEdgeFacts(allRows: Trade[]): EdgeFact[] {
     })
     facts.push({
       label: 'Avg profit per trade',
-      value: `€${s.expectancy.toFixed(2)}/trade`,
-      sub:   `Across ${s.totalTrades} trades (break-evens excluded)`,
+      value: `${eurSigned(s.expectancy, 2)}/trade`,
+      // Expectancy is measured per DECIDED trade — break-evens are excluded
+      // from both sides, so quoting the full trade count here was wrong.
+      sub:   `Across ${s.decidedTrades} decided trades${s.totalTrades > s.decidedTrades ? ` · ${s.totalTrades - s.decidedTrades} break-evens excluded` : ''}`,
       color: s.expectancy >= 0 ? 'var(--gr2)' : 'var(--re)',
     })
     facts.push({
@@ -89,8 +95,8 @@ export function buildEdgeFacts(allRows: Trade[]): EdgeFact[] {
       sub:   `Worst run = ${s.maxConsecLosses} losses in a row — plan your stop-day rule around it`,
     })
   }
-  if (b.bestCombo) facts.push({ label: 'Strongest combo',  value: b.bestCombo.label, sub: `+€${b.bestCombo.netPnl.toFixed(0)} · ${b.bestCombo.winRate.toFixed(0)}% WR`, color: 'var(--gr2)' })
-  if (b.worstCombo) facts.push({ label: 'Most damaging combo', value: b.worstCombo.label, sub: `€${b.worstCombo.netPnl.toFixed(0)} · ${b.worstCombo.winRate.toFixed(0)}% WR`, color: 'var(--re)' })
+  if (b.bestCombo)  facts.push({ label: 'Strongest combo',      value: b.bestCombo.label,  sub: `${eurSigned(b.bestCombo.netPnl)} · ${b.bestCombo.winRate.toFixed(0)}% WR`,  color: 'var(--gr2)' })
+  if (b.worstCombo) facts.push({ label: 'Most damaging combo', value: b.worstCombo.label, sub: `${eurSigned(b.worstCombo.netPnl)} · ${b.worstCombo.winRate.toFixed(0)}% WR`, color: 'var(--re)' })
   return facts
 }
 

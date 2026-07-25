@@ -1,3 +1,4 @@
+import { eur } from '@/lib/utils/formatting'
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 export const TROY_OZ_TO_GRAMS = 31.1034768
@@ -10,7 +11,8 @@ export const METAL_OPTIONS: Record<string, { label: string; symbol: string; colo
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 export function fmtEur(n: number): string {
-  return `€${Math.abs(n).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  // en-US grouping everywhere — see AccountMenu for why this is not de-AT.
+  return eur(Math.abs(n))
 }
 export function fmtPct(n: number): string {
   return `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`

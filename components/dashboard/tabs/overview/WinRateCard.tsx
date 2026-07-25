@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BE_THRESHOLD } from '@/hooks/useTrades'
 import { WinRing } from './WinRing'
 
@@ -37,6 +37,69 @@ function periodRange(key: PeriodKey): { from: Date; to: Date } | null {
   }
 }
 
+function PeriodMenu({ value, onChange }: { value: PeriodKey; onChange: (k: PeriodKey) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [open])
+
+  const current = PERIODS.find(p => p.key === value)?.label ?? ''
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '5px',
+          fontSize: '10px', fontWeight: 600, letterSpacing: '0.02em',
+          color: open ? 'var(--t1)' : 'var(--t2)',
+          background: 'var(--s2)', border: '1px solid var(--bd2)',
+          borderRadius: '6px', padding: '3px 7px', cursor: 'pointer',
+          transition: 'color 0.12s, border-color 0.12s',
+        }}
+      >
+        {current}
+        <span style={{
+          fontSize: '7px', lineHeight: 1, color: 'var(--t3)',
+          transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s',
+        }}>▼</span>
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 5px)', right: 0, zIndex: 20,
+          background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
+          boxShadow: 'var(--shadow-lg)', padding: '4px', minWidth: '104px',
+          animation: 'fade-in 0.12s ease',
+        }}>
+          {PERIODS.map(p => (
+            <button
+              key={p.key}
+              onClick={() => { onChange(p.key); setOpen(false) }}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left',
+                padding: '5px 8px', borderRadius: '5px', border: 'none',
+                background: p.key === value ? 'rgba(255,255,255,0.06)' : 'transparent',
+                color: p.key === value ? 'var(--t1)' : 'var(--t2)',
+                fontSize: '11px', fontWeight: p.key === value ? 600 : 400, cursor: 'pointer',
+              }}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Win-rate metric card with a period switcher (month / quarters / year / all).
 export function WinRateCard({ trades }: { trades: TradeLike[] }) {
   const [period, setPeriod] = useState<PeriodKey>('month')
@@ -62,23 +125,15 @@ export function WinRateCard({ trades }: { trades: TradeLike[] }) {
       border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
-        <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>Win Rate</span>
-        <select
-          value={period}
-          onChange={e => setPeriod(e.target.value as PeriodKey)}
-          style={{
-            fontSize: '10px', fontWeight: 600, color: 'var(--t2)',
-            background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px',
-            padding: '2px 4px', cursor: 'pointer', outline: 'none', maxWidth: '92px',
-          }}
-        >
-          {PERIODS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
-        </select>
+        <span className="label-caps">Win Rate</span>
+        {/* A native <select> drops the OS control (and its chevron) into the
+            middle of the instrument cluster. This is a menu we draw ourselves. */}
+        <PeriodMenu value={period} onChange={setPeriod} />
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         <WinRing wr={wr} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--t1)' }}>{wins}W / {losses}L</span>
+          <span className="num" style={{ fontSize: '15px', fontWeight: 600, color: 'var(--t1)' }}>{wins}W / {losses}L</span>
           <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
             {count > 0 ? `${count} trades` : 'No trades in period'}
           </span>

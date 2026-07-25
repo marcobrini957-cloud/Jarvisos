@@ -100,7 +100,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
   )
 
   const shell = (body: React.ReactNode) => (
-    <Panel title="Net Worth" accent="var(--gr2)" fill className="h-full" action={yearButtons}>
+    <Panel title="Net Worth" fill className="h-full" action={yearButtons}>
       {body}
     </Panel>
   )
@@ -138,9 +138,13 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
   const cH = H - PAD.t - PAD.b
   const bottom = PAD.t + cH
 
-  // Calendar-year x-axis: Jan 1 → Dec 31 (→ now for the current year).
-  const xStart = Date.UTC(year, 0, 1)
-  const xEnd   = year === currentYear ? Date.now() : Date.UTC(year, 11, 31, 23, 59, 59)
+  // X-axis starts where the data starts, not on 1 January. An account funded in
+  // June rendered five empty months of gridlines with the whole curve crushed
+  // into the right quarter of the panel — it read as a broken chart.
+  const yearStart = Date.UTC(year, 0, 1)
+  const firstMs   = points[0].ms
+  const xStart    = Math.max(yearStart, firstMs - 2 * 86_400_000)
+  const xEnd      = year === currentYear ? Date.now() : Date.UTC(year, 11, 31, 23, 59, 59)
   const xSpan  = Math.max(1, xEnd - xStart)
   const xOfMs = (ms: number) => PAD.l + Math.max(0, Math.min(1, (ms - xStart) / xSpan)) * cW
   const yOf   = (v: number) => PAD.t + (1 - (v - lo) / range) * cH
@@ -153,11 +157,12 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
   const lastX = coords[n - 1].x, firstX = coords[0].x
   const areaPath = `${linePath} L${lastX.toFixed(1)},${bottom.toFixed(1)} L${firstX.toFixed(1)},${bottom.toFixed(1)} Z`
 
-  // Month gridlines / labels across the year
+  // Month gridlines / labels — only across the span that actually has data
   const months: { x: number; label: string }[] = []
   for (let m = 0; m < 12; m++) {
     const ms = Date.UTC(year, m, 1)
     if (ms > xEnd) break
+    if (ms < xStart) continue
     months.push({ x: xOfMs(ms), label: MON[m] })
   }
 
@@ -192,7 +197,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
         <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '4px' }}>
           {activeDateStr}
         </p>
-        <p style={{ color: 'var(--t1)', fontSize: '28px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>
+        <p className="num" style={{ color: 'var(--t1)', fontSize: '28px', fontWeight: 600, lineHeight: 1 }}>
           €{eur2(activeVal)}
         </p>
       </div>
@@ -231,7 +236,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
       >
         <defs>
           <linearGradient id="nwFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor={fillColor} stopOpacity="0.26" />
+            <stop offset="0%"   stopColor={fillColor} stopOpacity="0.16" />
             <stop offset="100%" stopColor={fillColor} stopOpacity="0.01" />
           </linearGradient>
         </defs>
@@ -247,7 +252,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
 
         {/* Line */}
         <path className="nw-line" d={linePath} pathLength={1} fill="none" stroke={lineColor}
-          strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          strokeWidth="1.75" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
 
         {/* Final dot */}
         {(hover === null || hover.idx !== n - 1) && (
