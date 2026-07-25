@@ -367,3 +367,39 @@ Open questions for Marco on this proof:
 1. Is the density right, or push further?
 2. Metric strip as one bordered band vs separate tiles?
 3. Does the wordmark want more presence?
+
+---
+
+## 10. Build log
+
+**Stage 0 — DONE** (383cf91). Coolvetica + JetBrains Mono self-hosted, subset to
+Latin plus trading symbols, 7 faces / 175KB. `@theme` token block added
+alongside the legacy palette; nothing applied globally. `/fonts` added to
+proxy.ts's public list — it was 307-ing to /login, so signed-out visitors would
+have seen the fallback font.
+
+**Stage 1 — DONE** (6bfc1a5). `components/ui/vq`: Surface, MetricStrip, Num,
+Label, Segmented, Row, RunStrip, DataTable.
+
+**Stage 2 — DONE, awaiting sign-off** (6bfc1a5). Overview rebuilt at both
+breakpoints. Greeting hero replaced by a status line; five figures in one band;
+net worth, calendar, streaks, focus and edge facts all on new tokens.
+
+### Open questions for Marco on the proof
+1. **Density** — right, or push tighter?
+2. **Win rate** now reads all-time (61.0%) rather than this month (85%) because
+   the strip has no room for the period switcher. Keep all-time, or restore the
+   control?
+3. **Metric strip** — one band (as built) vs separate tiles?
+4. **Wordmark** — Coolvetica Heavy Compressed is not in the UI yet; it only
+   appears in `design/proof-01-overview.html`. It goes in with the chrome.
+
+### Known remaining in the Overview
+- Chrome (Topbar, TabBar, MobileNav) still in the old language — shared by all
+  12 tabs, belongs to Stage 3.
+- `SessionClock` still uses a purple accent — a chroma violation to clean up
+  with the chrome.
+- Mobile "Daily risk" panel still has a red border treatment from the old system.
+
+**Stage 3 — NEXT.** Chrome first (it frames every tab), then the remaining 11
+tabs in order of use, each verified at 1512px and 390px.
