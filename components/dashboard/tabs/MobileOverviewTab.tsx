@@ -14,7 +14,6 @@ import { formatValue }        from '@/lib/utils/formatting'
 import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
 import InsightCard            from '@/components/ui/InsightCard'
 import { NetWorthCurve }      from './trading/NetWorthCurve'
-import DailyPnLChart          from '@/components/ui/DailyPnLChart'
 import { buildEdgeFacts, Fact } from './overview/EdgeReport'
 import SessionClock           from '@/components/ui/SessionClock'
 import DailyMaxLoss           from '@/components/ui/DailyMaxLoss'
@@ -275,12 +274,6 @@ export default function MobileOverviewTab() {
 
       {/* ── Net Worth (MT5 balance + portfolio, over time) ── */}
       <NetWorthCurve portfolioValue={totalValueEur} />
-
-      {/* ── Daily P&L — 30 days ────────────────────────────────── */}
-      <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid var(--bd2)' }}>
-        <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>Daily P&L</span>
-        <DailyPnLChart days={30} height={130} showStats />
-      </div>
 
       {/* ── Daily Max Loss ─────────────────────────────────────── */}
       <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid rgba(255,61,80,0.15)' }}>

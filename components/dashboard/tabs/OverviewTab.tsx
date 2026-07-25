@@ -16,7 +16,6 @@ import Panel                  from '@/components/ui/Panel'
 import Icon                   from '@/components/ui/Icon'
 import SessionClock           from '@/components/ui/SessionClock'
 import { NetWorthCurve }      from './trading/NetWorthCurve'
-import DailyPnLChart          from '@/components/ui/DailyPnLChart'
 import { useUserProfile }     from '@/context/UserProfileContext'
 import { useIsMobile, greeting, fmtEur, fmtPnl, fullDate } from './overview/helpers'
 import { TradeCalendar } from './overview/TradeCalendar'
@@ -255,18 +254,9 @@ export default function OverviewTab() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════
-          CHARTS — Equity Curve + Daily P&L (equal-height row)
+          NET WORTH — full width now that Daily P&L is gone
       ══════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-stretch">
-        <div className="lg:col-span-3">
-          <NetWorthCurve portfolioValue={totalValueEur} />
-        </div>
-        <div className="lg:col-span-2">
-          <Panel title="Daily P&L" className="h-full">
-            <DailyPnLChart days={30} height={130} showStats />
-          </Panel>
-        </div>
-      </div>
+      <NetWorthCurve portfolioValue={totalValueEur} />
 
       {/* ══════════════════════════════════════════════════════════
           CALENDAR + STREAKS/FOCUS (equal-height row)
