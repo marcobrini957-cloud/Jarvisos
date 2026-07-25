@@ -12,6 +12,7 @@ import ScreenshotGallery from '@/components/ui/ScreenshotGallery'
 import SessionAnalyticsChart from '@/components/ui/SessionAnalyticsChart'
 import type { Trade } from '@/types'
 import { BE_THRESHOLD } from '@/lib/trading/stats'
+import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
 import {
   filterByPeriod, calcPnl, calcWinRate, calcPips,
   fmtPnl, fmtPips, fmtDate, fmtTime, MON, buildHeatmap, heatColor,
@@ -62,6 +63,27 @@ export default function TradingTab() {
 
   const heatmap    = buildHeatmap(trades)
   const maxAbsPnl  = Math.max(1, ...( stats?.weeklyPnl.map(Math.abs) ?? [1]))
+
+  // Percent return for a period, time-weighted so deposits and withdrawals move
+  // the capital base without ever counting as performance. This is what makes
+  // the figure agree with the Growth line in MetaTrader's own report.
+  const returnPctFor = (p: Period): number => {
+    const periodTrades = filterByPeriod(trades, p)
+    if (periodTrades.length === 0 || balance <= 0) return 0
+    const earliest = periodTrades
+      .map(t => t.close_time ?? '')
+      .filter(Boolean)
+      .sort()[0]
+    if (!earliest) return 0
+
+    const events: ReturnEvent[] = [
+      ...periodTrades.map(t => ({ at: t.close_time!, amount: t.net_profit ?? 0, kind: 'trade' as const })),
+      ...balanceOps
+        .filter(t => t.close_time && t.close_time >= earliest)
+        .map(t => ({ at: t.close_time!, amount: t.net_profit ?? 0, kind: 'funding' as const })),
+    ]
+    return periodReturnPct({ endBalance: balance, events })
+  }
 
   // Best/worst setup from tags
   const tagStats = new Map<string, { wins: number; total: number }>()
@@ -267,15 +289,15 @@ export default function TradingTab() {
             if (t.length === 0) return <>No closed trades {phrase} yet, so there&apos;s no return to show for this timeframe.</>
             const pnl = calcPnl(t)
             if (balance <= 0) return <>Across your {t.length} trade{t.length !== 1 ? 's' : ''} {phrase} you {pnl >= 0 ? 'made' : 'lost'} <strong style={{ color: pnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{eur(pnl)}</strong>. Connect your MT5 account so we know your balance and can show this as a percentage return.</>
-            const pct = (pnl / balance) * 100
-            return <>Return is your net P&amp;L over this period as a <strong style={{ color: 'var(--t1)' }}>percentage of your account balance</strong>, so it&apos;s comparable whatever your account size. Across your {t.length} trade{t.length !== 1 ? 's' : ''} {phrase}, you {pnl >= 0 ? 'made' : 'lost'} <strong style={{ color: pnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{eur(pnl)}</strong> — a <strong style={{ color: pct >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{pct >= 0 ? '+' : ''}{pct.toFixed(2)}%</strong> return on your {eur(balance)} balance.</>
+            const pct = returnPctFor(p)
+            return <>Return is your net P&amp;L over this period as a <strong style={{ color: 'var(--t1)' }}>percentage of the capital you were actually trading</strong> — money you paid in or took out never counts as profit, so this matches the Growth figure in MetaTrader&apos;s own report. Across your {t.length} trade{t.length !== 1 ? 's' : ''} {phrase}, you {pnl >= 0 ? 'made' : 'lost'} <strong style={{ color: pnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{eur(pnl)}</strong> — a <strong style={{ color: pct >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{pct >= 0 ? '+' : ''}{pct.toFixed(2)}%</strong> return.</>
           }}
           getValue={(p) => {
             const t = filterByPeriod(trades, p)
             if (t.length === 0) return { value: '—', change: 'No trades', changePositive: null }
             const pnl = calcPnl(t)
             if (balance <= 0) return { value: fmtPnl(pnl), change: `${t.length} trade${t.length !== 1 ? 's' : ''} · connect MT5 for %`, changePositive: pnl > 0 ? true : pnl < 0 ? false : null }
-            const pct = (pnl / balance) * 100
+            const pct = returnPctFor(p)
             return { value: `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`, change: `${fmtPnl(pnl)} · ${t.length} trade${t.length !== 1 ? 's' : ''}`, changePositive: pct > 0 ? true : pct < 0 ? false : null }
           }}
         />

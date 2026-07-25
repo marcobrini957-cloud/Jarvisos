@@ -6,7 +6,7 @@ const rateLimit = require('express-rate-limit');
 const sharp = require('sharp');
 const { createClient } = require('@supabase/supabase-js');
 const {
-  mapOpenPosition, mapClosedTrade, versionLt,
+  mapOpenPosition, mapClosedTrade, mapBalanceOp, versionLt,
   SETTINGS_DEFAULTS, mergeSettings,
 } = require('./lib');
 
@@ -297,9 +297,15 @@ app.post('/sync', wrap(async (req, res) => {
   }
 
   // 2+3. trades — batched into at most two upsert calls instead of one per row
+  //
+  // balance_ops (EA 2.24+) are deposits / withdrawals / credit, stored with
+  // symbol='BALANCE' — the convention the app already uses to separate funding
+  // from performance. Without them every percentage return drifts away from the
+  // broker's own Growth figure as soon as money moves in or out.
   const rows = [
     ...(Array.isArray(body.open_positions) ? body.open_positions.map(p => mapOpenPosition(p, user.id)) : []),
     ...(Array.isArray(body.closed_trades)  ? body.closed_trades.map(t => mapClosedTrade(t, user.id))   : []),
+    ...(Array.isArray(body.balance_ops)    ? body.balance_ops.map(o => mapBalanceOp(o, user.id)).filter(Boolean) : []),
   ].map(r => ({ ...r, mt5_login: loginNum }));
   if (rows.length > 0) {
     const { error } = await supabase.from('trades').upsert(rows, { onConflict: 'mt5_ticket' });

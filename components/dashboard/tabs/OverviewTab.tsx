@@ -11,6 +11,7 @@ import { useHabits }          from '@/hooks/useHabits'
 import { useDisplayMode }     from '@/context/DisplayModeContext'
 import { generateInsights }   from '@/lib/intelligence'
 import { formatValue }        from '@/lib/utils/formatting'
+import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
 import Panel                  from '@/components/ui/Panel'
 import Icon                   from '@/components/ui/Icon'
 import SessionClock           from '@/components/ui/SessionClock'
@@ -127,18 +128,19 @@ export default function OverviewTab() {
 
   const monthPnl = stats?.monthPnl ?? 0
 
-  // Return is measured against what the account started the month with — not
-  // today's balance, which already contains this month's profit and any money
-  // paid in since the 1st. Dividing by the end balance understates a good month
-  // and flatters a bad one.
-  const monthDeposits = useMemo(() =>
-    allRows
-      .filter(t => t.symbol === 'BALANCE' && t.close_time && new Date(t.close_time) >= monthStart)
-      .reduce((s, t) => s + (t.net_profit ?? 0), 0),
-  [allRows, monthStart])
-
-  const monthStartBalance = balance - monthPnl - monthDeposits
-  const monthPnlPct = monthStartBalance > 0 ? (monthPnl / monthStartBalance) * 100 : 0
+  // Percent return is time-weighted, so it matches the Growth figure in
+  // MetaTrader's own report. Dividing profit by a single balance disagrees with
+  // the broker whenever money moved in or out mid-period. See lib/trading/returns.
+  const monthPnlPct = useMemo(() => {
+    const events: ReturnEvent[] = allRows
+      .filter(t => t.close_time && new Date(t.close_time) >= monthStart)
+      .map(t => ({
+        at:     t.close_time!,
+        amount: t.net_profit ?? 0,
+        kind:   t.symbol === 'BALANCE' ? 'funding' : 'trade',
+      }))
+    return periodReturnPct({ endBalance: balance, events })
+  }, [allRows, monthStart, balance])
 
   const bestHabitStreak = habits.length > 0 ? Math.max(...habits.map(h => calcStreak(h.id))) : 0
 
@@ -233,7 +235,7 @@ export default function OverviewTab() {
               value={todayPnl !== 0 ? fmtPnl(todayPnl) : '€0.00'}
               valueColor={todayColor}
               sub={todayPnl !== 0
-                ? `${(monthStartBalance > 0 ? todayPnl / monthStartBalance * 100 : 0).toFixed(2)}% of balance`
+                ? `${(balance > 0 ? todayPnl / (balance - todayPnl) * 100 : 0).toFixed(2)}% of balance`
                 : 'No closed trades today'}
             />
 

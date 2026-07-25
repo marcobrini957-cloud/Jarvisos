@@ -11,6 +11,7 @@ import { useDisplayMode }     from '@/context/DisplayModeContext'
 import { useUserProfile }     from '@/context/UserProfileContext'
 import { generateInsights }   from '@/lib/intelligence'
 import { formatValue }        from '@/lib/utils/formatting'
+import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
 import InsightCard            from '@/components/ui/InsightCard'
 import { NetWorthCurve }      from './trading/NetWorthCurve'
 import DailyPnLChart          from '@/components/ui/DailyPnLChart'
@@ -143,7 +144,18 @@ export default function MobileOverviewTab() {
   const edgeFacts    = useMemo(() => buildEdgeFacts(allRows), [allRows])
 
   const monthPnl    = stats?.monthPnl ?? 0
-  const monthPnlPct = balance > 0 ? (monthPnl / balance) * 100 : 0
+  // Time-weighted, so it matches MetaTrader's Growth — see lib/trading/returns
+  const monthPnlPct = useMemo(() => {
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    const events: ReturnEvent[] = allRows
+      .filter(t => t.close_time && new Date(t.close_time) >= monthStart)
+      .map(t => ({
+        at:     t.close_time!,
+        amount: t.net_profit ?? 0,
+        kind:   t.symbol === 'BALANCE' ? 'funding' : 'trade',
+      }))
+    return periodReturnPct({ endBalance: balance, events })
+  }, [allRows, balance])
 
   const todayColor = todayPnl > 0 ? 'var(--gr2)' : todayPnl < 0 ? 'var(--re)' : 'var(--t2)'
   const monthColor = monthPnl >= 0 ? 'var(--gr2)' : 'var(--re)'
@@ -219,7 +231,7 @@ export default function MobileOverviewTab() {
         <StatCard
           label="Today P&L"
           value={todayPnl !== 0 ? fmtPnl(todayPnl) : '€0'}
-          sub={todayPnl !== 0 ? `${(balance > 0 ? todayPnl / balance * 100 : 0).toFixed(2)}%` : 'No trades today'}
+          sub={todayPnl !== 0 ? `${(balance > 0 ? todayPnl / (balance - todayPnl) * 100 : 0).toFixed(2)}%` : 'No trades today'}
           color={todayColor}
           bg={todayPnl !== 0 ? `rgba(${todayPnl > 0 ? '0,232,122' : '255,61,80'},0.07)` : 'rgba(255,255,255,0.03)'}
           border={todayPnl !== 0 ? (todayPnl > 0 ? 'rgba(0,232,122,0.18)' : 'rgba(255,61,80,0.18)') : 'var(--bd2)'}

@@ -31,7 +31,7 @@ describe('bridge calcPips', () => {
 })
 
 // ── v2 helpers ───────────────────────────────────────────────────────────────
-import { versionLt, mapOpenPosition, mapClosedTrade, mergeSettings, SETTINGS_DEFAULTS } from '../bridge/lib.js'
+import { versionLt, mapOpenPosition, mapClosedTrade, mapBalanceOp, mergeSettings, SETTINGS_DEFAULTS } from '../bridge/lib.js'
 
 describe('bridge versionLt', () => {
   it('orders dotted versions numerically', () => {
@@ -81,5 +81,30 @@ describe('bridge mergeSettings', () => {
     expect(s.rate_limit_copy).toBe(SETTINGS_DEFAULTS.rate_limit_copy)
     expect(s.min_ea_version).toBe('2.10')
     expect(mergeSettings({ min_ea_version: 'DROP TABLE' }).min_ea_version).toBe(SETTINGS_DEFAULTS.min_ea_version)
+  })
+})
+
+describe('bridge mapBalanceOp', () => {
+  it('maps a deposit to a BALANCE row the app can read', () => {
+    const r = mapBalanceOp({ ticket: 991, kind: 'balance', amount: 249.34, time: 1784110214, comment: 'Deposit' }, 'u1')
+    expect(r.symbol).toBe('BALANCE')
+    expect(r.net_profit).toBe(249.34)
+    expect(r.status).toBe('closed')
+    expect(r.notes).toBe('Deposit')
+    // prefixed so a deal ticket can never collide with a position id
+    expect(r.mt5_ticket).toBe('bal_991')
+  })
+
+  it('maps a withdrawal as a negative amount', () => {
+    const r = mapBalanceOp({ ticket: 992, kind: 'balance', amount: -500, time: 1784110214 }, 'u1')
+    expect(r.net_profit).toBe(-500)
+    expect(r.trade_type).toBe('sell')
+  })
+
+  it('drops zero and malformed operations', () => {
+    expect(mapBalanceOp({ ticket: 1, amount: 0, time: 1784110214 }, 'u1')).toBeNull()
+    expect(mapBalanceOp({ ticket: 2, amount: 'x', time: 1784110214 }, 'u1')).toBeNull()
+    expect(mapBalanceOp({ ticket: 3, amount: 10, time: 0 }, 'u1')).toBeNull()
+    expect(mapBalanceOp(null, 'u1')).toBeNull()
   })
 })

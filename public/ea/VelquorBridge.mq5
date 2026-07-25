@@ -4,7 +4,7 @@
 //|  Place in: MQL5/Experts/VelquorBridge.mq5                        |
 //+------------------------------------------------------------------+
 #property copyright "VELQUOR"
-#property version   "2.22"
+#property version   "2.24"
 #property strict
 
 #include <Trade\Trade.mqh>
@@ -51,7 +51,7 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.23";
+string   g_eaVersion   = "2.24";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // follower: throttles PostSync inside the fast timer
@@ -1192,9 +1192,15 @@ string BuildPayload()
    double marginLevel = (margin > 0) ? (equity / margin * 100.0) : 0.0;
    int    openCount   = PositionsTotal();
 
+   // Credit is broker money (bonus / credit line), not the trader's. Without it
+   // the site cannot tell a €140 bonus apart from €140 of floating profit, and
+   // net worth silently counts it as the user's capital.
+   double credit      = AccountInfoDouble(ACCOUNT_CREDIT);
+
    out += "\"account\":{";
    out += "\"balance\":"           + DoubleToStr(balance,     2) + ",";
    out += "\"equity\":"            + DoubleToStr(equity,      2) + ",";
+   out += "\"credit\":"            + DoubleToStr(credit,      2) + ",";
    out += "\"margin_used\":"       + DoubleToStr(margin,      2) + ",";
    out += "\"free_margin\":"       + DoubleToStr(freeMargin,  2) + ",";
    out += "\"margin_level_pct\":"  + DoubleToStr(marginLevel, 2) + ",";
@@ -1307,6 +1313,45 @@ string BuildPayload()
       out += "\"swap\":"        + DoubleToStr(swap,    2) + ",";
       out += "\"open_time\":"   + IntegerToString(openTime) + ",";
       out += "\"close_time\":"  + IntegerToString(closeTime);
+      out += "}";
+   }
+   out += "]";
+
+   // Balance operations — deposits, withdrawals, credit, corrections.
+   //
+   // These were dropped entirely (the loop above only keeps DEAL_TYPE_BUY/SELL),
+   // so the site never learned that money moved in or out. That breaks any
+   // percentage return: a mid-month deposit makes profit look like it was earned
+   // on smaller capital than it was, and the figure stops agreeing with the
+   // Growth line in MetaTrader's own report.
+   out += ",\"balance_ops\":[";
+   bool firstOp = true;
+   for(int i = 0; i < dealTotal; i++)
+   {
+      ulong dealTicket = HistoryDealGetTicket(i);
+      if(dealTicket == 0) continue;
+
+      ENUM_DEAL_TYPE dt = (ENUM_DEAL_TYPE)HistoryDealGetInteger(dealTicket, DEAL_TYPE);
+      if(dt != DEAL_TYPE_BALANCE && dt != DEAL_TYPE_CREDIT &&
+         dt != DEAL_TYPE_CORRECTION && dt != DEAL_TYPE_BONUS) continue;
+
+      double amount = HistoryDealGetDouble(dealTicket, DEAL_PROFIT);
+      long   opTime = (long)HistoryDealGetInteger(dealTicket, DEAL_TIME);
+
+      string kind = "balance";
+      if(dt == DEAL_TYPE_CREDIT)          kind = "credit";
+      else if(dt == DEAL_TYPE_CORRECTION) kind = "correction";
+      else if(dt == DEAL_TYPE_BONUS)      kind = "bonus";
+
+      if(!firstOp) out += ",";
+      firstOp = false;
+
+      out += "{";
+      out += "\"ticket\":"  + IntegerToString((long)dealTicket) + ",";
+      out += "\"kind\":\""  + kind + "\",";
+      out += "\"amount\":"  + DoubleToStr(amount, 2) + ",";
+      out += "\"comment\":\"" + EscapeJson(HistoryDealGetString(dealTicket, DEAL_COMMENT)) + "\",";
+      out += "\"time\":"    + IntegerToString(opTime);
       out += "}";
    }
    out += "]";

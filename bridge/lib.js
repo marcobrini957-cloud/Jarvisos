@@ -91,6 +91,41 @@ function mapClosedTrade(trade, userId) {
   };
 }
 
+// Deposits / withdrawals / credit, stored as symbol='BALANCE' rows — the shape
+// the web app already reads to keep funding out of performance figures. The EA
+// only started sending these in 2.24; before that money movements were invisible
+// to the site, which is why percentage returns drifted from MetaTrader's report.
+function mapBalanceOp(op, userId) {
+  const amount = Number(op && op.amount);
+  const when   = Number(op && op.time);
+  if (!Number.isFinite(amount) || amount === 0) return null;
+  if (!Number.isFinite(when)   || when <= 0)    return null;
+
+  const at = new Date(when * 1000).toISOString();
+  return {
+    user_id:            userId,
+    // Deal tickets share a sequence with trade tickets, so prefix to guarantee
+    // a balance op can never collide with a position id on the unique index.
+    mt5_ticket:         `bal_${op.ticket}`,
+    symbol:             'BALANCE',
+    trade_type:         amount >= 0 ? 'buy' : 'sell',
+    lot_size:           0,
+    open_price:         0,
+    close_price:        0,
+    open_time:          at,
+    close_time:         at,
+    duration_minutes:   0,
+    pips:               0,
+    profit_usd:         amount,
+    commission:         0,
+    swap:               0,
+    net_profit:         amount,
+    status:             'closed',
+    notes:              op.comment ? String(op.comment).slice(0, 200) : null,
+    screenshot_missing: false,
+  };
+}
+
 const SETTINGS_DEFAULTS = Object.freeze({
   maintenance_mode: false,
   sync_enabled:     true,
@@ -120,6 +155,6 @@ function mergeSettings(row) {
 
 module.exports = {
   detectSession, calcPips, versionLt,
-  mapOpenPosition, mapClosedTrade,
+  mapOpenPosition, mapClosedTrade, mapBalanceOp,
   SETTINGS_DEFAULTS, mergeSettings,
 };
