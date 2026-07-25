@@ -35,11 +35,14 @@ between this and a launchable product.
    account_snapshots 48h, thin to hourly after, delete >90d. Runs as
    pg_cron in Supabase or a bridge interval. Without it every connected
    account writes ~8.6K rows/day forever.
-7. **EA Connect Wizard** (~half day) — the free/pro onboarding path is a
-   text modal today. 3 steps with big copy buttons (API key, bridge URL),
-   screenshots for the MT5 WebRequest allowlist, and a live "waiting for
-   first sync… ✓ Connected!" check (poll user_profiles.ea_last_seen).
-   This is THE conversion lever for the EA path.
+7. ~~**EA Connect Wizard**~~ DONE 2026-07-25 (f26fa2a) — `/connect` +
+   `components/ea/EAConnectWizard.tsx`, also embedded in onboarding step 2 and
+   linked from Settings / Copy tab / the empty Trading tab. 3 steps with big
+   copy buttons, rendered MT5 dialog mock-ups instead of screenshots, live
+   handshake banner. Users now download a **compiled .ex5** (no MetaEditor):
+   `npm run ea:build` compiles on the bridge box and records the source hash;
+   `sync-ea.mjs` withholds the binary if it ever drifts from the .mq5.
+   ⚠️ Re-run `npm run ea:build` after every EA edit, commit the .ex5 + .json.
 8. **Copy tab: live positions card** — follower's open mirrors + balance
    (data already on copy_accounts + copy_log; Marco asked for visibility
    without logging into the follower in MT5).
