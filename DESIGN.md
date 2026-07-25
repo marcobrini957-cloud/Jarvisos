@@ -194,10 +194,25 @@ display face is for.
 **Coolvetica Heavy Compressed is the wordmark.** It is the most distinctive cut
 and is wasted on body copy.
 
-**Still to pick: the mono.** The proof uses SF Mono, which is macOS-only — it
-must be self-hosted for production. Options: Berkeley Mono (paid, the most
-characterful, best fit for the terminal identity), JetBrains Mono or Martian
-Mono (both free, self-hostable). Marco decides.
+**Mono — DECIDED: JetBrains Mono** (free, OFL, self-hosted). Compared against
+SF Mono and Martian Mono at real table density — see `design/mono-comparison.png`.
+
+Reasoning:
+- **Coolvetica is already the personality.** A second characterful face competes
+  with it. The mono's job is 70% of the screen staying legible and aligned at
+  11.5px across hundreds of rows — that is a workhorse brief, not a styling one.
+- **Martian Mono is ~15% wider** at the same size, which costs real columns in a
+  dense table. JetBrains sits between it and SF Mono.
+- **It restores the weight hierarchy Coolvetica lost.** JetBrains Mono ships
+  Thin→ExtraBold; since figures carry most of the data, weight-based emphasis
+  can live in the mono.
+- Free and OFL, so there is no licensing tier to get wrong on a commercial SaaS.
+
+**Berkeley Mono is not ruled out** — it is more characterful and would pair well
+with Coolvetica's retro-technical DNA. But `--font-mono` is a single token, so
+swapping is a one-line change. Recommendation: live with JetBrains for a week
+first, then decide whether the data voice needs more character. If bought, it
+must be the **webfont / commercial embedding tier**, not the desktop licence.
 
 ### 4.1 Typeface reference — superseded by 4.0
 
