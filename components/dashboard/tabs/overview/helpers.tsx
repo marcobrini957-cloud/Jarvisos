@@ -3,9 +3,13 @@
 import { useState, useEffect } from 'react'
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia('(max-width: 639px)').matches : false
-  )
+  // Must start `false` on the client too, not read from window in the lazy
+  // initialiser. The server has no window, so it always rendered the DESKTOP
+  // tree — while a phone hydrated straight into the MOBILE tree and React threw
+  // a hydration mismatch on every mobile dashboard load. Matching the server on
+  // the first client render costs one frame and fixes it.
+  const [isMobile, setIsMobile] = useState(false)
+
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 639px)')
     setIsMobile(mq.matches)
@@ -13,6 +17,7 @@ export function useIsMobile() {
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
   }, [])
+
   return isMobile
 }
 

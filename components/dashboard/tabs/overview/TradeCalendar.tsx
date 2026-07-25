@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { BE_THRESHOLD } from '@/hooks/useTrades'
+import { Num, Label } from '@/components/ui/vq'
 import type { Trade } from '@/types'
 
 // ── Trade Calendar ────────────────────────────────────────────────────────────
@@ -21,7 +22,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
       marginTop: '16px',
       padding: '16px',
       background: 'var(--s1)',
-      border: `1px solid ${totalPnl >= 0 ? 'rgba(0,232,122,0.2)' : 'rgba(255,61,80,0.2)'}`,
+      border: `1px solid ${totalPnl >= 0 ? 'rgba(0,196,106,0.2)' : 'rgba(240,80,75,0.2)'}`,
       borderRadius: '12px',
       animation: 'fadeIn 0.15s ease',
     }}>
@@ -34,7 +35,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <span style={{ fontSize: '20px', fontWeight: 700, color: totalPnl >= 0 ? 'var(--gr2)' : 'var(--re)', letterSpacing: '-0.03em' }}>
+          <span style={{ fontSize: '20px', fontWeight: 700, color: totalPnl >= 0 ? 'var(--color-up)' : 'var(--color-down)', letterSpacing: '-0.03em' }}>
             {totalPnl >= 0 ? '+' : ''}€{totalPnl.toFixed(2)}
           </span>
           <button onClick={onClose} style={{
@@ -50,7 +51,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {trades.map((t, i) => {
           const pnl = t.net_profit ?? 0
-          const col = pnl > BE_THRESHOLD ? 'var(--gr2)' : pnl < -BE_THRESHOLD ? 'var(--re)' : 'var(--t3)'
+          const col = pnl > BE_THRESHOLD ? 'var(--color-up)' : pnl < -BE_THRESHOLD ? 'var(--color-down)' : 'var(--t3)'
           const openTime  = t.open_time  ? new Date(t.open_time ).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'
           const closeTime = t.close_time ? new Date(t.close_time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'
           return (
@@ -59,7 +60,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
               padding: '9px 12px',
               background: 'rgba(255,255,255,0.025)',
               borderRadius: '8px',
-              border: `1px solid ${pnl > BE_THRESHOLD ? 'rgba(0,232,122,0.1)' : pnl < -BE_THRESHOLD ? 'rgba(255,61,80,0.1)' : 'var(--bd)'}`,
+              border: `1px solid ${pnl > BE_THRESHOLD ? 'rgba(0,196,106,0.1)' : pnl < -BE_THRESHOLD ? 'rgba(240,80,75,0.1)' : 'var(--bd)'}`,
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -67,8 +68,8 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
                   {t.trade_type && (
                     <span style={{
                       fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em',
-                      color: t.trade_type === 'buy' ? 'var(--gr2)' : 'var(--re)',
-                      background: t.trade_type === 'buy' ? 'rgba(0,232,122,0.1)' : 'rgba(255,61,80,0.1)',
+                      color: t.trade_type === 'buy' ? 'var(--color-up)' : 'var(--color-down)',
+                      background: t.trade_type === 'buy' ? 'rgba(0,196,106,0.1)' : 'rgba(240,80,75,0.1)',
                       padding: '1px 6px', borderRadius: '4px',
                     }}>{t.trade_type.toUpperCase()}</span>
                   )}
@@ -166,7 +167,7 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
             {monthLabel}
           </span>
           {dailyPnl.size > 0 && (
-            <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '-0.01em', marginTop: '1px', color: monthTotal >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '-0.01em', marginTop: '1px', color: monthTotal >= 0 ? 'var(--color-up)' : 'var(--color-down)' }}>
               {fmtSigned(monthTotal)}
             </span>
           )}
@@ -198,7 +199,7 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
                 {week.map((dayNum, di) => {
                   if (dayNum == null) {
-                    return <div key={`e${di}`} style={{ minHeight: '54px', border: '1px solid rgba(255,255,255,0.05)' }} />
+                    return <div key={`e${di}`} style={{ minHeight: '54px', border: '1px solid var(--color-line-1)' }} />
                   }
                   const dateStr    = dateOf(dayNum)
                   const pnl        = dailyPnl.get(dateStr)
@@ -215,8 +216,8 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
                   const wins     = decisive.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length
                   const winPct   = decisive.length > 0 ? Math.round((wins / decisive.length) * 100) : null
 
-                  const bg = isWinDay  ? 'rgba(0,232,122,0.09)'
-                           : isLossDay ? 'rgba(255,61,80,0.10)'
+                  const bg = isWinDay  ? 'rgba(0,196,106,0.09)'
+                           : isLossDay ? 'rgba(240,80,75,0.10)'
                            : has       ? 'rgba(232,201,106,0.08)'  // break-even day
                            : 'transparent'
 
@@ -227,28 +228,21 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
                       style={{
                         minHeight: '54px', padding: '5px 6px', background: bg,
                         border: isSelected
-                          ? '1.5px solid rgba(77,143,255,0.8)'
+                          ? '1.5px solid rgba(255,255,255,0.44)'
                           : isToday
-                            ? '1.5px solid rgba(77,143,255,0.55)'
-                            : '1px solid rgba(255,255,255,0.05)',
+                            ? '1.5px solid rgba(255,255,255,0.28)'
+                            : '1px solid var(--color-line-1)',
                         display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px',
                         cursor: has ? 'pointer' : 'default', transition: 'background 0.12s',
                       }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, lineHeight: 1, color: has ? 'var(--t1)' : 'var(--t3)' }}>
-                        {dayNum}
-                      </span>
+                      <Num size="2xs" tone={has ? 'neutral' : 'muted'}>{dayNum}</Num>
                       {has && (
                         <>
                           {/* Signed: a red tint alone left "€175" ambiguous —
                               a losing day must read as a loss on its own. */}
-                          <span className="num" style={{
-                            fontSize: '11px', fontWeight: 600, lineHeight: 1.1,
-                            color: pnl! >= 0 ? 'var(--gr2)' : 'var(--re)',
-                          }}>
-                            {fmtSigned(pnl!)}
-                          </span>
+                          <Num size="xs" tone={pnl! >= 0 ? 'up' : 'down'}>{fmtSigned(pnl!)}</Num>
                           {winPct != null && (
-                            <span style={{ fontSize: '9px', color: 'var(--t3)', lineHeight: 1 }}>{winPct}%</span>
+                            <Num size="2xs" tone="muted">{winPct}%</Num>
                           )}
                         </>
                       )}
@@ -263,12 +257,12 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
                   marginTop: '5px',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '8px 12px', borderRadius: '8px',
-                  background: weekPnl >= 0 ? 'rgba(0,232,122,0.045)' : 'rgba(255,61,80,0.05)',
-                  border: `1px solid ${weekPnl >= 0 ? 'rgba(0,232,122,0.12)' : 'rgba(255,61,80,0.14)'}`,
+                  background: weekPnl >= 0 ? 'rgba(0,196,106,0.045)' : 'rgba(240,80,75,0.05)',
+                  border: `1px solid ${weekPnl >= 0 ? 'rgba(0,196,106,0.12)' : 'rgba(240,80,75,0.14)'}`,
                 }}>
                   <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--t3)' }}>Week total</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '-0.02em', color: weekPnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '-0.02em', color: weekPnl >= 0 ? 'var(--color-up)' : 'var(--color-down)' }}>
                       {fmtSigned(weekPnl)}
                     </span>
                     <span style={{ fontSize: '13px', color: 'var(--t3)', lineHeight: 1 }}>›</span>

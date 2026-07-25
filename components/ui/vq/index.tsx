@@ -1,0 +1,309 @@
+'use client'
+
+/**
+ * VELQUOR 2.0 primitives.
+ *
+ * The rules these encode, so no screen has to remember them:
+ *   · Coolvetica carries words. JetBrains Mono carries every figure. Coolvetica
+ *     has no tabular set and one weight, so a number must never touch it.
+ *   · Surfaces are white at graded alpha, never solid grey.
+ *   · P&L green/red is the only chroma. Nothing else on screen is coloured.
+ *   · Small radii, hairline rules, no shadow, no gradient, no glow.
+ *
+ * See DESIGN.md.
+ */
+
+import type { ReactNode, CSSProperties } from 'react'
+
+// ── Figures ───────────────────────────────────────────────────────────────────
+
+export type Tone = 'auto' | 'neutral' | 'muted' | 'up' | 'down'
+
+function toneColor(tone: Tone, value?: number): string {
+  if (tone === 'up')      return 'var(--color-up)'
+  if (tone === 'down')    return 'var(--color-down)'
+  if (tone === 'muted')   return 'var(--color-ink-3)'
+  if (tone === 'neutral') return 'var(--color-ink-1)'
+  if (value === undefined || value === 0) return 'var(--color-ink-1)'
+  return value > 0 ? 'var(--color-up)' : 'var(--color-down)'
+}
+
+/**
+ * Every number in the product goes through here — mono, tabular, optically
+ * aligned. `value` drives the colour when tone is 'auto'.
+ */
+export function Num({ children, value, tone = 'neutral', size = 'sm', style }: {
+  children: ReactNode
+  value?:   number
+  tone?:    Tone
+  size?:    '2xs' | 'xs' | 'sm' | 'base' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
+  style?:   CSSProperties
+}) {
+  return (
+    <span
+      className="vq-num"
+      style={{ fontSize: `var(--text-${size})`, color: toneColor(tone, value), ...style }}
+    >
+      {children}
+    </span>
+  )
+}
+
+/** Uppercase micro-label. Words, so Coolvetica. */
+export function Label({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+  return <span className="vq-label" style={style}>{children}</span>
+}
+
+// ── Surface ───────────────────────────────────────────────────────────────────
+
+export function Surface({ title, action, children, padded = false, className = '', style }: {
+  title?:   ReactNode
+  action?:  ReactNode
+  children: ReactNode
+  padded?:  boolean
+  className?: string
+  style?:   CSSProperties
+}) {
+  return (
+    <div
+      className={className}
+      style={{
+        background: 'var(--color-surface-1)',
+        border: '1px solid var(--color-line-1)',
+        borderRadius: 'var(--radius-md)',
+        display: 'flex', flexDirection: 'column', minWidth: 0,
+        ...style,
+      }}
+    >
+      {title && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '10px', padding: '9px 14px',
+          borderBottom: '1px solid var(--color-line-1)',
+        }}>
+          <span style={{
+            fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+            color: 'var(--color-ink-1)', letterSpacing: '0.01em',
+          }}>
+            {title}
+          </span>
+          {action}
+        </div>
+      )}
+      <div style={{ flex: 1, minWidth: 0, padding: padded ? '14px' : undefined }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ── Metric strip ──────────────────────────────────────────────────────────────
+
+export interface Metric {
+  label: string
+  value: ReactNode
+  meta?: ReactNode
+  tone?: Tone
+  num?:  number
+}
+
+/**
+ * One bordered band of figures. Replaces the old hero: five numbers now occupy
+ * the height a single padded card used to.
+ */
+export function MetricStrip({ metrics }: { metrics: Metric[] }) {
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: `repeat(${metrics.length}, minmax(0, 1fr))`,
+      border: '1px solid var(--color-line-1)',
+      borderRadius: 'var(--radius-md)',
+      background: 'var(--color-surface-1)',
+      overflow: 'hidden',
+    }}>
+      {metrics.map((m, i) => (
+        <div
+          key={m.label}
+          style={{
+            padding: '11px 14px', minWidth: 0,
+            borderRight: i < metrics.length - 1 ? '1px solid var(--color-line-1)' : undefined,
+          }}
+        >
+          <Label>{m.label}</Label>
+          <div style={{ marginTop: '5px' }}>
+            <Num size="xl" tone={m.tone ?? 'auto'} value={m.num}>{m.value}</Num>
+          </div>
+          {m.meta && (
+            <div style={{
+              marginTop: '3px', fontSize: 'var(--text-xs)',
+              color: 'var(--color-ink-3)', fontFamily: 'var(--font-display)',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
+              {m.meta}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── Segmented control ─────────────────────────────────────────────────────────
+
+export function Segmented<T extends string>({ options, value, onChange }: {
+  options: { key: T; label: string }[]
+  value:   T
+  onChange: (k: T) => void
+}) {
+  return (
+    <div style={{
+      display: 'flex', gap: '1px', padding: '1px',
+      background: 'var(--color-surface-2)', borderRadius: 'var(--radius-sm)',
+    }}>
+      {options.map(o => {
+        const on = o.key === value
+        return (
+          <button
+            key={o.key}
+            onClick={() => onChange(o.key)}
+            style={{
+              fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+              padding: '3px 9px', borderRadius: 'var(--radius-xs)', border: 'none',
+              background: on ? 'var(--color-surface-3)' : 'transparent',
+              color: on ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
+              cursor: 'pointer', transition: 'background 0.12s, color 0.12s',
+            }}
+          >
+            {o.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Rows ──────────────────────────────────────────────────────────────────────
+
+/** key / value line inside a Surface. Hairline separated, no card nesting. */
+export function Row({ label, sub, children, last = false }: {
+  label:    ReactNode
+  sub?:     ReactNode
+  children: ReactNode
+  last?:    boolean
+}) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      gap: '12px', padding: '9px 14px',
+      borderBottom: last ? undefined : '1px solid var(--color-line-1)',
+    }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{
+          fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+          color: 'var(--color-ink-2)',
+        }}>
+          {label}
+        </div>
+        {sub && <div style={{ marginTop: '2px' }}><Label>{sub}</Label></div>}
+      </div>
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ── Run strip ─────────────────────────────────────────────────────────────────
+
+export type RunMark = 'up' | 'down' | 'flat' | 'none'
+
+const RUN_COLOR: Record<RunMark, string> = {
+  up:   'var(--color-up)',
+  down: 'var(--color-down)',
+  flat: 'var(--color-line-3)',
+  none: 'var(--color-line-1)',
+}
+
+/** Recent outcomes as tick marks — a count tells you "3", this shows what of. */
+export function RunStrip({ run, height = 13 }: { run: RunMark[]; height?: number }) {
+  return (
+    <div style={{ display: 'flex', gap: '2px', alignItems: 'flex-end', height }}>
+      {run.map((m, i) => (
+        <span key={i} style={{
+          width: '3px', borderRadius: '1px', background: RUN_COLOR[m],
+          height: m === 'none' ? height * 0.3 : m === 'flat' ? height * 0.45 : height,
+        }} />
+      ))}
+    </div>
+  )
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+
+export interface Column<T> {
+  key:    string
+  header: string
+  align?: 'left' | 'right'
+  render: (row: T) => ReactNode
+  width?: string
+}
+
+/** Dense data table. Headers are words (Coolvetica); cells should hold <Num>. */
+export function DataTable<T>({ columns, rows, rowKey, onRowClick, empty }: {
+  columns:  Column<T>[]
+  rows:     T[]
+  rowKey:   (row: T, i: number) => string
+  onRowClick?: (row: T) => void
+  empty?:   ReactNode
+}) {
+  if (rows.length === 0) {
+    return (
+      <div style={{ padding: '22px 14px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', color: 'var(--color-ink-3)' }}>
+        {empty ?? 'Nothing here yet'}
+      </div>
+    )
+  }
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            {columns.map(c => (
+              <th key={c.key} style={{
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+                letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 400,
+                color: 'var(--color-ink-3)', padding: '7px 14px',
+                textAlign: c.align ?? 'right', width: c.width,
+                borderBottom: '1px solid var(--color-line-1)', whiteSpace: 'nowrap',
+              }}>
+                {c.header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr
+              key={rowKey(r, i)}
+              onClick={onRowClick ? () => onRowClick(r) : undefined}
+              style={{ cursor: onRowClick ? 'pointer' : undefined }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-state-hover)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              {columns.map(c => (
+                <td key={c.key} style={{
+                  padding: '6px 14px', textAlign: c.align ?? 'right',
+                  borderBottom: i === rows.length - 1 ? undefined : '1px solid var(--color-line-1)',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {c.render(r)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}

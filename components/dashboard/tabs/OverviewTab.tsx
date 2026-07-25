@@ -12,15 +12,14 @@ import { useDisplayMode }     from '@/context/DisplayModeContext'
 import { generateInsights }   from '@/lib/intelligence'
 import { formatValue }        from '@/lib/utils/formatting'
 import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
-import Panel                  from '@/components/ui/Panel'
 import Icon                   from '@/components/ui/Icon'
+import { Surface, MetricStrip, Label, Num } from '@/components/ui/vq'
 import SessionClock           from '@/components/ui/SessionClock'
 import { NetWorthCurve }      from './trading/NetWorthCurve'
 import { useUserProfile }     from '@/context/UserProfileContext'
 import { useIsMobile, greeting, fmtEur, fmtPnl, fullDate } from './overview/helpers'
 import { TradeCalendar } from './overview/TradeCalendar'
 import { StreakCard, StreakBadge } from './overview/StreakCards'
-import { WinRateCard } from './overview/WinRateCard'
 import { TodaysFocus } from './overview/TodaysFocus'
 import { EdgeReport } from './overview/EdgeReport'
 
@@ -152,124 +151,103 @@ export default function OverviewTab() {
   if (isMobile) return <MobileOverviewTab />
 
   // ── Render ──────────────────────────────────────────────────────────────────
+  const payoff = stats && stats.avgLoss > 0 ? stats.avgWin / stats.avgLoss : 0
+
   return (
-    <div className="flex flex-col gap-5 fade-in">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="fade-in">
 
-      {/* ══════════════════════════════════════════════════════════
-          HERO
-      ══════════════════════════════════════════════════════════ */}
-      {/* No ambient colour washes behind the numbers — a terminal is read, not
-          decorated. Colour is reserved for data (green/red P&L). */}
-      <div className="hero-section" style={{
-        position: 'relative', overflow: 'hidden',
-        background: 'var(--s1)',
-        border: '1px solid var(--bd2)',
-        borderRadius: '16px', padding: '22px 24px 20px',
-        boxShadow: 'var(--shadow-md)',
+      {/* ── Status line ──────────────────────────────────────────────────────
+          The old hero spent ~180px on a greeting and a date. A terminal opens
+          with the account, not with a salutation — this is one 26px line. */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: '16px', flexWrap: 'wrap', minHeight: '20px',
       }}>
-        <div style={{ position: 'relative' }}>
-          {/* Row 1: date + habits + streak */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '8px' }}>
-            <p style={{ fontSize: '11px', color: 'var(--t3)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-              {fullDate()}
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              {habits.length > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{todayCompleted}/{todayTotal}</span>
-                  {habits.map(h => {
-                    const done = isCompleted(h.id, today)
-                    return <div key={h.id} title={h.name} style={{ width: '8px', height: '8px', borderRadius: '50%', background: done ? 'var(--gr2)' : 'var(--s3)', border: `1px solid ${done ? 'var(--gr)' : 'var(--bd2)'}`, boxShadow: done ? '0 0 5px rgba(0,232,122,0.55)' : 'none' }} />
-                  })}
-                </div>
-              )}
-              {bestHabitStreak >= 3 && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 500, color: 'var(--t2)' }}>
-                  <Icon name="habit" size={12} />
-                  {bestHabitStreak}d habits
-                </span>
-              )}
-              {journalStreak >= 1 && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 500, color: 'var(--t2)' }}>
-                  <Icon name="journal" size={12} />
-                  {journalStreak}d journal
-                </span>
-              )}
-            </div>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
+          <Label>{fullDate()}</Label>
+          <SessionClock />
+        </div>
 
-          {/* Row 2: greeting + streak alert */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '18px', flexWrap: 'wrap' }}>
-            <h1 className="greeting-heading" style={{ fontSize: '28px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-              {greeting()}, {profile.display_name || 'Trader'}
-            </h1>
-            <StreakBadge trades={trades} />
-            {overdueTasks.length > 0 && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 600, color: 'var(--re)', background: 'rgba(255,61,80,0.08)', padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(255,61,80,0.2)' }}>
-                <Icon name="alert" size={12} />
-                {overdueTasks.length} overdue
-              </span>
-            )}
-          </div>
-
-          {/* Row 3: Session clock */}
-          <div style={{ marginBottom: '20px', padding: '10px 14px', background: 'rgba(255,255,255,0.025)', borderRadius: '10px', border: '1px solid var(--bd2)' }}>
-            <SessionClock />
-          </div>
-
-          {/* Row 4: Metric grid */}
-          <div className="metric-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', minWidth: 0 }}>
-
-            {/* Balance */}
-            <MetricTile
-              label="MT5 Balance"
-              value={fmtEur(balance)}
-              sub={`${wins}W / ${losses}L · ${stats?.totalTrades ?? 0} trades`}
-              aside={equity > 0 && equity !== balance ? `Equity ${fmtEur(equity)}` : undefined}
-            />
-
-            {/* Today P&L */}
-            <MetricTile
-              label="Today P&L"
-              value={todayPnl !== 0 ? fmtPnl(todayPnl) : '€0.00'}
-              valueColor={todayColor}
-              sub={todayPnl !== 0
-                ? `${(balance > 0 ? todayPnl / (balance - todayPnl) * 100 : 0).toFixed(2)}% of balance`
-                : 'No closed trades today'}
-            />
-
-            {/* Month P&L */}
-            <MetricTile
-              label="Month P&L"
-              value={stats ? formatValue(monthPnl, monthPnlPct, displayMode, { showSign: true }) : '—'}
-              valueColor={monthColor}
-              sub={`${monthWins}W · ${monthLosses}L this month`}
-            />
-
-            {/* Win Rate — period-switchable */}
-            <WinRateCard trades={trades} />
-
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {habits.length > 0 && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <Label>Habits</Label>
+              <Num size="xs" tone={todayCompleted === todayTotal ? 'up' : 'muted'}>
+                {todayCompleted}/{todayTotal}
+              </Num>
+            </span>
+          )}
+          {journalStreak >= 1 && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--color-ink-3)' }}>
+              <Icon name="journal" size={11} />
+              <Num size="xs" tone="muted">{journalStreak}d</Num>
+            </span>
+          )}
+          <StreakBadge trades={trades} />
+          {overdueTasks.length > 0 && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: '6px',
+              padding: '2px 8px', borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-down-dim)', color: 'var(--color-down)',
+              fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
+            }}>
+              <Icon name="alert" size={11} />
+              {overdueTasks.length} overdue
+            </span>
+          )}
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════
-          NET WORTH — full width now that Daily P&L is gone
-      ══════════════════════════════════════════════════════════ */}
+      {/* ── Instrument cluster ───────────────────────────────────────────────
+          Five figures in the height one padded card used to take. */}
+      <MetricStrip metrics={[
+        {
+          label: 'Balance',
+          value: fmtEur(balance),
+          tone:  'neutral',
+          meta:  equity > 0 && equity !== balance ? `Equity ${fmtEur(equity)}` : `${stats?.totalTrades ?? 0} trades`,
+        },
+        {
+          label: 'Month',
+          value: stats ? formatValue(monthPnl, monthPnlPct, displayMode, { showSign: true }) : '—',
+          num:   monthPnl,
+          meta:  `${monthWins}W · ${monthLosses}L`,
+        },
+        {
+          label: 'Today',
+          value: todayPnl !== 0 ? fmtPnl(todayPnl) : '€0.00',
+          num:   todayPnl,
+          tone:  todayPnl === 0 ? 'muted' : 'auto',
+          meta:  todayPnl !== 0
+            ? `${(balance > 0 ? todayPnl / (balance - todayPnl) * 100 : 0).toFixed(2)}% of balance`
+            : 'No closed trades',
+        },
+        {
+          label: 'Win rate',
+          value: `${wins + losses > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) : '0.0'}%`,
+          tone:  'neutral',
+          meta:  `${wins}W / ${losses}L decided`,
+        },
+        {
+          label: 'Payoff',
+          value: payoff > 0 ? payoff.toFixed(2) : '—',
+          tone:  payoff >= 1 ? 'up' : payoff > 0 ? 'down' : 'muted',
+          meta:  stats ? `€${stats.avgWin.toFixed(0)} / €${stats.avgLoss.toFixed(0)} avg` : '',
+        },
+      ]} />
+
+      {/* ── Net worth ────────────────────────────────────────────────────── */}
       <NetWorthCurve portfolioValue={totalValueEur} />
 
-      {/* ══════════════════════════════════════════════════════════
-          CALENDAR + STREAKS/FOCUS (equal-height row)
-      ══════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
-
-        <div className="lg:col-span-2">
-          <Panel title="Trading Calendar" className="h-full">
+      {/* ── Calendar + right rail ────────────────────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '12px', alignItems: 'start' }}>
+        <Surface title="Trading calendar">
+          <div style={{ padding: '12px 14px' }}>
             <TradeCalendar allRows={allRows} />
-          </Panel>
-        </div>
+          </div>
+        </Surface>
 
-        <div className="lg:col-span-1 flex flex-col gap-5">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 }}>
           <StreakCard
             trades={trades}
             journalStreak={journalStreak}
@@ -277,25 +255,25 @@ export default function OverviewTab() {
             journalDays={journalDays}
             habitDays={habitDays}
           />
-          <Panel title="Today's Focus" className="flex-1">
-            <TodaysFocus allRows={allRows} />
-          </Panel>
+          <Surface title="Today's focus">
+            <div style={{ padding: '12px 14px' }}>
+              <TodaysFocus allRows={allRows} />
+            </div>
+          </Surface>
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════
-          EDGE REPORT — insights + hard numbers from the trade DB
-      ══════════════════════════════════════════════════════════ */}
-      <Panel
-        title="Edge Report"
-        action={insights.length > 0 ? (
-          <span style={{ fontSize: '11px', color: 'var(--t3)', fontWeight: 500 }}>
-            {insights.length} insight{insights.length !== 1 ? 's' : ''}
-          </span>
-        ) : undefined}
+      {/* ── Edge report ──────────────────────────────────────────────────── */}
+      <Surface
+        title="Edge report"
+        action={insights.length > 0
+          ? <Label>{insights.length} insight{insights.length !== 1 ? 's' : ''}</Label>
+          : undefined}
       >
-        <EdgeReport allRows={allRows} insights={insights} loading={tradesLoading} />
-      </Panel>
+        <div style={{ padding: '12px 14px' }}>
+          <EdgeReport allRows={allRows} insights={insights} loading={tradesLoading} />
+        </div>
+      </Surface>
 
     </div>
   )

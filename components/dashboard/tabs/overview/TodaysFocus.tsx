@@ -25,10 +25,12 @@ interface FocusItem {
   body:  string
 }
 
+// P&L colours only. 'info' carries no chroma at all — a neutral observation
+// does not earn a colour, and a blue tint here would be pure decoration.
 const TONE = {
-  warn: { color: 'var(--re)',  bg: 'rgba(255,61,80,0.07)',  bd: 'rgba(255,61,80,0.18)'  },
-  info: { color: 'var(--ac)',  bg: 'rgba(88,166,255,0.06)', bd: 'rgba(88,166,255,0.16)' },
-  good: { color: 'var(--gr2)', bg: 'rgba(0,232,122,0.06)',  bd: 'rgba(0,232,122,0.16)'  },
+  warn: { color: 'var(--color-down)', bg: 'var(--color-down-dim)' },
+  info: { color: 'var(--color-ink-1)', bg: 'var(--color-surface-2)' },
+  good: { color: 'var(--color-up)',   bg: 'var(--color-up-dim)'   },
 } as const
 
 function eventCountdown(e: FFEvent): string | null {
@@ -128,13 +130,16 @@ export function TodaysFocus({ allRows }: { allRows: Trade[] }) {
         const t = TONE[it.tone]
         return (
           <div key={i} style={{
-            padding: '10px 12px', borderRadius: '9px',
-            background: t.bg, border: `1px solid ${t.bd}`,
+            padding: '9px 11px', borderRadius: 'var(--radius-sm)',
+            background: t.bg,
+            borderLeft: `2px solid ${t.color}`,
           }}>
-            <p style={{ fontSize: '12px', fontWeight: 700, color: t.color, margin: 0, marginBottom: '3px' }}>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                        color: t.color, margin: '0 0 3px' }}>
               {it.title}
             </p>
-            <p style={{ fontSize: '11.5px', color: 'var(--t2)', lineHeight: 1.5, margin: 0 }}>
+            <p style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)',
+                        color: 'var(--color-ink-2)', lineHeight: 1.55, margin: 0 }}>
               {it.body}
             </p>
           </div>

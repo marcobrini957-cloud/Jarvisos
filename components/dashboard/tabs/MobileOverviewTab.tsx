@@ -12,6 +12,7 @@ import { useUserProfile }     from '@/context/UserProfileContext'
 import { generateInsights }   from '@/lib/intelligence'
 import { formatValue }        from '@/lib/utils/formatting'
 import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
+import { Surface, MetricStrip, Label, Num } from '@/components/ui/vq'
 import InsightCard            from '@/components/ui/InsightCard'
 import { NetWorthCurve }      from './trading/NetWorthCurve'
 import { buildEdgeFacts, Fact } from './overview/EdgeReport'
@@ -32,42 +33,6 @@ function fmtEur(n: number, dec = 2) {
 }
 function fmtPnl(n: number) {
   return `${n >= 0 ? '+' : '-'}€${Math.abs(n).toFixed(2)}`
-}
-
-// ── Win Rate Ring ─────────────────────────────────────────────────────────────
-
-function WinRing({ wr }: { wr: number }) {
-  const pct   = Math.min(100, Math.max(0, wr))
-  const color = pct >= 65 ? 'var(--gr2)' : pct >= 50 ? 'var(--am2)' : 'var(--re)'
-  const glow  = pct >= 65 ? 'rgba(0,232,122,0.45)' : pct >= 50 ? 'rgba(240,168,64,0.45)' : 'rgba(255,61,80,0.45)'
-  const deg   = (pct / 100) * 360
-  return (
-    <div style={{ position: 'relative', width: '52px', height: '52px', flexShrink: 0 }}>
-      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: `conic-gradient(${color} ${deg}deg, var(--s3) ${deg}deg)`, boxShadow: `0 0 12px ${glow}` }} />
-      <div style={{ position: 'absolute', inset: '7px', borderRadius: '50%', background: 'var(--s1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ color, fontSize: '12px', fontWeight: 700 }}>{pct.toFixed(0)}%</span>
-      </div>
-    </div>
-  )
-}
-
-// ── Stat Card ─────────────────────────────────────────────────────────────────
-
-function StatCard({ label, value, sub, color = 'var(--t1)', bg = 'rgba(255,255,255,0.03)', border = 'var(--bd2)', accent }: {
-  label: string; value: string; sub?: string; color?: string; bg?: string; border?: string; accent?: string
-}) {
-  return (
-    <div style={{
-      padding: '14px', background: bg, borderRadius: '14px',
-      border: `1px solid ${border}`,
-      borderLeft: accent ? `3px solid ${accent}` : undefined,
-      display: 'flex', flexDirection: 'column', gap: '4px',
-    }}>
-      <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>{label}</span>
-      <span style={{ fontSize: '22px', fontWeight: 700, color, letterSpacing: '-0.03em', lineHeight: 1 }}>{value}</span>
-      {sub && <span style={{ fontSize: '11px', color: 'var(--t3)', marginTop: '2px' }}>{sub}</span>}
-    </div>
-  )
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -162,115 +127,58 @@ export default function MobileOverviewTab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '80px' }}>
 
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <div style={{
-        background: 'var(--s1)', border: '1px solid var(--bd2)',
-        borderRadius: '16px', padding: '18px 16px',
-        position: 'relative', overflow: 'hidden',
-      }}>
-        <div className="ambient-blue" style={{ width: '200px', height: '200px', top: '-80px', right: '-20px', opacity: 0.3 }} />
-        <div style={{ position: 'relative' }}>
-
-          {/* Date + habits + streak */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--t3)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+      {/* ── Status line ────────────────────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+        <Label>{new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}</Label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {habits.length > 0 && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+              <Label>Habits</Label>
+              <Num size="xs" tone={todayCompleted === todayTotal ? 'up' : 'muted'}>{todayCompleted}/{todayTotal}</Num>
             </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {habits.length > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{todayCompleted}/{todayTotal}</span>
-                  {habits.slice(0, 5).map(h => {
-                    const done = isCompleted(h.id, today)
-                    return <div key={h.id} style={{ width: '7px', height: '7px', borderRadius: '50%', background: done ? 'var(--gr2)' : 'var(--s3)', border: `1px solid ${done ? 'var(--gr)' : 'var(--bd2)'}` }} />
-                  })}
-                </div>
-              )}
-              {journalStreak >= 1 && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 500, color: 'var(--t2)' }}>
-                  <Icon name="journal" size={11} /> {journalStreak}d
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Greeting */}
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: '6px' }}>
-            {greeting()}, {profile.display_name || 'Trader'}
-          </h1>
-
-          {/* Alert badges */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
-            {overdueTasks.length > 0 && (
-              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--re)', background: 'rgba(255,61,80,0.1)', padding: '3px 9px', borderRadius: '6px', border: '1px solid rgba(255,61,80,0.2)' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                  <Icon name="alert" size={11} /> {overdueTasks.length} overdue
-                </span>
-              </span>
-            )}
-          </div>
-
-          {/* Session clock */}
-          <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.025)', borderRadius: '10px', border: '1px solid var(--bd2)' }}>
-            <SessionClock />
-          </div>
+          )}
+          {journalStreak >= 1 && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: 'var(--color-ink-3)' }}>
+              <Icon name="journal" size={11} />
+              <Num size="xs" tone="muted">{journalStreak}d</Num>
+            </span>
+          )}
+          {overdueTasks.length > 0 && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: '5px',
+              padding: '2px 7px', borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-down-dim)', color: 'var(--color-down)',
+              fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
+            }}>
+              <Icon name="alert" size={11} /> {overdueTasks.length}
+            </span>
+          )}
         </div>
       </div>
+
+      <Surface><div style={{ padding: '9px 12px' }}><SessionClock /></div></Surface>
 
       {/* Free-tier house ad (mobile has no side rail) — hidden for paid users */}
       <AdSlot seed={2} />
 
-      {/* ── Balance + Today P&L (2 col) ────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        <StatCard
-          label="MT5 Balance"
-          value={fmtEur(balance, 0)}
-          sub={equity > 0 && equity !== balance ? `Eq ${fmtEur(equity, 0)}` : `${wins}W / ${losses}L`}
-        />
-        <StatCard
-          label="Today P&L"
-          value={todayPnl !== 0 ? fmtPnl(todayPnl) : '€0'}
-          sub={todayPnl !== 0 ? `${(balance > 0 ? todayPnl / (balance - todayPnl) * 100 : 0).toFixed(2)}%` : 'No trades today'}
-          color={todayColor}
-          bg={todayPnl !== 0 ? `rgba(${todayPnl > 0 ? '0,232,122' : '255,61,80'},0.07)` : 'rgba(255,255,255,0.03)'}
-          border={todayPnl !== 0 ? (todayPnl > 0 ? 'rgba(0,232,122,0.18)' : 'rgba(255,61,80,0.18)') : 'var(--bd2)'}
-          accent={todayColor}
-        />
-      </div>
+      {/* ── Instrument cluster ─────────────────────────────────────
+          Two bands of three instead of four tinted tiles: same figures,
+          roughly half the vertical space, one surface treatment. */}
+      <MetricStrip metrics={[
+        { label: 'Balance', value: fmtEur(balance, 0), tone: 'neutral',
+          meta: equity > 0 && equity !== balance ? `Eq ${fmtEur(equity, 0)}` : `${wins}W/${losses}L` },
+        { label: 'Month', value: stats ? formatValue(monthPnl, monthPnlPct, displayMode, { showSign: true }) : '—',
+          num: monthPnl, meta: `${monthWins}W · ${monthLosses}L` },
+        { label: 'Today', value: todayPnl !== 0 ? fmtPnl(todayPnl) : '€0',
+          num: todayPnl, tone: todayPnl === 0 ? 'muted' : 'auto',
+          meta: todayPnl !== 0 ? `${(balance > 0 ? todayPnl / (balance - todayPnl) * 100 : 0).toFixed(2)}%` : 'No trades' },
+      ]} />
 
-      {/* ── Month P&L + Net Worth (2 col) ──────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        <StatCard
-          label="Month P&L"
-          value={stats ? formatValue(monthPnl, monthPnlPct, displayMode, { showSign: true }) : '—'}
-          sub={`${monthWins}W · ${monthLosses}L`}
-          color={monthColor}
-          bg={`rgba(${monthPnl >= 0 ? '0,232,122' : '255,61,80'},0.06)`}
-          border={monthPnl >= 0 ? 'rgba(0,232,122,0.15)' : 'rgba(255,61,80,0.15)'}
-        />
-        <StatCard
-          label="Net Worth"
-          value={fmtEur(netWorth, 0)}
-          sub="MT5 + portfolio"
-          color="var(--go2)"
-          bg="rgba(255,176,48,0.06)"
-          border="rgba(255,176,48,0.15)"
-        />
-      </div>
-
-      {/* ── Win Rate ───────────────────────────────────────────── */}
-      <div style={{
-        padding: '14px 16px', background: 'rgba(255,255,255,0.025)',
-        borderRadius: '14px', border: '1px solid var(--bd2)',
-        display: 'flex', alignItems: 'center', gap: '16px',
-      }}>
-        <WinRing wr={wr} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Win Rate</span>
-          <span style={{ fontSize: '20px', fontWeight: 700, color: 'var(--t1)' }}>{wins}W / {losses}L</span>
-          <span style={{ fontSize: '11px', color: 'var(--t3)', display: 'block' }}>{stats?.totalTrades ?? 0} total trades</span>
-        </div>
-      </div>
+      <MetricStrip metrics={[
+        { label: 'Net worth', value: fmtEur(netWorth, 0), tone: 'neutral', meta: 'MT5 + portfolio' },
+        { label: 'Win rate', value: `${wr.toFixed(1)}%`, tone: 'neutral', meta: `${wins}W / ${losses}L` },
+        { label: 'Trades', value: String(stats?.totalTrades ?? 0), tone: 'muted', meta: 'all time' },
+      ]} />
 
       {/* ── Net Worth (MT5 balance + portfolio, over time) ── */}
       <NetWorthCurve portfolioValue={totalValueEur} />

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useRef, useEffect } from 'react'
-import Panel from '@/components/ui/Panel'
+import { Surface, Label, Num, Segmented } from '@/components/ui/vq'
 import { MON } from './helpers'
 
 // ── Net Worth Curve ───────────────────────────────────────────────────────────
@@ -81,39 +81,30 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
   }, [n])
 
   const yearButtons = (
-    <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
-      {years.map(y => (
-        <button key={y}
-          onClick={() => setYear(y)}
-          style={{
-            padding: '3px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer',
-            fontSize: '11px', fontWeight: 600,
-            background: year === y ? 'var(--ac)' : 'var(--s3)',
-            color:      year === y ? 'white'     : 'var(--t3)',
-            transition: 'all 0.12s',
-          }}
-        >
-          {y}
-        </button>
-      ))}
-    </div>
+    <Segmented
+      options={years.map(y => ({ key: String(y), label: String(y) }))}
+      value={String(year)}
+      onChange={k => setYear(Number(k))}
+    />
   )
 
   const shell = (body: React.ReactNode) => (
-    <Panel title="Net Worth" fill className="h-full" action={yearButtons}>
-      {body}
-    </Panel>
+    <Surface title="Net worth" action={yearButtons} style={{ minHeight: '300px' }}>
+      <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        {body}
+      </div>
+    </Surface>
   )
 
   if (loading && n === 0) {
     return shell(<div style={{ flex: 1, minHeight: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <span style={{ color: 'var(--t3)', fontSize: '12px' }}>Loading…</span>
+      <span style={{ fontFamily: 'var(--font-display)', color: 'var(--color-ink-3)', fontSize: 'var(--text-base)' }}>Loading…</span>
     </div>)
   }
   if (n < 2) {
     return shell(<div style={{ flex: 1, minHeight: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--s2)', borderRadius: '10px', border: '1px dashed var(--bd2)' }}>
-      <span style={{ color: 'var(--t3)', fontSize: '13px' }}>No account data for {year}</span>
+      background: 'var(--color-surface-1)', borderRadius: 'var(--radius-sm)', border: '1px dashed var(--color-line-2)' }}>
+      <span style={{ fontFamily: 'var(--font-display)', color: 'var(--color-ink-3)', fontSize: 'var(--text-base)' }}>No account data for {year}</span>
     </div>)
   }
 
@@ -149,8 +140,8 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
   const xOfMs = (ms: number) => PAD.l + Math.max(0, Math.min(1, (ms - xStart) / xSpan)) * cW
   const yOf   = (v: number) => PAD.t + (1 - (v - lo) / range) * cH
 
-  const lineColor = isUp ? '#00E87A' : '#FF3D50'
-  const fillColor = isUp ? '#00CC6A' : '#FF3D50'
+  const lineColor = isUp ? '#00C46A' : '#F0504B'
+  const fillColor = isUp ? '#00C46A' : '#F0504B'
 
   const coords = points.map((p, i) => ({ x: xOfMs(p.ms), y: yOf(series[i]) }))
   const linePath = smoothPath(coords)
@@ -194,30 +185,32 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
     <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
       marginBottom: '10px', minHeight: '44px', flex: 'none' }}>
       <div>
-        <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '4px' }}>
-          {activeDateStr}
-        </p>
-        <p className="num" style={{ color: 'var(--t1)', fontSize: '28px', fontWeight: 600, lineHeight: 1 }}>
-          €{eur2(activeVal)}
-        </p>
+        <Label>{activeDateStr}</Label>
+        <div style={{ marginTop: '4px' }}>
+          <Num size="2xl">€{eur2(activeVal)}</Num>
+        </div>
       </div>
       <div style={{ display: 'flex', gap: '20px', paddingBottom: '2px' }}>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '3px' }}>{year} change</p>
-          <p style={{ color: isUp ? 'var(--gr2)' : 'var(--re)', fontSize: '14px', fontWeight: 600 }}>
-            {isUp ? '+' : '−'}€{eur0(Math.abs(change))} ({changePct >= 0 ? '+' : ''}{changePct.toFixed(1)}%)
-          </p>
+          <Label>{year} change</Label>
+          <div style={{ marginTop: '3px' }}>
+            <Num size="md" tone={isUp ? 'up' : 'down'}>
+              {isUp ? '+' : '−'}€{eur0(Math.abs(change))} ({changePct >= 0 ? '+' : ''}{changePct.toFixed(1)}%)
+            </Num>
+          </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '3px' }}>Max DD</p>
-          <p style={{ color: maxDD > 0.01 ? 'var(--re)' : 'var(--t3)', fontSize: '14px', fontWeight: 600 }}>
-            {maxDD > 0.01 ? `−€${eur0(maxDD)}` : '€0'}
-          </p>
+          <Label>Max DD</Label>
+          <div style={{ marginTop: '3px' }}>
+            <Num size="md" tone={maxDD > 0.01 ? 'down' : 'muted'}>{maxDD > 0.01 ? `−€${eur0(maxDD)}` : '€0'}</Num>
+          </div>
         </div>
         {portfolioValue > 0 && (
           <div style={{ textAlign: 'right' }}>
-            <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '3px' }}>Portfolio</p>
-            <p style={{ color: 'var(--t2)', fontSize: '14px', fontWeight: 600 }}>€{eur0(portfolioValue)}</p>
+            <Label>Portfolio</Label>
+            <div style={{ marginTop: '3px' }}>
+              <Num size="md" tone="muted">€{eur0(portfolioValue)}</Num>
+            </div>
           </div>
         )}
       </div>
@@ -262,7 +255,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
         {/* Y-axis labels (absolute €) */}
         {yTicks.map((v, i) => (
           <text key={i} x={PAD.l - 8} y={yOf(v) + 4} textAnchor="end" fontSize="10"
-            fill="rgba(104,129,168,0.55)" fontFamily="monospace">
+            fill="rgba(255,255,255,0.44)" fontFamily="JetBrains Mono, monospace">
             €{eur0(v)}
           </text>
         ))}
@@ -282,9 +275,9 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
                 stroke="rgba(255,255,255,0.1)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
               <circle cx={hover.x} cy={hover.y} r="10" fill={lineColor} opacity="0.1" />
               <circle cx={hover.x} cy={hover.y} r="5" fill={lineColor} stroke="#000" strokeWidth="2" />
-              <rect x={tx} y={ty} width={tipW} height={tipH} rx="7" fill="#111" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <text x={tx + 11} y={ty + 17} fontSize="10" fill="rgba(104,129,168,0.8)" fontFamily="monospace">{dateStr}</text>
-              <text x={tx + 11} y={ty + 38} fontSize="16" fontWeight="700" fill="var(--t1)" fontFamily="monospace">€{eur2(val)}</text>
+              <rect x={tx} y={ty} width={tipW} height={tipH} rx="7" fill="#0A0A0A" stroke="rgba(255,255,255,0.24)" strokeWidth="1" />
+              <text x={tx + 11} y={ty + 17} fontSize="10" fill="rgba(255,255,255,0.48)" fontFamily="JetBrains Mono, monospace">{dateStr}</text>
+              <text x={tx + 11} y={ty + 38} fontSize="15" fontWeight="500" fill="#fff" fontFamily="JetBrains Mono, monospace">€{eur2(val)}</text>
             </g>
           )
         })()}
@@ -295,7 +288,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
     <div style={{ position: 'relative', height: '12px', marginTop: '5px', flex: 'none' }}>
       {months.map((m, i) => (
         <span key={i} style={{ position: 'absolute', left: `${(m.x / W) * 100}%`, transform: 'translateX(-50%)',
-          fontSize: '9px', color: 'var(--t3)', fontFamily: 'monospace' }}>
+          fontSize: '9px', color: 'var(--color-ink-3)', fontFamily: 'var(--font-mono)' }}>
           {m.label}
         </span>
       ))}
