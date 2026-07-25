@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import type { CopyGroup } from './copy/types'
 import { CreateGroupModal } from './copy/CreateGroupModal'
 import { GroupCard, type CloudInfo } from './copy/GroupCard'
@@ -125,6 +126,7 @@ export default function CopyTradingTab() {
           https://bridge.velquor.app
         </code>
         {' '}under <em>Tools → Options → Expert Advisors → Allow WebRequest</em>. Cloud-hosted accounts need no setup.
+        {' '}<Link href="/connect" style={{ color: 'var(--ac)', fontWeight: 600 }}>Step-by-step guide →</Link>
       </div>
 
       {showCreateGroup && (

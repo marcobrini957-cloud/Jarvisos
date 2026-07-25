@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import Panel from '@/components/ui/Panel'
 
 const KEY_ENABLED = 'vq_greeting_enabled'
@@ -55,7 +56,6 @@ interface EaStatus {
 function MT5AccountsPanel() {
   const [status,   setStatus]   = useState<EaStatus | null>(null)
   const [copied,   setCopied]   = useState(false)
-  const [expanded, setExpanded] = useState(false)
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -124,18 +124,19 @@ function MT5AccountsPanel() {
             </div>
           </div>
 
-          {/* Download EA */}
-          <a
-            href="/ea/VelquorBridge.mq5"
-            download="VelquorBridge.mq5"
+          {/* Setup guide */}
+          <Link
+            href="/connect"
             style={{
               padding: '6px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
-              background: 'var(--ac)', color: 'white', textDecoration: 'none',
-              whiteSpace: 'nowrap', flexShrink: 0,
+              background: connected ? 'var(--s3)' : 'var(--ac)',
+              color: connected ? 'var(--t2)' : 'white',
+              border: connected ? '1px solid var(--bd2)' : 'none',
+              textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
             }}
           >
-            Download EA
-          </a>
+            {connected ? 'Add account' : 'Connect MT5 →'}
+          </Link>
         </div>
 
         {/* ── API Key ──────────────────────────────────────────────────────── */}
@@ -172,46 +173,16 @@ function MT5AccountsPanel() {
           </p>
         </div>
 
-        {/* ── Setup guide (collapsible) ─────────────────────────────────────── */}
-        <div>
-          <button
-            onClick={() => setExpanded(v => !v)}
-            style={{
-              background: 'none', border: 'none', padding: '0',
-              color: 'var(--ac)', fontSize: '12px', fontWeight: 600,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
-            }}
-          >
-            <span style={{
-              display: 'inline-block',
-              transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
-              transition: 'transform 0.15s',
-            }}>▶</span>
-            {expanded ? 'Hide setup guide' : 'Show setup guide'}
-          </button>
-
-          {expanded && (
-            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {[
-                ['Download', <>Download <strong style={{ color: 'var(--t1)' }}>VelquorBridge.mq5</strong> above and copy it into your MT5 <code style={{ fontFamily: 'monospace', background: 'var(--s3)', padding: '1px 4px', borderRadius: '3px', fontSize: '11px' }}>MQL5/Experts/</code> folder.</>],
-                ['Allow URL', <>In MT5: <strong style={{ color: 'var(--t1)' }}>Tools → Options → Expert Advisors</strong> — tick &ldquo;Allow WebRequest&rdquo; and add <code style={{ fontFamily: 'monospace', background: 'var(--s3)', padding: '1px 4px', borderRadius: '3px', fontSize: '11px' }}>https://bridge.velquor.app</code></>],
-                ['Attach EA', <>Drag <strong style={{ color: 'var(--t1)' }}>VelquorBridge</strong> onto any chart. Paste your API key above into the <em>InpApiKey</em> input and click OK.</>],
-                ['Enable trading', <>Enable <strong style={{ color: 'var(--t1)' }}>Auto Trading</strong> in MT5 (green toolbar button). The smiley face on the chart confirms the EA is running.</>],
-              ].map(([step, desc], i) => (
-                <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                  <div style={{
-                    minWidth: '20px', height: '20px', borderRadius: '50%',
-                    background: 'var(--ac)', color: 'white',
-                    fontSize: '10px', fontWeight: 700,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    marginTop: '1px',
-                  }}>{i + 1}</div>
-                  <p style={{ margin: 0, fontSize: '12px', color: 'var(--t2)', lineHeight: 1.55 }}>{desc as React.ReactNode}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* ── Setup guide ───────────────────────────────────────────────────── */}
+        <Link
+          href="/connect"
+          style={{
+            display: 'flex', alignItems: 'center', gap: '5px',
+            color: 'var(--ac)', fontSize: '12px', fontWeight: 600, textDecoration: 'none',
+          }}
+        >
+          Step-by-step setup guide <span style={{ fontSize: '10px' }}>▶</span>
+        </Link>
       </div>
     </Panel>
   )

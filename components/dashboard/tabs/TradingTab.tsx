@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useTrades, tradeResult } from '@/hooks/useTrades'
 import { useAccountSnapshot } from '@/hooks/useAccountSnapshot'
 import PeriodMetricCard, { type Period } from '@/components/ui/PeriodMetricCard'
@@ -115,18 +116,26 @@ export default function TradingTab() {
           </p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '280px' }}>
-          <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '18px' }}>1</span>
-            <span style={{ color: 'var(--t2)', fontSize: '13px' }}>Click the MT5 button in the top bar</span>
-          </div>
-          <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '18px' }}>2</span>
-            <span style={{ color: 'var(--t2)', fontSize: '13px' }}>Enter your account ID &amp; investor password</span>
-          </div>
-          <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '18px' }}>3</span>
-            <span style={{ color: 'var(--t2)', fontSize: '13px' }}>Trades sync automatically every 30 seconds</span>
-          </div>
+          {[
+            'Install the VELQUOR EA in your MetaTrader 5',
+            'Paste your API key into the EA inputs',
+            'Every trade syncs by itself from then on',
+          ].map((text, i) => (
+            <div key={text} style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
+              <span style={{ fontSize: '18px' }}>{i + 1}</span>
+              <span style={{ color: 'var(--t2)', fontSize: '13px' }}>{text}</span>
+            </div>
+          ))}
+          <Link
+            href="/connect"
+            style={{
+              marginTop: '6px', padding: '13px 16px', borderRadius: '10px',
+              background: 'var(--ac)', color: '#fff', fontSize: '13px', fontWeight: 700,
+              textAlign: 'center', boxShadow: '0 8px 24px rgba(77,143,255,0.25)',
+            }}
+          >
+            Connect MetaTrader 5 →
+          </Link>
         </div>
       </div>
     )

@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "sync:ea": "node scripts/sync-ea.mjs",
+    "ea:build": "bash scripts/build-ea.sh",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -515,3 +515,11 @@ html { scroll-behavior: smooth; }
 .tv-chart-wrap {
   height: 480px;
 }
+
+/* ── EA Connect wizard ─────────────────────────────────────────────────── */
+/* Expanding ring behind the "waiting for your first sync" dot. */
+@keyframes vq-ea-ping {
+  0%   { transform: scale(0.55); opacity: 0.7; }
+  70%  { transform: scale(1.25); opacity: 0;   }
+  100% { transform: scale(1.25); opacity: 0;   }
+}
