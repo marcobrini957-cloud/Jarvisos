@@ -380,6 +380,7 @@ const FIXES: [string, React.ReactNode][] = [
   ['Experts tab says "WebRequest is not allowed"', <>The URL didn&apos;t save. Re-open <Strong>Tools → Options → Expert Advisors</Strong>, make sure <Mono>{BRIDGE_URL}</Mono> is in the list with no trailing slash, and that the checkbox above it is ticked.</>],
   ['Experts tab says "401" or "invalid API key"', <>The key was pasted with a space or is from another account. Copy it again in step 3 and re-attach the EA — the inputs only apply when you press OK.</>],
   ['I don\'t see VelquorBridge in the Navigator', <>Right-click anywhere in the Navigator panel and choose <Strong>Refresh</Strong>. If it still isn&apos;t there, the file landed in the wrong folder — use <Strong>File → Open Data Folder</Strong> inside MT5 and drop it in <Mono>MQL5/Experts</Mono>.</>],
+  ['MT5 says the program is incompatible or won\'t load', <>Your terminal is older than the one that built our EA. Update MT5 (<Strong>Help → Check for Updates</Strong>), or download the <a href={EA_SOURCE} download="VelquorBridge.mq5" style={{ color: 'var(--ac)' }}>source (.mq5)</a>, drop it in <Mono>MQL5/Experts</Mono> and press <Strong>F7</Strong> in MetaEditor — that builds it against your own version.</>],
   ['Still nothing after 2 minutes', <>Your broker&apos;s terminal may block outgoing requests. Write to <Strong>support@velquor.app</Strong> with a screenshot of the MT5 <Strong>Experts</Strong> tab and we&apos;ll look at it.</>],
 ]
 
