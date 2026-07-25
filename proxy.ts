@@ -14,6 +14,9 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/icon') ||
+    // Self-hosted faces must reach signed-out visitors too, or the landing and
+    // login pages render in the fallback font.
+    pathname.startsWith('/fonts') ||
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml' ||
     pathname === '/manifest.webmanifest' ||

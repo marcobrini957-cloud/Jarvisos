@@ -523,3 +523,130 @@ html { scroll-behavior: smooth; }
   70%  { transform: scale(1.25); opacity: 0;   }
   100% { transform: scale(1.25); opacity: 0;   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VELQUOR 2.0 — design tokens
+   ───────────────────────────────────────────────────────────────────────────
+   Added alongside the legacy palette above, which still drives ~2,700 inline
+   styles. Nothing below is applied globally yet: components opt in as they are
+   migrated, so the app never sits half-redesigned. See DESIGN.md.
+
+   Two voices: Coolvetica carries language, JetBrains Mono carries every figure.
+   Coolvetica has no tabular figures and only one weight, so it must never be
+   used for numbers — that is what the mono is for.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Faces ─────────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Coolvetica';
+  src: url('/fonts/coolvetica-regular.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Coolvetica Cond';
+  src: url('/fonts/coolvetica-cond.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Coolvetica Comp';
+  src: url('/fonts/coolvetica-heavycomp.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono-400.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono-500.woff2') format('woff2');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono-600.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono-700.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+@theme {
+  /* ── Type ──
+     Coolvetica = words. Mono = every figure, no exceptions. */
+  --font-display: 'Coolvetica', 'Helvetica Neue', Arial, sans-serif;
+  --font-cond:    'Coolvetica Cond', 'Coolvetica', sans-serif;
+  --font-mark:    'Coolvetica Comp', 'Coolvetica', sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Terminal scale — small, finite, named. No improvising sizes. */
+  --text-2xs:  9px;
+  --text-xs:   10.5px;
+  --text-sm:   11.5px;   /* table data */
+  --text-base: 12.5px;   /* UI default */
+  --text-md:   14px;
+  --text-lg:   17px;
+  --text-xl:   21px;     /* metric values */
+  --text-2xl:  26px;
+  --text-3xl:  34px;     /* page display */
+
+  /* ── Surfaces ──
+     One hue at graded alpha rather than solid greys: composites over any
+     background and carries its own interaction states. */
+  --color-void:      #000000;
+  --color-surface-1: rgba(255,255,255,0.04);
+  --color-surface-2: rgba(255,255,255,0.08);
+  --color-surface-3: rgba(255,255,255,0.12);
+
+  --color-line-1:    rgba(255,255,255,0.08);
+  --color-line-2:    rgba(255,255,255,0.12);
+  --color-line-3:    rgba(255,255,255,0.24);
+
+  --color-state-hover:   rgba(255,255,255,0.08);
+  --color-state-active:  rgba(255,255,255,0.12);
+  --color-state-pressed: rgba(255,255,255,0.16);
+
+  /* ── Ink ── */
+  --color-ink-1: #ffffff;
+  --color-ink-2: rgba(255,255,255,0.72);
+  --color-ink-3: rgba(255,255,255,0.48);
+  --color-ink-4: rgba(255,255,255,0.28);
+
+  /* ── P&L — the only chroma on screen ──
+     Tuned for equal optical weight on pure black at 11.5px. Red is held back
+     slightly because it otherwise reads heavier than green at the same value.
+     There is deliberately no brand accent competing with these. */
+  --color-up:      #00C46A;
+  --color-down:    #F0504B;
+  --color-up-dim:   rgba(0,196,106,0.15);
+  --color-down-dim: rgba(240,80,75,0.15);
+  --color-flat:     rgba(255,255,255,0.28);
+
+  /* Non-P&L status. Used for system state only, never decoration. */
+  --color-warn: #E8A33D;
+
+  /* ── Geometry — small radii; a terminal is not a card deck ── */
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+}
+
+/* Every figure is mono + tabular. Applied by the primitives, not globally,
+   until the migration completes. */
+.vq-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.02em;
+}
+.vq-label {
+  font-family: var(--font-display);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
