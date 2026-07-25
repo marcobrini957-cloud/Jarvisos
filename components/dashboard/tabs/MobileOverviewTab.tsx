@@ -278,7 +278,7 @@ export default function MobileOverviewTab() {
 
       {/* ── Daily P&L — 30 days ────────────────────────────────── */}
       <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid var(--bd2)' }}>
-        <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>Daily P&L — 30 Days</span>
+        <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>Daily P&L</span>
         <DailyPnLChart days={30} height={130} showStats />
       </div>
 

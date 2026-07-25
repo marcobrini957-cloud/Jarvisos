@@ -262,7 +262,7 @@ export default function OverviewTab() {
           <NetWorthCurve portfolioValue={totalValueEur} />
         </div>
         <div className="lg:col-span-2">
-          <Panel title="Daily P&L — Last 30 Days" className="h-full">
+          <Panel title="Daily P&L" className="h-full">
             <DailyPnLChart days={30} height={130} showStats />
           </Panel>
         </div>

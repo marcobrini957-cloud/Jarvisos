@@ -1,32 +1,54 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { eurSigned } from '@/lib/utils/formatting'
 
 interface Bar { date: string; pnl: number; wins: number; losses: number; breakEven?: number }
 
+type Range = '30d' | 'mtd' | '90d'
+
+const RANGES: { key: Range; label: string; days: number }[] = [
+  { key: '30d', label: '30D',   days: 30 },
+  { key: 'mtd', label: 'Month', days: 31 },
+  { key: '90d', label: '90D',   days: 90 },
+]
+
 interface Props {
   days?:      number
   height?:    number
-  showStats?: boolean   // header row: period total + the green/red day split
+  showStats?: boolean   // header row, range switcher and the win/loss breakdown
 }
 
 const dayLabel = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
 export default function DailyPnLChart({ days = 30, height = 120, showStats = false }: Props) {
+  const [range,   setRange]   = useState<Range>('30d')
   const [bars,    setBars]    = useState<Bar[]>([])
   const [loading, setLoading] = useState(true)
   const [hovered, setHovered] = useState<Bar | null>(null)
 
+  // Fetch the widest span once per range change; "Month" is a client-side slice
+  // of the same data so switching back and forth costs nothing.
+  const fetchDays = showStats ? (RANGES.find(r => r.key === range)?.days ?? days) : days
+
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/trades/daily-pnl?days=${days}`)
+    fetch(`/api/trades/daily-pnl?days=${fetchDays}`)
       .then(r => r.json())
       .then(d => setBars(d.bars ?? []))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [days])
+  }, [fetchDays])
+
+  const displayBars = useMemo(() => {
+    if (!showStats || range !== 'mtd') return bars
+    // Calendar month to date — the window most traders actually think in, and
+    // the one a broker statement is cut to.
+    const now = new Date()
+    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+    return bars.filter(b => b.date >= monthStart)
+  }, [bars, range, showStats])
 
   if (loading) {
     return (
@@ -36,15 +58,37 @@ export default function DailyPnLChart({ days = 30, height = 120, showStats = fal
     )
   }
 
-  if (bars.length === 0) {
+  const rangeSwitcher = showStats && (
+    <div style={{ display: 'flex', gap: '2px', background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '7px', padding: '2px' }}>
+      {RANGES.map(r => (
+        <button
+          key={r.key}
+          onClick={() => setRange(r.key)}
+          style={{
+            padding: '3px 9px', borderRadius: '5px', border: 'none', cursor: 'pointer',
+            fontSize: '10px', fontWeight: 600,
+            background: range === r.key ? 'var(--s4)' : 'transparent',
+            color:      range === r.key ? 'var(--t1)' : 'var(--t3)',
+            transition: 'background 0.12s, color 0.12s',
+          }}
+        >
+          {r.label}
+        </button>
+      ))}
+    </div>
+  )
+
+  if (displayBars.length === 0) {
     return (
-      <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ color: 'var(--t3)', fontSize: '12px' }}>No closed trades in this period</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {showStats && <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{rangeSwitcher}</div>}
+        <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ color: 'var(--t3)', fontSize: '12px' }}>No closed trades in this period</span>
+        </div>
       </div>
     )
   }
 
-  const displayBars = bars.slice(-days)
   const maxAbs = Math.max(...displayBars.map(b => Math.abs(b.pnl)), 0.01)
   const midY   = height / 2
 
@@ -52,31 +96,43 @@ export default function DailyPnLChart({ days = 30, height = 120, showStats = fal
   const greenDays = displayBars.filter(b => b.pnl > 0)
   const redDays   = displayBars.filter(b => b.pnl < 0)
 
-  // The question a daily P&L chart should answer: are my good days bigger than
-  // my bad days? A bar wall alone cannot be read that way.
-  const avgGreen = greenDays.length ? greenDays.reduce((s, b) => s + b.pnl, 0) / greenDays.length : 0
-  const avgRed   = redDays.length   ? redDays.reduce((s, b) => s + b.pnl, 0) / redDays.length     : 0
-  const best     = displayBars.reduce((a, b) => (b.pnl > a.pnl ? b : a))
-  const worst    = displayBars.reduce((a, b) => (b.pnl < a.pnl ? b : a))
+  // A net figure alone is unreadable: +€109.84 looks like a quiet month, when it
+  // is really €449 of winners minus €339 of losses concentrated in two days.
+  const wonTotal  = greenDays.reduce((s, b) => s + b.pnl, 0)
+  const lostTotal = redDays.reduce((s, b) => s + b.pnl, 0)
+  const best      = displayBars.reduce((a, b) => (b.pnl > a.pnl ? b : a))
+  const worst     = displayBars.reduce((a, b) => (b.pnl < a.pnl ? b : a))
+  const avgGreen  = greenDays.length ? wonTotal  / greenDays.length : 0
+  const avgRed    = redDays.length   ? lostTotal / redDays.length   : 0
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {showStats && (
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px' }}>
-          <span className="num" style={{
-            fontSize: '24px', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1,
-            color: total >= 0 ? 'var(--gr2)' : 'var(--re)',
-          }}>
-            {eurSigned(total, 2)}
-          </span>
-          <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
-            {displayBars.length} trading {displayBars.length === 1 ? 'day' : 'days'}
-            {' · '}
-            <span style={{ color: 'var(--gr2)' }}>{greenDays.length}</span>
-            {' / '}
-            <span style={{ color: 'var(--re)' }}>{redDays.length}</span>
-          </span>
-        </div>
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+            <span className="num" style={{
+              fontSize: '24px', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1,
+              color: total >= 0 ? 'var(--gr2)' : 'var(--re)',
+            }}>
+              {eurSigned(total, 2)}
+            </span>
+            {rangeSwitcher}
+          </div>
+
+          {/* How the net is built — winners, losers, and what each side weighs */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '11px' }}>
+            <span style={{ color: 'var(--gr2)' }}>{eurSigned(wonTotal)} won</span>
+            <span style={{ color: 'var(--t3)' }}>·</span>
+            <span style={{ color: 'var(--re)' }}>{eurSigned(lostTotal)} lost</span>
+            <span style={{ color: 'var(--t3)', marginLeft: 'auto' }}>
+              {displayBars.length} trading {displayBars.length === 1 ? 'day' : 'days'}
+              {' · '}
+              <span style={{ color: 'var(--gr2)' }}>{greenDays.length}</span>
+              /
+              <span style={{ color: 'var(--re)' }}>{redDays.length}</span>
+            </span>
+          </div>
+        </>
       )}
 
       {/* Bars */}
@@ -140,8 +196,8 @@ export default function DailyPnLChart({ days = 30, height = 120, showStats = fal
       {/* Day-size read-out */}
       {showStats && (greenDays.length > 0 || redDays.length > 0) && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', paddingTop: '2px' }}>
-          <ReadOut label="Avg green day" value={eurSigned(avgGreen)} color="var(--gr2)" sub={`best ${eurSigned(best.pnl)}`} />
-          <ReadOut label="Avg red day"   value={eurSigned(avgRed)}   color="var(--re)"  sub={`worst ${eurSigned(worst.pnl)}`} />
+          <ReadOut label="Avg green day" value={eurSigned(avgGreen)} color="var(--gr2)" sub={`best ${eurSigned(best.pnl)} on ${dayLabel(best.date)}`} />
+          <ReadOut label="Avg red day"   value={eurSigned(avgRed)}   color="var(--re)"  sub={`worst ${eurSigned(worst.pnl)} on ${dayLabel(worst.date)}`} />
         </div>
       )}
     </div>
