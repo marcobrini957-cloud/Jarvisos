@@ -31,7 +31,7 @@ describe('bridge calcPips', () => {
 })
 
 // ── v2 helpers ───────────────────────────────────────────────────────────────
-import { versionLt, mapOpenPosition, mapClosedTrade, mapBalanceOp, mergeSettings, SETTINGS_DEFAULTS } from '../bridge/lib.js'
+import { versionLt, mapOpenPosition, mapClosedTrade, mapBalanceOp, mergeSettings, SETTINGS_DEFAULTS, serverSecToUtcMs } from '../bridge/lib.js'
 
 describe('bridge versionLt', () => {
   it('orders dotted versions numerically', () => {
@@ -91,8 +91,8 @@ describe('bridge mapBalanceOp', () => {
     expect(r.net_profit).toBe(249.34)
     expect(r.status).toBe('closed')
     expect(r.notes).toBe('Deposit')
-    // prefixed so a deal ticket can never collide with a position id
-    expect(r.mt5_ticket).toBe('bal_991')
+    // negated so a deal ticket can never collide with a position id
+    expect(r.mt5_ticket).toBe(-991)
   })
 
   it('maps a withdrawal as a negative amount', () => {
@@ -106,5 +106,38 @@ describe('bridge mapBalanceOp', () => {
     expect(mapBalanceOp({ ticket: 2, amount: 'x', time: 1784110214 }, 'u1')).toBeNull()
     expect(mapBalanceOp({ ticket: 3, amount: 10, time: 0 }, 'u1')).toBeNull()
     expect(mapBalanceOp(null, 'u1')).toBeNull()
+  })
+})
+
+describe('bridge server-time normalisation', () => {
+  it('subtracts the broker GMT offset so stamps land in real UTC', () => {
+    // Blueberry runs GMT+3 in summer. A deposit MetaAPI recorded at 09:50:14Z
+    // arrived from the EA as 12:50:14 server time — the same event, 3h apart.
+    const serverSec = Math.floor(Date.UTC(2026, 6, 13, 12, 50, 14) / 1000)
+    expect(serverSecToUtcMs(serverSec, 3 * 3600))
+      .toBe(Date.UTC(2026, 6, 13, 9, 50, 14))
+  })
+
+  it('leaves stamps untouched when an older EA sends no offset', () => {
+    const sec = Math.floor(Date.UTC(2026, 6, 13, 12, 0, 0) / 1000)
+    expect(serverSecToUtcMs(sec, 0)).toBe(Date.UTC(2026, 6, 13, 12, 0, 0))
+    expect(serverSecToUtcMs(sec, undefined)).toBe(Date.UTC(2026, 6, 13, 12, 0, 0))
+  })
+
+  it('applies the offset through the trade mapper, including the session label', () => {
+    const openSec = Math.floor(Date.UTC(2026, 6, 13, 12, 0, 0) / 1000)  // 09:00 UTC = London
+    const r = mapClosedTrade({
+      ticket: 1, symbol: 'XAUUSD', trade_type: 0, lot_size: 0.1,
+      open_price: 2000, close_price: 2010, open_time: openSec, close_time: openSec + 3600,
+      profit: 10, commission: 0, swap: 0,
+    }, 'u1', 3 * 3600)
+    expect(r.open_time).toBe('2026-07-13T09:00:00.000Z')
+    expect(r.session).toBe('london')
+  })
+
+  it('applies the offset to balance operations', () => {
+    const sec = Math.floor(Date.UTC(2026, 6, 13, 12, 50, 14) / 1000)
+    const r = mapBalanceOp({ ticket: 52021395, amount: 249.34, time: sec }, 'u1', 3 * 3600)
+    expect(r.close_time).toBe('2026-07-13T09:50:14.000Z')
   })
 })

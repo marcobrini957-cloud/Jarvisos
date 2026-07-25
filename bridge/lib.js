@@ -2,6 +2,18 @@
 
 // Pure helpers for the VELQUOR bridge — no I/O, unit-tested in tests/bridge-lib.test.js.
 
+// MQL5 datetimes are seconds in the BROKER's server timezone, not UTC. EA 2.25+
+// reports server_gmt_offset_sec so we can convert to real UTC before storing.
+// Without this every trade time — and therefore every session label, calendar
+// day and hourly breakdown — sits offset by the broker's timezone (+3h on
+// Blueberry in summer). Older EAs send no offset: treat as 0, i.e. unchanged.
+function serverSecToUtcMs(sec, offsetSec) {
+  const s = Number(sec);
+  if (!Number.isFinite(s)) return NaN;
+  const off = Number(offsetSec);
+  return (s - (Number.isFinite(off) ? off : 0)) * 1000;
+}
+
 function detectSession(openTimeMs) {
   const d = new Date(openTimeMs);
   const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
@@ -38,7 +50,7 @@ function versionLt(a, b) {
 }
 
 // Build a `trades` upsert row from an EA open-position payload.
-function mapOpenPosition(pos, userId) {
+function mapOpenPosition(pos, userId, offsetSec = 0) {
   const tradeType = pos.trade_type === 0 ? 'buy' : 'sell';
   return {
     user_id:            userId,
@@ -59,13 +71,13 @@ function mapOpenPosition(pos, userId) {
     swap:               pos.swap       ?? 0,
     net_profit:         (pos.profit ?? 0) + (pos.commission ?? 0) + (pos.swap ?? 0),
     status:             'open',
-    session:            detectSession(pos.open_time * 1000),
+    session:            detectSession(serverSecToUtcMs(pos.open_time, offsetSec)),
     screenshot_missing: true,
   };
 }
 
 // Build a `trades` upsert row from an EA closed-trade payload.
-function mapClosedTrade(trade, userId) {
+function mapClosedTrade(trade, userId, offsetSec = 0) {
   const tradeType = trade.trade_type === 0 ? 'buy' : 'sell';
   return {
     user_id:            userId,
@@ -77,8 +89,8 @@ function mapClosedTrade(trade, userId) {
     close_price:        trade.close_price,
     stop_loss:          trade.stop_loss   ?? null,
     take_profit:        trade.take_profit ?? null,
-    open_time:          new Date(trade.open_time  * 1000).toISOString(),
-    close_time:         new Date(trade.close_time * 1000).toISOString(),
+    open_time:          new Date(serverSecToUtcMs(trade.open_time,  offsetSec)).toISOString(),
+    close_time:         new Date(serverSecToUtcMs(trade.close_time, offsetSec)).toISOString(),
     duration_minutes:   Math.round((trade.close_time - trade.open_time) / 60),
     pips:               calcPips(trade.symbol, trade.open_price, trade.close_price, tradeType),
     profit_usd:         trade.profit      ?? 0,
@@ -86,7 +98,7 @@ function mapClosedTrade(trade, userId) {
     swap:               trade.swap        ?? 0,
     net_profit:         (trade.profit ?? 0) + (trade.commission ?? 0) + (trade.swap ?? 0),
     status:             'closed',
-    session:            detectSession(trade.open_time * 1000),
+    session:            detectSession(serverSecToUtcMs(trade.open_time, offsetSec)),
     screenshot_missing: false,
   };
 }
@@ -95,18 +107,21 @@ function mapClosedTrade(trade, userId) {
 // the web app already reads to keep funding out of performance figures. The EA
 // only started sending these in 2.24; before that money movements were invisible
 // to the site, which is why percentage returns drifted from MetaTrader's report.
-function mapBalanceOp(op, userId) {
+function mapBalanceOp(op, userId, offsetSec = 0) {
   const amount = Number(op && op.amount);
   const when   = Number(op && op.time);
   if (!Number.isFinite(amount) || amount === 0) return null;
   if (!Number.isFinite(when)   || when <= 0)    return null;
+  const ticket = Number(op.ticket);
+  if (!Number.isFinite(ticket) || ticket === 0)  return null;
 
-  const at = new Date(when * 1000).toISOString();
+  const at = new Date(serverSecToUtcMs(when, offsetSec)).toISOString();
   return {
     user_id:            userId,
-    // Deal tickets share a sequence with trade tickets, so prefix to guarantee
-    // a balance op can never collide with a position id on the unique index.
-    mt5_ticket:         `bal_${op.ticket}`,
+    // mt5_ticket is a bigint holding the POSITION id for trades. Deal tickets
+    // live in the same numeric space, so a balance op is stored NEGATED: it can
+    // never collide with a position id, and the row is still uniquely keyed.
+    mt5_ticket:         -Math.abs(Number(op.ticket)),
     symbol:             'BALANCE',
     trade_type:         amount >= 0 ? 'buy' : 'sell',
     lot_size:           0,
@@ -154,7 +169,7 @@ function mergeSettings(row) {
 }
 
 module.exports = {
-  detectSession, calcPips, versionLt,
+  detectSession, calcPips, versionLt, serverSecToUtcMs,
   mapOpenPosition, mapClosedTrade, mapBalanceOp,
   SETTINGS_DEFAULTS, mergeSettings,
 };

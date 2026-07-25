@@ -302,10 +302,14 @@ app.post('/sync', wrap(async (req, res) => {
   // symbol='BALANCE' — the convention the app already uses to separate funding
   // from performance. Without them every percentage return drifts away from the
   // broker's own Growth figure as soon as money moves in or out.
+  // EA 2.25+ reports the broker's GMT offset so server-time deal stamps can be
+  // stored as real UTC. Older EAs send nothing → 0 → previous behaviour.
+  const tzOffset = Number(body.server_gmt_offset_sec) || 0;
+
   const rows = [
-    ...(Array.isArray(body.open_positions) ? body.open_positions.map(p => mapOpenPosition(p, user.id)) : []),
-    ...(Array.isArray(body.closed_trades)  ? body.closed_trades.map(t => mapClosedTrade(t, user.id))   : []),
-    ...(Array.isArray(body.balance_ops)    ? body.balance_ops.map(o => mapBalanceOp(o, user.id)).filter(Boolean) : []),
+    ...(Array.isArray(body.open_positions) ? body.open_positions.map(p => mapOpenPosition(p, user.id, tzOffset)) : []),
+    ...(Array.isArray(body.closed_trades)  ? body.closed_trades.map(t => mapClosedTrade(t, user.id, tzOffset))   : []),
+    ...(Array.isArray(body.balance_ops)    ? body.balance_ops.map(o => mapBalanceOp(o, user.id, tzOffset)).filter(Boolean) : []),
   ].map(r => ({ ...r, mt5_login: loginNum }));
   if (rows.length > 0) {
     const { error } = await supabase.from('trades').upsert(rows, { onConflict: 'mt5_ticket' });
@@ -329,7 +333,8 @@ app.post('/sync', wrap(async (req, res) => {
         user_id:   user.id,
         symbol:    String(c.symbol),
         timeframe: String(c.timeframe),
-        ts:        Math.floor(Number(c.ts)),
+        // candle stamps are server time as well — align them with the trades
+        ts:        Math.floor(Number(c.ts) - tzOffset),
         open:      Number(c.o),
         high:      Number(c.h),
         low:       Number(c.l),

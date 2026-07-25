@@ -4,7 +4,7 @@
 //|  Place in: MQL5/Experts/VelquorBridge.mq5                        |
 //+------------------------------------------------------------------+
 #property copyright "VELQUOR"
-#property version   "2.24"
+#property version   "2.25"
 #property strict
 
 #include <Trade\Trade.mqh>
@@ -51,7 +51,7 @@ string   g_disconnectUrl;
 string   g_copySignalUrl;
 string   g_copyPollUrl;
 string   g_copyAckUrl;
-string   g_eaVersion   = "2.24";
+string   g_eaVersion   = "2.25";
 string   g_mt5Login;
 int      g_copyOutSeq  = 0;   // uniquifies cloud copy outbox filenames
 ulong    g_lastSyncMs  = 0;   // follower: throttles PostSync inside the fast timer
@@ -1184,6 +1184,17 @@ string BuildPayload()
 
    out += "\"ea_version\":\"" + g_eaVersion + "\",";
    out += "\"broker\":\"" + EscapeJson(AccountInfoString(ACCOUNT_COMPANY)) + "\",";
+
+   // Every timestamp below (deal times, candle times) is an MQL5 datetime, i.e.
+   // seconds counted in the BROKER's server timezone — not UTC. Sending them
+   // raw meant the server sent 12:50 for a deposit that happened at 09:50 UTC,
+   // and every trade time in the app was shifted by the broker's offset (+3h on
+   // Blueberry in summer). Report the offset so the receiver can normalise.
+   // Rounded to a quarter hour: real offsets are quarter-hour multiples, so this
+   // absorbs clock skew between the terminal host and the broker.
+   long serverOffsetSec = (long)TimeTradeServer() - (long)TimeGMT();
+   serverOffsetSec = (long)MathRound((double)serverOffsetSec / 900.0) * 900;
+   out += "\"server_gmt_offset_sec\":" + IntegerToString(serverOffsetSec) + ",";
 
    double balance     = AccountInfoDouble(ACCOUNT_BALANCE);
    double equity      = AccountInfoDouble(ACCOUNT_EQUITY);
