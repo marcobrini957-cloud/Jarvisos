@@ -1,0 +1,94 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  body { background:#000; color:#fff; margin:0; padding:28px 32px;
+         font-family:'Coolvetica', sans-serif; }
+  .row { display:flex; gap:40px; align-items:flex-start; }
+  .col { flex:1; }
+  h2 { font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+       color:#ffffff7a; margin:0 0 12px; font-family:-apple-system,sans-serif; font-weight:600 }
+  .display { font-size:34px; line-height:1.05; margin:0 0 4px }
+  .sub { font-size:15px; color:#ffffffb8; margin:0 0 24px }
+  table { border-collapse:collapse; width:100% }
+  td, th { padding:6px 10px; font-size:12px; text-align:right; border-bottom:1px solid #ffffff14 }
+  th { color:#ffffff7a; font-size:10px; letter-spacing:.08em; text-transform:uppercase; font-weight:400 }
+  td.sym { text-align:left }
+  .pos { color:#00C951 } .neg { color:#FB2C36 }
+  .tab { font-variant-numeric: tabular-nums; font-feature-settings:"tnum" 1 }
+  .big { font-size:26px; }
+  .lbl { font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:#ffffff7a }
+  .note { font-family:-apple-system,sans-serif; font-size:11px; color:#ffffff7a; margin-top:6px }
+  .cmp { font-family:'Coolvetica-Cond', sans-serif }
+  .hv { font-family:'Coolvetica-HeavyComp', sans-serif }
+  hr { border:0; border-top:1px solid #ffffff14; margin:26px 0 }
+</style>
+
+<div class="display">Good evening, Marco</div>
+<div class="sub">Coolvetica — display 34px / subhead 15px</div>
+
+<div class="row">
+  <div class="col">
+    <h2>Trade table @ 12px — DEFAULT figures</h2>
+    <table>
+      <tr><th class="sym" style="text-align:left">Symbol</th><th>Lots</th><th>Entry</th><th>Exit</th><th>P&amp;L</th></tr>
+      <tr><td class="sym">XAUUSD</td><td>0.20</td><td>4118.87</td><td>4118.78</td><td class="neg">−18.93</td></tr>
+      <tr><td class="sym">XAUUSD</td><td>0.10</td><td>4099.30</td><td>4095.35</td><td class="pos">+111.11</td></tr>
+      <tr><td class="sym">NAS100</td><td>0.10</td><td>28909.04</td><td>29049.97</td><td class="neg">−123.38</td></tr>
+      <tr><td class="sym">BTCUSD</td><td>0.05</td><td>90000.00</td><td>90888.88</td><td class="pos">+1000.00</td></tr>
+    </table>
+    <p class="note">Watch the decimal points and the 1s / 8s / 0s.</p>
+  </div>
+
+  <div class="col">
+    <h2>Same table — tabular-nums forced</h2>
+    <table class="tab">
+      <tr><th class="sym" style="text-align:left">Symbol</th><th>Lots</th><th>Entry</th><th>Exit</th><th>P&amp;L</th></tr>
+      <tr><td class="sym">XAUUSD</td><td>0.20</td><td>4118.87</td><td>4118.78</td><td class="neg">−18.93</td></tr>
+      <tr><td class="sym">XAUUSD</td><td>0.10</td><td>4099.30</td><td>4095.35</td><td class="pos">+111.11</td></tr>
+      <tr><td class="sym">NAS100</td><td>0.10</td><td>28909.04</td><td>29049.97</td><td class="neg">−123.38</td></tr>
+      <tr><td class="sym">BTCUSD</td><td>0.05</td><td>90000.00</td><td>90888.88</td><td class="pos">+1000.00</td></tr>
+    </table>
+    <p class="note">If these two look identical, the face has no tabular set.</p>
+  </div>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col">
+    <h2>Metric tile @ 26px</h2>
+    <div class="lbl">MT5 Balance</div>
+    <div class="big">€2,358.19</div>
+    <div class="lbl" style="margin-top:14px">Month P&amp;L</div>
+    <div class="big pos">+11.38%</div>
+  </div>
+  <div class="col">
+    <h2>Small UI text @ 11px / 12px / 13px</h2>
+    <p style="font-size:11px;margin:0 0 6px">11px — 122W / 78L · 351 trades · last sync 13s ago</p>
+    <p style="font-size:12px;margin:0 0 6px">12px — Waiting for your first sync… leave this page open</p>
+    <p style="font-size:13px;margin:0">13px — Your average loss (€71) is bigger than your average win (€44).</p>
+  </div>
+  <div class="col">
+    <h2>Other cuts</h2>
+    <p class="cmp" style="font-size:22px;margin:0 0 8px">Condensed 22px €2,358.19</p>
+    <p class="hv" style="font-size:22px;margin:0">Heavy Comp 22px VELQUOR</p>
+  </div>
+</div>
+<hr>
+<h2>Weight hierarchy test — family ships ONE weight</h2>
+<div style="display:flex;gap:40px">
+  <div>
+    <div class="lbl">weight 400 / 500 / 600 / 700 requested</div>
+    <p style="font-weight:400;font-size:15px;margin:6px 0 0">400 — Open positions</p>
+    <p style="font-weight:500;font-size:15px;margin:2px 0 0">500 — Open positions</p>
+    <p style="font-weight:600;font-size:15px;margin:2px 0 0">600 — Open positions</p>
+    <p style="font-weight:700;font-size:15px;margin:2px 0 0">700 — Open positions</p>
+    <p class="note">If these look identical, hierarchy cannot come from weight.</p>
+  </div>
+  <div>
+    <div class="lbl">hierarchy by size + colour instead</div>
+    <p style="font-size:22px;margin:6px 0 0">€2,358.19</p>
+    <p style="font-size:13px;color:#ffffffb8;margin:2px 0 0">Equity €2,498.19</p>
+    <p style="font-size:11px;color:#ffffff7a;margin:2px 0 0">122W / 78L · 351 trades</p>
+  </div>
+</div>

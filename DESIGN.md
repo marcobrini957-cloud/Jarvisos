@@ -161,7 +161,45 @@ furniture in the way.
 3. Anti-references.
 4. **Brand assets**: logo source (vector), wordmark.
 
-### 4.1 Typeface — the single biggest lever
+### 4.0 Typeface — DECIDED: Coolvetica, as one of two voices
+
+Marco chose **Coolvetica** (Typodermic, installed locally: Regular, Italic,
+Condensed, Heavy Compressed). Tested at real dashboard sizes before committing —
+specimen in `design/specimen-coolvetica.html`. Two hard findings:
+
+**1. It has no tabular figures.** Rendering a trade table with default figures
+and with `font-variant-numeric: tabular-nums` forced produces *identical* output
+— the face has no tabular set. Digits are proportional, so `1` is visibly
+narrower than `2`: `0.10` and `0.20` are different widths, `+111.11` is far
+narrower than `+1000.00`, and decimal points do not line up down a column. For a
+screen that is mostly columns of numbers this is a functional defect, not a
+taste issue.
+
+**2. It ships one weight.** Requesting 400 / 500 / 600 / 700 renders four
+identical lines. Hierarchy cannot come from weight; it must come from size,
+colour and case.
+
+**Resolution — the interface speaks in two voices:**
+
+| Voice | Face | Used for |
+|---|---|---|
+| **Language** | Coolvetica | Wordmark, headings, panel titles, labels, instrument names, prose |
+| **Data** | Mono | Every figure, without exception — prices, P&L, percentages, counts, times |
+
+This turns the limitation into the identity. Numbers in a mono makes columns
+align perfectly, reinforces "instrument, not app", and no competitor in retail
+trading does it. Coolvetica then only carries the words, which is exactly what a
+display face is for.
+
+**Coolvetica Heavy Compressed is the wordmark.** It is the most distinctive cut
+and is wasted on body copy.
+
+**Still to pick: the mono.** The proof uses SF Mono, which is macOS-only — it
+must be self-hosted for production. Options: Berkeley Mono (paid, the most
+characterful, best fit for the terminal identity), JetBrains Mono or Martian
+Mono (both free, self-hostable). Marco decides.
+
+### 4.1 Typeface reference — superseded by 4.0
 
 The font is what makes a site unplaceable. Inter says "Next.js template",
 Poppins says "startup landing page", Roboto says "Android". None of them can
@@ -288,3 +326,29 @@ Target primitives — to be agreed at Stage 1:
 - The ban list in §2 is checked explicitly before anything is called done.
 - Numbers are verified against MetaTrader, per the standing data rule — a
   redesign must not change a single figure.
+
+---
+
+## 9. Proof 01 — Overview (`design/proof-01-overview.html`)
+
+First look at the language, built with Marco's real account data. Open it in a
+browser; it uses locally-installed Coolvetica + SF Mono.
+
+What it establishes:
+- **Two voices**: Coolvetica for words, mono for every figure. Decimal points
+  align down every column.
+- **FTMO's alpha-on-black surfaces** (`#ffffff0a/14/1f`), hairline borders,
+  6px radii — no solid grey panels.
+- **P&L is the only colour on screen.** No brand accent competing with it.
+  Chrome, labels and structure are pure white at graded alpha.
+- **Terminal density**: 46px header, 38px nav, ~28px table rows, 9.5px labels,
+  11.5px data. A metric strip of five figures fits in the height one of the old
+  hero cards used.
+- **Wordmark** in Coolvetica Heavy Compressed.
+- Ban list held: no gradient, no glow, no emoji, no centred column, no 3-up card
+  grid, no native controls.
+
+Open questions for Marco on this proof:
+1. Is the density right, or push further?
+2. Metric strip as one bordered band vs separate tiles?
+3. Does the wordmark want more presence?
