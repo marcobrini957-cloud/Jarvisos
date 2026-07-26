@@ -401,5 +401,53 @@ net worth, calendar, streaks, focus and edge facts all on new tokens.
   with the chrome.
 - Mobile "Daily risk" panel still has a red border treatment from the old system.
 
-**Stage 3 — NEXT.** Chrome first (it frames every tab), then the remaining 11
-tabs in order of use, each verified at 1512px and 390px.
+**Stage 3 — DONE.** The whole dashboard is on the language: chrome plus the
+remaining eleven tabs.
+
+The rollout did not port 2,700 inline styles by hand. The legacy Void Black vars
+are **re-pointed inside a `.vq2` scope** on the dashboard shell (see the block at
+the end of `app/globals.css`), so every unconverted surface, hairline, ink and
+radius resolved to 2.0 values in one step; tabs were then converted structurally
+on top of that instead of from scratch. Surfaces are written as their composite
+over black (`#0A0A0A`, not white at 4%) so dropdowns, modals and the sticky
+chrome stay opaque. Landing, auth and /dev keep the old palette — the class is
+only on the dashboard.
+
+Mechanical passes, all scripted:
+- **Chroma collapse** (52 files): every hardcoded blue / purple / cyan / gold /
+  pink literal → ink at the same alpha; greens and reds → the tuned P&L pair.
+- **Radii** → the 3/4/6/8/12 ladder (276 sites, plus Tailwind's `rounded-*`).
+- **Type scale**: 591 ad-hoc `fontSize` values onto the named scale.
+- **Shadows**: 21 box/text shadows and drop-shadow filters deleted.
+- **`font-synthesis: none`** on `.vq2` — Coolvetica ships one weight, so every
+  legacy `fontWeight: 600` was being faux-bolded into smeared stems at 12px.
+- **Figures → mono**: a JSX walker added `vq-num` to single-element spans whose
+  content is plainly a figure (42 sites). CSS cannot see which spans hold digits,
+  which is why this rule needed a script rather than a stylesheet.
+
+What the screenshots caught that the code review would not have:
+1. `var(--ac)` was used both as an ink colour *and* as a fill. Once the accent
+   resolved to white, every toggled control was white-on-white. Fills now take a
+   surface step (toggled) or the ink-1/void button (primary).
+2. Green-filled action buttons — "+ Add", "Update", "Host in cloud" — read as
+   profit. Green means money; actions are ink. Red stays on destructive only.
+3. Words were going through the mono voice: "Best mood: Neutral" rendered in
+   JetBrains Mono. MetricCard/PeriodMetricCard now check for digits first.
+4. Counts were inheriting P&L colour ("17 trades" in green under a green figure).
+5. At 390px a "+€1488.70" at 26px ran under its donut — the figure now scales
+   with the card, since the ring is the fixed element.
+
+Decisions made during the rollout, all following from "P&L is the only chroma":
+- Five mood colours → ordinal brightness (bad keeps red).
+- Five habit-category colours → ink.
+- Four session colours in SessionClock → open/closed in ink.
+- Eight badge tints → direction and outcome only.
+- Skill scores (Trader DNA, Radar) → brightness, red for weak. Green is money.
+- Partner brand colour lives on the logo tile, not on the card.
+- The avatar accent-colour picker was deleted: there is no accent to pick.
+- Amber survives only as `--color-warn` for genuine state — a risk gauge past
+  50%, a stale bridge heartbeat.
+
+**Stage 4 — NEXT.** Landing, pricing, auth, legal.
+**Stage 5.** Delete the legacy palette and the `.vq2` bridge once nothing reads
+the old vars; drop the glow/gradient helper classes and the remaining emoji.

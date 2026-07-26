@@ -61,7 +61,7 @@ export function HostAccountModal({
         </div>
 
         {isMain ? (
-          <div style={{ fontSize: 'var(--text-base)', color: 'var(--color-up)', padding: '10px 12px', background: 'rgba(0,196,106,0.06)', border: '1px solid rgba(0,196,106,0.2)', borderRadius: 'var(--radius-md)', marginBottom: '16px', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--text-base)', color: 'var(--color-up)', padding: '10px 12px', background: 'var(--color-up-dim)', borderLeft: '2px solid var(--color-up)', borderRadius: 'var(--radius-md)', marginBottom: '16px', lineHeight: 1.5 }}>
             ✓ This is your connected VELQUOR terminal — no password needed. It will be restarted in
             {' '}{account.role} mode and keeps syncing your dashboard as before.
           </div>

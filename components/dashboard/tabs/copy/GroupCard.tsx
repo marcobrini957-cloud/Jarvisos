@@ -67,7 +67,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
   const cloudBadge = (
     <span style={{
       fontSize: 'var(--text-2xs)', fontWeight: 700, letterSpacing: '0.05em', padding: '2px 7px',
-      borderRadius: 'var(--radius-xl)', background: 'rgba(0,196,106,0.1)',
+      borderRadius: 'var(--radius-xs)', background: 'var(--color-surface-2)',
       border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', flexShrink: 0,
     }}>
       CLOUD
@@ -92,7 +92,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
       title="Run this account in a VELQUOR cloud terminal"
       style={{
         fontSize: 'var(--text-xs)', padding: '4px 10px', borderRadius: 'var(--radius-md)', fontWeight: 600,
-        background: 'rgba(0,196,106,0.08)', border: '1px solid rgba(0,196,106,0.3)',
+        background: 'transparent', border: '1px solid var(--color-line-2)',
         color: 'var(--color-ink-1)', cursor: 'pointer', whiteSpace: 'nowrap',
       }}
     >
@@ -132,8 +132,8 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
               onClick={toggleActive} disabled={toggling}
               style={{
                 padding: '5px 12px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)',
-                background: group.active ? 'rgba(240,80,75,0.1)' : 'rgba(0,196,106,0.1)',
-                border:     group.active ? '1px solid rgba(240,80,75,0.3)' : '1px solid rgba(0,196,106,0.3)',
+                background: 'transparent',
+                border:     '1px solid var(--color-line-1)',
                 color:      'var(--color-ink-2)',
                 cursor:     'pointer', fontWeight: 600,
               }}
@@ -292,7 +292,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
         {(leader || followers.length > 0) && (
           <div style={{
             margin: '0 20px 16px', padding: '12px 14px', borderRadius: 'var(--radius-md)',
-            background: 'rgba(0,196,106,0.03)', border: '1px solid rgba(0,196,106,0.1)',
+            background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
           }}>
             <button
               onClick={() => setShowEaConfig(v => !v)}

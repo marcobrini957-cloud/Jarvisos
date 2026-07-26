@@ -82,11 +82,13 @@ export default function PeriodMetricCard({
       </div>
 
       {/* Figure on the left, graphic on the right */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-col" style={{ minWidth: 0, gap: '3px' }}>
+      <div className="flex items-center justify-between gap-2" style={{ minWidth: 0 }}>
+        <div className="flex flex-col" style={{ minWidth: 0, gap: '3px', overflow: 'hidden' }}>
+          {/* The figure gives way before the ring does: at 390px a
+              "+€1488.70" at 26px used to run under the donut. */}
           {isFigure
-            ? <Num size="2xl" tone={tone}>{value}</Num>
-            : <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', color: 'var(--color-ink-1)' }}>{value}</span>}
+            ? <Num size="2xl" tone={tone} style={{ fontSize: 'clamp(15px, 4.1vw, 26px)', whiteSpace: 'nowrap' }}>{value}</Num>
+            : <span style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(15px, 4.1vw, 26px)', color: 'var(--color-ink-1)' }}>{value}</span>}
 
           {change && (
             <span style={{

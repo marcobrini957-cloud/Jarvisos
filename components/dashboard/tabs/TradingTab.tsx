@@ -237,7 +237,7 @@ export default function TradingTab() {
           getValue={(p) => {
             const t   = filterByPeriod(trades, p)
             const pnl = calcPnl(t)
-            return { value: fmtPnl(pnl), change: `${t.length} trade${t.length !== 1 ? 's' : ''}`, changePositive: pnl >= 0 ? true : false }
+            return { value: fmtPnl(pnl), change: `${t.length} trade${t.length !== 1 ? 's' : ''}`, changePositive: null }
           }}
           getVisual={(p) => {
             const t      = filterByPeriod(trades, p)
@@ -260,7 +260,7 @@ export default function TradingTab() {
           getValue={(p) => {
             const { rate, wins, losses, breakeven, total } = calcWinRate(filterByPeriod(trades, p))
             const label = breakeven > 0 ? `${wins}W · ${breakeven}BE · ${losses}L` : `${wins}W · ${losses}L`
-            return { value: total > 0 ? `${rate.toFixed(0)}%` : '—', change: label, changePositive: rate >= 50 ? true : rate === 0 ? null : false }
+            return { value: total > 0 ? `${rate.toFixed(0)}%` : '—', change: label, changePositive: null }
           }}
           getVisual={(p) => {
             const { rate, total } = calcWinRate(filterByPeriod(trades, p))
@@ -304,7 +304,7 @@ export default function TradingTab() {
             const sized = t.filter(x => x.lot_size && x.net_profit != null)
             if (sized.length === 0) return { value: '—', change: 'No sized trades', changePositive: null }
             const pips = calcPips(t)
-            return { value: fmtPips(pips), change: `across ${sized.length} trade${sized.length !== 1 ? 's' : ''}`, changePositive: pips > 0 ? true : pips < 0 ? false : null }
+            return { value: fmtPips(pips), change: `across ${sized.length} trade${sized.length !== 1 ? 's' : ''}`, changePositive: null }
           }}
           getVisual={(p) => {
             const t         = filterByPeriod(trades, p)
@@ -334,7 +334,7 @@ export default function TradingTab() {
             return {
               value:          totalDays > 0 ? `${pct.toFixed(0)}%` : '—',
               change:         totalDays > 0 ? `${green}/${totalDays} traded days green` : 'No trading days',
-              changePositive: totalDays === 0 ? null : pct >= 50 ? true : false,
+              changePositive: null,
             }
           }}
           getVisual={(p) => {

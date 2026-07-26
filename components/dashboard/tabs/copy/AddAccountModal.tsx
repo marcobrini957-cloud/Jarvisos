@@ -130,8 +130,8 @@ export function AddAccountModal({
                   style={{
                     flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)',
                     fontWeight: method === m ? 700 : 400,
-                    background: method === m ? 'rgba(0,196,106,0.08)' : 'var(--s2)',
-                    border:     method === m ? '1px solid rgba(0,196,106,0.35)' : '1px solid var(--bd)',
+                    background: method === m ? 'var(--color-surface-3)' : 'transparent',
+                    border:     '1px solid var(--color-line-1)',
                     color:      method === m ? 'var(--color-up)' : 'var(--t3)',
                     cursor:     'pointer',
                   }}
