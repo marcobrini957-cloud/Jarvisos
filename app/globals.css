@@ -627,6 +627,15 @@ html { scroll-behavior: smooth; }
   /* Non-P&L status. Used for system state only, never decoration. */
   --color-warn: #E8A33D;
 
+  /* ── The one deliberate exception to "P&L is the only chroma" ──
+     Outbound commercial actions — the affiliate CTAs on the Partners tab and in
+     the ad slots. Those clicks are the point of that page, and an ink-on-ink
+     button did not read as pressable. Kept out of the P&L hues on purpose, and
+     it appears nowhere else in the product: an internal Save stays ink. */
+  --color-action:       #2F6BFF;
+  --color-action-hover: #4C82FF;
+  --color-action-ink:   #ffffff;
+
   /* ── Geometry — small radii; a terminal is not a card deck ── */
   --radius-xs: 3px;
   --radius-sm: 4px;

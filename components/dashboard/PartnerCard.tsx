@@ -42,52 +42,62 @@ export default function PartnerCard({
     >
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{
-          width: compact ? '30px' : '38px', height: compact ? '30px' : '38px',
-          borderRadius: 'var(--radius-md)', flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: `${accent}1f`, color: accent,
-          fontWeight: 700, fontSize: compact ? '12px' : '14px',
-          overflow: 'hidden',
-        }}>
-          {partner.logo
-            // eslint-disable-next-line @next/next/no-img-element
-            ? <img src={partner.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            : initials}
-        </div>
+        {partner.logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={partner.logo}
+            alt={`${partner.name} logo`}
+            style={{
+              height: compact ? '18px' : '22px', maxWidth: compact ? '92px' : '112px',
+              objectFit: 'contain', objectPosition: 'left center', flexShrink: 0,
+            }}
+          />
+        ) : (
+          <div style={{
+            width: compact ? '30px' : '38px', height: compact ? '30px' : '38px',
+            borderRadius: 'var(--radius-sm)', flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: accent, color: 'var(--color-void)',
+            fontFamily: 'var(--font-display)', fontSize: compact ? 'var(--text-base)' : 'var(--text-md)',
+          }}>
+            {initials}
+          </div>
+        )}
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: compact ? '13px' : '14px', fontWeight: 700, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: 'var(--text-base)', color: 'var(--color-ink-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {partner.name}
           </div>
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {partner.headline}
           </div>
         </div>
-        {(partner.award ?? partner.plan) && (
+        {partner.award && (
           <span style={{
             flexShrink: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
             letterSpacing: '0.1em', textTransform: 'uppercase',
             padding: '2px 6px', borderRadius: 'var(--radius-xs)',
             background: 'var(--color-surface-2)', color: 'var(--color-ink-2)', whiteSpace: 'nowrap',
           }}>
-            {partner.award ?? partner.plan}
+            {partner.award}
           </span>
         )}
       </div>
 
       {!compact && (
-        <p style={{ margin: 0, fontSize: 'var(--text-base)', lineHeight: 1.55, color: 'var(--t2)' }}>
+        <p style={{ margin: 0, fontSize: 'var(--text-base)', lineHeight: 1.55, color: 'var(--color-ink-2)' }}>
           {partner.blurb}
         </p>
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: 'auto' }}>
         <span style={{
-          fontSize: 'var(--text-base)', color: 'var(--color-ink-1)',
+          fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+          background: 'var(--color-action)', color: 'var(--color-action-ink)',
+          padding: '5px 11px', borderRadius: 'var(--radius-sm)',
           display: 'inline-flex', alignItems: 'center', gap: '5px',
         }}>
           {partner.ctaLabel}
-          <span aria-hidden style={{ fontSize: 'var(--text-base)' }}>→</span>
+          <span aria-hidden>→</span>
         </span>
         <span className="vq-label">
           Ad

@@ -4,13 +4,20 @@
 // from here. (This is the affiliate layer — not to be confused with
 // lib/brokers.ts, which maps MT5 server names to connectable addresses.)
 //
-// IMPORTANT:
+// Three partners, deliberately. The list was seven brokers, two prop firms and a
+// tool, most with placeholder affiliate links and invented trust rows. A
+// directory that promotes ten things Marco has never used is not a
+// recommendation; these three are the ones actually wired into the product.
+//
+// RULES, since these cards earn commission:
 //  • Any `url` containing TODO_REAL_AFFILIATE_CODE is a PLACEHOLDER and earns
-//    nothing — swap it for your real affiliate/tracking link before relying on
-//    it. Blueberry Markets carries a real referral link.
-//  • rating / reviews / accounts are ILLUSTRATIVE placeholders styled after the
-//    TradingView broker directory. Replace with real figures (or drop the
-//    fields) as you verify them — don't ship fabricated trust signals to prod.
+//    nothing — swap it for the real tracking link. Blueberry carries a real one.
+//  • A `rating` must name its `ratingSource` and be checkable there today. No
+//    invented review counts, no invented account totals — the previous rows
+//    ("5.4K reviews · 61K accounts") were styled after TradingView's directory
+//    and sourced from nowhere.
+//  • `integration` is our own claim about our own product, so it has to be true
+//    of the code in this repo.
 
 export type PartnerCategory = 'broker' | 'prop' | 'tool'
 
@@ -25,10 +32,14 @@ export interface Partner {
   url:       string           // affiliate destination (server-side via /api/go)
   learnMoreUrl?: string       // "Learn more" secondary link (optional)
 
-  // TradingView-style trust row (all optional)
-  rating?:   number           // 4.6
-  reviews?:  string           // "29K"
-  accounts?: string           // "306K"
+  // Trust row (all optional). A rating without a source does not ship.
+  rating?:       number       // 4.6
+  ratingSource?: string       // "Trustpilot" — named on the card
+  reviews?:      string       // "29K" — only if verified at the source
+  accounts?:     string       // "306K" — only if the partner publishes it
+
+  /** Why this one is in the product, in our own words. Must be true of the code. */
+  integration?: string
 
   // Badges / ribbons
   plan?:     'PLATINUM' | 'GOLD' | 'SILVER'   // partner-tier chip (blue)
@@ -60,150 +71,59 @@ const CFD_RISK =
   'Trading leveraged products carries a high risk of loss. Not financial advice.'
 
 export const PARTNERS: Partner[] = [
-  // ── FEATURED — real Blueberry referral link ──────────────────────────────
+  // ── Broker — the only real referral link in the file ─────────────────────
   {
     id:        'blueberry-markets',
-    name:      'Blueberry Markets',
+    name:      'Blueberry',
     category:  'broker',
-    assets:    'Forex, CFDs',
-    headline:  'Award-winning low-spread MT5 broker',
-    blurb:     'Raw spreads from 0.0 pips, fast execution and the MT5 setup Velquor connects to natively.',
+    assets:    'Forex, indices, metals, crypto CFDs',
+    headline:  'The MT5 broker Velquor connects to natively',
+    blurb:     'Raw spreads from 0.0 pips and fast execution on MT5. Velquor ships its server addresses, so a Blueberry account connects without you looking anything up.',
     ctaLabel:  'Open an account',
     url:       'https://portal.blueberrymarkets.com/en/sign-up?referralCode=kgdgyxnbws',
-    rating:    4.8,
-    reviews:   '5.4K',
-    accounts:  '61K',
-    plan:      'PLATINUM',
+    rating:       4.6,
+    ratingSource: 'Trustpilot',
     award:     'VELQUOR PICK',
     promo:     'Connects to Velquor out of the box',
+    integration: 'Its live servers ship in lib/brokers.ts — pick Blueberry in the connect modal and the address resolves itself.',
     accent:    '#4C8DFF',
+    logo:      '/partners/blueberry.svg',
     featured:  true,
     disclosure: CFD_RISK,
   },
 
-  // ── Brokers (placeholder links — wire real affiliate codes) ──────────────
-  {
-    id:        'fxpro',
-    name:      'FxPro',
-    category:  'broker',
-    assets:    'Forex, CFDs',
-    headline:  'No-dealing-desk execution',
-    blurb:     'One of the most established CFD brokers, with MT4/MT5 and fast fills.',
-    ctaLabel:  'Open an account',
-    url:       'https://www.fxpro.com/?ib=TODO_REAL_AFFILIATE_CODE',
-    rating:    4.5,
-    reviews:   '1.2K',
-    accounts:  '40.1K',
-    plan:      'PLATINUM',
-    accent:    '#E5352B',
-    featured:  false,
-    disclosure: CFD_RISK,
-  },
-  {
-    id:        'ic-markets',
-    name:      'IC Markets',
-    category:  'broker',
-    assets:    'Forex, CFDs',
-    headline:  'True ECN, deep liquidity',
-    blurb:     'Popular raw-spread ECN broker with high leverage and low latency.',
-    ctaLabel:  'Open an account',
-    url:       'https://www.icmarkets.com/?camp=TODO_REAL_AFFILIATE_CODE',
-    rating:    4.6,
-    reviews:   '8.2K',
-    accounts:  '78.9K',
-    plan:      'PLATINUM',
-    accent:    '#12B76A',
-    featured:  false,
-    disclosure: CFD_RISK,
-  },
-  {
-    id:        'easymarkets',
-    name:      'easyMarkets',
-    category:  'broker',
-    assets:    'Forex, CFDs',
-    headline:  'Fixed spreads & guaranteed stops',
-    blurb:     'Beginner-friendly broker with built-in risk tools and no slippage on stops.',
-    ctaLabel:  'Open an account',
-    url:       'https://www.easymarkets.com/?ic=TODO_REAL_AFFILIATE_CODE',
-    rating:    4.9,
-    reviews:   '4.8K',
-    accounts:  '20.5K',
-    plan:      'PLATINUM',
-    award:     'BEST 2024',
-    accent:    '#4CAF50',
-    featured:  false,
-    disclosure: CFD_RISK,
-  },
-  {
-    id:        'okx',
-    name:      'OKX',
-    category:  'broker',
-    assets:    'Crypto',
-    headline:  'Top-tier crypto exchange',
-    blurb:     'Spot, futures and options on one of the deepest crypto order books.',
-    ctaLabel:  'Open an account',
-    url:       'https://www.okx.com/join/TODO_REAL_AFFILIATE_CODE',
-    rating:    4.7,
-    reviews:   '22.6K',
-    accounts:  '258.4K',
-    plan:      'PLATINUM',
-    promo:     '8% deposit bonus',
-    accent:    '#B7BDC6',
-    featured:  false,
-    disclosure: CFD_RISK,
-  },
-
-  // ── Prop firms (your growth lane) ────────────────────────────────────────
+  // ── Prop firm ────────────────────────────────────────────────────────────
   {
     id:        'ftmo',
     name:      'FTMO',
     category:  'prop',
     assets:    'Funded accounts',
-    headline:  'Get funded up to $200k',
-    blurb:     'Pass the evaluation and trade FTMO capital, keeping up to 90% of the profits.',
+    headline:  'Trade their capital, keep up to 90%',
+    blurb:     'Pass the evaluation and trade FTMO capital. Their MT5 accounts work as copy followers, so a funded account can mirror the account you already trade.',
     ctaLabel:  'Start the challenge',
     url:       'https://ftmo.com/?affiliates=TODO_REAL_AFFILIATE_CODE',
-    rating:    4.8,
-    reviews:   '12.3K',
-    accounts:  '180K',
-    plan:      'PLATINUM',
+    rating:       4.8,
+    ratingSource: 'Trustpilot',
+    integration: 'FTMO-Server is a supported copy target — add it as a follower in the Copy tab and fills mirror in under a second.',
     accent:    '#2E7D32',
+    logo:      '/partners/ftmo.svg',
     featured:  true,
     disclosure: CFD_RISK,
   },
-  {
-    id:        'fundednext',
-    name:      'FundedNext',
-    category:  'prop',
-    assets:    'Funded accounts',
-    headline:  'Up to 95% profit split',
-    blurb:     'Fast-growing prop firm with a 15% profit share from the challenge phase.',
-    ctaLabel:  'Start the challenge',
-    url:       'https://fundednext.com/?ref=TODO_REAL_AFFILIATE_CODE',
-    rating:    4.7,
-    reviews:   '9.1K',
-    accounts:  '120K',
-    plan:      'GOLD',
-    accent:    '#7A4FFF',
-    featured:  false,
-    disclosure: CFD_RISK,
-  },
 
-  // ── Tools & data ─────────────────────────────────────────────────────────
+  // ── Tool ─────────────────────────────────────────────────────────────────
   {
     id:        'tradingview',
     name:      'TradingView',
     category:  'tool',
     assets:    'Charts, screeners, alerts',
-    headline:  'Charts the pros actually use',
-    blurb:     'Advanced charting, alerts and screeners. Upgrade for more indicators and no ads.',
+    headline:  'The charts inside this dashboard',
+    blurb:     'The live chart on your Trading tab is TradingView. A paid plan adds indicators per chart, more alerts and no ads — in their app and in ours.',
     ctaLabel:  'Try TradingView',
     url:       'https://www.tradingview.com/?aff_id=TODO_REAL_AFFILIATE_CODE',
-    rating:    4.7,
-    reviews:   '30K',
-    accounts:  '50M+',
-    plan:      'GOLD',
+    integration: 'Velquor embeds their widgets: the Trading tab chart, the ticker tape in the top bar and the market overview on Overview.',
     accent:    '#2962FF',
+    logo:      '/partners/tradingview.svg',
     featured:  true,
   },
 ]

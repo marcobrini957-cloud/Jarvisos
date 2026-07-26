@@ -42,14 +42,18 @@ export default function PartnersTab() {
         <OrdersCounter />
       </div>
 
-      {/* ── Filter pills ─────────────────────────────────────────── */}
-      <div style={{ display: 'flex', marginBottom: '12px' }}>
-        <Segmented
-          options={PARTNER_FILTERS.map(f => ({ key: f.id, label: f.label }))}
-          value={filter}
-          onChange={setFilter}
-        />
-      </div>
+      {/* ── Filter ──
+          Kept, but only earns its place once the list grows past a screenful;
+          with three offers it is one tap that changes nothing. */}
+      {PARTNERS.length > 4 && (
+        <div style={{ display: 'flex', marginBottom: '12px' }}>
+          <Segmented
+            options={PARTNER_FILTERS.map(f => ({ key: f.id, label: f.label }))}
+            value={filter}
+            onChange={setFilter}
+          />
+        </div>
+      )}
 
       {/* ── Cards ────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -63,8 +67,10 @@ export default function PartnersTab() {
         fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)', lineHeight: 1.6,
       }}>
         Some links on this page are affiliate links — Velquor may earn a commission if you sign up,
-        at no extra cost to you. Ratings and figures are indicative. Trading leveraged products
-        carries a high risk of loss. This is not financial advice.
+        at no extra cost to you. Star ratings are each partner&apos;s Trustpilot score at the time of
+        writing; check the current one before you decide. Market turnover is from the BIS Triennial
+        Central Bank Survey, April 2025. Trading leveraged products carries a high risk of loss.
+        This is not financial advice.
       </div>
     </div>
   )

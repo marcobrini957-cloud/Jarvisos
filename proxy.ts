@@ -17,6 +17,9 @@ export async function proxy(request: NextRequest) {
     // Self-hosted faces must reach signed-out visitors too, or the landing and
     // login pages render in the fallback font.
     pathname.startsWith('/fonts') ||
+    // Partner logos appear in the free-user ad rail, which renders before the
+    // session is resolved on a cold load.
+    pathname.startsWith('/partners') ||
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml' ||
     pathname === '/manifest.webmanifest' ||
