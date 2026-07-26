@@ -122,7 +122,9 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
   const ovr    = scored.length > 0
     ? Math.round(scored.reduce((s, a) => s + a.score, 0) / scored.length)
     : 0
-  const scoreCol = (s: number) => s >= 70 ? '#00C46A' : s >= 45 ? '#FFFFFF' : '#F0504B'
+  // A skill score is not a P&L. Green belongs to money, so strength reads as
+  // brightness and only a genuinely weak score keeps the red.
+  const scoreCol = (s: number) => s >= 70 ? '#FFFFFF' : s >= 45 ? 'rgba(255,255,255,0.55)' : '#F0504B'
   const ovrColor = scoreCol(ovr)
 
   // ── SVG geometry ──────────────────────────────────────────────────────────
@@ -163,22 +165,9 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         style={{ display: 'block', overflow: 'visible', maxWidth: '600px' }}
       >
         <defs>
-          {/* Polygon glow */}
-          <filter id="rglow2" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-          {/* Dot glow */}
-          <filter id="dglow2" x="-120%" y="-120%" width="340%" height="340%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-          {/* OVR badge inner glow */}
-          <filter id="oglow2" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-          {/* Data fill gradient — blue → purple */}
+          {/* The three gaussian glow filters this chart used to run — polygon,
+              vertex dots and the OVR badge — are gone; a radar is a gauge. */}
+          {/* Data fill */}
           <linearGradient id="rfill2" x1="0.3" y1="0" x2="0.7" y2="1">
             <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.32" />
             <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.10" />
@@ -204,7 +193,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
             <text key={v}
               x={(p.x + 5).toFixed(1)} y={(p.y + 1).toFixed(1)}
               fontSize="8" fill="rgba(255,255,255,0.18)"
-              fontFamily="monospace" textAnchor="start"
+              fontFamily="var(--font-mono)" textAnchor="start"
             >{v}</text>
           )
         })}
@@ -240,14 +229,9 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         {/* ── Data polygon fill ── */}
         <path d={dataPath()} fill="url(#rfill2)" />
 
-        {/* ── Data polygon outline — glow pass ── */}
+        {/* ── Data polygon outline ── */}
         <path d={dataPath()} fill="none"
-          stroke="#FFFFFF" strokeWidth="4"
-          filter="url(#rglow2)" opacity="0.40"
-        />
-        {/* ── Data polygon outline — crisp pass ── */}
-        <path d={dataPath()} fill="none"
-          stroke="#FFFFFF" strokeWidth="1.8" opacity="0.90"
+          stroke="#FFFFFF" strokeWidth="1.5" opacity="0.9"
         />
 
         {/* ── Vertex dots ── */}
@@ -263,7 +247,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
           }
           const col = scoreCol(a.score)
           return (
-            <g key={i} filter="url(#dglow2)">
+            <g key={i}>
               <circle cx={p.x.toFixed(1)} cy={p.y.toFixed(1)}
                 r="7" fill="rgba(0,0,0,0.95)" stroke={col} strokeWidth="2.5" />
               <circle cx={p.x.toFixed(1)} cy={p.y.toFixed(1)}
@@ -290,7 +274,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
               <text
                 x={lx.toFixed(1)} y={(ly + 6).toFixed(1)}
                 textAnchor={anchor} fontSize="16"
-                fill={col} fontFamily="monospace" fontWeight="800"
+                fill={col} fontFamily="var(--font-mono)" fontWeight="800"
               >{a.value}</text>
               {/* context sub-line */}
               <text
@@ -305,7 +289,6 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
 
         {/* ── Center OVR badge ── */}
         {/* Outer glow ring */}
-        <circle cx={cx} cy={cy} r="50" fill={ovrColor} opacity="0.06" filter="url(#oglow2)" />
         {/* Dark bg */}
         <circle cx={cx} cy={cy} r="48" fill="rgba(0,0,0,0.88)" />
         {/* Accent ring */}
@@ -317,7 +300,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
           style={{ letterSpacing: '0.20em' }}>OVR</text>
         {/* Score */}
         <text x={cx} y={cy + 22} textAnchor="middle" fontSize="40"
-          fill={ovrColor} fontFamily="monospace" fontWeight="900">{ovr}</text>
+          fill={ovrColor} fontFamily="var(--font-mono)" fontWeight="600">{ovr}</text>
         {/* How many skills actually counted toward the OVR */}
         {scored.length < N && (
           <text x={cx} y={cy + 64} textAnchor="middle" fontSize="9"
@@ -335,22 +318,22 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
           const col = a.has ? scoreCol(a.score) : 'rgba(255,255,255,0.38)'
           const bg  = !a.has
             ? 'rgba(255,255,255,0.02)' : a.score >= 70
-            ? 'rgba(0,196,106,0.08)' : a.score >= 45
+            ? 'rgba(255,255,255,0.08)' : a.score >= 45
             ? 'rgba(255,255,255,0.08)' : 'rgba(240,80,75,0.08)'
           return (
             <div key={a.id} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
               padding: '8px 12px', borderRadius: 'var(--radius-md)',
-              background: bg, border: `1px solid ${col}25`,
+              background: bg, border: '1px solid var(--color-line-1)',
               minWidth: '80px', flex: '1 1 80px', opacity: a.has ? 1 : 0.7,
             }}>
-              <span style={{ fontSize: 'var(--text-2xs)', color: 'rgba(255,255,255,0.30)', letterSpacing: '0.08em', textAlign: 'center', whiteSpace: 'nowrap' }}>
+              <span className="vq-label" style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
                 {a.label}
               </span>
-              <span style={{ fontSize: 'var(--text-md)', color: col, fontFamily: 'monospace', fontWeight: 800 }}>
+              <span className="vq-num" style={{ fontSize: 'var(--text-md)', color: col }}>
                 {a.value}
               </span>
-              <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.18)', textAlign: 'center' }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)', color: 'var(--color-ink-4)', textAlign: 'center' }}>
                 {a.sub}
               </span>
             </div>
@@ -365,8 +348,8 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
             width: '100%', padding: '8px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
-            background: 'var(--s2)', border: '1px solid var(--bd2)',
-            color: 'var(--t2)', fontSize: 'var(--text-sm)', fontWeight: 600, letterSpacing: '0.04em',
+            background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
+            color: 'var(--color-ink-2)', fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
           }}
         >
           <span>{showLegend ? 'Hide' : 'How is this graded?'}</span>
@@ -374,7 +357,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         </button>
 
         {showLegend && (
-          <div style={{ marginTop: '10px', padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ marginTop: '10px', padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
               Your <strong style={{ color: 'var(--t1)' }}>OVR</strong> is the average of the skills below, each scored 0–100.
               Skills you haven&apos;t logged data for show <span style={{ color: 'var(--t2)' }}>“—”</span> and are left out of the average — they don&apos;t drag your score down.

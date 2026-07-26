@@ -47,6 +47,7 @@ export default function PeriodMetricCard({
   const isPositive = changePositive === true
   const isNegative = changePositive === false
   const tone = value.startsWith('+') ? 'up' : value.startsWith('-') ? 'down' : 'neutral'
+  const isFigure = /\d/.test(value)
 
   return (
     <div
@@ -83,7 +84,9 @@ export default function PeriodMetricCard({
       {/* Figure on the left, graphic on the right */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col" style={{ minWidth: 0, gap: '3px' }}>
-          <Num size="2xl" tone={tone}>{value}</Num>
+          {isFigure
+            ? <Num size="2xl" tone={tone}>{value}</Num>
+            : <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xl)', color: 'var(--color-ink-1)' }}>{value}</span>}
 
           {change && (
             <span style={{

@@ -24,6 +24,9 @@ export default function MetricCard({
 
   // A value that opens with a sign is a P&L, and takes the P&L colour.
   const tone = value.startsWith('+') ? 'up' : value.startsWith('-') ? 'down' : 'neutral'
+  // Not every "value" is a figure — "Best mood: Neutral" is a word, and words
+  // are Coolvetica. Mono is for numbers only.
+  const isFigure = /\d/.test(value)
 
   return (
     <div
@@ -39,7 +42,9 @@ export default function MetricCard({
     >
       <Label>{title}</Label>
 
-      <Num size="xl" tone={tone}>{value}</Num>
+      {isFigure
+        ? <Num size="xl" tone={tone}>{value}</Num>
+        : <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', color: 'var(--color-ink-1)' }}>{value}</span>}
 
       {(change || subtitle) && (
         <span style={{

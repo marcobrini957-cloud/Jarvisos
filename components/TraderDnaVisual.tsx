@@ -33,9 +33,9 @@ function axisPoint(i: number, n: number, r: number) {
 }
 
 function scoreColor(s: number): string {
-  if (s >= 75) return 'var(--gr2, #00FF85)'
-  if (s >= 50) return 'var(--am2, #FACC15)'
-  return 'var(--re, #F87171)'
+  if (s >= 75) return 'var(--color-ink-1)'
+  if (s >= 50) return 'var(--color-ink-3)'
+  return 'var(--color-down)'
 }
 
 export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string }) {
@@ -49,23 +49,23 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
         <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE}>
           <defs>
             <radialGradient id="dnaFill" cx="50%" cy="50%" r="60%">
-              <stop offset="0%"  stopColor="rgba(77,143,255,0.55)" />
-              <stop offset="100%" stopColor="rgba(77,143,255,0.10)" />
+              <stop offset="0%"  stopColor="rgba(255,255,255,0.22)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0.04)" />
             </radialGradient>
           </defs>
           {/* grid rings */}
           {[0.25, 0.5, 0.75, 1].map((f, ri) => (
             <polygon key={ri}
               points={pointsFor(new Array(n).fill(100), f)}
-              fill="none" stroke="var(--bd2, #1E1E30)" strokeWidth="1" opacity={0.7} />
+              fill="none" stroke="var(--color-line-1)" strokeWidth="1" opacity={0.7} />
           ))}
           {/* spokes */}
           {dna.dimensions.map((_, i) => {
             const p = axisPoint(i, n, RMAX)
-            return <line key={i} x1={CENTER} y1={CENTER} x2={p.x} y2={p.y} stroke="var(--bd2, #1E1E30)" strokeWidth="1" opacity={0.6} />
+            return <line key={i} x1={CENTER} y1={CENTER} x2={p.x} y2={p.y} stroke="var(--color-line-1)" strokeWidth="1" opacity={0.6} />
           })}
           {/* the DNA polygon */}
-          <polygon points={pointsFor(scores)} fill="url(#dnaFill)" stroke="var(--ac, #4D8FFF)" strokeWidth="2"
+          <polygon points={pointsFor(scores)} fill="url(#dnaFill)" stroke="var(--color-ink-1)" strokeWidth="1.5"
             style={{ animation: 'dnaPulse 4s ease-in-out infinite' }} />
           {/* vertices */}
           {dna.dimensions.map((d, i) => {
@@ -77,7 +77,7 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
           {dna.dimensions.map((d, i) => {
             const p = axisPoint(i, n, RMAX + 22)
             return (
-              <text key={i} x={p.x} y={p.y} fontSize="8.5" fill="var(--t2, #9090A8)"
+              <text key={i} x={p.x} y={p.y} fontSize="8.5" fill="var(--color-ink-3)"
                 textAnchor="middle" dominantBaseline="middle" style={{ letterSpacing: 0.3 }}>
                 {d.label.split(' ')[0]}
               </text>
@@ -87,7 +87,7 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
         {/* center overall score */}
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
           <div style={{ fontSize: 34, fontWeight: 800, color: 'var(--t1, #fff)', lineHeight: 1 }}>{dna.overall}</div>
-          <div style={{ fontSize: 8, letterSpacing: 2, color: 'var(--t3, #48485E)', marginTop: 2 }}>DNA SCORE</div>
+          <div style={{ fontSize: 8, letterSpacing: 2, color: 'var(--color-ink-4)', marginTop: 2 }}>DNA SCORE</div>
         </div>
       </div>
 
@@ -96,9 +96,9 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 16 }}>
           {dna.dimensions.map(d => (
             <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 11, color: 'var(--t2, #9090A8)', width: 130, flexShrink: 0 }}>{d.label}</span>
-              <div style={{ flex: 1, height: 6, background: 'var(--bd2, #1E1E30)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ width: `${Math.max(3, d.score)}%`, height: '100%', background: scoreColor(d.score), borderRadius: 3, transition: 'width .8s ease' }} />
+              <span style={{ fontSize: 11, color: 'var(--color-ink-2)', width: 130, flexShrink: 0 }}>{d.label}</span>
+              <div style={{ flex: 1, height: 6, background: 'var(--color-surface-2)', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ width: `${Math.max(3, d.score)}%`, height: '100%', background: scoreColor(d.score), borderRadius: 4, transition: 'width .8s ease' }} />
               </div>
               <span style={{ fontSize: 12, fontWeight: 700, color: scoreColor(d.score), width: 26, textAlign: 'right' }}>{d.score}</span>
             </div>
@@ -116,13 +116,13 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
       {/* AI focus callout — full width under the two columns */}
       {focus && (
         <div style={{
-          flexBasis: '100%', marginTop: 4, padding: '16px 18px', borderRadius: 12,
-          background: 'linear-gradient(135deg, rgba(77,143,255,0.08), rgba(200,133,26,0.05))',
-          border: '1px solid rgba(77,143,255,0.18)',
+          flexBasis: '100%', marginTop: 4, padding: '16px 18px', borderRadius: 4,
+          background: 'var(--color-surface-1)',
+          borderLeft: '2px solid var(--color-line-3)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
-            <span style={{ width: 6, height: 6, borderRadius: 3, background: 'var(--go2, #C8851A)' }} />
-            <span style={{ fontSize: 10, letterSpacing: 1.5, color: 'var(--go2, #C8851A)', fontWeight: 700 }}>YOUR BIGGEST OPPORTUNITY</span>
+            <span style={{ width: 6, height: 6, borderRadius: 4, background: 'var(--color-ink-1)' }} />
+            <span style={{ fontSize: 10, letterSpacing: 1.5, color: 'var(--color-ink-2)' }}>YOUR BIGGEST OPPORTUNITY</span>
           </div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--t1, #fff)', margin: 0 }}>{focus}</p>
         </div>
@@ -134,10 +134,10 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
 }
 
 function Trait({ label, value, good, bad }: { label: string; value: string; good?: boolean; bad?: boolean }) {
-  const color = good ? 'var(--gr2, #00FF85)' : bad ? 'var(--re, #F87171)' : 'var(--t2, #9090A8)'
+  const color = good ? 'var(--color-ink-1)' : bad ? 'var(--color-down)' : 'var(--color-ink-2)'
   return (
-    <div style={{ padding: '7px 11px', borderRadius: 9, background: 'var(--s2, #0F0F16)', border: '1px solid var(--bd2, #1E1E30)' }}>
-      <div style={{ fontSize: 8.5, letterSpacing: 1, color: 'var(--t3, #48485E)', marginBottom: 3 }}>{label.toUpperCase()}</div>
+    <div style={{ padding: '7px 11px', borderRadius: 4, background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)' }}>
+      <div style={{ fontSize: 8.5, letterSpacing: 1, color: 'var(--color-ink-4)', marginBottom: 3 }}>{label.toUpperCase()}</div>
       <div style={{ fontSize: 12, fontWeight: 600, color }}>{value}</div>
     </div>
   )

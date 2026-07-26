@@ -165,24 +165,19 @@ function Stars({ rating }: { rating: number }) {
 }
 
 function StackedLogo({ accent, initials, logo }: { accent: string; initials: string; logo?: string }) {
-  const size = 96
-  const layer = (offset: number, opacity: number, top = false): React.CSSProperties => ({
-    position: 'absolute', width: `${size}px`, height: `${size}px`,
-    right: `${offset}px`, top: `${offset}px`,
-    borderRadius: 'var(--radius-md)',
-    background: accent,
-    opacity,     display: 'flex', alignItems: 'center', justifyContent: 'center',
-  })
+  // Was three offset layers at 28/55/100% opacity — a 3D card stack. One tile is
+  // enough: the logo is identification, not an illustration.
+  const size = 64
   return (
-    <div className="hidden sm:block" style={{ position: 'relative', width: `${size + 24}px`, height: `${size + 24}px`, flexShrink: 0 }}>
-      <div style={layer(24, 0.28)} />
-      <div style={layer(12, 0.55)} />
-      <div style={layer(0, 1, true)}>
-        {logo
-          // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={logo} alt="" style={{ width: '60%', height: '60%', objectFit: 'contain' }} />
-          : <span style={{ fontSize: 'var(--text-3xl)', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>{initials}</span>}
-      </div>
+    <div className="hidden sm:flex" style={{
+      width: `${size}px`, height: `${size}px`, flexShrink: 0,
+      borderRadius: 'var(--radius-md)', background: accent,
+      alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+    }}>
+      {logo
+        // eslint-disable-next-line @next/next/no-img-element
+        ? <img src={logo} alt="" style={{ width: '62%', height: '62%', objectFit: 'contain' }} />
+        : <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', color: 'var(--color-void)' }}>{initials}</span>}
     </div>
   )
 }

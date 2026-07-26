@@ -120,7 +120,7 @@ export default function JournalTab() {
       {/* Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         <MetricCard title="Entries this month" value={`${entries.filter(e => e.entry_date.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`)).length}`} change={`of ${calDays.filter(isWeekday).length} trading days`} changePositive={null} />
-        <MetricCard title="Avg mood"     value={avgMoodScore > 0 ? `${avgMoodScore.toFixed(1)}/10` : '—'} change={entries.length > 0 ? 'Based on entries' : 'No entries yet'} changePositive={avgMoodScore >= 6 ? true : null} />
+        <MetricCard title="Avg mood"     value={avgMoodScore > 0 ? `${avgMoodScore.toFixed(1)}/10` : '—'} change={entries.length > 0 ? 'Based on entries' : 'No entries yet'} changePositive={null} />
         {(() => {
           const withStats = MOODS.filter(m => moodStats[m])
           if (withStats.length === 0) {
@@ -138,7 +138,7 @@ export default function JournalTab() {
             />
           )
         })()}
-        <MetricCard title="Streak"       value={`${streak}d`} change={streak > 0 ? 'consecutive days' : 'Start journaling today!'} changePositive={streak > 0} />
+        <MetricCard title="Streak"       value={`${streak}d`} change={streak > 0 ? 'consecutive days' : 'Start journaling today'} changePositive={null} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">

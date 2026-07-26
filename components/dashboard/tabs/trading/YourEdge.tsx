@@ -2,6 +2,7 @@
 
 import { BE_THRESHOLD } from '@/hooks/useTrades'
 import Panel from '@/components/ui/Panel'
+import { Label, Num } from '@/components/ui/vq'
 import type { Trade } from '@/types'
 
 // ── Your Edge Panel ───────────────────────────────────────────────────────────
@@ -10,7 +11,9 @@ export function YourEdge({ trades }: { trades: Trade[] }) {
   const closed = trades.filter(t => t.net_profit !== null && t.symbol !== 'BALANCE')
   if (closed.length < 10) return null
 
-  type Edge = { label: string; value: string; sub: string; color: string; icon: string }
+  // No icon field any more: the emoji row (calendar, clock, chart, tick) read as
+  // a sticker sheet next to the numbers, and the label already says what it is.
+  type Edge = { label: string; value: string; sub: string; color: string }
   const edges: Edge[] = []
 
   // Helper
@@ -41,7 +44,7 @@ export function YourEdge({ trades }: { trades: Trade[] }) {
     label: `Best day: ${bestDay.day}`,
     value: `${bestDay.wr.toFixed(0)}% WR`,
     sub: `avg ${bestDay.avg >= 0 ? '+' : ''}€${bestDay.avg.toFixed(0)} · ${bestDay.n} trades`,
-    color: 'var(--gr2)', icon: '📅',
+    color: 'var(--color-ink-1)',
   })
 
   // Best session
@@ -62,7 +65,7 @@ export function YourEdge({ trades }: { trades: Trade[] }) {
     label: bestSession.label,
     value: `${bestSession.wr.toFixed(0)}% WR`,
     sub: `avg ${bestSession.avg >= 0 ? '+' : ''}€${bestSession.avg.toFixed(0)} · ${bestSession.n} trades`,
-    color: 'var(--cy2)', icon: '⏰',
+    color: 'var(--color-ink-1)',
   })
 
   // Best instrument
@@ -82,7 +85,7 @@ export function YourEdge({ trades }: { trades: Trade[] }) {
     label: `Best instrument: ${bestInst.label}`,
     value: `${bestInst.wr.toFixed(0)}% WR`,
     sub: `avg ${bestInst.avg >= 0 ? '+' : ''}€${bestInst.avg.toFixed(0)} · ${bestInst.n} trades`,
-    color: 'var(--go2)', icon: '📈',
+    color: 'var(--color-ink-1)',
   })
 
   // Plan adherence edge
@@ -96,8 +99,7 @@ export function YourEdge({ trades }: { trades: Trade[] }) {
       label: diff > 0 ? 'Following your plan pays' : 'Breaking plan is costly',
       value: diff > 0 ? `+€${diff.toFixed(0)} avg` : `-€${Math.abs(diff).toFixed(0)} avg`,
       sub: `plan: €${planPnl.toFixed(0)} · no plan: €${noPlanPnl.toFixed(0)}`,
-      color: diff > 0 ? 'var(--gr2)' : 'var(--re)',
-      icon: diff > 0 ? '✅' : '🚫',
+      color: diff > 0 ? 'var(--color-up)' : 'var(--color-down)',
     })
   }
 
@@ -111,28 +113,23 @@ export function YourEdge({ trades }: { trades: Trade[] }) {
     label: `${streak}-trade loss streak`,
     value: 'Take a break',
     sub: 'History shows WR drops 40% after 3 consecutive losses',
-    color: 'var(--re)',
-    icon: '🛑',
+    color: 'var(--color-down)',
   })
 
   if (edges.length === 0) return null
 
   return (
-    <Panel title="Your Edge — What the Data Says" accent="var(--cy)">
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+    <Panel title="Your edge — what the data says" noPadding>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))' }}>
         {edges.map((e, i) => (
           <div key={i} style={{
-            padding: '14px 16px', borderRadius: 'var(--radius-md)',
-            background: `${e.color}0D`,
-            border: `1px solid ${e.color}28`,
-            display: 'flex', flexDirection: 'column', gap: '5px',
+            padding: '10px 14px',
+            borderRight: '1px solid var(--color-line-1)',
+            display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0,
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <span style={{ fontSize: 'var(--text-lg)' }}>{e.icon}</span>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{e.label}</span>
-            </div>
-            <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: e.color, letterSpacing: '-0.03em', lineHeight: 1 }}>{e.value}</span>
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>{e.sub}</span>
+            <Label>{e.label}</Label>
+            <Num size="xl" style={{ color: e.color }}>{e.value}</Num>
+            <Num size="2xs" tone="muted">{e.sub}</Num>
           </div>
         ))}
       </div>
