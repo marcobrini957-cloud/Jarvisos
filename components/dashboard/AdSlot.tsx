@@ -35,8 +35,8 @@ export default function AdSlot({
     if (!showPaidNote) return null
     return (
       <div style={{
-        padding: '10px 14px', borderRadius: 'var(--radius-lg)',
-        background: 'var(--s1)', border: '1px solid var(--bd)',
+        padding: '10px 14px', borderRadius: 'var(--radius-md)',
+        background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
         fontSize: 'var(--text-sm)', color: 'var(--t3)', textAlign: 'center',
       }}>
         ✦ Ad-free — thanks for being {profile.tier === 'ultra' ? 'Ultra' : 'Pro'}

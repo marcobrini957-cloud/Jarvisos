@@ -10,33 +10,35 @@ import { ratingLabel } from '@/lib/partners'
 // Big TradingView-broker-directory-style offer card. Featured partners get a
 // gradient wash + "FEATURED" ribbon. All clicks route through /api/go/[id].
 export default function BrokerCard({ partner }: { partner: Partner }) {
-  const accent = partner.accent ?? 'var(--ac)'
+  // The brand colour survives on the logo tile only — a featured offer used to
+  // wash the whole card in it.
+  const accent = partner.accent ?? 'var(--color-ink-2)'
   const initials = partner.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
   return (
     <div
       style={{
         position: 'relative', overflow: 'hidden',
-        borderRadius: 'var(--radius-xl)',
-        border: '1px solid var(--bd2)',
-        background: partner.featured
-          ? `linear-gradient(105deg, ${accent}26 0%, rgba(255,255,255,0.10) 45%, var(--s1) 78%)`
-          : 'var(--s1)',
-        padding: 'clamp(20px, 3vw, 30px)',
-        display: 'flex', alignItems: 'center', gap: '20px',
-        transition: 'border-color 0.15s, transform 0.15s',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid var(--color-line-1)',
+        borderLeft: partner.featured ? '2px solid var(--color-line-3)' : undefined,
+        background: 'var(--color-surface-1)',
+        padding: '16px 18px',
+        display: 'flex', alignItems: 'center', gap: '18px',
+        transition: 'border-color 0.15s',
       }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.transform = 'translateY(-2px)' }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--bd2)'; e.currentTarget.style.transform = 'translateY(0)' }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-line-3)' }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-line-1)' }}
     >
       {partner.featured && (
         <span style={{
-          position: 'absolute', top: '16px', right: '16px',
-          fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.08em',
-          color: 'var(--t1)', background: 'rgba(255,255,255,0.10)',
-          border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '4px 9px',
+          position: 'absolute', top: '14px', right: '14px',
+          fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+          color: 'var(--color-ink-2)', background: 'var(--color-surface-2)',
+          borderRadius: 'var(--radius-xs)', padding: '2px 6px',
         }}>
-          FEATURED
+          Featured
         </span>
       )}
 
@@ -44,11 +46,11 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Name + badges */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '6px' }}>
-          <span style={{ fontSize: 'clamp(18px, 2.4vw, 24px)', fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.02em' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', color: 'var(--color-ink-1)' }}>
             {partner.name}
           </span>
-          {partner.plan && <Chip color="#FFFFFF" bg="rgba(255,255,255,0.16)">{partner.plan}</Chip>}
-          {partner.award && <Chip color="#FFFFFF" bg="rgba(255,255,255,0.15)">{partner.award}</Chip>}
+          {partner.plan && <Chip>{partner.plan}</Chip>}
+          {partner.award && <Chip>{partner.award}</Chip>}
         </div>
 
         {/* Tradable assets */}
@@ -94,9 +96,9 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
             target="_blank" rel="sponsored noopener noreferrer"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '7px',
-              background: 'var(--t1)', color: 'var(--bg)',
-              fontSize: 'var(--text-base)', fontWeight: 700, textDecoration: 'none',
-              padding: '10px 18px', borderRadius: 'var(--radius-md)',
+              background: 'var(--color-ink-1)', color: 'var(--color-void)',
+              fontSize: 'var(--text-base)', textDecoration: 'none',
+              padding: '7px 14px', borderRadius: 'var(--radius-sm)',
             }}
           >
             {partner.ctaLabel}
@@ -107,10 +109,10 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
             target="_blank" rel="sponsored noopener noreferrer"
             style={{
               display: 'inline-flex', alignItems: 'center',
-              background: 'transparent', color: 'var(--t1)',
-              fontSize: 'var(--text-base)', fontWeight: 600, textDecoration: 'none',
-              padding: '10px 18px', borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--bd2)',
+              background: 'transparent', color: 'var(--color-ink-1)',
+              fontSize: 'var(--text-base)', textDecoration: 'none',
+              padding: '7px 14px', borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--color-line-1)',
             }}
           >
             Learn more
@@ -124,11 +126,13 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
   )
 }
 
-function Chip({ children, color, bg }: { children: React.ReactNode; color: string; bg: string }) {
+function Chip({ children }: { children: React.ReactNode }) {
   return (
     <span style={{
-      fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.06em',
-      color, background: bg, borderRadius: 'var(--radius-md)', padding: '3px 8px',
+      fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+      letterSpacing: '0.1em', textTransform: 'uppercase',
+      color: 'var(--color-ink-2)', background: 'var(--color-surface-2)',
+      borderRadius: 'var(--radius-xs)', padding: '2px 6px',
     }}>
       {children}
     </span>
@@ -165,8 +169,8 @@ function StackedLogo({ accent, initials, logo }: { accent: string; initials: str
   const layer = (offset: number, opacity: number, top = false): React.CSSProperties => ({
     position: 'absolute', width: `${size}px`, height: `${size}px`,
     right: `${offset}px`, top: `${offset}px`,
-    borderRadius: 'var(--radius-xl)',
-    background: top ? `linear-gradient(145deg, ${accent}, ${accent}bb)` : accent,
+    borderRadius: 'var(--radius-md)',
+    background: accent,
     opacity,     display: 'flex', alignItems: 'center', justifyContent: 'center',
   })
   return (

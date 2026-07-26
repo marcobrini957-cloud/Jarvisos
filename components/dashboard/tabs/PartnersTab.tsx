@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { PARTNERS, PARTNER_FILTERS, type PartnerCategory } from '@/lib/partners'
 import BrokerCard from '../BrokerCard'
 import OrdersCounter from '../OrdersCounter'
+import { Segmented } from '@/components/ui/vq'
 
 type Filter = 'all' | PartnerCategory
 
@@ -21,66 +22,45 @@ export default function PartnersTab() {
   }, [filter])
 
   return (
-    <div style={{ maxWidth: '920px', margin: '0 auto' }}>
-      {/* ── Hero ─────────────────────────────────────────────────── */}
+    <div style={{ maxWidth: '1100px' }}>
+      {/* ── Hero ──
+          Was a radial-gradient sky with a blurred horizon glow behind a 56px
+          headline. The odometer is the interesting part; it now sits on one
+          hairline band with the wordmark face carrying the line. */}
       <div style={{
-        position: 'relative', overflow: 'hidden',
-        borderRadius: 'var(--radius-xl)', border: '1px solid var(--bd2)',
-        padding: 'clamp(32px, 6vw, 56px) 24px clamp(28px, 4vw, 40px)',
-        marginBottom: '20px', textAlign: 'center',
-        background: 'radial-gradient(120% 90% at 50% -20%, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.14) 30%, var(--s1) 62%)',
+        borderRadius: 'var(--radius-md)', border: '1px solid var(--color-line-1)',
+        background: 'var(--color-surface-1)',
+        padding: '18px 20px', marginBottom: '12px', textAlign: 'center',
       }}>
-        {/* atmospheric horizon glow */}
-        <div style={{
-          position: 'absolute', top: '-40%', left: '50%', transform: 'translateX(-50%)',
-          width: '160%', height: '120%', pointerEvents: 'none',
-          background: 'radial-gradient(circle at 50% 100%, rgba(255,255,255,0.35), transparent 55%)',
-          filter: 'blur(20px)',
-        }} />
-        <div style={{ position: 'relative' }}>
-          <h1 style={{
-            fontSize: 'clamp(30px, 6vw, 56px)', fontWeight: 800, color: 'var(--t1)',
-            letterSpacing: '-0.03em', lineHeight: 1.02, margin: '0 0 26px',
-          }}>
-            Built for trading
-          </h1>
-          <OrdersCounter />
-        </div>
+        <h1 style={{
+          fontFamily: 'var(--font-mark)', textTransform: 'uppercase',
+          fontSize: 'clamp(22px, 3.4vw, 34px)', color: 'var(--color-ink-1)',
+          letterSpacing: '0.02em', lineHeight: 1.05, margin: '0 0 14px',
+        }}>
+          Built for trading
+        </h1>
+        <OrdersCounter />
       </div>
 
       {/* ── Filter pills ─────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
-        {PARTNER_FILTERS.map(f => {
-          const active = filter === f.id
-          return (
-            <button
-              key={f.id}
-              onClick={() => setFilter(f.id)}
-              style={{
-                padding: '9px 18px', borderRadius: 'var(--radius-xl)',
-                fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer',
-                border: '1px solid ' + (active ? 'var(--t1)' : 'var(--bd2)'),
-                background: active ? 'var(--t1)' : 'var(--s2)',
-                color: active ? 'var(--bg)' : 'var(--t2)',
-                transition: 'all 0.14s',
-              }}
-            >
-              {f.label}
-            </button>
-          )
-        })}
+      <div style={{ display: 'flex', marginBottom: '12px' }}>
+        <Segmented
+          options={PARTNER_FILTERS.map(f => ({ key: f.id, label: f.label }))}
+          value={filter}
+          onChange={setFilter}
+        />
       </div>
 
       {/* ── Cards ────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {items.map(p => <BrokerCard key={p.id} partner={p} />)}
       </div>
 
       {/* ── Affiliate transparency disclosure ────────────────────── */}
       <div style={{
-        marginTop: '20px', padding: '12px 16px', borderRadius: 'var(--radius-lg)',
-        background: 'var(--s1)', border: '1px solid var(--bd)',
-        fontSize: 'var(--text-sm)', color: 'var(--t3)', lineHeight: 1.6, opacity: 0.9,
+        marginTop: '12px', padding: '10px 12px', borderRadius: 'var(--radius-md)',
+        background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
+        fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)', lineHeight: 1.6,
       }}>
         Some links on this page are affiliate links — Velquor may earn a commission if you sign up,
         at no extra cost to you. Ratings and figures are indicative. Trading leveraged products

@@ -33,7 +33,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
 
 // ── Status dot ─────────────────────────────────────────────────────────────────
 function Dot({ ok }: { ok: boolean | null }) {
-  const color = ok === null ? 'var(--t3)' : ok ? 'var(--gr2)' : '#F0504B'
+  const color = ok === null ? 'var(--color-ink-4)' : ok ? 'var(--color-up)' : 'var(--color-down)'
   return (
     <span style={{
       width: '8px', height: '8px', borderRadius: '50%',
@@ -102,7 +102,7 @@ function MT5AccountsPanel() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Dot ok={status === null ? null : connected} />
             <div>
-              <p style={{ margin: 0, fontSize: 'var(--text-base)', fontWeight: 600, color: connected ? 'var(--gr2)' : 'var(--t2)' }}>
+              <p style={{ margin: 0, fontSize: 'var(--text-base)', fontWeight: 600, color: connected ? 'var(--color-up)' : 'var(--color-ink-2)' }}>
                 {status === null
                   ? 'Checking…'
                   : connected
@@ -160,7 +160,7 @@ function MT5AccountsPanel() {
               style={{
                 padding: '4px 10px', borderRadius: 'var(--radius-md)', border: 'none',
                 background: copied ? 'rgba(0,196,106,0.15)' : 'var(--s3)',
-                color: copied ? 'var(--gr2)' : 'var(--t2)',
+                color: copied ? 'var(--color-up)' : 'var(--color-ink-2)',
                 fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
               }}
             >
@@ -232,14 +232,14 @@ export default function SettingsTab() {
         <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>{label}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Dot ok={health ? ok : null} />
-          <span style={{ color: ok ? 'var(--gr2)' : health ? '#F0504B' : 'var(--t3)', fontSize: 'var(--text-base)', fontWeight: 500 }}>{text}</span>
+          <span style={{ color: ok ? 'var(--color-up)' : health ? 'var(--color-down)' : 'var(--color-ink-3)', fontSize: 'var(--text-base)', fontWeight: 500 }}>{text}</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '640px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '760px' }}>
       <div>
         <h1 style={{ color: 'var(--t1)', fontSize: 'var(--text-lg)', fontWeight: 600 }}>Settings</h1>
         <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', marginTop: '4px' }}>MT5 connection, integrations and preferences</p>
@@ -270,14 +270,14 @@ export default function SettingsTab() {
             <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Yahoo Finance (portfolio &amp; metals)</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Dot ok={true} />
-              <span style={{ color: 'var(--gr2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Active</span>
+              <span style={{ color: 'var(--color-up)', fontSize: 'var(--text-base)' }}>Active</span>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
             <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Forex Factory (calendar)</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Dot ok={true} />
-              <span style={{ color: 'var(--gr2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Active</span>
+              <span style={{ color: 'var(--color-up)', fontSize: 'var(--text-base)' }}>Active</span>
             </div>
           </div>
         </div>

@@ -21,9 +21,9 @@ export function HowItWorks() {
           <div key={s.n} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
             <div style={{
               width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-              background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
+              background: 'var(--color-surface-3)', border: '1px solid var(--color-line-2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--ac)',
+              fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--color-ink-1)',
             }}>
               {s.n}
             </div>

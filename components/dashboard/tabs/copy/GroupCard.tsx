@@ -68,7 +68,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
     <span style={{
       fontSize: 'var(--text-2xs)', fontWeight: 700, letterSpacing: '0.05em', padding: '2px 7px',
       borderRadius: 'var(--radius-xl)', background: 'rgba(0,196,106,0.1)',
-      border: '1px solid rgba(0,196,106,0.25)', color: '#00C46A', flexShrink: 0,
+      border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', flexShrink: 0,
     }}>
       CLOUD
     </span>
@@ -93,7 +93,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
       style={{
         fontSize: 'var(--text-xs)', padding: '4px 10px', borderRadius: 'var(--radius-md)', fontWeight: 600,
         background: 'rgba(0,196,106,0.08)', border: '1px solid rgba(0,196,106,0.3)',
-        color: '#00C46A', cursor: 'pointer', whiteSpace: 'nowrap',
+        color: 'var(--color-ink-1)', cursor: 'pointer', whiteSpace: 'nowrap',
       }}
     >
       Host in Cloud
@@ -114,7 +114,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
               width: 8, height: 8, borderRadius: '50%',
-              background: group.active ? '#00C46A' : '#444',
+              background: group.active ? 'var(--color-up)' : 'var(--color-ink-4)',
                           }} />
             <span style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--t1)' }}>{group.name}</span>
             <span style={{
@@ -134,7 +134,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                 padding: '5px 12px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)',
                 background: group.active ? 'rgba(240,80,75,0.1)' : 'rgba(0,196,106,0.1)',
                 border:     group.active ? '1px solid rgba(240,80,75,0.3)' : '1px solid rgba(0,196,106,0.3)',
-                color:      group.active ? '#F0504B' : '#00C46A',
+                color:      'var(--color-ink-2)',
                 cursor:     'pointer', fontWeight: 600,
               }}
             >
@@ -301,8 +301,8 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                 background: 'none', border: 'none', padding: 0, cursor: 'pointer',
               }}
             >
-              <span style={{ fontSize: 'var(--text-xs)', color: '#00C46A', letterSpacing: '0.08em', fontWeight: 700 }}>
-                EA CONFIGURATION <span style={{ color: 'var(--t3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· for accounts on your own MetaTrader</span>
+              <span className="vq-label">
+                EA configuration <span style={{ color: 'var(--color-ink-4)', letterSpacing: 0 }}>· for accounts on your own MetaTrader</span>
               </span>
               <span style={{
                 fontSize: 'var(--text-xs)', color: 'var(--t3)', display: 'inline-block',
@@ -311,16 +311,16 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             </button>
             {showEaConfig && <div style={{ marginTop: '8px' }}>
             <div style={{ fontFamily: 'monospace', fontSize: 'var(--text-sm)', color: 'var(--t2)', lineHeight: '1.7' }}>
-              <div><span style={{ color: 'var(--t3)' }}>InpCopyMode</span> = <span style={{ color: '#FFFFFF' }}>COPY_LEADER</span> <span style={{ color: '#555' }}>// or COPY_FOLLOWER</span></div>
-              <div><span style={{ color: 'var(--t3)' }}>InpCopyGroupId</span> = <span style={{ color: '#FFFFFF' }}>"{group.id}"</span></div>
-              <div><span style={{ color: 'var(--t3)' }}>InpCopyLotMode</span> = <span style={{ color: '#FFFFFF' }}>
+              <div><span style={{ color: 'var(--color-ink-3)' }}>InpCopyMode</span> = <span style={{ color: '#FFFFFF' }}>COPY_LEADER</span> <span style={{ color: '#555' }}>// or COPY_FOLLOWER</span></div>
+              <div><span style={{ color: 'var(--color-ink-3)' }}>InpCopyGroupId</span> = <span style={{ color: '#FFFFFF' }}>"{group.id}"</span></div>
+              <div><span style={{ color: 'var(--color-ink-3)' }}>InpCopyLotMode</span> = <span style={{ color: '#FFFFFF' }}>
                 {group.lot_mode === 'fixed' ? 'LOT_FIXED' : 'LOT_PROPORTIONAL'}
               </span></div>
               {group.lot_mode === 'fixed'
-                ? <div><span style={{ color: 'var(--t3)' }}>InpCopyLotFixed</span> = <span style={{ color: '#00C46A' }}>{group.lot_fixed}</span></div>
-                : <div><span style={{ color: 'var(--t3)' }}>InpCopyLotMult</span> = <span style={{ color: '#00C46A' }}>{group.lot_multiplier}</span></div>
+                ? <div><span style={{ color: 'var(--color-ink-3)' }}>InpCopyLotFixed</span> = <span style={{ color: 'var(--color-ink-1)' }}>{group.lot_fixed}</span></div>
+                : <div><span style={{ color: 'var(--color-ink-3)' }}>InpCopyLotMult</span> = <span style={{ color: 'var(--color-ink-1)' }}>{group.lot_multiplier}</span></div>
               }
-              <div><span style={{ color: 'var(--t3)' }}>InpCopyMaxLot</span> = <span style={{ color: '#00C46A' }}>{group.max_lot}</span></div>
+              <div><span style={{ color: 'var(--color-ink-3)' }}>InpCopyMaxLot</span> = <span style={{ color: 'var(--color-ink-1)' }}>{group.max_lot}</span></div>
             </div>
             </div>}
           </div>

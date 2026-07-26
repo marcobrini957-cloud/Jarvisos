@@ -56,12 +56,12 @@ export default function CopyTradingTab() {
 
   return (
     // No extra padding or overflow here — DashboardShell's <main> handles both
-    <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+    <div style={{ maxWidth: '1100px' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
         <div>
-          <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--t1)' }}>Copy Trading</div>
+          <div style={{ fontSize: 'var(--text-lg)', color: 'var(--color-ink-1)' }}>Copy trading</div>
           <div style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', marginTop: '4px' }}>
             Mirror trades across multiple MT5 accounts in real time
           </div>
@@ -75,7 +75,7 @@ export default function CopyTradingTab() {
               color: 'var(--ac)', cursor: 'pointer', flexShrink: 0,
             }}
           >
-            + New Group
+            + New group
           </button>
         )}
       </div>
@@ -89,7 +89,6 @@ export default function CopyTradingTab() {
               textAlign: 'center', padding: '48px 20px',
               background: 'var(--s1)', border: '1px dashed var(--bd)', borderRadius: 'var(--radius-xl)',
             }}>
-              <div style={{ fontSize: 'var(--text-3xl)', marginBottom: '12px' }}>⚡</div>
               <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: '8px' }}>
                 No copy groups yet
               </div>

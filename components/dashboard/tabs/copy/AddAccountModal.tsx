@@ -132,7 +132,7 @@ export function AddAccountModal({
                     fontWeight: method === m ? 700 : 400,
                     background: method === m ? 'rgba(0,196,106,0.08)' : 'var(--s2)',
                     border:     method === m ? '1px solid rgba(0,196,106,0.35)' : '1px solid var(--bd)',
-                    color:      method === m ? '#00C46A' : 'var(--t3)',
+                    color:      method === m ? 'var(--color-up)' : 'var(--t3)',
                     cursor:     'pointer',
                   }}
                 >
@@ -156,7 +156,7 @@ export function AddAccountModal({
               style={inputStyle}
             />
             {isMainAccount && method === 'cloud' && (
-              <span style={{ fontSize: 'var(--text-xs)', color: '#00C46A' }}>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-up)' }}>
                 ✓ This is your connected VELQUOR terminal — no password needed, we reuse it.
               </span>
             )}

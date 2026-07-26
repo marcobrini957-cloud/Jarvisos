@@ -54,7 +54,7 @@ export default function OrdersCounter() {
             key={i}
             style={{
               width: `${CELL_W}px`, height: `${CELL_H}px`, overflow: 'hidden',
-              borderRadius: 'var(--radius-md)', background: 'var(--s2)',
+              borderRadius: 'var(--radius-xs)', background: 'var(--color-surface-2)',
               border: '1px solid var(--bd2)',
               position: 'relative',
               transition: 'opacity 0.4s',
@@ -77,7 +77,7 @@ export default function OrdersCounter() {
                   style={{
                     height: `${CELL_H}px`, display: 'flex',
                     alignItems: 'center', justifyContent: 'center',
-                    fontSize: `${Math.round(CELL_H * 0.62)}px`, fontWeight: 800,
+                    fontSize: `${Math.round(CELL_H * 0.58)}px`,
                     color: 'var(--t1)', letterSpacing: '-0.03em',
                     fontVariantNumeric: 'tabular-nums',
                   }}
@@ -90,7 +90,7 @@ export default function OrdersCounter() {
         ))}
       </div>
       <div style={{
-        fontSize: 'var(--text-base)', color: 'var(--t3)', letterSpacing: '0.06em',
+        fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)', color: 'var(--color-ink-3)', letterSpacing: '0.16em',
         textTransform: 'uppercase', fontWeight: 600,
       }}>
         Real-money orders executed

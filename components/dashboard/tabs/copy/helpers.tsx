@@ -4,15 +4,15 @@
 export function statusDot(status: string, lastSeen: string | null) {
   const isRecent = lastSeen && (Date.now() - new Date(lastSeen).getTime()) < 15000
   const color =
-    status === 'active' && isRecent ? '#00C46A' :
-    status === 'active'             ? '#FFFFFF' :
-    status === 'paused'             ? '#888'    :
-    status === 'error'              ? '#F0504B' : '#444'
+    status === 'active' && isRecent ? 'var(--color-up)'     :
+    status === 'active'             ? 'var(--color-ink-1)'  :
+    status === 'paused'             ? 'var(--color-ink-3)'  :
+    status === 'error'              ? 'var(--color-down)'   : 'var(--color-ink-4)'
   return (
     <span style={{
-      display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
+      display: 'inline-block', width: 5, height: 5, borderRadius: '50%',
       background: color, flexShrink: 0,
-          }} />
+    }} />
   )
 }
 

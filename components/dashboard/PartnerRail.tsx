@@ -18,7 +18,7 @@ export default function PartnerRail({ className }: { className?: string }) {
     <aside
       className={className}
       style={{
-        width: '260px', flexShrink: 0, borderLeft: '1px solid var(--bd)',
+        width: '260px', flexShrink: 0, borderLeft: '1px solid var(--color-line-1)',
         padding: 'clamp(16px, 2vw, 24px) 16px', overflowY: 'auto', gap: '12px',
       }}
     >
@@ -37,7 +37,7 @@ export default function PartnerRail({ className }: { className?: string }) {
       <a
         href="/pricing"
         style={{
-          marginTop: '4px', padding: '12px', borderRadius: 'var(--radius-lg)', display: 'block',
+          marginTop: '4px', padding: '12px', borderRadius: 'var(--radius-md)', display: 'block',
           background: 'linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04))',
           border: '1px solid rgba(255,255,255,0.28)', cursor: 'pointer', textAlign: 'left',
           textDecoration: 'none',

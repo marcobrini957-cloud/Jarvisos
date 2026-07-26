@@ -14,7 +14,9 @@ export default function PartnerCard({
   slot?: 'tab' | 'rail' | 'ad'
   compact?: boolean
 }) {
-  const accent = partner.accent ?? 'var(--ac)'
+  // A partner's brand colour belongs to their logo, not to our card: the tinted
+  // borders, top rules and CTAs made every offer a different-coloured surface.
+  const accent = partner.accent ?? 'var(--color-ink-2)'
   const initials = partner.name
     .split(' ')
     .map(w => w[0])
@@ -30,21 +32,14 @@ export default function PartnerCard({
       style={{
         display: 'flex', flexDirection: 'column', gap: compact ? '8px' : '12px',
         padding: compact ? '14px' : '18px',
-        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
+        background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
+        borderRadius: 'var(--radius-md)',
         textDecoration: 'none', position: 'relative', overflow: 'hidden',
-        transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s',
+        transition: 'border-color 0.15s',
       }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = accent
-        e.currentTarget.style.transform = 'translateY(-2px)'
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = 'var(--bd)'
-        e.currentTarget.style.transform = 'translateY(0)'
-      }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-line-3)' }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-line-1)' }}
     >
-      {/* accent hairline top */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: accent, opacity: 0.7 }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{
@@ -70,9 +65,10 @@ export default function PartnerCard({
         </div>
         {(partner.award ?? partner.plan) && (
           <span style={{
-            flexShrink: 0, fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.02em',
-            padding: '3px 8px', borderRadius: 'var(--radius-xl)',
-            background: `${accent}1f`, color: accent, whiteSpace: 'nowrap',
+            flexShrink: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+            letterSpacing: '0.1em', textTransform: 'uppercase',
+            padding: '2px 6px', borderRadius: 'var(--radius-xs)',
+            background: 'var(--color-surface-2)', color: 'var(--color-ink-2)', whiteSpace: 'nowrap',
           }}>
             {partner.award ?? partner.plan}
           </span>
@@ -87,13 +83,13 @@ export default function PartnerCard({
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: 'auto' }}>
         <span style={{
-          fontSize: 'var(--text-base)', fontWeight: 600, color: accent,
+          fontSize: 'var(--text-base)', color: 'var(--color-ink-1)',
           display: 'inline-flex', alignItems: 'center', gap: '5px',
         }}>
           {partner.ctaLabel}
           <span aria-hidden style={{ fontSize: 'var(--text-base)' }}>→</span>
         </span>
-        <span style={{ fontSize: '9.5px', color: 'var(--t3)', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <span className="vq-label">
           Ad
         </span>
       </div>

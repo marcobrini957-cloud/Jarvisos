@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useTasks } from '@/hooks/useTasks'
 import Panel from '@/components/ui/Panel'
+import { Label, Num } from '@/components/ui/vq'
 import Badge from '@/components/ui/Badge'
 import type { Task, TaskCategory, TaskPriority } from '@/types'
 
@@ -59,7 +60,7 @@ function AddTaskModal({ onSave, onClose }: {
           padding: '24px',
         }}>
         <div className="flex items-center justify-between">
-          <h2 style={{ color: 'var(--t1)', fontSize: 'var(--text-md)', fontWeight: 500 }}>New Task</h2>
+          <h2 style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-md)' }}>New task</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}>×</button>
         </div>
 
@@ -70,13 +71,13 @@ function AddTaskModal({ onSave, onClose }: {
           placeholder="What needs to be done?"
           autoFocus
           style={inputStyle}
-          onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-          onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
+          onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
+          onBlur={e => (e.target.style.borderColor = 'var(--color-line-1)')}
         />
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Category</label>
+            <label className="vq-label" style={{ display: 'block' }}>Category</label>
             <select value={category} onChange={e => setCategory(e.target.value as TaskCategory)}
               style={{ ...inputStyle, cursor: 'pointer' }}>
               <option value="trading">Trading</option>
@@ -86,7 +87,7 @@ function AddTaskModal({ onSave, onClose }: {
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Priority</label>
+            <label className="vq-label" style={{ display: 'block' }}>Priority</label>
             <select value={priority} onChange={e => setPriority(e.target.value as TaskPriority)}
               style={{ ...inputStyle, cursor: 'pointer' }}>
               <option value="high">High</option>
@@ -97,21 +98,21 @@ function AddTaskModal({ onSave, onClose }: {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Due date</label>
+          <label className="vq-label" style={{ display: 'block' }}>Due date</label>
           <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
             style={{ ...inputStyle, colorScheme: 'dark' }}
-            onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-            onBlur={e => (e.target.style.borderColor = 'var(--bd2)')} />
+            onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
+            onBlur={e => (e.target.style.borderColor = 'var(--color-line-1)')} />
         </div>
 
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2.5 vq-r"
-            style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: 'var(--text-base)', cursor: 'pointer' }}>
+          <button onClick={onClose} className="flex-1 py-2"
+            style={{ background: 'transparent', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', fontSize: 'var(--text-base)', cursor: 'pointer' }}>
             Cancel
           </button>
-          <button onClick={handleSave} disabled={saving || !title.trim()} className="flex-1 py-2.5 vq-r font-medium"
-            style={{ background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)', fontSize: 'var(--text-base)', cursor: 'pointer', opacity: (!title.trim() || saving) ? 0.5 : 1 }}>
-            {saving ? 'Adding…' : 'Add Task'}
+          <button onClick={handleSave} disabled={saving || !title.trim()} className="flex-1 py-2"
+            style={{ background: 'var(--color-ink-1)', borderRadius: 'var(--radius-sm)', border: 'none', color: 'var(--color-void)', fontSize: 'var(--text-base)', cursor: 'pointer', opacity: (!title.trim() || saving) ? 0.5 : 1 }}>
+            {saving ? 'Adding…' : 'Add task'}
           </button>
         </div>
       </div>
@@ -131,9 +132,9 @@ function TaskRow({ task, onToggle, onDelete }: {
 
   return (
     <div
-      className="flex items-start gap-3 py-2.5 px-4 transition-colors group"
-      style={{ borderBottom: '1px solid var(--bd)' }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'var(--s3)')}
+      className="flex items-start gap-3 transition-colors group"
+      style={{ padding: '7px 14px', borderBottom: '1px solid var(--color-line-1)' }}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-state-hover)')}
       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
 
       {/* Checkbox */}
@@ -141,21 +142,21 @@ function TaskRow({ task, onToggle, onDelete }: {
         onClick={() => onToggle(task.id, !done)}
         className="flex-shrink-0 mt-0.5 flex items-center justify-center rounded transition-all"
         style={{
-          width: '16px', height: '16px',
-          border: done ? 'none' : '1.5px solid var(--bd2)',
-          background: done ? 'var(--color-surface-3)' : 'transparent',
+          width: '14px', height: '14px', borderRadius: 'var(--radius-xs)',
+          border: done ? 'none' : '1px solid var(--color-line-2)',
+          background: done ? 'var(--color-ink-1)' : 'transparent',
           cursor: 'pointer',
         }}>
         {done && (
           <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-            <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M1 4L3.5 6.5L9 1" stroke="var(--color-void)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         )}
       </button>
 
       <div className="flex-1 flex flex-col gap-1 min-w-0">
         <span style={{
-          color: done ? 'var(--t3)' : 'var(--t1)', fontSize: 'var(--text-base)',
+          color: done ? 'var(--color-ink-4)' : 'var(--color-ink-1)', fontSize: 'var(--text-base)',
           textDecoration: done ? 'line-through' : 'none',
         }}>
           {task.title}
@@ -167,13 +168,13 @@ function TaskRow({ task, onToggle, onDelete }: {
             <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }}>↻ {task.recurrence}</span>
           )}
           {isOverdue && (
-            <span style={{ color: 'var(--re)', fontSize: 'var(--text-xs)', fontWeight: 500 }}>overdue</span>
+            <span style={{ color: 'var(--color-down)', fontSize: 'var(--text-xs)' }}>overdue</span>
           )}
         </div>
       </div>
 
       {task.due_date && (
-        <span style={{ color: isOverdue ? 'var(--re)' : 'var(--t3)', fontSize: 'var(--text-sm)', flexShrink: 0 }}>
+        <span className="vq-num" style={{ color: isOverdue ? 'var(--color-down)' : 'var(--color-ink-3)', fontSize: 'var(--text-xs)', flexShrink: 0 }}>
           {new Date(task.due_date + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
         </span>
       )}
@@ -209,33 +210,34 @@ export default function TasksTab() {
   const doneToday    = todayTasks.filter(t => t.status === 'done').length
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {/* Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         {[
-          { title: 'Done Today',   value: `${doneToday}/${todayTasks.length}`,  sub: 'tasks completed',   color: 'var(--gr)' },
-          { title: 'Open',         value: String(tasks.filter(t => t.status !== 'done').length), sub: 'pending',   color: 'var(--ac)' },
-          { title: 'Overdue',      value: String(overdueTasks.length), sub: 'needs attention', color: overdueTasks.length > 0 ? 'var(--re)' : 'var(--gr)' },
-          { title: 'Total Done',   value: String(doneTasks.length),    sub: 'all time',         color: 'var(--pu)' },
+          { title: 'Done today', value: `${doneToday}/${todayTasks.length}`,  sub: 'tasks completed', color: 'var(--color-ink-1)' },
+          { title: 'Open',       value: String(tasks.filter(t => t.status !== 'done').length), sub: 'pending', color: 'var(--color-ink-1)' },
+          { title: 'Overdue',    value: String(overdueTasks.length), sub: 'needs attention', color: overdueTasks.length > 0 ? 'var(--color-down)' : 'var(--color-ink-1)' },
+          { title: 'Total done', value: String(doneTasks.length),    sub: 'all time',        color: 'var(--color-ink-1)' },
         ].map(m => (
-          <div key={m.title} className="relative vq-r p-4 overflow-hidden"
-            style={{ background: 'var(--s2)', border: '1px solid var(--bd)' }}>
-            <p style={{ color: 'var(--t2)', fontSize: 'var(--text-sm)', letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500 }}>{m.title}</p>
-            <p style={{ color: 'var(--t1)', fontSize: 'var(--text-2xl)', fontWeight: 500, lineHeight: 1.2, marginTop: '4px' }}>{m.value}</p>
-            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '2px' }}>{m.sub}</p>
-            <div className="absolute bottom-0 left-0 right-0" style={{ height: '3px', background: m.color, opacity: 0.8 }} />
+          <div key={m.title}
+            style={{ padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)' }}>
+            <Label>{m.title}</Label>
+            <div style={{ margin: '4px 0 2px' }}>
+              <Num size="xl" style={{ color: m.color }}>{m.value}</Num>
+            </div>
+            <Label>{m.sub}</Label>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Today */}
         <Panel title={`Today (${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })})`}
           noPadding
           action={
             <button onClick={() => setShowModal(true)}
-              style={{ fontSize: 'var(--text-sm)', padding: '3px 10px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', background: 'var(--color-ink-1)', color: 'var(--color-void)', fontWeight: 500 }}>
-              + Add Task
+              style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', padding: '3px 9px', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer', background: 'var(--color-ink-1)', color: 'var(--color-void)' }}>
+              + Add task
             </button>
           }>
           {loading ? (
@@ -246,7 +248,7 @@ export default function TasksTab() {
             <div className="flex flex-col items-center justify-center py-8 gap-3">
               <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>No tasks for today.</p>
               <button onClick={() => setShowModal(true)}
-                style={{ background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)', fontSize: 'var(--text-base)', padding: '6px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
+                style={{ background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)', fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', padding: '5px 14px', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }}>
                 + Add one
               </button>
             </div>
@@ -257,12 +259,12 @@ export default function TasksTab() {
           )}
         </Panel>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           {/* Overdue */}
           <Panel title="Overdue" noPadding>
             {overdueTasks.length === 0 ? (
               <div className="flex items-center justify-center py-6">
-                <span style={{ color: 'var(--gr2)', fontSize: 'var(--text-base)' }}>All clear — nothing overdue ✓</span>
+                <span style={{ color: 'var(--color-up)', fontSize: 'var(--text-base)' }}>All clear — nothing overdue</span>
               </div>
             ) : (
               overdueTasks.map(t => (
