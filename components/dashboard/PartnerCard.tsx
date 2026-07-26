@@ -1,10 +1,12 @@
 'use client'
 
 import type { Partner } from '@/lib/partners'
+import PartnerLink from './PartnerLink'
 
-// A single affiliate offer. All clicks route through /api/go/[id] so they're
-// logged server-side; rel="sponsored noopener" keeps us honest with search
-// engines and safe from tab-nabbing.
+// A single affiliate offer. The card is one link straight to the partner (see
+// PartnerLink — the click is beaconed, not redirected through us, so the tab
+// never sits on a blank page); rel="sponsored noopener" keeps us honest with
+// search engines and safe from tab-nabbing.
 export default function PartnerCard({
   partner,
   slot = 'tab',
@@ -25,10 +27,9 @@ export default function PartnerCard({
     .toUpperCase()
 
   return (
-    <a
-      href={`/api/go/${partner.id}?slot=${slot}`}
-      target="_blank"
-      rel="sponsored noopener noreferrer"
+    <PartnerLink
+      partner={partner}
+      slot={slot}
       style={{
         display: 'flex', flexDirection: 'column', gap: compact ? '8px' : '12px',
         padding: compact ? '14px' : '18px',
@@ -103,6 +104,6 @@ export default function PartnerCard({
           Ad
         </span>
       </div>
-    </a>
+    </PartnerLink>
   )
 }

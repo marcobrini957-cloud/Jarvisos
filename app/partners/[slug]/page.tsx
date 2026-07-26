@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PARTNERS, getPartner, ratingLabel } from '@/lib/partners'
 import { getBrief, type BriefFact } from '@/lib/partnerBriefs'
+import PartnerLink from '@/components/dashboard/PartnerLink'
 
 // One page per partner, behind every "Learn more". Public on purpose: it is a
 // review, and a review you have to log in to read is a sales page.
@@ -86,9 +87,9 @@ export default async function PartnerBriefPage({ params }: { params: Promise<{ s
   if (!partner || !brief) notFound()
 
   const cta = (
-    <a
-      href={`/api/go/${partner.id}?slot=brief`}
-      target="_blank" rel="sponsored noopener noreferrer"
+    <PartnerLink
+      partner={partner}
+      slot="brief"
       style={{
         display: 'inline-flex', alignItems: 'center', gap: '7px',
         background: 'var(--color-action)', color: 'var(--color-action-ink)',
@@ -97,7 +98,7 @@ export default async function PartnerBriefPage({ params }: { params: Promise<{ s
       }}
     >
       {partner.ctaLabel} ↗
-    </a>
+    </PartnerLink>
   )
 
   return (

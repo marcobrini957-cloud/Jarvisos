@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import PartnerLink from './PartnerLink'
 import { IconStarFilled, IconExternalLink } from '@tabler/icons-react'
 import type { Partner } from '@/lib/partners'
 import { ratingLabel } from '@/lib/partners'
@@ -79,9 +80,9 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
 
         {/* Buttons */}
         <div style={{ display: 'flex', gap: '9px', flexWrap: 'wrap' }}>
-          <a
-            href={`/api/go/${partner.id}?slot=tab`}
-            target="_blank" rel="sponsored noopener noreferrer"
+          <PartnerLink
+            partner={partner}
+            slot="tab"
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '7px',
               background: 'var(--color-action)', color: 'var(--color-action-ink)',
@@ -95,7 +96,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
           >
             {partner.ctaLabel}
             <IconExternalLink size={14} stroke={2} />
-          </a>
+          </PartnerLink>
           {/* Learn more reads our own brief — regulation, costs and what to
               watch — instead of firing the affiliate link a second time. */}
           <Link
