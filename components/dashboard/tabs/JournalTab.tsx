@@ -5,6 +5,7 @@ import { useJournalEntries } from '@/hooks/useJournalEntries'
 import { useTrades } from '@/hooks/useTrades'
 import MetricCard from '@/components/ui/MetricCard'
 import Panel from '@/components/ui/Panel'
+import { Label, Num, Segmented } from '@/components/ui/vq'
 import type { JournalEntry } from '@/types'
 import { type Mood, MOOD_COLOR, MOOD_SCORE, MOODS, getDaysInMonth, toDateStr, isWeekday } from './journal/helpers'
 import { EntryModal } from './journal/EntryModal'
@@ -103,74 +104,72 @@ export default function JournalTab() {
   const nextMonth = () => { if (calMonth === 11) { setCalYear(y => y+1); setCalMonth(0) } else setCalMonth(m => m+1) }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {/* View toggle */}
-      <div className="flex items-center gap-2">
-        {(['journal', 'review'] as const).map(v => (
-          <button key={v} onClick={() => setView(v)}
-            style={{
-              padding: '6px 16px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer',
-              background: view === v ? 'var(--color-surface-3)' : 'var(--s2)',
-              border: view === v ? 'none' : '1px solid var(--bd2)',
-              color: view === v ? 'white' : 'var(--t3)',
-              textTransform: 'capitalize',
-            }}>
-            {v === 'journal' ? '✍ Daily Journal' : '📋 Weekly Review'}
-          </button>
-        ))}
+      <div className="flex items-center self-start">
+        <Segmented
+          options={[{ key: 'journal', label: 'Daily journal' }, { key: 'review', label: 'Weekly review' }]}
+          value={view}
+          onChange={setView}
+        />
       </div>
 
       {view === 'review' && <WeeklyReviewSection />}
 
       {view === 'journal' && <>
       {/* Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <MetricCard title="Entries This Month" value={`${entries.filter(e => e.entry_date.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`)).length}`} change={`of ${calDays.filter(isWeekday).length} trading days`} changePositive={null} barColor="var(--ac)" />
-        <MetricCard title="Avg Mood"     value={avgMoodScore > 0 ? `${avgMoodScore.toFixed(1)}/10` : '—'} change={entries.length > 0 ? 'Based on entries' : 'No entries yet'} changePositive={avgMoodScore >= 6 ? true : null} barColor="var(--gr)" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        <MetricCard title="Entries this month" value={`${entries.filter(e => e.entry_date.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`)).length}`} change={`of ${calDays.filter(isWeekday).length} trading days`} changePositive={null} />
+        <MetricCard title="Avg mood"     value={avgMoodScore > 0 ? `${avgMoodScore.toFixed(1)}/10` : '—'} change={entries.length > 0 ? 'Based on entries' : 'No entries yet'} changePositive={avgMoodScore >= 6 ? true : null} />
         {(() => {
           const withStats = MOODS.filter(m => moodStats[m])
           if (withStats.length === 0) {
-            return <MetricCard title="Best Mood" value="—" change="Log moods to find your edge" changePositive={null} barColor="var(--am)" />
+            return <MetricCard title="Best mood" value="—" change="Log moods to find your edge" changePositive={null} />
           }
           const best = withStats.sort((a, b) => (moodStats[b].totalPnl / moodStats[b].count) - (moodStats[a].totalPnl / moodStats[a].count))[0]
           const bestAvg = moodStats[best].totalPnl / moodStats[best].count
           return (
             <MetricCard
-              title="Best Mood"
+              title="Best mood"
               value={best.charAt(0).toUpperCase() + best.slice(1)}
               change={`${bestAvg >= 0 ? '+' : '−'}€${Math.abs(bestAvg).toFixed(0)}/day avg`}
               changePositive={bestAvg >= 0}
-              barColor="var(--am)"
+             
             />
           )
         })()}
-        <MetricCard title="Streak"       value={`${streak}d`} change={streak > 0 ? 'consecutive days' : 'Start journaling today!'} changePositive={streak > 0} barColor="var(--pu)" />
+        <MetricCard title="Streak"       value={`${streak}d`} change={streak > 0 ? 'consecutive days' : 'Start journaling today!'} changePositive={streak > 0} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
         {/* LEFT: Calendar + Recent Entries */}
-        <div className="lg:col-span-3 flex flex-col gap-4">
+        <div className="lg:col-span-3 flex flex-col gap-3">
 
           {/* Calendar */}
           <Panel noPadding action={
             <button
               onClick={() => setModal({ date: today, existing: byDate.get(today) })}
-              className="flex items-center gap-1.5 px-3 py-1.5 vq-r text-sm font-medium transition-colors"
-              style={{ background: byDate.has(today) ? 'rgba(0,196,106,0.15)' : 'var(--gr)', border: byDate.has(today) ? '1px solid rgba(0,196,106,0.35)' : 'none', color: byDate.has(today) ? 'var(--gr2)' : 'white', fontSize: 'var(--text-base)', cursor: 'pointer' }}>
+              className="flex items-center gap-1.5 transition-colors"
+              style={{
+                padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)', cursor: 'pointer',
+                background: byDate.has(today) ? 'transparent' : 'var(--color-ink-1)',
+                border: byDate.has(today) ? '1px solid var(--color-line-1)' : 'none',
+                color: byDate.has(today) ? 'var(--color-ink-2)' : 'var(--color-void)',
+              }}>
               {byDate.has(today) ? '✓ Today logged' : '+ Log Today'}
             </button>
           } title="">
             {/* Month nav */}
-            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--bd)' }}>
-              <button onClick={prevMonth} style={{ background: 'none', border: 'none', color: 'var(--t2)', cursor: 'pointer', fontSize: 'var(--text-lg)' }}>‹</button>
-              <span style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500 }}>{monthName}</span>
-              <button onClick={nextMonth} style={{ background: 'none', border: 'none', color: 'var(--t2)', cursor: 'pointer', fontSize: 'var(--text-lg)' }}>›</button>
+            <div className="flex items-center justify-between" style={{ padding: '8px 14px', borderBottom: '1px solid var(--color-line-1)' }}>
+              <button onClick={prevMonth} style={{ background: 'none', border: 'none', color: 'var(--color-ink-3)', cursor: 'pointer', fontSize: 'var(--text-md)' }}>‹</button>
+              <Num size="sm" tone="neutral">{monthName}</Num>
+              <button onClick={nextMonth} style={{ background: 'none', border: 'none', color: 'var(--color-ink-3)', cursor: 'pointer', fontSize: 'var(--text-md)' }}>›</button>
             </div>
 
             {/* Day labels */}
             <div className="calendar-header-grid grid grid-cols-7 px-4 pt-3 pb-1">
               {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
-                <div key={d} className="text-center" style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', letterSpacing: '0.04em' }}>{d}</div>
+                <div key={d} className="text-center"><Label>{d}</Label></div>
               ))}
             </div>
 
@@ -199,25 +198,23 @@ export default function JournalTab() {
                   dot    = 'var(--re)'
                 }
 
-                if (isToday) border = `1.5px solid var(--ac)`
+                if (isToday) border = '1px solid var(--color-line-3)'
 
                 return (
                   <button
                     key={ds}
                     onClick={() => !future && setModal({ date: ds, existing: entry })}
                     disabled={!!future}
-                    className="relative flex flex-col items-center justify-center vq-r transition-all"
+                    className="relative flex flex-col items-center justify-center transition-all"
                     style={{
-                      height: '44px', background: bg, border,
+                      height: '38px', borderRadius: 'var(--radius-xs)', background: bg, border,
                       cursor: future ? 'default' : 'pointer',
                       opacity: future ? 0.3 : 1,
                     }}
-                    onMouseEnter={e => { if (!future) e.currentTarget.style.background = 'var(--s3)' }}
+                    onMouseEnter={e => { if (!future) e.currentTarget.style.background = 'var(--color-state-hover)' }}
                     onMouseLeave={e => { if (!future) e.currentTarget.style.background = bg }}
                   >
-                    <span style={{ fontSize: 'var(--text-base)', color: isToday ? 'var(--ac)' : 'var(--t2)', fontWeight: isToday ? 500 : 400 }}>
-                      {day.getDate()}
-                    </span>
+                    <Num size="xs" tone={isToday ? 'neutral' : 'muted'}>{day.getDate()}</Num>
                     {dot && !future && (
                       <span className="rounded-full" style={{ width: '5px', height: '5px', background: dot, display: 'block', marginTop: '2px' }} />
                     )}
@@ -228,20 +225,20 @@ export default function JournalTab() {
 
             {/* Legend */}
             <div className="flex items-center gap-4 px-4 pb-3">
-              {([['var(--gr2)', 'Journaled'], ['var(--re)', 'Missed'], ['var(--ac)', 'Today']] as [string, string][]).map(([color, label]) => (
+              {([['var(--color-ink-1)', 'Journaled'], ['var(--color-down)', 'Missed'], ['var(--color-line-3)', 'Today']] as [string, string][]).map(([color, label]) => (
                 <div key={label} className="flex items-center gap-1.5">
-                  <span className="rounded-full" style={{ width: '7px', height: '7px', background: color, display: 'inline-block' }} />
-                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>{label}</span>
+                  <span className="rounded-full" style={{ width: '5px', height: '5px', background: color, display: 'inline-block' }} />
+                  <Label>{label}</Label>
                 </div>
               ))}
             </div>
           </Panel>
 
           {/* Recent Entries */}
-          <Panel title="" noPadding action={
-            <span className="vq-num" style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
-              {isFiltered ? `${filteredEntries.length} result${filteredEntries.length !== 1 ? 's' : ''}` : 'Recent Entries'}
-            </span>
+          <Panel title="Recent entries" noPadding action={
+            isFiltered
+              ? <Num size="xs" tone="muted">{filteredEntries.length} result{filteredEntries.length !== 1 ? 's' : ''}</Num>
+              : undefined
           }>
             {/* Search + mood filter bar */}
             <div className="flex flex-col gap-2 px-4 py-3" style={{ borderBottom: '1px solid var(--bd)' }}>
@@ -254,12 +251,12 @@ export default function JournalTab() {
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Search entries by keyword or tag…"
                   style={{
-                    width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)',
-                    borderRadius: 'var(--radius-md)', padding: '8px 32px 8px 30px',
-                    color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none',
+                    width: '100%', background: 'var(--color-surface-2)', border: '1px solid var(--color-line-1)',
+                    borderRadius: 'var(--radius-sm)', padding: '6px 30px 6px 28px',
+                    color: 'var(--color-ink-1)', fontSize: 'var(--text-base)', outline: 'none',
                   }}
-                  onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-                  onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
+                  onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
+                  onBlur={e => (e.target.style.borderColor = 'var(--color-line-1)')}
                 />
                 {search && (
                   <button onClick={() => setSearch('')}
@@ -271,18 +268,18 @@ export default function JournalTab() {
                 <button
                   onClick={() => setMoodFilter('')}
                   style={{
-                    padding: '3px 10px', borderRadius: 'var(--radius-xl)', fontSize: 'var(--text-sm)', cursor: 'pointer',
-                    background: moodFilter === '' ? 'var(--s4)' : 'transparent',
-                    border: moodFilter === '' ? '1px solid var(--bd2)' : '1px solid transparent',
-                    color: moodFilter === '' ? 'var(--t1)' : 'var(--t3)',
+                    padding: '2px 9px', borderRadius: 'var(--radius-xs)', fontSize: 'var(--text-xs)', cursor: 'pointer',
+                    background: moodFilter === '' ? 'var(--color-surface-3)' : 'transparent',
+                    border: '1px solid var(--color-line-1)',
+                    color: moodFilter === '' ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
                   }}>All</button>
                 {MOODS.map(m => (
                   <button key={m} onClick={() => setMoodFilter(moodFilter === m ? '' : m)}
                     style={{
-                      padding: '3px 10px', borderRadius: 'var(--radius-xl)', fontSize: 'var(--text-sm)', cursor: 'pointer',
-                      background: moodFilter === m ? `${MOOD_COLOR[m]}20` : 'transparent',
-                      border: moodFilter === m ? `1px solid ${MOOD_COLOR[m]}60` : '1px solid transparent',
-                      color: moodFilter === m ? MOOD_COLOR[m] : 'var(--t3)',
+                      padding: '2px 9px', borderRadius: 'var(--radius-xs)', fontSize: 'var(--text-xs)', cursor: 'pointer',
+                      background: moodFilter === m ? 'var(--color-surface-3)' : 'transparent',
+                      border: '1px solid var(--color-line-1)',
+                      color: moodFilter === m ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
                       textTransform: 'capitalize',
                     }}>{m}</button>
                 ))}
@@ -304,21 +301,21 @@ export default function JournalTab() {
                   const dayPnl  = pnlByDate.get(entry.entry_date)
                   return (
                     <div key={entry.id}
-                      className="flex flex-col gap-2 px-4 py-3 cursor-pointer transition-colors"
-                      style={{ borderBottom: i < Math.min(filteredEntries.length, 30) - 1 ? '1px solid var(--bd)' : 'none' }}
+                      className="flex flex-col gap-1.5 cursor-pointer transition-colors"
+                      style={{ padding: '8px 14px', borderBottom: i < Math.min(filteredEntries.length, 30) - 1 ? '1px solid var(--color-line-1)' : 'none' }}
                       onClick={() => setModal({ date: entry.entry_date, existing: entry })}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--s3)')}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-state-hover)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
 
                       <div className="flex items-center gap-2 flex-wrap">
-                        {mood && <span className="rounded-full flex-shrink-0" style={{ width: '8px', height: '8px', display: 'inline-block', background: MOOD_COLOR[mood] }} />}
-                        <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
+                        {mood && <span className="rounded-full flex-shrink-0" style={{ width: '5px', height: '5px', display: 'inline-block', background: MOOD_COLOR[mood] }} />}
+                        <Num size="xs" tone="neutral">
                           {new Date(entry.entry_date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-                        </span>
-                        {mood && <span style={{ color: MOOD_COLOR[mood], fontSize: 'var(--text-sm)' }}>{mood} · {MOOD_SCORE[mood]}/10</span>}
-                        {entry.energy_level && <span style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>⚡{entry.energy_level}/10</span>}
+                        </Num>
+                        {mood && <span style={{ color: 'var(--color-ink-3)', fontSize: 'var(--text-xs)' }}>{mood} · {MOOD_SCORE[mood]}/10</span>}
+                        {entry.energy_level && <Num size="2xs" tone="muted">energy {entry.energy_level}/10</Num>}
                         {dayPnl !== undefined && (
-                          <span className="vq-num" style={{ color: dayPnl >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: 'var(--text-sm)', marginLeft: 'auto' }}>
+                          <span className="vq-num" style={{ color: dayPnl >= 0 ? 'var(--color-up)' : 'var(--color-down)', fontSize: 'var(--text-sm)', marginLeft: 'auto' }}>
                             {dayPnl >= 0 ? '+' : ''}€{Math.abs(dayPnl).toFixed(2)}
                           </span>
                         )}
@@ -344,7 +341,7 @@ export default function JournalTab() {
                         return (
                           <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', lineHeight: '1.6' }}>
                             {snippet.slice(0, matchStart)}
-                            <mark style={{ background: 'rgba(255,255,255,0.3)', color: 'var(--t1)', borderRadius: 'var(--radius-xs)', padding: '0 2px' }}>{snippet.slice(matchStart, matchStart + q.length)}</mark>
+                            <mark style={{ background: 'var(--color-surface-3)', color: 'var(--color-ink-1)', borderRadius: 'var(--radius-xs)', padding: '0 2px' }}>{snippet.slice(matchStart, matchStart + q.length)}</mark>
                             {snippet.slice(matchStart + q.length)}
                           </p>
                         )
@@ -353,7 +350,7 @@ export default function JournalTab() {
                       {(entry.tags ?? []).length > 0 && (
                         <div className="flex gap-1.5 flex-wrap">
                           {(entry.tags ?? []).map(tag => (
-                            <span key={tag} style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', background: 'var(--s3)', padding: '1px 6px', borderRadius: 'var(--radius-xl)' }}>#{tag}</span>
+                            <span key={tag} style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)', background: 'var(--color-surface-2)', padding: '1px 5px', borderRadius: 'var(--radius-xs)' }}>#{tag}</span>
                           ))}
                         </div>
                       )}
@@ -366,8 +363,8 @@ export default function JournalTab() {
         </div>
 
         {/* RIGHT: Mood → P&L correlation */}
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <Panel title="Mood → P&L Correlation">
+        <div className="lg:col-span-2 flex flex-col gap-3">
+          <Panel title="Mood → P&L correlation">
             {Object.keys(moodStats).length === 0 ? (
               <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>Add journal entries to see how your mood affects your trading P&L.</p>
             ) : (
@@ -385,20 +382,19 @@ export default function JournalTab() {
                     <div key={m}>
                       <div className="flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="rounded-full" style={{ width: '8px', height: '8px', background: MOOD_COLOR[m], display: 'inline-block' }} />
-                          <span style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500, textTransform: 'capitalize' }}>{m}</span>
-                          <span style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>{count} day{count !== 1 ? 's' : ''}</span>
+                          <span className="rounded-full" style={{ width: '5px', height: '5px', background: MOOD_COLOR[m], display: 'inline-block' }} />
+                          <span style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-base)', textTransform: 'capitalize' }}>{m}</span>
+                          <Num size="2xs" tone="muted">{count} day{count !== 1 ? 's' : ''}</Num>
                         </div>
-                        <span className="vq-num" style={{ color: avg >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
+                        <span className="vq-num" style={{ color: avg >= 0 ? 'var(--color-up)' : 'var(--color-down)', fontSize: 'var(--text-sm)' }}>
                           {avg >= 0 ? '+' : ''}€{Math.abs(avg).toFixed(2)} avg
                         </span>
                       </div>
-                      <div className="rounded-full overflow-hidden" style={{ height: '5px', background: 'var(--s3)' }}>
+                      <div className="overflow-hidden" style={{ height: '3px', background: 'var(--color-surface-2)' }}>
                         <div style={{
                           width: `${(Math.abs(avg) / maxAbs) * 100}%`,
                           height: '100%',
-                          background: avg >= 0 ? 'var(--gr2)' : 'var(--re)',
-                          borderRadius: 'var(--radius-sm)',
+                          background: avg >= 0 ? 'var(--color-up)' : 'var(--color-down)',
                         }} />
                       </div>
                     </div>
@@ -412,12 +408,12 @@ export default function JournalTab() {
                   const bestAvg  = moodStats[best].totalPnl  / moodStats[best].count
                   const worstAvg = moodStats[worst].totalPnl / moodStats[worst].count
                   return (
-                    <div className="vq-r p-3 mt-2" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                      <p style={{ color: 'var(--go2)', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: '4px' }}>VELQUOR INSIGHT</p>
-                      <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', lineHeight: '1.6' }}>
-                        You trade best when feeling <strong style={{ color: MOOD_COLOR[best as Mood] }}>{best}</strong> (avg {bestAvg >= 0 ? '+' : '−'}€{Math.abs(bestAvg).toFixed(2)}/day).
+                    <div className="mt-2" style={{ padding: '9px 12px', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0', background: 'var(--color-surface-1)', borderLeft: '2px solid var(--color-line-3)' }}>
+                      <div style={{ marginBottom: '4px' }}><Label>Velquor insight</Label></div>
+                      <p style={{ color: 'var(--color-ink-2)', fontSize: 'var(--text-base)', lineHeight: '1.6' }}>
+                        You trade best when feeling <strong style={{ color: 'var(--color-ink-1)' }}>{best}</strong> (avg {bestAvg >= 0 ? '+' : '−'}€{Math.abs(bestAvg).toFixed(2)}/day).
                         {best !== worst && <>
-                          {' '}Avoid trading when <strong style={{ color: MOOD_COLOR[worst as Mood] }}>{worst}</strong> (avg {worstAvg >= 0 ? '+' : '−'}€{Math.abs(worstAvg).toFixed(2)}/day).
+                          {' '}Avoid trading when <strong style={{ color: 'var(--color-ink-1)' }}>{worst}</strong> (avg {worstAvg >= 0 ? '+' : '−'}€{Math.abs(worstAvg).toFixed(2)}/day).
                         </>}
                       </p>
                     </div>
@@ -428,21 +424,21 @@ export default function JournalTab() {
           </Panel>
 
           {/* Quick stats */}
-          <Panel title="This Month at a Glance">
+          <Panel title="This month at a glance">
             <div className="flex flex-col gap-2">
               {MOODS.map(m => {
                 const count = entries.filter(e => e.mood === m && e.entry_date.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`)).length
                 if (count === 0) return null
                 return (
                   <div key={m} className="flex items-center gap-2">
-                    <span className="rounded-full flex-shrink-0" style={{ width: '7px', height: '7px', background: MOOD_COLOR[m], display: 'inline-block' }} />
-                    <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', textTransform: 'capitalize', flex: 1 }}>{m}</span>
+                    <span className="rounded-full flex-shrink-0" style={{ width: '5px', height: '5px', background: MOOD_COLOR[m], display: 'inline-block' }} />
+                    <span style={{ color: 'var(--color-ink-2)', fontSize: 'var(--text-base)', textTransform: 'capitalize', flex: 1 }}>{m}</span>
                     <div className="flex gap-1">
                       {Array(count).fill(null).map((_, i) => (
-                        <span key={i} className="rounded-full" style={{ width: '7px', height: '7px', background: MOOD_COLOR[m], display: 'inline-block', opacity: 0.7 }} />
+                        <span key={i} className="rounded-full" style={{ width: '5px', height: '5px', background: MOOD_COLOR[m], display: 'inline-block', opacity: 0.7 }} />
                       ))}
                     </div>
-                    <span style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', minWidth: '20px', textAlign: 'right' }}>{count}d</span>
+                    <Num size="xs" tone="muted" style={{ minWidth: '20px', textAlign: 'right' }}>{count}d</Num>
                   </div>
                 )
               })}

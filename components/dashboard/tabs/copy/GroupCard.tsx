@@ -115,8 +115,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             <div style={{
               width: 8, height: 8, borderRadius: '50%',
               background: group.active ? '#00C46A' : '#444',
-              boxShadow: group.active ? '0 0 6px #00C46A' : undefined,
-            }} />
+                          }} />
             <span style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--t1)' }}>{group.name}</span>
             <span style={{
               fontSize: 'var(--text-xs)', padding: '2px 8px', borderRadius: 'var(--radius-xl)',

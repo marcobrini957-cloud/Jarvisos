@@ -2,12 +2,14 @@
 
 export type Mood = 'great' | 'good' | 'neutral' | 'low' | 'bad'
 
+// Mood is not P&L, so it does not get P&L's green and red. It is ordinal, so it
+// reads as brightness: a great day is full ink, a bad one is barely there.
 export const MOOD_COLOR: Record<Mood, string> = {
-  great:   'var(--gr2)',
-  good:    'var(--gr)',
-  neutral: 'var(--am2)',
-  low:     '#FFFFFF',
-  bad:     'var(--re)',
+  great:   'var(--color-ink-1)',
+  good:    'var(--color-ink-2)',
+  neutral: 'var(--color-ink-3)',
+  low:     'var(--color-ink-4)',
+  bad:     'var(--color-down)',
 }
 export const MOOD_SCORE: Record<Mood, number> = { great: 9, good: 7, neutral: 5, low: 3, bad: 1 }
 export const MOODS: Mood[] = ['great', 'good', 'neutral', 'low', 'bad']

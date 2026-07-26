@@ -37,12 +37,10 @@ export default function PartnerCard({
       onMouseEnter={e => {
         e.currentTarget.style.borderColor = accent
         e.currentTarget.style.transform = 'translateY(-2px)'
-        e.currentTarget.style.boxShadow = `0 8px 24px ${accent}22`
       }}
       onMouseLeave={e => {
         e.currentTarget.style.borderColor = 'var(--bd)'
         e.currentTarget.style.transform = 'translateY(0)'
-        e.currentTarget.style.boxShadow = 'none'
       }}
     >
       {/* accent hairline top */}

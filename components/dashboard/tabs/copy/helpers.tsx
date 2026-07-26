@@ -12,8 +12,7 @@ export function statusDot(status: string, lastSeen: string | null) {
     <span style={{
       display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
       background: color, flexShrink: 0,
-      boxShadow: (status === 'active' && isRecent) ? '0 0 6px #00C46A' : undefined,
-    }} />
+          }} />
   )
 }
 

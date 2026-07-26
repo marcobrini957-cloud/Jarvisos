@@ -167,8 +167,7 @@ function StackedLogo({ accent, initials, logo }: { accent: string; initials: str
     right: `${offset}px`, top: `${offset}px`,
     borderRadius: 'var(--radius-xl)',
     background: top ? `linear-gradient(145deg, ${accent}, ${accent}bb)` : accent,
-    opacity, boxShadow: top ? `0 16px 40px ${accent}55` : 'none',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    opacity,     display: 'flex', alignItems: 'center', justifyContent: 'center',
   })
   return (
     <div className="hidden sm:block" style={{ position: 'relative', width: `${size + 24}px`, height: `${size + 24}px`, flexShrink: 0 }}>

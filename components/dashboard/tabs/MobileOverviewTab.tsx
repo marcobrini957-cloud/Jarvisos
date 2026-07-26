@@ -209,7 +209,6 @@ export default function MobileOverviewTab() {
                         background: done ? 'var(--gr)' : 'transparent',
                         border: `2px solid ${done ? 'var(--gr2)' : 'var(--bd2)'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: done ? '0 0 7px rgba(0,196,106,0.4)' : 'none',
                       }}>
                         {done && <span style={{ fontSize: 'var(--text-2xs)', color: 'white', fontWeight: 700 }}>✓</span>}
                       </div>

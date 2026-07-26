@@ -6,6 +6,7 @@ import { useTasks }  from '@/hooks/useTasks'
 import Panel         from '@/components/ui/Panel'
 import type { Task } from '@/types'
 import { TODAY, categoryColor, last7Days } from './discipline/helpers'
+import { Num } from '@/components/ui/vq'
 import { AddHabitModal } from './discipline/AddHabitModal'
 import { AddTaskModal } from './discipline/AddTaskModal'
 import { TaskRow } from './discipline/TaskRow'
@@ -55,25 +56,25 @@ export default function DisciplineTab() {
       title: 'Habits Today',
       value: `${todayCompleted}/${todayTotal}`,
       sub:   `${habitCompletionPct}% complete`,
-      color: habitCompletionPct === 100 ? 'var(--gr)' : habitCompletionPct >= 50 ? 'var(--am)' : 'var(--re)',
+      color: habitCompletionPct === 100 ? 'var(--color-up)' : habitCompletionPct >= 50 ? 'var(--color-ink-3)' : 'var(--color-down)',
     },
     {
       title: 'Best Streak',
       value: habits.length > 0 ? `${bestStreak}d` : '—',
       sub:   'consecutive days',
-      color: 'var(--pu)',
+      color: 'var(--color-ink-3)',
     },
     {
       title: 'Tasks Today',
       value: `${doneToday}/${todayTasks.length}`,
       sub:   'tasks completed',
-      color: 'var(--ac)',
+      color: 'var(--color-ink-3)',
     },
     {
       title: 'Overdue',
       value: String(overdueTasks.length),
       sub:   overdueTasks.length === 0 ? 'all clear' : 'needs attention',
-      color: overdueTasks.length > 0 ? 'var(--re)' : 'var(--gr)',
+      color: overdueTasks.length > 0 ? 'var(--color-down)' : 'var(--color-up)',
     },
   ]
 
@@ -90,23 +91,22 @@ export default function DisciplineTab() {
             key={m.title}
             className="relative vq-r p-4 overflow-hidden"
             style={{ background: 'var(--s2)', border: '1px solid var(--bd)' }}>
-            <p style={{ color: 'var(--t2)', fontSize: 'var(--text-sm)', letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500 }}>
+            <p className="vq-label" style={{ display: 'block' }}>
               {m.title}
             </p>
-            <p style={{ color: 'var(--t1)', fontSize: 'var(--text-2xl)', fontWeight: 500, lineHeight: 1.2, marginTop: '4px' }}>
-              {m.value}
-            </p>
-            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '2px' }}>{m.sub}</p>
-            <div className="absolute bottom-0 left-0 right-0" style={{ height: '3px', background: m.color, opacity: 0.8 }} />
+            <div style={{ marginTop: '4px' }}>
+              <Num size="xl" style={{ color: m.color }}>{m.value}</Num>
+            </div>
+            <p style={{ color: 'var(--color-ink-3)', fontSize: 'var(--text-xs)', marginTop: '2px' }}>{m.sub}</p>
           </div>
         ))}
       </div>
 
       {/* ── Split panel ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
 
         {/* ── Habits section (lg:col-span-2) ── */}
-        <div className="lg:col-span-2 flex flex-col gap-4">
+        <div className="lg:col-span-2 flex flex-col gap-3">
           <Panel
             title={`Habits — ${new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}`}
             noPadding
@@ -114,11 +114,12 @@ export default function DisciplineTab() {
               <button
                 onClick={() => setShowAddHabit(true)}
                 style={{
-                  fontSize: 'var(--text-sm)', padding: '3px 10px', borderRadius: 'var(--radius-md)',
+                  fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                  padding: '3px 9px', borderRadius: 'var(--radius-sm)',
                   border: 'none', cursor: 'pointer', background: 'var(--color-ink-1)',
-                  color: 'var(--color-void)', fontWeight: 500,
+                  color: 'var(--color-void)',
                 }}>
-                + Add Habit
+                + Add habit
               </button>
             }>
 
@@ -135,7 +136,7 @@ export default function DisciplineTab() {
                 <button
                   onClick={() => setShowAddHabit(true)}
                   style={{ background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)', fontSize: 'var(--text-base)', padding: '8px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
-                  + Add First Habit
+                  + Add first habit
                 </button>
               </div>
             ) : (
@@ -148,35 +149,37 @@ export default function DisciplineTab() {
                   return (
                     <div
                       key={habit.id}
-                      className="flex items-center gap-3 px-4 py-3 transition-colors group"
+                      className="flex items-center gap-3 transition-colors group"
                       style={{
-                        borderBottom: '1px solid var(--bd)',
-                        borderLeft: `3px solid ${done ? color : 'transparent'}`,
+                        padding: '8px 14px',
+                        borderBottom: '1px solid var(--color-line-1)',
+                        borderLeft: `2px solid ${done ? 'var(--color-ink-1)' : 'transparent'}`,
                       }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--s3)')}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-state-hover)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
 
                       {/* Toggle button */}
                       <button
                         onClick={() => toggleHabit(habit.id, today)}
-                        className="flex items-center justify-center vq-r flex-shrink-0 transition-all"
+                        className="flex items-center justify-center flex-shrink-0 transition-all"
                         style={{
-                          width: '36px', height: '36px', fontSize: 'var(--text-lg)',
-                          background: done ? `${color}20` : 'var(--s2)',
-                          border: done ? `1px solid ${color}40` : '1px solid var(--bd2)',
+                          width: '28px', height: '28px', fontSize: 'var(--text-md)',
+                          borderRadius: 'var(--radius-sm)',
+                          background: done ? 'var(--color-surface-3)' : 'transparent',
+                          border: '1px solid var(--color-line-1)',
                           cursor: 'pointer',
-                          filter: done ? 'none' : 'grayscale(0.5) opacity(0.6)',
+                          filter: done ? 'none' : 'grayscale(1) opacity(0.5)',
                         }}>
                         {habit.icon}
                       </button>
 
                       <div className="flex-1 min-w-0">
-                        <p style={{ color: done ? 'var(--t2)' : 'var(--t1)', fontSize: 'var(--text-base)', textDecoration: done ? 'line-through' : 'none' }}>
+                        <p style={{ color: done ? 'var(--color-ink-3)' : 'var(--color-ink-1)', fontSize: 'var(--text-base)', textDecoration: done ? 'line-through' : 'none' }}>
                           {habit.name}
                         </p>
-                        <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '1px' }}>
+                        <p style={{ color: 'var(--color-ink-4)', fontSize: 'var(--text-xs)', marginTop: '1px' }}>
                           <span style={{ color }}>{habit.category}</span>
-                          {streak > 0 && <span> · 🔥 {streak} day streak</span>}
+                          {streak > 0 && <span> · {streak} day streak</span>}
                         </p>
                       </div>
 
@@ -187,8 +190,8 @@ export default function DisciplineTab() {
                             key={d}
                             title={d}
                             style={{
-                              width: '7px', height: '7px', borderRadius: '50%',
-                              background: isCompleted(habit.id, d) ? color : 'var(--s3)',
+                              width: '5px', height: '5px', borderRadius: '50%',
+                              background: isCompleted(habit.id, d) ? 'var(--color-ink-1)' : 'var(--color-surface-3)',
                               opacity: d === today ? 1 : 0.7,
                             }}
                           />
@@ -208,9 +211,8 @@ export default function DisciplineTab() {
                 })}
 
                 {todayCompleted === todayTotal && todayTotal > 0 && (
-                  <div className="flex items-center justify-center py-4 gap-2">
-                    <span style={{ fontSize: 'var(--text-xl)' }}>🎉</span>
-                    <span style={{ color: 'var(--gr2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>All habits done today! Great discipline.</span>
+                  <div className="flex items-center justify-center py-3">
+                    <span style={{ color: 'var(--color-up)', fontSize: 'var(--text-base)' }}>All habits done today.</span>
                   </div>
                 )}
               </>
@@ -219,7 +221,7 @@ export default function DisciplineTab() {
 
           {/* Habit stats bar */}
           {habits.length > 0 && (
-            <Panel title="Habit Stats">
+            <Panel title="Habit stats">
               <div className="flex flex-col gap-3">
                 {habits.map(habit => {
                   const rate   = completionRate(habit.id)
@@ -233,12 +235,12 @@ export default function DisciplineTab() {
                           <span style={{ color: 'var(--t1)', fontSize: 'var(--text-base)' }}>{habit.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          {streak > 0 && <span style={{ color: 'var(--am2)', fontSize: 'var(--text-sm)' }}>🔥{streak}d</span>}
-                          <span className="vq-num" style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>{rate}%</span>
+                          {streak > 0 && <Num size="2xs" tone="muted">{streak}d streak</Num>}
+                          <Num size="sm" tone="neutral">{rate}%</Num>
                         </div>
                       </div>
-                      <div className="rounded-full overflow-hidden" style={{ height: '3px', background: 'var(--s3)' }}>
-                        <div style={{ width: `${rate}%`, height: '100%', background: color, borderRadius: 'var(--radius-sm)' }} />
+                      <div className="overflow-hidden" style={{ height: '3px', background: 'var(--color-surface-2)' }}>
+                        <div style={{ width: `${rate}%`, height: '100%', background: 'var(--color-ink-2)' }} />
                       </div>
                     </div>
                   )
@@ -249,7 +251,7 @@ export default function DisciplineTab() {
         </div>
 
         {/* ── Tasks section ── */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
 
           {/* Today's tasks */}
           <Panel
@@ -259,11 +261,12 @@ export default function DisciplineTab() {
               <button
                 onClick={() => setShowAddTask(true)}
                 style={{
-                  fontSize: 'var(--text-sm)', padding: '3px 10px', borderRadius: 'var(--radius-md)',
+                  fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                  padding: '3px 9px', borderRadius: 'var(--radius-sm)',
                   border: 'none', cursor: 'pointer', background: 'var(--color-ink-1)',
-                  color: 'var(--color-void)', fontWeight: 500,
+                  color: 'var(--color-void)',
                 }}>
-                + Add Task
+                + Add task
               </button>
             }>
 
@@ -291,7 +294,7 @@ export default function DisciplineTab() {
           <Panel title="Overdue" noPadding>
             {overdueTasks.length === 0 ? (
               <div className="flex items-center justify-center py-6">
-                <span style={{ color: 'var(--gr2)', fontSize: 'var(--text-base)' }}>All clear — nothing overdue ✓</span>
+                <span style={{ color: 'var(--color-up)', fontSize: 'var(--text-base)' }}>All clear — nothing overdue</span>
               </div>
             ) : (
               overdueTasks.map(t => (

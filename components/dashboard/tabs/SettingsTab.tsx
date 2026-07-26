@@ -38,8 +38,7 @@ function Dot({ ok }: { ok: boolean | null }) {
     <span style={{
       width: '8px', height: '8px', borderRadius: '50%',
       background: color,
-      boxShadow: ok === true ? '0 0 5px var(--gr2)' : 'none',
-      display: 'inline-block', flexShrink: 0,
+            display: 'inline-block', flexShrink: 0,
     }} />
   )
 }

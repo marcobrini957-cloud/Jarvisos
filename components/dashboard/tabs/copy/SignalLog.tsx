@@ -87,8 +87,7 @@ export function SignalLog({ groupId }: { groupId: string }) {
               <span style={{
                 display: 'inline-block', width: 6, height: 6, borderRadius: '50%',
                 background: statusColor, flexShrink: 0,
-                boxShadow: e.status === 'success' ? '0 0 4px #00C46A' : undefined,
-              }} />
+                              }} />
               <span style={{ color: statusColor, textTransform: 'capitalize', fontSize: 'var(--text-xs)' }}>
                 {e.status}
               </span>

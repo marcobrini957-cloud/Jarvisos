@@ -147,7 +147,7 @@ export default function VelquorTab() {
               <div style={introStyle(0)}>
                 <div style={{
                   display: 'inline-flex', padding: '14px', borderRadius: 'var(--radius-xl)',
-                  background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.2)',
+                  background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
                   animation: animate ? 'vq-analyst-ring 2.4s ease-in-out 1.2s 3' : 'none',
                 }}>
                   <LogoMark size={44} />
@@ -155,10 +155,10 @@ export default function VelquorTab() {
               </div>
 
               <div style={introStyle(1)}>
-                <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.03em', margin: 0 }}>
-                  VELQUOR Analyst
+                <h1 style={{ fontFamily: 'var(--font-mark)', fontSize: 'var(--text-2xl)', textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--color-ink-1)', margin: 0 }}>
+                  Velquor Analyst
                 </h1>
-                <p style={{ fontSize: 'var(--text-md)', fontWeight: 500, color: 'var(--t2)', lineHeight: 1.65, maxWidth: '520px', margin: '10px auto 0' }}>
+                <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-ink-2)', lineHeight: 1.65, maxWidth: '520px', margin: '10px auto 0' }}>
                   Your trading desk analyst. It reads your actual trade history, journal, and
                   discipline data — then answers with your numbers, not generic advice.
                   Ask why you lose on certain days, which setup carries you, or what to fix first.
@@ -168,11 +168,11 @@ export default function VelquorTab() {
               <div style={{ ...introStyle(2), display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', width: '100%', maxWidth: '640px', marginTop: '6px' }}>
                 {CAPABILITIES.map(c => (
                   <div key={c.label} style={{
-                    padding: '12px 14px', borderRadius: 'var(--radius-md)', textAlign: 'left',
-                    background: 'rgba(255,255,255,0.02)', border: '1px solid var(--bd2)',
+                    padding: '10px 12px', borderRadius: 'var(--radius-md)', textAlign: 'left',
+                    background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
                   }}>
-                    <p style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{c.label}</p>
-                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', margin: '3px 0 0', lineHeight: 1.45 }}>{c.sub}</p>
+                    <p style={{ fontSize: 'var(--text-base)', color: 'var(--color-ink-1)', margin: 0 }}>{c.label}</p>
+                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)', margin: '3px 0 0', lineHeight: 1.45 }}>{c.sub}</p>
                   </div>
                 ))}
               </div>
@@ -186,11 +186,11 @@ export default function VelquorTab() {
                       inputRef.current?.focus()
                     }}
                     style={{
-                      padding: '7px 14px', borderRadius: 'var(--radius-xl)', fontSize: 'var(--text-sm)', fontWeight: 600,
-                      background: 'transparent', border: '1px solid rgba(255,255,255,0.28)',
-                      color: 'var(--go2)', cursor: 'pointer', transition: 'all 0.12s',
+                      padding: '5px 11px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)',
+                      background: 'transparent', border: '1px solid var(--color-line-1)',
+                      color: 'var(--color-ink-2)', cursor: 'pointer', transition: 'all 0.12s',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-state-hover)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     {p.label}
@@ -204,11 +204,11 @@ export default function VelquorTab() {
             msg.role === 'user' ? (
               <div key={i} style={{ display: 'flex', justifyContent: 'flex-end', margin: '20px 0' }}>
                 <div style={{
-                  maxWidth: '78%', padding: '11px 16px',
-                  background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)',
-                  borderRadius: '14px 14px 3px 14px',
+                  maxWidth: '78%', padding: '9px 12px',
+                  background: 'var(--color-surface-2)', border: '1px solid var(--color-line-1)',
+                  borderRadius: 'var(--radius-md)',
                 }}>
-                  <p style={{ color: 'var(--t1)', fontSize: '13.5px', fontWeight: 500, lineHeight: 1.65, margin: 0, whiteSpace: 'pre-line' }}>
+                  <p style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-md)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-line' }}>
                     {msg.content}
                   </p>
                 </div>
@@ -217,18 +217,18 @@ export default function VelquorTab() {
               <div key={i} style={{ display: 'flex', gap: '12px', margin: '20px 0', alignItems: 'flex-start' }}>
                 <div style={{
                   flexShrink: 0, marginTop: '2px', borderRadius: 'var(--radius-md)', overflow: 'hidden',
-                  outline: speakingIdx === i ? '2px solid rgba(255,255,255,0.5)' : 'none',
+                  outline: speakingIdx === i ? '1px solid var(--color-line-3)' : 'none',
                 }}>
                   <LogoMark size={26} />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   {msg.content === '' && streaming ? (
-                    <span style={{ color: 'var(--go2)', fontSize: 'var(--text-md)' }}>▌</span>
+                    <span style={{ color: 'var(--color-ink-2)', fontSize: 'var(--text-md)' }}>▌</span>
                   ) : (
                     <>
-                      <p style={{ color: 'var(--t1)', fontSize: '13.5px', fontWeight: 450, lineHeight: 1.75, margin: 0, whiteSpace: 'pre-line' }}>
+                      <p style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-md)', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-line' }}>
                         {msg.content}
-                        {streaming && i === messages.length - 1 && <span style={{ color: 'var(--go2)' }}>▌</span>}
+                        {streaming && i === messages.length - 1 && <span style={{ color: 'var(--color-ink-2)' }}>▌</span>}
                       </p>
                       {msg.content && !streaming && (
                         <button
@@ -237,8 +237,8 @@ export default function VelquorTab() {
                             marginTop: '8px', padding: '3px 10px', borderRadius: 'var(--radius-md)',
                             background: speakingIdx === i ? 'rgba(255,255,255,0.15)' : 'transparent',
                             border: '1px solid rgba(255,255,255,0.25)',
-                            color: speakingIdx === i ? 'var(--go2)' : 'var(--t3)',
-                            fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer',
+                            color: speakingIdx === i ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
+                            fontSize: 'var(--text-xs)', cursor: 'pointer',
                           }}
                         >
                           {speakingIdx === i ? 'Stop' : 'Read aloud'}
@@ -286,7 +286,7 @@ export default function VelquorTab() {
               style={{
                 width: '34px', height: '34px', borderRadius: 'var(--radius-md)', flexShrink: 0,
                 border: 'none',
-                background: input.trim() && !streaming ? 'var(--go2)' : 'var(--s3)',
+                background: input.trim() && !streaming ? 'var(--color-ink-1)' : 'var(--color-surface-2)',
                 color: input.trim() && !streaming ? '#111' : 'var(--t3)',
                 cursor: (streaming || !input.trim()) ? 'default' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -305,7 +305,7 @@ export default function VelquorTab() {
             {messages.length > 0 && !streaming && (
               <button
                 onClick={() => setMessages([])}
-                style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xs)', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                style={{ background: 'none', border: 'none', color: 'var(--color-ink-3)', fontSize: 'var(--text-xs)', cursor: 'pointer', padding: 0 }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--t1)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'var(--t3)')}
               >

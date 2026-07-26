@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FFEvent } from '@/lib/forex-factory/calendar'
 import { briefFor } from '@/lib/news/eventBriefs'
+import { Label, Num } from '@/components/ui/vq'
 
 // ── Bloomberg-style economic calendar: red-folder (high-impact) releases only ──
 
+// This tab predates the token layer and carried its own mono stack.
 const MONO: React.CSSProperties = {
-  fontFamily: 'ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace',
+  fontFamily: 'var(--font-mono)',
   fontVariantNumeric: 'tabular-nums',
 }
 
@@ -37,11 +39,11 @@ function fmtCountdown(ms: number): string {
 
 // Beat = actual vs forecast direction (green when above, red when below).
 function actualTone(e: FFEvent): string {
-  if (!e.actual || !e.forecast) return 'var(--t1)'
+  if (!e.actual || !e.forecast) return 'var(--color-ink-1)'
   const a = parseFloat(e.actual.replace(/[^0-9.-]/g, ''))
   const f = parseFloat(e.forecast.replace(/[^0-9.-]/g, ''))
-  if (isNaN(a) || isNaN(f) || a === f) return 'var(--t1)'
-  return a > f ? 'var(--gr2)' : 'var(--re)'
+  if (isNaN(a) || isNaN(f) || a === f) return 'var(--color-ink-1)'
+  return a > f ? 'var(--color-up)' : 'var(--color-down)'
 }
 
 function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; now: number }) {
@@ -49,13 +51,11 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
     <div>
       <div style={{
         display: 'flex', alignItems: 'center', gap: '10px',
-        padding: '7px 14px', background: 'rgba(255,255,255,0.03)',
-        borderTop: '1px solid var(--bd2)', borderBottom: '1px solid var(--bd)',
+        padding: '6px 14px', background: 'var(--color-surface-1)',
+        borderTop: '1px solid var(--color-line-1)', borderBottom: '1px solid var(--color-line-1)',
       }}>
-        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--am2)', textTransform: 'uppercase' }}>
-          {label}
-        </span>
-        <span className="vq-num" style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', ...MONO }}>{events.length} RELEASES</span>
+        <Label>{label}</Label>
+        <Num size="2xs" tone="muted">{events.length} releases</Num>
       </div>
 
       {events.map((e, i) => {
@@ -66,7 +66,7 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
         return (
           <div key={i} style={{
             padding: '9px 14px',
-            borderBottom: '1px solid var(--bd)',
+            borderBottom: '1px solid var(--color-line-1)',
             opacity: past ? 0.45 : 1,
             background: isNext && at - now < 3600_000 ? 'rgba(240,80,75,0.04)' : 'transparent',
           }}>
@@ -75,22 +75,21 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
               gridTemplateColumns: '68px 20px 44px 1fr 96px 96px 96px',
               gap: '10px', alignItems: 'center',
             }}>
-              <span style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--t1)', ...MONO }}>{eventTime(e)}</span>
+              <Num size="sm" tone="neutral">{eventTime(e)}</Num>
               <span title="High impact" style={{
-                width: '9px', height: '9px', borderRadius: 'var(--radius-xs)', background: 'var(--re)',
-                boxShadow: past ? 'none' : '0 0 6px rgba(240,80,75,0.6)',
+                width: '5px', height: '5px', borderRadius: '50%', background: 'var(--color-down)',
               }} />
-              <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.06em', ...MONO }}>{e.currency}</span>
-              <span style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <Num size="xs" tone="muted">{e.currency}</Num>
+              <span style={{ fontSize: 'var(--text-base)', color: 'var(--color-ink-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {e.title}
               </span>
               {[
                 { label: 'ACT', value: e.actual,   color: actualTone(e) },
-                { label: 'FCT', value: e.forecast, color: 'var(--t2)' },
-                { label: 'PRV', value: e.previous, color: 'var(--t3)' },
+                { label: 'FCT', value: e.forecast, color: 'var(--color-ink-2)' },
+                { label: 'PRV', value: e.previous, color: 'var(--color-ink-3)' },
               ].map(cell => (
-                <span key={cell.label} style={{ fontSize: 'var(--text-base)', textAlign: 'right', ...MONO, color: cell.value ? cell.color : 'var(--t3)' }}>
-                  <span style={{ fontSize: '8.5px', color: 'var(--t3)', marginRight: '6px', letterSpacing: '0.08em' }}>{cell.label}</span>
+                <span key={cell.label} style={{ fontSize: 'var(--text-sm)', textAlign: 'right', ...MONO, color: cell.value ? cell.color : 'var(--color-ink-4)' }}>
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)', color: 'var(--color-ink-4)', marginRight: '6px', letterSpacing: '0.14em' }}>{cell.label}</span>
                   {cell.value || '—'}
                 </span>
               ))}
@@ -98,9 +97,9 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
             {/* One-glance explainer: what it is + what a hot/miss print does */}
             <p style={{
               margin: '4px 0 0', paddingLeft: '78px',
-              fontSize: 'var(--text-sm)', color: 'var(--t3)', lineHeight: 1.5,
+              fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)', lineHeight: 1.5,
             }}>
-              {brief.what} <span style={{ color: 'var(--t2)' }}>{brief.effect}</span>
+              {brief.what} <span style={{ color: 'var(--color-ink-2)' }}>{brief.effect}</span>
             </p>
           </div>
         )
@@ -154,38 +153,38 @@ export default function MacroTab() {
     new Date(now).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: tz })
 
   return (
-    <div className="flex flex-col gap-4 fade-in">
+    <div className="flex flex-col gap-3 fade-in">
 
       {/* ── Terminal header ── */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
-        background: 'var(--s1)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-lg)',
-        padding: '14px 18px',
+        background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-md)',
+        padding: '10px 14px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{
-            width: '10px', height: '10px', borderRadius: 'var(--radius-xs)', background: 'var(--re)',
-            }} />
+            width: '5px', height: '5px', borderRadius: '50%', background: 'var(--color-down)',
+          }} />
           <div>
-            <h2 style={{ fontSize: 'var(--text-md)', fontWeight: 800, color: 'var(--t1)', letterSpacing: '0.02em', margin: 0 }}>
-              MARKET NEWS
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', color: 'var(--color-ink-1)', letterSpacing: '0.01em', margin: 0 }}>
+              Market news
             </h2>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', letterSpacing: '0.1em', margin: '2px 0 0' }}>
-              USD · RED FOLDERS ONLY · FOREXFACTORY FEED
-            </p>
+            <div style={{ marginTop: '2px' }}>
+              <Label>USD · red folders · ForexFactory feed</Label>
+            </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '22px', ...MONO }}>
+        <div style={{ display: 'flex', gap: '18px', ...MONO }}>
           {[
             { label: 'VIENNA',   tz: 'Europe/Vienna' },
             { label: 'LONDON',   tz: 'Europe/London' },
             { label: 'NEW YORK', tz: 'America/New_York' },
           ].map(c => (
             <div key={c.label} style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: 'var(--text-2xs)', color: 'var(--t3)', letterSpacing: '0.12em', margin: 0 }}>{c.label}</p>
+              <Label>{c.label}</Label>
               {/* second-precision — server/client can never agree (React #418) */}
-              <p suppressHydrationWarning style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--t1)', margin: '1px 0 0' }}>{clock(c.tz)}</p>
+              <p suppressHydrationWarning style={{ fontSize: 'var(--text-sm)', color: 'var(--color-ink-1)', margin: '1px 0 0' }}>{clock(c.tz)}</p>
             </div>
           ))}
         </div>
@@ -193,39 +192,38 @@ export default function MacroTab() {
 
       {/* ── Next release hero ── */}
       <div style={{
-        background: nextEvent ? 'linear-gradient(135deg, rgba(240,80,75,0.08), rgba(240,80,75,0.02))' : 'var(--s1)',
-        border: `1px solid ${nextEvent ? 'rgba(240,80,75,0.25)' : 'var(--bd2)'}`,
-        borderRadius: 'var(--radius-lg)', padding: '18px 20px',
+        background: 'var(--color-surface-1)',
+        border: '1px solid var(--color-line-1)',
+        borderLeft: nextEvent ? '2px solid var(--color-down)' : '1px solid var(--color-line-1)',
+        borderRadius: 'var(--radius-md)', padding: '12px 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px',
       }}>
         {nextEvent ? (
           <>
             <div>
-              <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--re)', letterSpacing: '0.14em', margin: 0 }}>
-                NEXT RELEASE
-              </p>
-              <h3 style={{ fontSize: 'var(--text-xl)', fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.01em', margin: '4px 0 2px' }}>
+              <Label>Next release</Label>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', color: 'var(--color-ink-1)', margin: '4px 0 3px' }}>
                 {nextEvent.title}
               </h3>
-              <p style={{ fontSize: 'var(--text-base)', color: 'var(--t2)', margin: 0, ...MONO }}>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-ink-2)', margin: 0, ...MONO }}>
                 {nextEvent.currency} · {eventDate(nextEvent).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} {eventTime(nextEvent)}
                 {nextEvent.forecast && ` · FCT ${nextEvent.forecast}`}
                 {nextEvent.previous && ` · PRV ${nextEvent.previous}`}
               </p>
-              <p style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', margin: '6px 0 0', lineHeight: 1.55, maxWidth: '560px' }}>
+              <p style={{ fontSize: 'var(--text-base)', color: 'var(--color-ink-3)', margin: '6px 0 0', lineHeight: 1.55, maxWidth: '560px' }}>
                 {briefFor(nextEvent.title).what}{' '}
-                <span style={{ color: 'var(--t2)' }}>{briefFor(nextEvent.title).effect}</span>
+                <span style={{ color: 'var(--color-ink-2)' }}>{briefFor(nextEvent.title).effect}</span>
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: 'var(--text-3xl)', fontWeight: 800, color: 'var(--re)', letterSpacing: '0.01em', margin: 0, ...MONO }}>
+              <p style={{ fontSize: 'var(--text-2xl)', color: 'var(--color-down)', margin: 0, ...MONO }}>
                 {fmtCountdown(eventDate(nextEvent).getTime() - now)}
               </p>
-              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', letterSpacing: '0.1em', margin: '2px 0 0' }}>UNTIL RELEASE</p>
+              <div style={{ marginTop: '2px' }}><Label>Until release</Label></div>
             </div>
           </>
         ) : (
-          <p style={{ fontSize: 'var(--text-base)', color: 'var(--t2)', margin: 0 }}>
+          <p style={{ fontSize: 'var(--text-base)', color: 'var(--color-ink-2)', margin: 0 }}>
             {loading ? 'Loading calendar…' : 'No further high-impact releases this week. Markets are clear.'}
           </p>
         )}
@@ -233,30 +231,28 @@ export default function MacroTab() {
 
       {/* ── Week table ── */}
       <div style={{
-        background: 'var(--s1)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-lg)',
+        background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-md)',
         overflow: 'hidden',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '11px 14px',
+          padding: '9px 14px', borderBottom: '1px solid var(--color-line-1)',
         }}>
-          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.1em' }}>
-            THIS WEEK — RED FOLDERS
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', color: 'var(--color-ink-1)' }}>
+            This week — red folders
           </span>
-          <span className="vq-num" style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', ...MONO }}>
-            {calendar.length} EVENTS
-          </span>
+          <Num size="2xs" tone="muted">{calendar.length} events</Num>
         </div>
 
         {loading ? (
-          <p style={{ padding: '24px 14px', fontSize: 'var(--text-base)', color: 'var(--t3)' }}>Loading ForexFactory feed…</p>
+          <p style={{ padding: '18px 14px', fontSize: 'var(--text-base)', color: 'var(--color-ink-3)' }}>Loading ForexFactory feed…</p>
         ) : calendar.length === 0 ? (
-          <p style={{ padding: '24px 14px', fontSize: 'var(--text-base)', color: 'var(--t3)' }}>
+          <p style={{ padding: '18px 14px', fontSize: 'var(--text-base)', color: 'var(--color-ink-3)' }}>
             No high-impact USD events this week.
           </p>
         ) : (
           Array.from(byDay.entries()).map(([day, events]) => (
-            <DayGroup key={day} label={day === todayKey ? `TODAY — ${day}` : day} events={events} now={now} />
+            <DayGroup key={day} label={day === todayKey ? `Today — ${day}` : day} events={events} now={now} />
           ))
         )}
       </div>
