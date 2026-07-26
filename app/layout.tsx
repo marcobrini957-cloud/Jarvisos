@@ -56,7 +56,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`h-full ${inter.variable}`}>
-      <body className="h-full" style={{ overflow: 'hidden' }}>
+      {/* Body is NOT scroll-locked. It used to be `overflow: hidden` so the
+          dashboard's inner-scrolling layout could not double-scroll — but that
+          silently clipped every ordinary page taller than the viewport, which is
+          why the landing and login pages each had to set `body.style.overflow =
+          'auto'` by hand, and why /pricing and /connect were unreachable below
+          the fold. Containment belongs to the dashboard shell, which is sized to
+          100dvh and scrolls its own <main>. */}
+      <body className="h-full">
         <DisplayModeProvider>{children}</DisplayModeProvider>
         <CookieConsent />
       </body>

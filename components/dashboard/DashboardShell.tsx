@@ -91,7 +91,9 @@ export default function DashboardShell() {
   return (
     <UserProfileProvider>
       <WelcomeGreeting />
-      <div className="vq2" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflowX: 'hidden' }}>
+      {/* Exactly one viewport tall, and it owns its own scrolling — the page
+          behind it no longer needs to be locked. */}
+      <div className="vq2" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
         <Topbar />
 
         {/* Desktop tab bar — hidden on mobile */}

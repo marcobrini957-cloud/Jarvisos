@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { IconStarFilled, IconExternalLink } from '@tabler/icons-react'
 import type { Partner } from '@/lib/partners'
 import { ratingLabel } from '@/lib/partners'
@@ -95,9 +96,10 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
             {partner.ctaLabel}
             <IconExternalLink size={14} stroke={2} />
           </a>
-          <a
-            href={`/api/go/${partner.id}?slot=learn`}
-            target="_blank" rel="sponsored noopener noreferrer"
+          {/* Learn more reads our own brief — regulation, costs and what to
+              watch — instead of firing the affiliate link a second time. */}
+          <Link
+            href={`/partners/${partner.id}`}
             style={{
               display: 'inline-flex', alignItems: 'center',
               background: 'transparent', color: 'var(--color-ink-1)',
@@ -108,7 +110,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
             }}
           >
             Learn more
-          </a>
+          </Link>
         </div>
       </div>
 
