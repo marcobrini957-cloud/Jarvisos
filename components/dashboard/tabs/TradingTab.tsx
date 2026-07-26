@@ -28,6 +28,7 @@ import { TradeCalendar } from './overview/TradeCalendar'
 import { WinRing } from './overview/WinRing'
 import { PnlDonut } from './trading/PnlDonut'
 import { MetricRing } from './trading/MetricRing'
+import { Label, Num } from '@/components/ui/vq'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -115,12 +116,12 @@ export default function TradingTab() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '16px' }}>
         <div style={{
-          width: '40px', height: '40px', borderRadius: '50%',
-          border: '2px solid var(--bd2)',
-          borderTopColor: 'var(--ac)',
+          width: '28px', height: '28px', borderRadius: '50%',
+          border: '1px solid var(--color-line-1)',
+          borderTopColor: 'var(--color-ink-1)',
           animation: 'spin 0.8s linear infinite',
         }} />
-        <p style={{ color: 'var(--t3)', fontSize: '13px' }}>Loading trades…</p>
+        <Label>Loading trades</Label>
       </div>
     )
   }
@@ -132,8 +133,8 @@ export default function TradingTab() {
         {/* Icon */}
         <LogoMark size={72} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <p style={{ color: 'var(--t1)', fontSize: '18px', fontWeight: 600 }}>No trades yet</p>
-          <p style={{ color: 'var(--t3)', fontSize: '13px', maxWidth: '320px', lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-lg)' }}>No trades yet</p>
+          <p style={{ color: 'var(--color-ink-3)', fontSize: 'var(--text-base)', maxWidth: '320px', lineHeight: 1.6 }}>
             Connect your MT5 account to start syncing trades automatically. VELQUOR will analyse your performance in real time.
           </p>
         </div>
@@ -143,17 +144,17 @@ export default function TradingTab() {
             'Paste your API key into the EA inputs',
             'Every trade syncs by itself from then on',
           ].map((text, i) => (
-            <div key={text} style={{ padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
-              <span style={{ fontSize: '18px' }}>{i + 1}</span>
-              <span style={{ color: 'var(--t2)', fontSize: '13px' }}>{text}</span>
+            <div key={text} style={{ padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
+              <Num size="sm" tone="muted">{i + 1}</Num>
+              <span style={{ color: 'var(--color-ink-2)', fontSize: 'var(--text-base)' }}>{text}</span>
             </div>
           ))}
           <Link
             href="/connect"
             style={{
-              marginTop: '6px', padding: '13px 16px', borderRadius: 'var(--radius-md)',
-              background: 'var(--ac)', color: '#fff', fontSize: '13px', fontWeight: 700,
-              textAlign: 'center', boxShadow: '0 8px 24px rgba(255,255,255,0.25)',
+              marginTop: '6px', padding: '11px 16px', borderRadius: 'var(--radius-sm)',
+              background: 'var(--color-ink-1)', color: 'var(--color-void)', fontSize: 'var(--text-base)',
+              textAlign: 'center',
             }}
           >
             Connect MetaTrader 5 →
@@ -164,7 +165,7 @@ export default function TradingTab() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
 
       {/* ── Report download bar ── */}
       <ReportDownloadBar />
@@ -173,14 +174,12 @@ export default function TradingTab() {
       {openPositions.length > 0 && (
         <Panel title={
           <span className="flex items-center gap-2">
-            <span style={{
-              width: '7px', height: '7px', borderRadius: '50%',
-              background: 'var(--gr2)',
-              boxShadow: '0 0 6px var(--gr)',
-              display: 'inline-block',
+            <span className="vq-num" style={{
+              width: '5px', height: '5px', borderRadius: '50%',
+              background: 'var(--color-up)', display: 'inline-block',
               animation: 'pulse-dot 1.5s ease-in-out infinite',
             }} />
-            Live Positions ({openPositions.length})
+            Live positions ({openPositions.length})
           </span>
         } noPadding>
           {openPositions.map(pos => {
@@ -188,38 +187,26 @@ export default function TradingTab() {
             const isUp = unrealised >= 0
             return (
               <div key={pos.id}
-                className="flex items-center gap-3 px-4 py-3"
-                style={{ borderBottom: '1px solid var(--bd)' }}>
-                <div className="flex flex-col gap-0.5" style={{ minWidth: '80px' }}>
-                  <span style={{ color: 'var(--t1)', fontWeight: 600, fontSize: '13px' }}>{pos.symbol}</span>
-                  <Badge variant={pos.trade_type as 'buy' | 'sell'}>{pos.trade_type.toUpperCase()}</Badge>
+                className="flex items-center gap-3"
+                style={{ padding: '8px 14px', borderBottom: '1px solid var(--color-line-1)' }}>
+                <div className="flex items-center gap-2" style={{ minWidth: '120px' }}>
+                  <Num size="sm" tone="neutral">{pos.symbol}</Num>
+                  <Badge variant={pos.trade_type as 'buy' | 'sell'}>{pos.trade_type}</Badge>
                 </div>
-                <div className="flex flex-col gap-0.5" style={{ minWidth: '80px' }}>
-                  <span style={{ color: 'var(--t3)', fontSize: '11px' }}>
-                    {pos.lot_size} lot{(pos.lot_size ?? 0) !== 1 ? 's' : ''}
-                  </span>
-                  <span style={{ color: 'var(--t3)', fontSize: '11px' }}>
-                    @ {pos.open_price}
-                  </span>
+                <Num size="xs" tone="muted" style={{ minWidth: '112px' }}>
+                  {pos.lot_size} lot @ {pos.open_price}
+                </Num>
+                <div className="flex items-center gap-3 flex-1">
+                  {pos.stop_loss   ? <Num size="xs" tone="down">SL {pos.stop_loss}</Num> : null}
+                  {pos.take_profit ? <Num size="xs" tone="up">TP {pos.take_profit}</Num> : null}
                 </div>
-                <div className="flex flex-col gap-0.5 flex-1">
-                  {pos.stop_loss && (
-                    <span style={{ color: 'var(--re)', fontSize: '11px' }}>SL {pos.stop_loss}</span>
-                  )}
-                  {pos.take_profit && (
-                    <span style={{ color: 'var(--gr2)', fontSize: '11px' }}>TP {pos.take_profit}</span>
-                  )}
-                </div>
-                <div className="flex flex-col items-end gap-0.5">
-                  <span style={{
-                    color: isUp ? 'var(--gr2)' : 'var(--re)',
-                    fontWeight: 700, fontSize: '14px', letterSpacing: '-0.02em',
-                  }}>
-                    {isUp ? '+' : '-'}€{Math.abs(unrealised).toFixed(2)}
-                  </span>
-                  <span style={{ color: 'var(--t3)', fontSize: '10px' }}>
+                <div className="flex items-center gap-3">
+                  <Num size="2xs" tone="muted">
                     {pos.open_time ? fmtDate(pos.open_time) + ' · ' + fmtTime(pos.open_time) : '—'}
-                  </span>
+                  </Num>
+                  <Num size="md" value={unrealised} tone="auto">
+                    {isUp ? '+' : '-'}€{Math.abs(unrealised).toFixed(2)}
+                  </Num>
                 </div>
               </div>
             )
@@ -228,12 +215,12 @@ export default function TradingTab() {
       )}
 
       {/* Live chart — real-time TradingView data, follows your instrument, all timeframes */}
-      <Panel title="Live Chart" noPadding accent="var(--gr)">
+      <Panel title="Live chart" noPadding>
         <LiveChart trades={trades} openPositions={openPositions} />
       </Panel>
 
       {/* Metrics with period selectors */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
         <PeriodMetricCard
           title="P&L"
           barColor="var(--gr)"
@@ -329,7 +316,7 @@ export default function TradingTab() {
             if (tot === 0) return null
             const net       = wonPips - lostPips
             // Green arc = pips won, red = pips given back — the pip payoff balance.
-            return <MetricRing pct={(wonPips / tot) * 100} color="var(--gr2)" glow="rgba(0,196,106,0.45)" track="var(--re)" center={`${net >= 0 ? '+' : ''}${Math.round(net)}`} sub="pips" />
+            return <MetricRing pct={(wonPips / tot) * 100} color="var(--color-up)" track="var(--color-down)" center={`${net >= 0 ? '+' : ''}${Math.round(net)}`} sub="pips" />
           }}
         />
         <PeriodMetricCard
@@ -353,66 +340,68 @@ export default function TradingTab() {
           getVisual={(p) => {
             const { totalDays, pct } = calcConsistency(filterByPeriod(trades, p))
             if (totalDays === 0) return null
-            const [color, glow] = pct >= 60 ? ['var(--gr2)', 'rgba(0,196,106,0.45)'] : pct >= 40 ? ['var(--am2)', 'rgba(255,255,255,0.45)'] : ['var(--re)', 'rgba(240,80,75,0.45)']
-            return <MetricRing pct={pct} color={color} glow={glow} center={`${pct.toFixed(0)}%`} sub="green" />
+            const color = pct >= 60 ? 'var(--color-up)' : pct >= 40 ? 'var(--color-ink-2)' : 'var(--color-down)'
+            return <MetricRing pct={pct} color={color} center={`${pct.toFixed(0)}%`} sub="green" />
           }}
         />
       </div>
 
       {/* Equity Curve + Daily P&L Calendar — side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-stretch">
         <EquityCurve trades={trades} />
-        <Panel title="Trading Calendar" accent="var(--gr)" className="h-full">
+        <Panel title="Trading calendar" className="h-full">
           <TradeCalendar allRows={allRows} />
         </Panel>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
         {/* Trade Log */}
         <div className="lg:col-span-3">
           <TradeLogTable trades={trades} loading={loading} onAnnotate={setAnnotating} onViewScreenshot={setScreenshotViewing} />
         </div>
 
         {/* Stats + Position Size */}
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <Panel title="Performance Stats">
+        <div className="lg:col-span-2 flex flex-col gap-3">
+          <Panel title="Performance stats">
             <div className="flex flex-col gap-3">
 
               {/* Professional Key Metrics */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 {[
                   {
-                    label: 'Profit Factor',
+                    label: 'Profit factor',
                     value: !stats ? '—' : stats.profitFactor >= 99 ? '∞' : stats.profitFactor.toFixed(2),
-                    color: !stats ? 'var(--t3)' : stats.profitFactor >= 1.5 ? 'var(--gr2)' : stats.profitFactor >= 1 ? 'var(--am2)' : 'var(--re)',
+                    color: !stats ? 'var(--color-ink-3)' : stats.profitFactor >= 1.5 ? 'var(--color-up)' : stats.profitFactor >= 1 ? 'var(--color-ink-1)' : 'var(--color-down)',
                     sub:   !stats ? '' : stats.profitFactor >= 1.5 ? 'Strong edge' : stats.profitFactor >= 1 ? 'Breakeven+' : 'Losing',
                   },
                   {
                     label: 'Expectancy',
                     value: !stats ? '—' : `${stats.expectancy >= 0 ? '+' : ''}€${stats.expectancy.toFixed(2)}`,
-                    color: !stats ? 'var(--t3)' : stats.expectancy > 0 ? 'var(--gr2)' : 'var(--re)',
+                    color: !stats ? 'var(--color-ink-3)' : stats.expectancy > 0 ? 'var(--color-up)' : 'var(--color-down)',
                     sub:   'per trade',
                   },
                   {
-                    label: 'Avg Win',
+                    label: 'Avg win',
                     value: !stats ? '—' : `€${stats.avgWin.toFixed(2)}`,
-                    color: 'var(--gr2)',
+                    color: 'var(--color-up)',
                     sub:   `${stats?.maxConsecWins ?? 0} max streak`,
                   },
                   {
-                    label: 'Avg Loss',
+                    label: 'Avg loss',
                     value: !stats ? '—' : `€${stats.avgLoss.toFixed(2)}`,
-                    color: 'var(--re)',
+                    color: 'var(--color-down)',
                     sub:   `${stats?.maxConsecLosses ?? 0} max streak`,
                   },
                 ].map(m => (
                   <div key={m.label} style={{
-                    padding: '10px 12px', borderRadius: 'var(--radius-md)',
-                    background: 'var(--s2)', border: '1px solid var(--bd)',
+                    padding: '9px 12px', borderRadius: 'var(--radius-md)',
+                    background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
                   }}>
-                    <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '4px' }}>{m.label}</p>
-                    <p style={{ color: m.color, fontSize: '17px', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '3px' }}>{m.value}</p>
-                    <p style={{ color: 'var(--t3)', fontSize: '10px' }}>{m.sub}</p>
+                    <Label>{m.label}</Label>
+                    <div style={{ margin: '4px 0 2px' }}>
+                      <Num size="lg" style={{ color: m.color }}>{m.value}</Num>
+                    </div>
+                    <Label>{m.sub}</Label>
                   </div>
                 ))}
               </div>
@@ -420,17 +409,17 @@ export default function TradingTab() {
               <div style={{ height: '1px', background: 'var(--bd)' }} />
 
               <div>
-                <p style={{ color:'var(--t3)', fontSize:'11px', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.04em' }}>Win Rate by Pair</p>
+                <div style={{ marginBottom: '6px' }}><Label>Win rate by pair</Label></div>
                 {[
-                  { label:'XAUUSD', wr: stats?.xauWinRate ?? 0, color:'var(--go2)' },
-                  { label:'NAS100', wr: stats?.nasWinRate ?? 0, color:'var(--ac)'  },
+                  { label:'XAUUSD', wr: stats?.xauWinRate ?? 0 },
+                  { label:'NAS100', wr: stats?.nasWinRate ?? 0 },
                 ].map(item => (
                   <div key={item.label} className="flex items-center gap-2 mb-2">
-                    <span style={{ color:'var(--t2)', fontSize:'12px', minWidth:'56px' }}>{item.label}</span>
-                    <div className="flex-1 rounded-full overflow-hidden" style={{ height:'4px', background:'var(--s3)' }}>
-                      <div style={{ width:`${item.wr}%`, height:'100%', background:item.color, borderRadius:'var(--radius-sm)' }}/>
+                    <span style={{ color:'var(--color-ink-2)', fontSize:'var(--text-base)', minWidth:'56px' }}>{item.label}</span>
+                    <div className="flex-1 overflow-hidden" style={{ height:'3px', background:'var(--color-surface-2)' }}>
+                      <div style={{ width:`${item.wr}%`, height:'100%', background: item.wr >= 50 ? 'var(--color-up)' : 'var(--color-down)' }}/>
                     </div>
-                    <span className="num" style={{ color:'var(--t1)', fontSize:'13px', fontWeight:700, minWidth:'40px', textAlign:'right' }}>{item.wr.toFixed(1)}%</span>
+                    <Num size="sm" tone="neutral" style={{ minWidth:'40px', textAlign:'right' }}>{item.wr.toFixed(1)}%</Num>
                   </div>
                 ))}
               </div>
@@ -438,17 +427,17 @@ export default function TradingTab() {
               <div style={{ height:'1px', background:'var(--bd)' }}/>
 
               <div>
-                <p style={{ color:'var(--t3)', fontSize:'11px', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.04em' }}>Win Rate by Session</p>
+                <div style={{ marginBottom: '6px' }}><Label>Win rate by session</Label></div>
                 {[
-                  { label:'London',   wr: stats?.londonWinRate ?? 0, color:'var(--ac)'  },
-                  { label:'New York', wr: stats?.nyWinRate     ?? 0, color:'var(--am2)' },
+                  { label:'London',   wr: stats?.londonWinRate ?? 0 },
+                  { label:'New York', wr: stats?.nyWinRate     ?? 0 },
                 ].map(item => (
                   <div key={item.label} className="flex items-center gap-2 mb-2">
-                    <span style={{ color:'var(--t2)', fontSize:'12px', minWidth:'64px' }}>{item.label}</span>
-                    <div className="flex-1 rounded-full overflow-hidden" style={{ height:'4px', background:'var(--s3)' }}>
-                      <div style={{ width:`${item.wr}%`, height:'100%', background:item.color, borderRadius:'var(--radius-sm)' }}/>
+                    <span style={{ color:'var(--color-ink-2)', fontSize:'var(--text-base)', minWidth:'64px' }}>{item.label}</span>
+                    <div className="flex-1 overflow-hidden" style={{ height:'3px', background:'var(--color-surface-2)' }}>
+                      <div style={{ width:`${item.wr}%`, height:'100%', background: item.wr >= 50 ? 'var(--color-up)' : 'var(--color-down)' }}/>
                     </div>
-                    <span className="num" style={{ color:'var(--t1)', fontSize:'13px', fontWeight:700, minWidth:'40px', textAlign:'right' }}>{item.wr.toFixed(1)}%</span>
+                    <Num size="sm" tone="neutral" style={{ minWidth:'40px', textAlign:'right' }}>{item.wr.toFixed(1)}%</Num>
                   </div>
                 ))}
               </div>
@@ -457,20 +446,20 @@ export default function TradingTab() {
 
               <div className="flex flex-col gap-2">
                 {bestSetup && (
-                  <div className="flex items-start justify-between">
-                    <span style={{ color:'var(--t3)', fontSize:'11px' }}>Best tag</span>
-                    <div className="text-right">
-                      <p style={{ color:'var(--gr2)', fontSize:'12px', fontWeight:500 }}>#{bestSetup.tag}</p>
-                      <p style={{ color:'var(--t3)', fontSize:'11px' }}>{(bestSetup.wr*100).toFixed(0)}% win · {bestSetup.total} trades</p>
+                  <div className="flex items-center justify-between">
+                    <Label>Best tag</Label>
+                    <div className="flex items-center gap-3">
+                      <span style={{ color:'var(--color-up)', fontSize:'var(--text-base)' }}>#{bestSetup.tag}</span>
+                      <Num size="xs" tone="muted">{(bestSetup.wr*100).toFixed(0)}% win · {bestSetup.total} trades</Num>
                     </div>
                   </div>
                 )}
                 {worstSetup && worstSetup.tag !== bestSetup?.tag && (
-                  <div className="flex items-start justify-between">
-                    <span style={{ color:'var(--t3)', fontSize:'11px' }}>Worst tag</span>
-                    <div className="text-right">
-                      <p style={{ color:'var(--re)', fontSize:'12px', fontWeight:500 }}>#{worstSetup.tag}</p>
-                      <p style={{ color:'var(--t3)', fontSize:'11px' }}>{(worstSetup.wr*100).toFixed(0)}% win · {worstSetup.total} trades</p>
+                  <div className="flex items-center justify-between">
+                    <Label>Worst tag</Label>
+                    <div className="flex items-center gap-3">
+                      <span style={{ color:'var(--color-down)', fontSize:'var(--text-base)' }}>#{worstSetup.tag}</span>
+                      <Num size="xs" tone="muted">{(worstSetup.wr*100).toFixed(0)}% win · {worstSetup.total} trades</Num>
                     </div>
                   </div>
                 )}
@@ -480,20 +469,20 @@ export default function TradingTab() {
 
               {/* Weekly P&L — bidirectional bar chart */}
               <div>
-                <p style={{ color:'var(--t3)', fontSize:'11px', marginBottom:'10px', textTransform:'uppercase', letterSpacing:'0.04em' }}>Last 7 Weeks P&L</p>
+                <div style={{ marginBottom: '10px' }}><Label>Last 7 weeks P&L</Label></div>
                 {/* Chart area: 40px above zero + 40px below zero */}
                 <div style={{ position:'relative', height:'88px' }}>
                   {/* Zero line */}
                   <div style={{
                     position:'absolute', top:'50%', left:0, right:0,
-                    height:'1px', background:'var(--bd2)', zIndex:1,
+                    height:'1px', background:'var(--color-line-1)', zIndex:1,
                   }} />
                   <div className="flex items-stretch gap-1" style={{ height:'100%' }}>
                     {(stats?.weeklyPnl ?? Array(7).fill(0)).map((pnl, i) => {
                       const pct  = Math.abs(pnl) / maxAbsPnl           // 0–1
                       const barH = Math.max(3, pct * 40)               // max 40px each side
                       const isPos = pnl >= 0
-                      const color = isPos ? 'var(--gr2)' : 'var(--re)'
+                      const color = isPos ? 'var(--color-up)' : 'var(--color-down)'
                       return (
                         <div key={i} className="flex-1 flex flex-col items-center justify-center" style={{ gap:0 }}
                           title={`${weekLabels[i]}: ${pnl >= 0 ? '+' : ''}€${pnl.toFixed(2)}`}>
@@ -502,8 +491,7 @@ export default function TradingTab() {
                             {isPos && (
                               <div style={{
                                 width:'100%', height:`${barH}px`,
-                                background: color, borderRadius:'3px 3px 0 0',
-                                opacity: 0.85,
+                                background: color,
                               }} />
                             )}
                           </div>
@@ -512,8 +500,7 @@ export default function TradingTab() {
                             {!isPos && (
                               <div style={{
                                 width:'100%', height:`${barH}px`,
-                                background: color, borderRadius:'0 0 3px 3px',
-                                opacity: 0.85,
+                                background: color,
                               }} />
                             )}
                           </div>
@@ -526,7 +513,7 @@ export default function TradingTab() {
                 <div className="flex gap-1" style={{ marginTop:'6px' }}>
                   {weekLabels.map((label, i) => (
                     <div key={i} className="flex-1 text-center">
-                      <span style={{ fontSize:'9px', color:'var(--t3)', whiteSpace:'nowrap' }}>{label}</span>
+                      <span className="vq-num" style={{ fontSize:'var(--text-2xs)', color:'var(--color-ink-4)', whiteSpace:'nowrap' }}>{label}</span>
                     </div>
                   ))}
                 </div>
@@ -537,14 +524,14 @@ export default function TradingTab() {
                 <>
                   <div style={{ height:'1px', background:'var(--bd)' }}/>
                   <div>
-                    <p style={{ color:'var(--t3)', fontSize:'11px', marginBottom:'6px', textTransform:'uppercase', letterSpacing:'0.04em' }}>Cash Flow (all-time)</p>
+                    <div style={{ marginBottom: '6px' }}><Label>Cash flow (all-time)</Label></div>
                     <div className="flex items-center justify-between mb-1">
-                      <span style={{ color:'var(--t2)', fontSize:'12px' }}>Deposited</span>
-                      <span className="num" style={{ color:'var(--gr2)', fontSize:'13px', fontWeight:600 }}>€{totalDeposited.toFixed(2)}</span>
+                      <span style={{ color:'var(--color-ink-2)', fontSize:'var(--text-base)' }}>Deposited</span>
+                      <Num size="sm" tone="neutral">€{totalDeposited.toFixed(2)}</Num>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span style={{ color:'var(--t2)', fontSize:'12px' }}>Withdrawn</span>
-                      <span className="num" style={{ color:'var(--am2)', fontSize:'13px', fontWeight:600 }}>€{totalWithdrawn.toFixed(2)}</span>
+                      <span style={{ color:'var(--color-ink-2)', fontSize:'var(--text-base)' }}>Withdrawn</span>
+                      <Num size="sm" tone="muted">€{totalWithdrawn.toFixed(2)}</Num>
                     </div>
                   </div>
                 </>
@@ -567,18 +554,18 @@ export default function TradingTab() {
         <>
           <div
             onClick={() => setScreenshotViewing(null)}
-            style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', cursor: 'zoom-out' }}
+            style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.9)', cursor: 'zoom-out' }}
           />
           <div style={{ position: 'fixed', inset: 0, zIndex: 51, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', pointerEvents: 'none' }}>
             <img
               src={screenshotViewing}
               alt="Trade screenshot"
-              style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 'var(--radius-lg)', boxShadow: '0 32px 80px rgba(0,0,0,0.8)', pointerEvents: 'auto' }}
+              style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-line-1)', pointerEvents: 'auto' }}
             />
           </div>
           <button
             onClick={() => setScreenshotViewing(null)}
-            style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 52, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 'var(--radius-md)', color: 'white', fontSize: '18px', width: '36px', height: '36px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 52, background: 'var(--color-surface-2)', border: '1px solid var(--color-line-2)', borderRadius: 'var(--radius-sm)', color: 'var(--color-ink-1)', fontSize: 'var(--text-lg)', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             ×
           </button>
@@ -593,31 +580,31 @@ export default function TradingTab() {
 
       {/* Session Heatmap — kept for visual quick reference */}
       {/* Analytics — session / symbol / direction breakdown */}
-      <Panel title="Analytics Breakdown" accent="var(--ac)">
+      <Panel title="Analytics breakdown">
         <SessionAnalyticsChart />
       </Panel>
 
-      <Panel title="Session Heatmap — Win Rate (from your real trades)">
+      <Panel title="Session heatmap — win rate from your real trades">
         <div className="flex flex-col gap-2">
           {['London','Overlap','NY'].map(session => (
             <div key={session} className="flex items-center gap-2">
-              <span style={{ color:'var(--t2)', fontSize:'12px', minWidth:'56px' }}>{session}</span>
+              <span style={{ color:'var(--color-ink-2)', fontSize:'var(--text-base)', minWidth:'56px' }}>{session}</span>
               <div className="flex gap-1.5 flex-1">
                 {heatmap.filter(h => h.session === session).map(h => {
                   const c = heatColor(h.winRate, h.trades)
                   return (
                     <div key={h.day}
-                      className="flex-1 flex flex-col items-center justify-center vq-r py-2 gap-0.5"
-                      style={{ background:c.bg, minHeight:'52px' }}
+                      className="flex-1 flex flex-col items-center justify-center gap-0.5"
+                      style={{ background:c.bg, minHeight:'46px', borderRadius:'var(--radius-xs)', padding:'6px 0' }}
                       title={`${session} ${h.day}: ${Math.round(h.winRate*100)}% (${h.trades} trades)`}>
-                      <span style={{ fontSize:'11px', color:'var(--t3)' }}>{h.day}</span>
+                      <Label>{h.day}</Label>
                       {h.trades > 0 ? (
                         <>
-                          <span style={{ fontSize:'13px', fontWeight:500, color:c.color }}>{Math.round(h.winRate*100)}%</span>
-                          <span style={{ fontSize:'10px', color:'var(--t3)' }}>{h.trades}t</span>
+                          <Num size="sm" style={{ color:c.color }}>{Math.round(h.winRate*100)}%</Num>
+                          <Num size="2xs" tone="muted">{h.trades}t</Num>
                         </>
                       ) : (
-                        <span style={{ fontSize:'11px', color:'var(--t3)' }}>—</span>
+                        <Num size="xs" tone="muted">—</Num>
                       )}
                     </div>
                   )
@@ -629,7 +616,7 @@ export default function TradingTab() {
       </Panel>
 
       {/* Screenshot Gallery */}
-      <Panel title={`Screenshot Gallery (${trades.filter(t => t.screenshot_close_url || t.screenshot_open_url || t.screenshot_user_url).length})`} accent="var(--cy2)">
+      <Panel title={`Screenshot gallery (${trades.filter(t => t.screenshot_close_url || t.screenshot_open_url || t.screenshot_user_url).length})`} >
         <ScreenshotGallery trades={trades} />
       </Panel>
 

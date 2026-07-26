@@ -109,8 +109,8 @@ export default function JournalTab() {
         {(['journal', 'review'] as const).map(v => (
           <button key={v} onClick={() => setView(v)}
             style={{
-              padding: '6px 16px', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-              background: view === v ? 'var(--ac)' : 'var(--s2)',
+              padding: '6px 16px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer',
+              background: view === v ? 'var(--color-surface-3)' : 'var(--s2)',
               border: view === v ? 'none' : '1px solid var(--bd2)',
               color: view === v ? 'white' : 'var(--t3)',
               textTransform: 'capitalize',
@@ -156,21 +156,21 @@ export default function JournalTab() {
             <button
               onClick={() => setModal({ date: today, existing: byDate.get(today) })}
               className="flex items-center gap-1.5 px-3 py-1.5 vq-r text-sm font-medium transition-colors"
-              style={{ background: byDate.has(today) ? 'rgba(0,196,106,0.15)' : 'var(--gr)', border: byDate.has(today) ? '1px solid rgba(0,196,106,0.35)' : 'none', color: byDate.has(today) ? 'var(--gr2)' : 'white', fontSize: '12px', cursor: 'pointer' }}>
+              style={{ background: byDate.has(today) ? 'rgba(0,196,106,0.15)' : 'var(--gr)', border: byDate.has(today) ? '1px solid rgba(0,196,106,0.35)' : 'none', color: byDate.has(today) ? 'var(--gr2)' : 'white', fontSize: 'var(--text-base)', cursor: 'pointer' }}>
               {byDate.has(today) ? '✓ Today logged' : '+ Log Today'}
             </button>
           } title="">
             {/* Month nav */}
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--bd)' }}>
-              <button onClick={prevMonth} style={{ background: 'none', border: 'none', color: 'var(--t2)', cursor: 'pointer', fontSize: '16px' }}>‹</button>
-              <span style={{ color: 'var(--t1)', fontSize: '13px', fontWeight: 500 }}>{monthName}</span>
-              <button onClick={nextMonth} style={{ background: 'none', border: 'none', color: 'var(--t2)', cursor: 'pointer', fontSize: '16px' }}>›</button>
+              <button onClick={prevMonth} style={{ background: 'none', border: 'none', color: 'var(--t2)', cursor: 'pointer', fontSize: 'var(--text-lg)' }}>‹</button>
+              <span style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500 }}>{monthName}</span>
+              <button onClick={nextMonth} style={{ background: 'none', border: 'none', color: 'var(--t2)', cursor: 'pointer', fontSize: 'var(--text-lg)' }}>›</button>
             </div>
 
             {/* Day labels */}
             <div className="calendar-header-grid grid grid-cols-7 px-4 pt-3 pb-1">
               {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => (
-                <div key={d} className="text-center" style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.04em' }}>{d}</div>
+                <div key={d} className="text-center" style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', letterSpacing: '0.04em' }}>{d}</div>
               ))}
             </div>
 
@@ -215,7 +215,7 @@ export default function JournalTab() {
                     onMouseEnter={e => { if (!future) e.currentTarget.style.background = 'var(--s3)' }}
                     onMouseLeave={e => { if (!future) e.currentTarget.style.background = bg }}
                   >
-                    <span style={{ fontSize: '12px', color: isToday ? 'var(--ac)' : 'var(--t2)', fontWeight: isToday ? 500 : 400 }}>
+                    <span style={{ fontSize: 'var(--text-base)', color: isToday ? 'var(--ac)' : 'var(--t2)', fontWeight: isToday ? 500 : 400 }}>
                       {day.getDate()}
                     </span>
                     {dot && !future && (
@@ -231,7 +231,7 @@ export default function JournalTab() {
               {([['var(--gr2)', 'Journaled'], ['var(--re)', 'Missed'], ['var(--ac)', 'Today']] as [string, string][]).map(([color, label]) => (
                 <div key={label} className="flex items-center gap-1.5">
                   <span className="rounded-full" style={{ width: '7px', height: '7px', background: color, display: 'inline-block' }} />
-                  <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{label}</span>
+                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>{label}</span>
                 </div>
               ))}
             </div>
@@ -239,7 +239,7 @@ export default function JournalTab() {
 
           {/* Recent Entries */}
           <Panel title="" noPadding action={
-            <span style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>
+            <span className="vq-num" style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
               {isFiltered ? `${filteredEntries.length} result${filteredEntries.length !== 1 ? 's' : ''}` : 'Recent Entries'}
             </span>
           }>
@@ -247,7 +247,7 @@ export default function JournalTab() {
             <div className="flex flex-col gap-2 px-4 py-3" style={{ borderBottom: '1px solid var(--bd)' }}>
               {/* Search input */}
               <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: '13px', pointerEvents: 'none' }}>⌕</span>
+                <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: 'var(--text-base)', pointerEvents: 'none' }}>⌕</span>
                 <input
                   ref={searchRef}
                   value={search}
@@ -256,14 +256,14 @@ export default function JournalTab() {
                   style={{
                     width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)',
                     borderRadius: 'var(--radius-md)', padding: '8px 32px 8px 30px',
-                    color: 'var(--t1)', fontSize: '13px', outline: 'none',
+                    color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none',
                   }}
                   onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
                   onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
                 />
                 {search && (
                   <button onClick={() => setSearch('')}
-                    style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '16px', lineHeight: 1 }}>×</button>
+                    style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: 'var(--text-lg)', lineHeight: 1 }}>×</button>
                 )}
               </div>
               {/* Mood filter chips */}
@@ -271,7 +271,7 @@ export default function JournalTab() {
                 <button
                   onClick={() => setMoodFilter('')}
                   style={{
-                    padding: '3px 10px', borderRadius: 'var(--radius-xl)', fontSize: '11px', cursor: 'pointer',
+                    padding: '3px 10px', borderRadius: 'var(--radius-xl)', fontSize: 'var(--text-sm)', cursor: 'pointer',
                     background: moodFilter === '' ? 'var(--s4)' : 'transparent',
                     border: moodFilter === '' ? '1px solid var(--bd2)' : '1px solid transparent',
                     color: moodFilter === '' ? 'var(--t1)' : 'var(--t3)',
@@ -279,7 +279,7 @@ export default function JournalTab() {
                 {MOODS.map(m => (
                   <button key={m} onClick={() => setMoodFilter(moodFilter === m ? '' : m)}
                     style={{
-                      padding: '3px 10px', borderRadius: 'var(--radius-xl)', fontSize: '11px', cursor: 'pointer',
+                      padding: '3px 10px', borderRadius: 'var(--radius-xl)', fontSize: 'var(--text-sm)', cursor: 'pointer',
                       background: moodFilter === m ? `${MOOD_COLOR[m]}20` : 'transparent',
                       border: moodFilter === m ? `1px solid ${MOOD_COLOR[m]}60` : '1px solid transparent',
                       color: moodFilter === m ? MOOD_COLOR[m] : 'var(--t3)',
@@ -290,12 +290,12 @@ export default function JournalTab() {
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center py-6"><span style={{ color: 'var(--t3)', fontSize: '13px' }}>Loading…</span></div>
+              <div className="flex items-center justify-center py-6"><span style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>Loading…</span></div>
             ) : entries.length === 0 ? (
-              <div className="flex items-center justify-center py-6"><span style={{ color: 'var(--t3)', fontSize: '13px' }}>No entries yet — click a day on the calendar to start journaling.</span></div>
+              <div className="flex items-center justify-center py-6"><span style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>No entries yet — click a day on the calendar to start journaling.</span></div>
             ) : filteredEntries.length === 0 ? (
               <div className="flex items-center justify-center py-6">
-                <span style={{ color: 'var(--t3)', fontSize: '13px' }}>No entries match your search.</span>
+                <span style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>No entries match your search.</span>
               </div>
             ) : (
               <div className="overflow-y-auto" style={{ maxHeight: '400px' }}>
@@ -312,13 +312,13 @@ export default function JournalTab() {
 
                       <div className="flex items-center gap-2 flex-wrap">
                         {mood && <span className="rounded-full flex-shrink-0" style={{ width: '8px', height: '8px', display: 'inline-block', background: MOOD_COLOR[mood] }} />}
-                        <span style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>
+                        <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
                           {new Date(entry.entry_date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
                         </span>
-                        {mood && <span style={{ color: MOOD_COLOR[mood], fontSize: '11px' }}>{mood} · {MOOD_SCORE[mood]}/10</span>}
-                        {entry.energy_level && <span style={{ color: 'var(--t3)', fontSize: '11px' }}>⚡{entry.energy_level}/10</span>}
+                        {mood && <span style={{ color: MOOD_COLOR[mood], fontSize: 'var(--text-sm)' }}>{mood} · {MOOD_SCORE[mood]}/10</span>}
+                        {entry.energy_level && <span style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>⚡{entry.energy_level}/10</span>}
                         {dayPnl !== undefined && (
-                          <span style={{ color: dayPnl >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: '11px', marginLeft: 'auto' }}>
+                          <span className="vq-num" style={{ color: dayPnl >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: 'var(--text-sm)', marginLeft: 'auto' }}>
                             {dayPnl >= 0 ? '+' : ''}€{Math.abs(dayPnl).toFixed(2)}
                           </span>
                         )}
@@ -328,13 +328,13 @@ export default function JournalTab() {
                         const q = search.trim().toLowerCase()
                         const text = entry.body_text!
                         if (!q) return (
-                          <p style={{ color: 'var(--t1)', fontSize: '12px', lineHeight: '1.6', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as never }}>
+                          <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', lineHeight: '1.6', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as never }}>
                             {text}
                           </p>
                         )
                         const idx = text.toLowerCase().indexOf(q)
                         if (idx === -1) return (
-                          <p style={{ color: 'var(--t1)', fontSize: '12px', lineHeight: '1.6', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as never }}>
+                          <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', lineHeight: '1.6', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as never }}>
                             {text}
                           </p>
                         )
@@ -342,7 +342,7 @@ export default function JournalTab() {
                         const snippet = (start > 0 ? '…' : '') + text.slice(start, idx + q.length + 60)
                         const matchStart = idx - start + (start > 0 ? 1 : 0)
                         return (
-                          <p style={{ color: 'var(--t1)', fontSize: '12px', lineHeight: '1.6' }}>
+                          <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', lineHeight: '1.6' }}>
                             {snippet.slice(0, matchStart)}
                             <mark style={{ background: 'rgba(255,255,255,0.3)', color: 'var(--t1)', borderRadius: 'var(--radius-xs)', padding: '0 2px' }}>{snippet.slice(matchStart, matchStart + q.length)}</mark>
                             {snippet.slice(matchStart + q.length)}
@@ -353,7 +353,7 @@ export default function JournalTab() {
                       {(entry.tags ?? []).length > 0 && (
                         <div className="flex gap-1.5 flex-wrap">
                           {(entry.tags ?? []).map(tag => (
-                            <span key={tag} style={{ fontSize: '10px', color: 'var(--t3)', background: 'var(--s3)', padding: '1px 6px', borderRadius: 'var(--radius-xl)' }}>#{tag}</span>
+                            <span key={tag} style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', background: 'var(--s3)', padding: '1px 6px', borderRadius: 'var(--radius-xl)' }}>#{tag}</span>
                           ))}
                         </div>
                       )}
@@ -369,10 +369,10 @@ export default function JournalTab() {
         <div className="lg:col-span-2 flex flex-col gap-4">
           <Panel title="Mood → P&L Correlation">
             {Object.keys(moodStats).length === 0 ? (
-              <p style={{ color: 'var(--t3)', fontSize: '13px' }}>Add journal entries to see how your mood affects your trading P&L.</p>
+              <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>Add journal entries to see how your mood affects your trading P&L.</p>
             ) : (
               <div className="flex flex-col gap-4">
-                <p style={{ color: 'var(--t2)', fontSize: '12px', lineHeight: '1.6' }}>
+                <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', lineHeight: '1.6' }}>
                   Average P&L on days you journaled, grouped by mood:
                 </p>
 
@@ -386,10 +386,10 @@ export default function JournalTab() {
                       <div className="flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-2">
                           <span className="rounded-full" style={{ width: '8px', height: '8px', background: MOOD_COLOR[m], display: 'inline-block' }} />
-                          <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 500, textTransform: 'capitalize' }}>{m}</span>
-                          <span style={{ color: 'var(--t3)', fontSize: '11px' }}>{count} day{count !== 1 ? 's' : ''}</span>
+                          <span style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500, textTransform: 'capitalize' }}>{m}</span>
+                          <span style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>{count} day{count !== 1 ? 's' : ''}</span>
                         </div>
-                        <span style={{ color: avg >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: '12px', fontWeight: 500 }}>
+                        <span className="vq-num" style={{ color: avg >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
                           {avg >= 0 ? '+' : ''}€{Math.abs(avg).toFixed(2)} avg
                         </span>
                       </div>
@@ -413,8 +413,8 @@ export default function JournalTab() {
                   const worstAvg = moodStats[worst].totalPnl / moodStats[worst].count
                   return (
                     <div className="vq-r p-3 mt-2" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                      <p style={{ color: 'var(--go2)', fontSize: '11px', fontWeight: 500, marginBottom: '4px' }}>VELQUOR INSIGHT</p>
-                      <p style={{ color: 'var(--t2)', fontSize: '12px', lineHeight: '1.6' }}>
+                      <p style={{ color: 'var(--go2)', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: '4px' }}>VELQUOR INSIGHT</p>
+                      <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', lineHeight: '1.6' }}>
                         You trade best when feeling <strong style={{ color: MOOD_COLOR[best as Mood] }}>{best}</strong> (avg {bestAvg >= 0 ? '+' : '−'}€{Math.abs(bestAvg).toFixed(2)}/day).
                         {best !== worst && <>
                           {' '}Avoid trading when <strong style={{ color: MOOD_COLOR[worst as Mood] }}>{worst}</strong> (avg {worstAvg >= 0 ? '+' : '−'}€{Math.abs(worstAvg).toFixed(2)}/day).
@@ -436,18 +436,18 @@ export default function JournalTab() {
                 return (
                   <div key={m} className="flex items-center gap-2">
                     <span className="rounded-full flex-shrink-0" style={{ width: '7px', height: '7px', background: MOOD_COLOR[m], display: 'inline-block' }} />
-                    <span style={{ color: 'var(--t2)', fontSize: '12px', textTransform: 'capitalize', flex: 1 }}>{m}</span>
+                    <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', textTransform: 'capitalize', flex: 1 }}>{m}</span>
                     <div className="flex gap-1">
                       {Array(count).fill(null).map((_, i) => (
                         <span key={i} className="rounded-full" style={{ width: '7px', height: '7px', background: MOOD_COLOR[m], display: 'inline-block', opacity: 0.7 }} />
                       ))}
                     </div>
-                    <span style={{ color: 'var(--t3)', fontSize: '11px', minWidth: '20px', textAlign: 'right' }}>{count}d</span>
+                    <span style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', minWidth: '20px', textAlign: 'right' }}>{count}d</span>
                   </div>
                 )
               })}
               {entries.filter(e => e.entry_date.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`)).length === 0 && (
-                <p style={{ color: 'var(--t3)', fontSize: '12px' }}>No entries this month yet.</p>
+                <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>No entries this month yet.</p>
               )}
             </div>
           </Panel>

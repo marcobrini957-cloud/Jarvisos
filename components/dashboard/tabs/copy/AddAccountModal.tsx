@@ -75,7 +75,7 @@ export function AddAccountModal({
     onClose()
   }
 
-  const hint: React.CSSProperties = { fontSize: '10px', color: 'var(--t3)', marginTop: '6px', lineHeight: 1.5 }
+  const hint: React.CSSProperties = { fontSize: 'var(--text-xs)', color: 'var(--t3)', marginTop: '6px', lineHeight: 1.5 }
 
   return (
     <div style={{
@@ -85,23 +85,22 @@ export function AddAccountModal({
       <div onClick={e => e.stopPropagation()} style={{
         background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
         padding: '28px', width: '100%', maxWidth: '420px', maxHeight: '90vh', overflowY: 'auto',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
-      }}>
-        <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--t1)', marginBottom: '20px' }}>
+        }}>
+        <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--t1)', marginBottom: '20px' }}>
           Add Account
         </div>
 
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {/* Role */}
           <div>
-            <div style={{ fontSize: '11px', color: 'var(--t3)', marginBottom: '6px' }}>ROLE</div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', marginBottom: '6px' }}>ROLE</div>
             <div style={{ display: 'flex', gap: '8px' }}>
               {(['leader', 'follower'] as const).map(r => (
                 <button
                   key={r} type="button"
                   onClick={() => setRole(r)}
                   style={{
-                    flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: '12px',
+                    flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)',
                     fontWeight: role === r ? 700 : 400,
                     background: role === r ? 'rgba(255,255,255,0.15)' : 'var(--s2)',
                     border:     role === r ? '1px solid rgba(255,255,255,0.5)' : '1px solid var(--bd)',
@@ -122,14 +121,14 @@ export function AddAccountModal({
 
           {/* Connection method */}
           <div>
-            <div style={{ fontSize: '11px', color: 'var(--t3)', marginBottom: '6px' }}>CONNECTION</div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', marginBottom: '6px' }}>CONNECTION</div>
             <div style={{ display: 'flex', gap: '8px' }}>
               {([['cloud', 'VELQUOR Cloud'], ['ea', 'My own MetaTrader']] as const).map(([m, label]) => (
                 <button
                   key={m} type="button"
                   onClick={() => setMethod(m)}
                   style={{
-                    flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: '12px',
+                    flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)',
                     fontWeight: method === m ? 700 : 400,
                     background: method === m ? 'rgba(0,196,106,0.08)' : 'var(--s2)',
                     border:     method === m ? '1px solid rgba(0,196,106,0.35)' : '1px solid var(--bd)',
@@ -150,14 +149,14 @@ export function AddAccountModal({
 
           {/* Account number */}
           <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--t3)' }}>MT5 ACCOUNT NUMBER</span>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>MT5 ACCOUNT NUMBER</span>
             <input
               value={mt5Login} onChange={e => setMt5Login(e.target.value)}
               placeholder="e.g. 123456789" type="number"
               style={inputStyle}
             />
             {isMainAccount && method === 'cloud' && (
-              <span style={{ fontSize: '10px', color: '#00C46A' }}>
+              <span style={{ fontSize: 'var(--text-xs)', color: '#00C46A' }}>
                 ✓ This is your connected VELQUOR terminal — no password needed, we reuse it.
               </span>
             )}
@@ -167,14 +166,14 @@ export function AddAccountModal({
           {method === 'cloud' && !isMainAccount && (
             <>
               <div>
-                <div style={{ fontSize: '11px', color: 'var(--t3)', marginBottom: '6px' }}>BROKER SERVER</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', marginBottom: '6px' }}>BROKER SERVER</div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
                   {BROKERS.flatMap(b => b.servers.map(s => (
                     <button
                       key={s.name} type="button"
                       onClick={() => setMt5Server(s.name)}
                       style={{
-                        fontSize: '11px', padding: '5px 10px', borderRadius: 'var(--radius-xl)',
+                        fontSize: 'var(--text-sm)', padding: '5px 10px', borderRadius: 'var(--radius-xl)',
                         background: mt5Server === s.name ? 'rgba(255,255,255,0.15)' : 'var(--s2)',
                         border:     mt5Server === s.name ? '1px solid rgba(255,255,255,0.5)' : '1px solid var(--bd)',
                         color:      mt5Server === s.name ? 'var(--ac)' : 'var(--t3)',
@@ -193,7 +192,7 @@ export function AddAccountModal({
               </div>
 
               <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
+                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
                   {role === 'follower' ? 'TRADING PASSWORD' : 'PASSWORD'}
                 </span>
                 <input
@@ -215,7 +214,7 @@ export function AddAccountModal({
           {/* EA: optional server */}
           {method === 'ea' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
                 BROKER SERVER <span style={{ color: '#555' }}>(optional)</span>
               </span>
               <input
@@ -227,7 +226,7 @@ export function AddAccountModal({
           )}
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
               NICKNAME <span style={{ color: '#555' }}>(optional)</span>
             </span>
             <input
@@ -238,7 +237,7 @@ export function AddAccountModal({
           </label>
 
           {error && (
-            <div style={{ fontSize: '12px', color: '#F0504B', padding: '8px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--text-base)', color: '#F0504B', padding: '8px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)', lineHeight: 1.5 }}>
               {error}
             </div>
           )}

@@ -28,7 +28,7 @@ export function TaskRow({ task, onToggle, onDelete }: {
         style={{
           width: '16px', height: '16px',
           border: done ? 'none' : '1.5px solid var(--bd2)',
-          background: done ? 'var(--ac)' : 'transparent',
+          background: done ? 'var(--color-surface-3)' : 'transparent',
           cursor: 'pointer',
         }}>
         {done && (
@@ -41,7 +41,7 @@ export function TaskRow({ task, onToggle, onDelete }: {
       <div className="flex-1 flex flex-col gap-1 min-w-0">
         <span style={{
           color: done ? 'var(--t3)' : 'var(--t1)',
-          fontSize: '13px',
+          fontSize: 'var(--text-base)',
           textDecoration: done ? 'line-through' : 'none',
         }}>
           {task.title}
@@ -50,16 +50,16 @@ export function TaskRow({ task, onToggle, onDelete }: {
           <Badge variant={task.category}>{task.category}</Badge>
           {task.priority === 'high' && <Badge variant="high">high</Badge>}
           {task.is_recurring && (
-            <span style={{ color: 'var(--t3)', fontSize: '10px' }}>↻ {task.recurrence}</span>
+            <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }}>↻ {task.recurrence}</span>
           )}
           {isOverdue && (
-            <span style={{ color: 'var(--re)', fontSize: '10px', fontWeight: 500 }}>overdue</span>
+            <span style={{ color: 'var(--re)', fontSize: 'var(--text-xs)', fontWeight: 500 }}>overdue</span>
           )}
         </div>
       </div>
 
       {task.due_date && (
-        <span style={{ color: isOverdue ? 'var(--re)' : 'var(--t3)', fontSize: '11px', flexShrink: 0 }}>
+        <span style={{ color: isOverdue ? 'var(--re)' : 'var(--t3)', fontSize: 'var(--text-sm)', flexShrink: 0 }}>
           {new Date(task.due_date + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
         </span>
       )}
@@ -67,7 +67,7 @@ export function TaskRow({ task, onToggle, onDelete }: {
       <button
         onClick={() => onDelete(task.id)}
         className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-        style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: '16px', padding: '0 2px', lineHeight: 1 }}
+        style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: 'var(--text-lg)', padding: '0 2px', lineHeight: 1 }}
         title="Delete task">
         ×
       </button>

@@ -43,25 +43,24 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
       <div onClick={e => e.stopPropagation()} style={{
         background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
         padding: '28px', width: '100%', maxWidth: '400px',
-        boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
-      }}>
-        <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--t1)', marginBottom: '20px' }}>
+        }}>
+        <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--t1)', marginBottom: '20px' }}>
           New Copy Group
         </div>
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--t3)' }}>GROUP NAME</span>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>GROUP NAME</span>
             <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
           </label>
 
           <div>
-            <div style={{ fontSize: '11px', color: 'var(--t3)', marginBottom: '6px' }}>LOT SIZING</div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', marginBottom: '6px' }}>LOT SIZING</div>
             <div style={{ display: 'flex', gap: '8px' }}>
               {([['mirror', '1:1 Mirror'], ['multiplier', 'Multiplier'], ['fixed', 'Fixed']] as const).map(([m, label]) => (
                 <button
                   key={m} type="button" onClick={() => setSizing(m)}
                   style={{
-                    flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: '12px',
+                    flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)',
                     fontWeight: sizing === m ? 700 : 400,
                     background: sizing === m ? 'rgba(255,255,255,0.15)' : 'var(--s2)',
                     border:     sizing === m ? '1px solid rgba(255,255,255,0.5)' : '1px solid var(--bd)',
@@ -76,34 +75,34 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
           </div>
 
           {sizing === 'mirror' && (
-            <span style={{ fontSize: '10px', color: 'var(--t3)' }}>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)' }}>
               Followers copy every trade at exactly the leader&apos;s lot size.
             </span>
           )}
           {sizing === 'multiplier' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--t3)' }}>LOT MULTIPLIER</span>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>LOT MULTIPLIER</span>
               <input value={lotMult} onChange={e => setLotMult(e.target.value)} type="number" step="0.01" min="0.01" style={inputStyle} />
-              <span style={{ fontSize: '10px', color: 'var(--t3)' }}>Follower lots = leader lots × {lotMult || '1.0'}</span>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)' }}>Follower lots = leader lots × {lotMult || '1.0'}</span>
             </label>
           )}
           {sizing === 'fixed' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--t3)' }}>FIXED LOT SIZE</span>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>FIXED LOT SIZE</span>
               <input value={lotFixed} onChange={e => setLotFixed(e.target.value)} type="number" step="0.01" min="0.01" style={inputStyle} />
-              <span style={{ fontSize: '10px', color: 'var(--t3)' }}>Follower always trades exactly {lotFixed || '0.01'} lots</span>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)' }}>Follower always trades exactly {lotFixed || '0.01'} lots</span>
             </label>
           )}
 
           {sizing !== 'mirror' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--t3)' }}>MAX LOT CAP</span>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>MAX LOT CAP</span>
               <input value={maxLot} onChange={e => setMaxLot(e.target.value)} type="number" step="0.1" min="0.01" style={inputStyle} />
             </label>
           )}
 
           {error && (
-            <div style={{ fontSize: '12px', color: '#F0504B', padding: '8px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ fontSize: 'var(--text-base)', color: '#F0504B', padding: '8px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)' }}>
               {error}
             </div>
           )}

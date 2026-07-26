@@ -185,18 +185,18 @@ export default function MobileOverviewTab() {
 
       {/* ── Daily Max Loss ─────────────────────────────────────── */}
       <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(240,80,75,0.15)' }}>
-        <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>Daily Risk</span>
+        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>Daily Risk</span>
         <DailyMaxLoss allRows={allRows} />
       </div>
 
       {/* ── Today's Focus ──────────────────────────────────────── */}
       {(habits.length > 0 || focusTasks.length > 0) && (
         <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--bd2)' }}>
-          <span style={{ fontSize: '10px', color: 'var(--am2)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '12px' }}>Today's Focus</span>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--am2)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '12px' }}>Today's Focus</span>
 
           {habits.length > 0 && (
             <>
-              <p style={{ fontSize: '11px', color: 'var(--t3)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
                 Habits · {todayCompleted}/{todayTotal}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginBottom: focusTasks.length > 0 ? '14px' : '0' }}>
@@ -211,9 +211,9 @@ export default function MobileOverviewTab() {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: done ? '0 0 7px rgba(0,196,106,0.4)' : 'none',
                       }}>
-                        {done && <span style={{ fontSize: '9px', color: 'white', fontWeight: 700 }}>✓</span>}
+                        {done && <span style={{ fontSize: 'var(--text-2xs)', color: 'white', fontWeight: 700 }}>✓</span>}
                       </div>
-                      <span style={{ fontSize: '13px', color: done ? 'var(--t3)' : 'var(--t2)', textDecoration: done ? 'line-through' : 'none' }}>
+                      <span style={{ fontSize: 'var(--text-base)', color: done ? 'var(--t3)' : 'var(--t2)', textDecoration: done ? 'line-through' : 'none' }}>
                         {h.icon} {h.name}
                       </span>
                     </div>
@@ -229,7 +229,7 @@ export default function MobileOverviewTab() {
 
           {focusTasks.length > 0 && (
             <>
-              <p style={{ fontSize: '11px', color: 'var(--t3)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
                 {todayTasks.length > 0 ? 'Due Today' : 'High Priority'}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
@@ -242,7 +242,7 @@ export default function MobileOverviewTab() {
                         background: task.status === 'done' ? 'var(--gr)' : 'transparent',
                         border: `2px solid ${task.status === 'done' ? 'var(--gr2)' : overdue ? 'var(--re)' : 'var(--bd2)'}`,
                       }} />
-                      <span style={{ fontSize: '13px', lineHeight: 1.45, color: overdue ? 'var(--re)' : 'var(--t2)', textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>
+                      <span style={{ fontSize: 'var(--text-base)', lineHeight: 1.45, color: overdue ? 'var(--re)' : 'var(--t2)', textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>
                         {task.title}
                       </span>
                     </div>
@@ -250,7 +250,7 @@ export default function MobileOverviewTab() {
                 })}
               </div>
               {openTasks.length > focusTasks.length && (
-                <p style={{ fontSize: '12px', color: 'var(--t3)', marginTop: '8px' }}>+{openTasks.length - focusTasks.length} more open</p>
+                <p className="vq-num" style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', marginTop: '8px' }}>+{openTasks.length - focusTasks.length} more open</p>
               )}
             </>
           )}
@@ -260,7 +260,7 @@ export default function MobileOverviewTab() {
       {/* ── Edge Report — day-trading insights + hard numbers ───── */}
       {(edgeInsights.length > 0 || edgeFacts.length > 0) && (
         <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.15)' }}>
-          <span style={{ fontSize: '10px', color: 'var(--go2)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--go2)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>
             Edge Report
           </span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

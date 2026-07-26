@@ -209,18 +209,18 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid var(--bd)' }}>
           <div>
-            <p style={{ fontWeight: 700, color: 'var(--t1)', fontSize: '15px' }}>
+            <p className="vq-num" style={{ fontWeight: 700, color: 'var(--t1)', fontSize: 'var(--text-md)' }}>
               {step === 'upload'
                 ? (isUpdate ? 'Update Portfolio from CSV' : 'Import Portfolio CSV')
                 : `Preview — ${rows.filter(r => !r.skip).length} holdings`}
             </p>
-            <p style={{ fontSize: '11px', color: 'var(--t3)', marginTop: '2px' }}>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', marginTop: '2px' }}>
               {step === 'upload'
                 ? (isUpdate ? 'Refreshes matching holdings · adds only new tickers · never duplicates' : 'Trade Republic · eToro · Degiro · any broker export')
                 : (isUpdate ? 'Uncheck any row you don\'t want to apply' : 'Uncheck rows you don\'t want to import')}
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '20px', cursor: 'pointer' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}>×</button>
         </div>
 
         {/* Body */}
@@ -238,15 +238,15 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
                 onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--ac)')}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--bd2)')}
               >
-                <p style={{ fontSize: '32px', marginBottom: '10px' }}>📂</p>
+                <p style={{ fontSize: 'var(--text-3xl)', marginBottom: '10px' }}>📂</p>
                 <p style={{ color: 'var(--t1)', fontWeight: 600, marginBottom: '4px' }}>Click to select your CSV file</p>
-                <p style={{ color: 'var(--t3)', fontSize: '12px' }}>or drag and drop</p>
+                <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>or drag and drop</p>
                 <input ref={fileRef} type="file" accept=".csv,.txt" style={{ display: 'none' }} onChange={handleFile} />
               </div>
 
               {/* Supported formats */}
               <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)', padding: '14px', border: '1px solid var(--bd)' }}>
-                <p style={{ fontSize: '11px', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '10px' }}>How to export your CSV</p>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '10px' }}>How to export your CSV</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                   {[
                     ['Trade Republic', 'Portfolio → Share → Export as CSV'],
@@ -255,7 +255,7 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
                     ['IBKR',           'Reports → Activity → Holdings → CSV'],
                     ['Other',          'Any CSV with columns: ticker/symbol, shares/qty, avg price'],
                   ].map(([broker, instruction]) => (
-                    <div key={broker} style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
+                    <div key={broker} style={{ display: 'flex', gap: '10px', fontSize: 'var(--text-base)' }}>
                       <span style={{ color: 'var(--t2)', fontWeight: 600, minWidth: '100px' }}>{broker}</span>
                       <span style={{ color: 'var(--t3)' }}>{instruction}</span>
                     </div>
@@ -265,17 +265,17 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
 
               {resolving && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', background: 'rgba(255,255,255,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                  <span style={{ fontSize: '14px', animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span>
-                  <p style={{ color: 'var(--ac)', fontSize: '12px' }}>Resolving ISIN codes to ticker symbols…</p>
+                  <span style={{ fontSize: 'var(--text-md)', animation: 'spin 1s linear infinite', display: 'inline-block' }}>⟳</span>
+                  <p style={{ color: 'var(--ac)', fontSize: 'var(--text-base)' }}>Resolving ISIN codes to ticker symbols…</p>
                 </div>
               )}
 
-              {error && <p style={{ color: 'var(--re)', fontSize: '12px', padding: '10px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(240,80,75,0.2)' }}>{error}</p>}
+              {error && <p style={{ color: 'var(--re)', fontSize: 'var(--text-base)', padding: '10px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(240,80,75,0.2)' }}>{error}</p>}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {/* Column headers */}
-              <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr 1fr 80px 80px 80px', gap: '8px', padding: '6px 8px', fontSize: '10px', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '32px 1fr 1fr 80px 80px 80px', gap: '8px', padding: '6px 8px', fontSize: 'var(--text-xs)', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                 <span />
                 <span>Ticker</span>
                 <span>Name</span>
@@ -285,7 +285,7 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
               </div>
 
               {rows.some(r => !r.skip && ISIN_RE.test(r.ticker)) && (
-                <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.2)', fontSize: '12px', color: 'var(--am2)' }}>
+                <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.2)', fontSize: 'var(--text-base)', color: 'var(--am2)' }}>
                   ⚠ Some tickers couldn't be resolved from their ISIN. Edit them manually in the Ticker column before importing.
                 </div>
               )}
@@ -306,25 +306,25 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', minWidth: 0 }}>
                     {isUpdate && (
                       isExisting(row.ticker)
-                        ? <span style={{ alignSelf: 'flex-start', fontSize: '9px', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--ac)', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 'var(--radius-sm)', padding: '1px 5px' }}>UPDATE</span>
-                        : <span style={{ alignSelf: 'flex-start', fontSize: '9px', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--gr2)', background: 'rgba(0,196,106,0.14)', border: '1px solid rgba(0,196,106,0.3)', borderRadius: 'var(--radius-sm)', padding: '1px 5px' }}>NEW</span>
+                        ? <span style={{ alignSelf: 'flex-start', fontSize: 'var(--text-2xs)', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--color-ink-1)', background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 'var(--radius-sm)', padding: '1px 5px' }}>UPDATE</span>
+                        : <span style={{ alignSelf: 'flex-start', fontSize: 'var(--text-2xs)', fontWeight: 700, letterSpacing: '0.04em', color: 'var(--gr2)', background: 'rgba(0,196,106,0.14)', border: '1px solid rgba(0,196,106,0.3)', borderRadius: 'var(--radius-sm)', padding: '1px 5px' }}>NEW</span>
                     )}
                     <input value={row.ticker}
                       onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, ticker: e.target.value.toUpperCase() } : r))}
-                      style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 8px', color: 'var(--t1)', fontSize: '12px', fontWeight: 600, width: '100%' }} />
+                      style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 8px', color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 600, width: '100%' }} />
                   </div>
                   <input value={row.name}
                     onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, name: e.target.value } : r))}
-                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 8px', color: 'var(--t2)', fontSize: '12px', width: '100%' }} />
+                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 8px', color: 'var(--t2)', fontSize: 'var(--text-base)', width: '100%' }} />
                   <input value={row.quantity} type="number"
                     onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, quantity: parseFloat(e.target.value) || 0 } : r))}
-                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 8px', color: 'var(--t1)', fontSize: '12px', width: '100%' }} />
+                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 8px', color: 'var(--t1)', fontSize: 'var(--text-base)', width: '100%' }} />
                   <input value={row.avg_buy_price} type="number"
                     onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, avg_buy_price: parseFloat(e.target.value) || 0 } : r))}
-                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 8px', color: 'var(--t1)', fontSize: '12px', width: '100%' }} />
+                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 8px', color: 'var(--t1)', fontSize: 'var(--text-base)', width: '100%' }} />
                   <select value={row.asset_type}
                     onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, asset_type: e.target.value } : r))}
-                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 6px', color: 'var(--t2)', fontSize: '11px', width: '100%' }}>
+                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 6px', color: 'var(--t2)', fontSize: 'var(--text-sm)', width: '100%' }}>
                     <option value="stock">Stock</option>
                     <option value="etf">ETF</option>
                     <option value="crypto">Crypto</option>
@@ -333,7 +333,7 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
                 </div>
               )})}
 
-              {error && <p style={{ color: 'var(--re)', fontSize: '12px', padding: '10px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(240,80,75,0.2)' }}>{error}</p>}
+              {error && <p style={{ color: 'var(--re)', fontSize: 'var(--text-base)', padding: '10px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(240,80,75,0.2)' }}>{error}</p>}
             </div>
           )}
         </div>
@@ -342,7 +342,7 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
         {step === 'preview' && (
           <div style={{ padding: '14px 20px', borderTop: '1px solid var(--bd)', display: 'flex', gap: '10px' }}>
             <button onClick={() => { setStep('upload'); setRows([]); setError('') }}
-              style={{ flex: 1, padding: '10px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
+              style={{ flex: 1, padding: '10px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', color: 'var(--t2)', fontSize: 'var(--text-base)', cursor: 'pointer' }}>
               ← Back
             </button>
             {(() => {
@@ -356,7 +356,7 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
                   : `Import ${active.length} holding${active.length !== 1 ? 's' : ''}`
               return (
                 <button onClick={handleImport} disabled={importing || active.length === 0}
-                  style={{ flex: 2, padding: '10px', background: 'var(--gr)', border: 'none', borderRadius: 'var(--radius-md)', color: 'white', fontSize: '13px', fontWeight: 600, cursor: importing ? 'not-allowed' : 'pointer', opacity: importing ? 0.7 : 1 }}>
+                  style={{ flex: 2, padding: '10px', background: 'var(--color-ink-1)', border: 'none', borderRadius: 'var(--radius-md)', color: 'var(--color-void)', fontSize: 'var(--text-base)', fontWeight: 600, cursor: importing ? 'not-allowed' : 'pointer', opacity: importing ? 0.7 : 1 }}>
                   {label}
                 </button>
               )

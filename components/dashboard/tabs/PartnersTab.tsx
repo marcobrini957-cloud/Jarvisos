@@ -58,7 +58,7 @@ export default function PartnersTab() {
               onClick={() => setFilter(f.id)}
               style={{
                 padding: '9px 18px', borderRadius: 'var(--radius-xl)',
-                fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                fontSize: 'var(--text-base)', fontWeight: 600, cursor: 'pointer',
                 border: '1px solid ' + (active ? 'var(--t1)' : 'var(--bd2)'),
                 background: active ? 'var(--t1)' : 'var(--s2)',
                 color: active ? 'var(--bg)' : 'var(--t2)',
@@ -80,7 +80,7 @@ export default function PartnersTab() {
       <div style={{
         marginTop: '20px', padding: '12px 16px', borderRadius: 'var(--radius-lg)',
         background: 'var(--s1)', border: '1px solid var(--bd)',
-        fontSize: '11px', color: 'var(--t3)', lineHeight: 1.6, opacity: 0.9,
+        fontSize: 'var(--text-sm)', color: 'var(--t3)', lineHeight: 1.6, opacity: 0.9,
       }}>
         Some links on this page are affiliate links — Velquor may earn a commission if you sign up,
         at no extra cost to you. Ratings and figures are indicative. Trading leveraged products

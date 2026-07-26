@@ -22,7 +22,7 @@ function AddTaskModal({ onSave, onClose }: {
 
   const inputStyle = {
     width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)',
-    borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
+    borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none',
   }
 
   async function handleSave() {
@@ -56,11 +56,11 @@ function AddTaskModal({ onSave, onClose }: {
           top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           width: '420px', maxWidth: 'calc(100vw - 32px)',
           background: 'var(--s1)', border: '1px solid var(--bd2)',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.5)', padding: '24px',
+          padding: '24px',
         }}>
         <div className="flex items-center justify-between">
-          <h2 style={{ color: 'var(--t1)', fontSize: '15px', fontWeight: 500 }}>New Task</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '20px', cursor: 'pointer' }}>×</button>
+          <h2 style={{ color: 'var(--t1)', fontSize: 'var(--text-md)', fontWeight: 500 }}>New Task</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}>×</button>
         </div>
 
         <input
@@ -76,7 +76,7 @@ function AddTaskModal({ onSave, onClose }: {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: '12px' }}>Category</label>
+            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Category</label>
             <select value={category} onChange={e => setCategory(e.target.value as TaskCategory)}
               style={{ ...inputStyle, cursor: 'pointer' }}>
               <option value="trading">Trading</option>
@@ -86,7 +86,7 @@ function AddTaskModal({ onSave, onClose }: {
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: '12px' }}>Priority</label>
+            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Priority</label>
             <select value={priority} onChange={e => setPriority(e.target.value as TaskPriority)}
               style={{ ...inputStyle, cursor: 'pointer' }}>
               <option value="high">High</option>
@@ -97,7 +97,7 @@ function AddTaskModal({ onSave, onClose }: {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label style={{ color: 'var(--t2)', fontSize: '12px' }}>Due date</label>
+          <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Due date</label>
           <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
             style={{ ...inputStyle, colorScheme: 'dark' }}
             onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
@@ -106,11 +106,11 @@ function AddTaskModal({ onSave, onClose }: {
 
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 py-2.5 vq-r"
-            style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
+            style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: 'var(--text-base)', cursor: 'pointer' }}>
             Cancel
           </button>
           <button onClick={handleSave} disabled={saving || !title.trim()} className="flex-1 py-2.5 vq-r font-medium"
-            style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '13px', cursor: 'pointer', opacity: (!title.trim() || saving) ? 0.5 : 1 }}>
+            style={{ background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)', fontSize: 'var(--text-base)', cursor: 'pointer', opacity: (!title.trim() || saving) ? 0.5 : 1 }}>
             {saving ? 'Adding…' : 'Add Task'}
           </button>
         </div>
@@ -143,7 +143,7 @@ function TaskRow({ task, onToggle, onDelete }: {
         style={{
           width: '16px', height: '16px',
           border: done ? 'none' : '1.5px solid var(--bd2)',
-          background: done ? 'var(--ac)' : 'transparent',
+          background: done ? 'var(--color-surface-3)' : 'transparent',
           cursor: 'pointer',
         }}>
         {done && (
@@ -155,7 +155,7 @@ function TaskRow({ task, onToggle, onDelete }: {
 
       <div className="flex-1 flex flex-col gap-1 min-w-0">
         <span style={{
-          color: done ? 'var(--t3)' : 'var(--t1)', fontSize: '13px',
+          color: done ? 'var(--t3)' : 'var(--t1)', fontSize: 'var(--text-base)',
           textDecoration: done ? 'line-through' : 'none',
         }}>
           {task.title}
@@ -164,16 +164,16 @@ function TaskRow({ task, onToggle, onDelete }: {
           <Badge variant={task.category}>{task.category}</Badge>
           {task.priority === 'high' && <Badge variant="high">high</Badge>}
           {task.is_recurring && (
-            <span style={{ color: 'var(--t3)', fontSize: '10px' }}>↻ {task.recurrence}</span>
+            <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }}>↻ {task.recurrence}</span>
           )}
           {isOverdue && (
-            <span style={{ color: 'var(--re)', fontSize: '10px', fontWeight: 500 }}>overdue</span>
+            <span style={{ color: 'var(--re)', fontSize: 'var(--text-xs)', fontWeight: 500 }}>overdue</span>
           )}
         </div>
       </div>
 
       {task.due_date && (
-        <span style={{ color: isOverdue ? 'var(--re)' : 'var(--t3)', fontSize: '11px', flexShrink: 0 }}>
+        <span style={{ color: isOverdue ? 'var(--re)' : 'var(--t3)', fontSize: 'var(--text-sm)', flexShrink: 0 }}>
           {new Date(task.due_date + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
         </span>
       )}
@@ -182,7 +182,7 @@ function TaskRow({ task, onToggle, onDelete }: {
       <button
         onClick={() => onDelete(task.id)}
         className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-        style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: '16px', padding: '0 2px', lineHeight: 1 }}
+        style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: 'var(--text-lg)', padding: '0 2px', lineHeight: 1 }}
         title="Delete task">
         ×
       </button>
@@ -220,9 +220,9 @@ export default function TasksTab() {
         ].map(m => (
           <div key={m.title} className="relative vq-r p-4 overflow-hidden"
             style={{ background: 'var(--s2)', border: '1px solid var(--bd)' }}>
-            <p style={{ color: 'var(--t2)', fontSize: '11px', letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500 }}>{m.title}</p>
-            <p style={{ color: 'var(--t1)', fontSize: '22px', fontWeight: 500, lineHeight: 1.2, marginTop: '4px' }}>{m.value}</p>
-            <p style={{ color: 'var(--t3)', fontSize: '11px', marginTop: '2px' }}>{m.sub}</p>
+            <p style={{ color: 'var(--t2)', fontSize: 'var(--text-sm)', letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500 }}>{m.title}</p>
+            <p style={{ color: 'var(--t1)', fontSize: 'var(--text-2xl)', fontWeight: 500, lineHeight: 1.2, marginTop: '4px' }}>{m.value}</p>
+            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '2px' }}>{m.sub}</p>
             <div className="absolute bottom-0 left-0 right-0" style={{ height: '3px', background: m.color, opacity: 0.8 }} />
           </div>
         ))}
@@ -234,19 +234,19 @@ export default function TasksTab() {
           noPadding
           action={
             <button onClick={() => setShowModal(true)}
-              style={{ fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', background: 'var(--ac)', color: 'white', fontWeight: 500 }}>
+              style={{ fontSize: 'var(--text-sm)', padding: '3px 10px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', background: 'var(--color-ink-1)', color: 'var(--color-void)', fontWeight: 500 }}>
               + Add Task
             </button>
           }>
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <span style={{ color: 'var(--t3)', fontSize: '13px' }}>Loading…</span>
+              <span style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>Loading…</span>
             </div>
           ) : todayTasks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 gap-3">
-              <p style={{ color: 'var(--t3)', fontSize: '13px' }}>No tasks for today.</p>
+              <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>No tasks for today.</p>
               <button onClick={() => setShowModal(true)}
-                style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '12px', padding: '6px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
+                style={{ background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)', fontSize: 'var(--text-base)', padding: '6px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
                 + Add one
               </button>
             </div>
@@ -262,7 +262,7 @@ export default function TasksTab() {
           <Panel title="Overdue" noPadding>
             {overdueTasks.length === 0 ? (
               <div className="flex items-center justify-center py-6">
-                <span style={{ color: 'var(--gr2)', fontSize: '13px' }}>All clear — nothing overdue ✓</span>
+                <span style={{ color: 'var(--gr2)', fontSize: 'var(--text-base)' }}>All clear — nothing overdue ✓</span>
               </div>
             ) : (
               overdueTasks.map(t => (
@@ -275,7 +275,7 @@ export default function TasksTab() {
           <Panel title="Upcoming" noPadding>
             {tasks.filter(t => t.due_date && t.due_date > TODAY && t.status !== 'done').length === 0 ? (
               <div className="flex items-center justify-center py-6">
-                <span style={{ color: 'var(--t3)', fontSize: '12px' }}>Nothing scheduled ahead.</span>
+                <span style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>Nothing scheduled ahead.</span>
               </div>
             ) : (
               tasks

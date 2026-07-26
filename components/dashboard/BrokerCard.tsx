@@ -32,7 +32,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
       {partner.featured && (
         <span style={{
           position: 'absolute', top: '16px', right: '16px',
-          fontSize: '10px', fontWeight: 800, letterSpacing: '0.08em',
+          fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.08em',
           color: 'var(--t1)', background: 'rgba(255,255,255,0.10)',
           border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '4px 9px',
         }}>
@@ -52,7 +52,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
         </div>
 
         {/* Tradable assets */}
-        <div style={{ fontSize: '13px', color: 'var(--t3)', marginBottom: '14px' }}>
+        <div style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', marginBottom: '14px' }}>
           Tradable assets: {partner.assets}
         </div>
 
@@ -62,8 +62,8 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
             {/* rating block */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--t1)' }}>{partner.rating.toFixed(1)}</span>
-                <span style={{ fontSize: '13px', color: 'var(--t2)' }}>· {ratingLabel(partner.rating)}</span>
+                <span className="vq-num" style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--t1)' }}>{partner.rating.toFixed(1)}</span>
+                <span style={{ fontSize: 'var(--text-base)', color: 'var(--t2)' }}>· {ratingLabel(partner.rating)}</span>
                 <IconRosetteDiscountCheckFilled size={16} style={{ color: '#FFFFFF' }} />
               </div>
               <Stars rating={partner.rating} />
@@ -82,8 +82,8 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
         {/* Promotion */}
         {partner.promo && (
           <div style={{ marginBottom: '18px' }}>
-            <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--t1)' }}>{partner.promo}</div>
-            <div style={{ fontSize: '11px', color: 'var(--t3)', letterSpacing: '0.02em' }}>Promotion</div>
+            <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--t1)' }}>{partner.promo}</div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', letterSpacing: '0.02em' }}>Promotion</div>
           </div>
         )}
 
@@ -95,7 +95,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '7px',
               background: 'var(--t1)', color: 'var(--bg)',
-              fontSize: '13px', fontWeight: 700, textDecoration: 'none',
+              fontSize: 'var(--text-base)', fontWeight: 700, textDecoration: 'none',
               padding: '10px 18px', borderRadius: 'var(--radius-md)',
             }}
           >
@@ -108,7 +108,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
             style={{
               display: 'inline-flex', alignItems: 'center',
               background: 'transparent', color: 'var(--t1)',
-              fontSize: '13px', fontWeight: 600, textDecoration: 'none',
+              fontSize: 'var(--text-base)', fontWeight: 600, textDecoration: 'none',
               padding: '10px 18px', borderRadius: 'var(--radius-md)',
               border: '1px solid var(--bd2)',
             }}
@@ -127,7 +127,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
 function Chip({ children, color, bg }: { children: React.ReactNode; color: string; bg: string }) {
   return (
     <span style={{
-      fontSize: '10px', fontWeight: 800, letterSpacing: '0.06em',
+      fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.06em',
       color, background: bg, borderRadius: 'var(--radius-md)', padding: '3px 8px',
     }}>
       {children}
@@ -138,10 +138,10 @@ function Chip({ children, color, bg }: { children: React.ReactNode; color: strin
 function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '14px', fontWeight: 700, color: 'var(--t1)' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--t1)' }}>
         <span style={{ color: 'var(--t3)' }}>{icon}</span>{value}
       </span>
-      <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{label}</span>
+      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>{label}</span>
     </div>
   )
 }
@@ -178,7 +178,7 @@ function StackedLogo({ accent, initials, logo }: { accent: string; initials: str
         {logo
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={logo} alt="" style={{ width: '60%', height: '60%', objectFit: 'contain' }} />
-          : <span style={{ fontSize: '34px', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>{initials}</span>}
+          : <span style={{ fontSize: 'var(--text-3xl)', fontWeight: 800, color: '#fff', letterSpacing: '-0.03em' }}>{initials}</span>}
       </div>
     </div>
   )

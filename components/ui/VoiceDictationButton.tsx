@@ -68,7 +68,7 @@ export default function VoiceDictationButton({ onText }: { onText: (text: string
         title={recording ? 'Stop and transcribe' : 'Dictate instead of typing'}
         style={{
           display: 'flex', alignItems: 'center', gap: '7px',
-          padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: '11.5px', fontWeight: 600,
+          padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', fontWeight: 600,
           background: recording ? 'rgba(240,80,75,0.12)' : 'var(--s2)',
           border: `1px solid ${recording ? 'rgba(240,80,75,0.4)' : 'var(--bd2)'}`,
           color: recording ? 'var(--re)' : busy ? 'var(--t3)' : 'var(--t2)',
@@ -84,7 +84,7 @@ export default function VoiceDictationButton({ onText }: { onText: (text: string
           ? `Stop · ${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`
           : busy ? 'Transcribing…' : 'Dictate'}
       </button>
-      {error && <span style={{ fontSize: '11px', color: 'var(--re)' }}>{error}</span>}
+      {error && <span style={{ fontSize: 'var(--text-sm)', color: 'var(--re)' }}>{error}</span>}
     </div>
   )
 }

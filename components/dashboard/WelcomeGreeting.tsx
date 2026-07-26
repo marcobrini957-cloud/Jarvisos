@@ -104,14 +104,13 @@ export default function WelcomeGreeting() {
           borderRadius: 'var(--radius-xl)',
           padding: 'clamp(28px, 5vw, 44px) clamp(24px, 5vw, 40px)',
           textAlign: 'center',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)',
           transform: rendered ? 'translateY(0) scale(1)' : 'translateY(24px) scale(0.96)',
           transition: 'transform 0.45s cubic-bezier(0.16,1,0.3,1)',
         }}
       >
         {/* Time of day */}
         <p style={{
-          color: 'var(--t3)', fontSize: '11px',
+          color: 'var(--t3)', fontSize: 'var(--text-sm)',
           letterSpacing: '0.1em', textTransform: 'uppercase',
           marginBottom: '12px', fontWeight: 500,
         }}>
@@ -158,7 +157,7 @@ export default function WelcomeGreeting() {
             background: 'rgba(255,255,255,0.1)',
             border: '1px solid rgba(255,255,255,0.32)',
             borderRadius: 'var(--radius-md)',
-            color: 'var(--go2)', fontSize: '13px', fontWeight: 600,
+            color: 'var(--go2)', fontSize: 'var(--text-base)', fontWeight: 600,
             cursor: 'pointer', letterSpacing: '0.04em',
             textTransform: 'uppercase',
             transition: 'background 0.2s ease',
@@ -169,7 +168,7 @@ export default function WelcomeGreeting() {
           Let&apos;s win
         </button>
 
-        <p style={{ color: 'var(--t3)', fontSize: '10px', marginTop: '14px' }}>
+        <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', marginTop: '14px' }}>
           Click anywhere to dismiss &middot; Toggle in Settings
         </p>
       </div>

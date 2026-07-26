@@ -36,8 +36,8 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
         padding: '32px', textAlign: 'center',
         background: 'var(--s2)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--bd2)',
       }}>
-        <p style={{ color: 'var(--t3)', fontSize: '13px' }}>No chart screenshots yet.</p>
-        <p style={{ color: 'var(--t3)', fontSize: '11px', marginTop: '4px' }}>
+        <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>No chart screenshots yet.</p>
+        <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '4px' }}>
           New trades are captured automatically from MT5 — or upload your own in the trade journal.
         </p>
       </div>
@@ -89,14 +89,14 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
               {/* Info */}
               <div style={{ padding: '7px 9px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--t1)' }}>
+                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--t1)' }}>
                     {trade.symbol}
                   </span>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: pnlCol }}>
+                  <span className="vq-num" style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: pnlCol }}>
                     {fmtPnl(trade.net_profit)}
                   </span>
                 </div>
-                <span style={{ fontSize: '10px', color: 'var(--t3)' }}>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)' }}>
                   {fmtDate(trade.open_time)}
                 </span>
               </div>
@@ -137,20 +137,20 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
               border: '1px solid var(--bd2)',
             }}>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--t1)' }}>
+                <span style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--t1)' }}>
                   {lightbox.symbol} {lightbox.trade_type?.toUpperCase()}
                 </span>
-                <span style={{
-                  fontSize: '14px', fontWeight: 700,
+                <span className="vq-num" style={{
+                  fontSize: 'var(--text-md)', fontWeight: 700,
                   color: (lightbox.net_profit ?? 0) > 10 ? 'var(--gr2)' : (lightbox.net_profit ?? 0) < -10 ? 'var(--re)' : 'var(--ac)',
                 }}>
                   {fmtPnl(lightbox.net_profit)}
                 </span>
-                <span style={{ fontSize: '12px', color: 'var(--t3)' }}>
+                <span style={{ fontSize: 'var(--text-base)', color: 'var(--t3)' }}>
                   {fmtDate(lightbox.open_time)}
                 </span>
                 {lightbox.setup_type && (
-                  <span style={{ fontSize: '11px', color: 'var(--t2)', background: 'var(--s3)', padding: '2px 8px', borderRadius: 'var(--radius-sm)' }}>
+                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t2)', background: 'var(--s3)', padding: '2px 8px', borderRadius: 'var(--radius-sm)' }}>
                     {lightbox.setup_type}
                   </span>
                 )}
@@ -159,7 +159,7 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
                 onClick={() => setLightbox(null)}
                 style={{
                   background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
-                  color: 'var(--t2)', cursor: 'pointer', fontSize: '13px', padding: '4px 12px',
+                  color: 'var(--t2)', cursor: 'pointer', fontSize: 'var(--text-base)', padding: '4px 12px',
                 }}
               >
                 Close

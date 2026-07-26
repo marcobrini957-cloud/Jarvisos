@@ -90,13 +90,13 @@ export default function DisciplineTab() {
             key={m.title}
             className="relative vq-r p-4 overflow-hidden"
             style={{ background: 'var(--s2)', border: '1px solid var(--bd)' }}>
-            <p style={{ color: 'var(--t2)', fontSize: '11px', letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500 }}>
+            <p style={{ color: 'var(--t2)', fontSize: 'var(--text-sm)', letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500 }}>
               {m.title}
             </p>
-            <p style={{ color: 'var(--t1)', fontSize: '22px', fontWeight: 500, lineHeight: 1.2, marginTop: '4px' }}>
+            <p style={{ color: 'var(--t1)', fontSize: 'var(--text-2xl)', fontWeight: 500, lineHeight: 1.2, marginTop: '4px' }}>
               {m.value}
             </p>
-            <p style={{ color: 'var(--t3)', fontSize: '11px', marginTop: '2px' }}>{m.sub}</p>
+            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '2px' }}>{m.sub}</p>
             <div className="absolute bottom-0 left-0 right-0" style={{ height: '3px', background: m.color, opacity: 0.8 }} />
           </div>
         ))}
@@ -114,9 +114,9 @@ export default function DisciplineTab() {
               <button
                 onClick={() => setShowAddHabit(true)}
                 style={{
-                  fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-md)',
-                  border: 'none', cursor: 'pointer', background: 'var(--gr)',
-                  color: 'white', fontWeight: 500,
+                  fontSize: 'var(--text-sm)', padding: '3px 10px', borderRadius: 'var(--radius-md)',
+                  border: 'none', cursor: 'pointer', background: 'var(--color-ink-1)',
+                  color: 'var(--color-void)', fontWeight: 500,
                 }}>
                 + Add Habit
               </button>
@@ -124,17 +124,17 @@ export default function DisciplineTab() {
 
             {habitsLoading ? (
               <div className="flex items-center justify-center py-8">
-                <span style={{ color: 'var(--t3)', fontSize: '13px' }}>Loading…</span>
+                <span style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>Loading…</span>
               </div>
             ) : habits.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 gap-3">
-                <p style={{ color: 'var(--t2)', fontSize: '13px' }}>No habits yet.</p>
-                <p style={{ color: 'var(--t3)', fontSize: '12px', textAlign: 'center', maxWidth: '300px' }}>
+                <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>No habits yet.</p>
+                <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)', textAlign: 'center', maxWidth: '300px' }}>
                   Add daily habits like "Morning journal", "No revenge trading", or "Exercise" to build consistency.
                 </p>
                 <button
                   onClick={() => setShowAddHabit(true)}
-                  style={{ background: 'var(--gr)', border: 'none', color: 'white', fontSize: '12px', padding: '8px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
+                  style={{ background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)', fontSize: 'var(--text-base)', padding: '8px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
                   + Add First Habit
                 </button>
               </div>
@@ -161,7 +161,7 @@ export default function DisciplineTab() {
                         onClick={() => toggleHabit(habit.id, today)}
                         className="flex items-center justify-center vq-r flex-shrink-0 transition-all"
                         style={{
-                          width: '36px', height: '36px', fontSize: '18px',
+                          width: '36px', height: '36px', fontSize: 'var(--text-lg)',
                           background: done ? `${color}20` : 'var(--s2)',
                           border: done ? `1px solid ${color}40` : '1px solid var(--bd2)',
                           cursor: 'pointer',
@@ -171,10 +171,10 @@ export default function DisciplineTab() {
                       </button>
 
                       <div className="flex-1 min-w-0">
-                        <p style={{ color: done ? 'var(--t2)' : 'var(--t1)', fontSize: '13px', textDecoration: done ? 'line-through' : 'none' }}>
+                        <p style={{ color: done ? 'var(--t2)' : 'var(--t1)', fontSize: 'var(--text-base)', textDecoration: done ? 'line-through' : 'none' }}>
                           {habit.name}
                         </p>
-                        <p style={{ color: 'var(--t3)', fontSize: '11px', marginTop: '1px' }}>
+                        <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '1px' }}>
                           <span style={{ color }}>{habit.category}</span>
                           {streak > 0 && <span> · 🔥 {streak} day streak</span>}
                         </p>
@@ -199,7 +199,7 @@ export default function DisciplineTab() {
                       <button
                         onClick={() => { if (confirm(`Remove "${habit.name}"?`)) deleteHabit(habit.id) }}
                         className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: '16px', lineHeight: 1, padding: '0 2px' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: 'var(--text-lg)', lineHeight: 1, padding: '0 2px' }}
                         title="Remove habit">
                         ×
                       </button>
@@ -209,8 +209,8 @@ export default function DisciplineTab() {
 
                 {todayCompleted === todayTotal && todayTotal > 0 && (
                   <div className="flex items-center justify-center py-4 gap-2">
-                    <span style={{ fontSize: '20px' }}>🎉</span>
-                    <span style={{ color: 'var(--gr2)', fontSize: '13px', fontWeight: 500 }}>All habits done today! Great discipline.</span>
+                    <span style={{ fontSize: 'var(--text-xl)' }}>🎉</span>
+                    <span style={{ color: 'var(--gr2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>All habits done today! Great discipline.</span>
                   </div>
                 )}
               </>
@@ -230,11 +230,11 @@ export default function DisciplineTab() {
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
                           <span>{habit.icon}</span>
-                          <span style={{ color: 'var(--t1)', fontSize: '12px' }}>{habit.name}</span>
+                          <span style={{ color: 'var(--t1)', fontSize: 'var(--text-base)' }}>{habit.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          {streak > 0 && <span style={{ color: 'var(--am2)', fontSize: '11px' }}>🔥{streak}d</span>}
-                          <span style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>{rate}%</span>
+                          {streak > 0 && <span style={{ color: 'var(--am2)', fontSize: 'var(--text-sm)' }}>🔥{streak}d</span>}
+                          <span className="vq-num" style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>{rate}%</span>
                         </div>
                       </div>
                       <div className="rounded-full overflow-hidden" style={{ height: '3px', background: 'var(--s3)' }}>
@@ -259,9 +259,9 @@ export default function DisciplineTab() {
               <button
                 onClick={() => setShowAddTask(true)}
                 style={{
-                  fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-md)',
-                  border: 'none', cursor: 'pointer', background: 'var(--ac)',
-                  color: 'white', fontWeight: 500,
+                  fontSize: 'var(--text-sm)', padding: '3px 10px', borderRadius: 'var(--radius-md)',
+                  border: 'none', cursor: 'pointer', background: 'var(--color-ink-1)',
+                  color: 'var(--color-void)', fontWeight: 500,
                 }}>
                 + Add Task
               </button>
@@ -269,14 +269,14 @@ export default function DisciplineTab() {
 
             {tasksLoading ? (
               <div className="flex items-center justify-center py-8">
-                <span style={{ color: 'var(--t3)', fontSize: '13px' }}>Loading…</span>
+                <span style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>Loading…</span>
               </div>
             ) : todayTasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 gap-3">
-                <p style={{ color: 'var(--t3)', fontSize: '13px' }}>No tasks for today.</p>
+                <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>No tasks for today.</p>
                 <button
                   onClick={() => setShowAddTask(true)}
-                  style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '12px', padding: '6px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
+                  style={{ background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)', fontSize: 'var(--text-base)', padding: '6px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
                   + Add one
                 </button>
               </div>
@@ -291,7 +291,7 @@ export default function DisciplineTab() {
           <Panel title="Overdue" noPadding>
             {overdueTasks.length === 0 ? (
               <div className="flex items-center justify-center py-6">
-                <span style={{ color: 'var(--gr2)', fontSize: '13px' }}>All clear — nothing overdue ✓</span>
+                <span style={{ color: 'var(--gr2)', fontSize: 'var(--text-base)' }}>All clear — nothing overdue ✓</span>
               </div>
             ) : (
               overdueTasks.map(t => (
@@ -304,8 +304,8 @@ export default function DisciplineTab() {
           <div
             className="vq-r p-4"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)' }}>
-            <p style={{ color: 'var(--go2)', fontSize: '11px', fontWeight: 500, marginBottom: '6px' }}>💡 VELQUOR TIP</p>
-            <p style={{ color: 'var(--t2)', fontSize: '12px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--go2)', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: '6px' }}>💡 VELQUOR TIP</p>
+            <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', lineHeight: 1.6 }}>
               Traders who maintain consistent daily habits — especially journaling and pre-trade checklists — show 23% higher win rates on average.
               Track your habits for 30 days and VELQUOR will correlate them with your P&L.
             </p>

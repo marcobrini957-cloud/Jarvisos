@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { eur } from '@/lib/utils/formatting'
+import { Label, Num } from '@/components/ui/vq'
 
 interface AccountOverview {
   kind:      'primary' | 'copy'
@@ -25,7 +26,13 @@ interface PrimaryStatus {
   error:         string | null
 }
 
-const DOT_COLOR = { live: 'var(--gr2)', stale: 'var(--go2)', offline: 'var(--t3)' } as const
+// Live / stale / offline is system state, so amber is allowed in the middle
+// band — but nothing here glows any more.
+const DOT_COLOR = {
+  live:    'var(--color-up)',
+  stale:   'var(--color-warn)',
+  offline: 'var(--color-ink-4)',
+} as const
 
 function fmtEur(n: number | null): string {
   if (n === null || n === undefined) return '—'
@@ -42,16 +49,14 @@ function timeAgo(iso: string | null): string {
   return `${Math.floor(s / 3600)}h ago`
 }
 
-function RoleBadge({ text, tone }: { text: string; tone: 'accent' | 'gold' | 'muted' }) {
-  const colors = {
-    accent: { bg: 'rgba(255,255,255,0.12)',  fg: 'var(--ac)'  },
-    gold:   { bg: 'rgba(255,255,255,0.12)',  fg: 'var(--go2)' },
-    muted:  { bg: 'rgba(255,255,255,0.06)', fg: 'var(--t3)'  },
-  }[tone]
+/** Role marker. All three roles read in ink — the tier is the word itself. */
+function RoleBadge({ text }: { text: string }) {
   return (
     <span style={{
-      background: colors.bg, color: colors.fg, fontSize: '9px', fontWeight: 700,
-      letterSpacing: '0.06em', padding: '1px 6px', borderRadius: 'var(--radius-sm)', flexShrink: 0,
+      background: 'var(--color-surface-2)', color: 'var(--color-ink-2)',
+      fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+      letterSpacing: '0.1em', textTransform: 'uppercase',
+      padding: '1px 5px', borderRadius: 'var(--radius-xs)', flexShrink: 0,
     }}>
       {text}
     </span>
@@ -127,76 +132,78 @@ export default function AccountMenu({
   }
 
   const actionStyle: React.CSSProperties = {
-    flex: 1, padding: '8px 0', borderRadius: 'var(--radius-md)', fontSize: '11px', fontWeight: 600,
-    background: 'var(--s3)', border: '1px solid var(--bd2)', color: 'var(--t2)',
-    cursor: 'pointer', transition: 'all 0.12s',
+    flex: 1, padding: '7px 0', borderRadius: 'var(--radius-sm)',
+    fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+    background: 'var(--color-surface-2)', border: '1px solid var(--color-line-1)',
+    color: 'var(--color-ink-2)', cursor: 'pointer', transition: 'all 0.12s',
   }
 
   return (
     <div ref={rootRef} style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 px-3 py-1.5 vq-r"
+        className="flex items-center gap-2"
         style={{
-          background: open ? 'var(--s2)' : 'transparent',
-          border: '1px solid var(--bd2)',
+          padding: '4px 10px', borderRadius: 'var(--radius-sm)',
+          background: open ? 'var(--color-surface-2)' : 'transparent',
+          border: '1px solid var(--color-line-1)',
           cursor: 'pointer',
           transition: 'all 0.12s',
         }}
-        onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
-        onMouseLeave={e => (e.currentTarget.style.background = open ? 'var(--s2)' : 'transparent')}
+        onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-state-hover)')}
+        onMouseLeave={e => (e.currentTarget.style.background = open ? 'var(--color-surface-2)' : 'transparent')}
       >
         <span style={{
-          width: '6px', height: '6px', borderRadius: '50%', display: 'inline-block', flexShrink: 0,
-          background: status.connected ? 'var(--gr2)' : status.error ? 'var(--re)' : 'var(--t3)',
-          boxShadow:  status.connected ? '0 0 6px var(--gr)' : 'none',
+          width: '5px', height: '5px', borderRadius: '50%', display: 'inline-block', flexShrink: 0,
+          background: status.connected ? 'var(--color-up)' : status.error ? 'var(--color-down)' : 'var(--color-ink-4)',
           animation:  syncing ? 'pulse-dot 1s ease-in-out infinite' : 'none',
         }} />
 
         {status.connected ? (
           <div className="flex items-center gap-3">
-            <span className="topbar-mt5-label" style={{ color: 'var(--t2)', fontSize: '12px' }}>{pillLabel}</span>
-            {pillBalance !== null && (
-              <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 500 }}>{fmtEur(pillBalance)}</span>
-            )}
+            <span className="topbar-mt5-label"><Label>{pillLabel}</Label></span>
+            {pillBalance !== null && <Num size="sm" tone="neutral">{fmtEur(pillBalance)}</Num>}
             {pillOpen > 0 && (
               <span className="topbar-mt5-open" style={{
-                background: 'rgba(255,255,255,0.12)', color: 'var(--ac)',
-                fontSize: '11px', padding: '1px 7px', borderRadius: 'var(--radius-sm)',
+                background: 'var(--color-surface-2)', color: 'var(--color-ink-1)',
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+                padding: '1px 5px', borderRadius: 'var(--radius-xs)',
               }}>
                 {pillOpen} open
               </span>
             )}
             {pillSynced && (
-              <span className="topbar-mt5-time" style={{ color: 'var(--t3)', fontSize: '11px' }}>{timeAgo(pillSynced)}</span>
+              <span className="topbar-mt5-time"><Num size="2xs" tone="muted">{timeAgo(pillSynced)}</Num></span>
             )}
-            <span style={{ color: 'var(--t3)', fontSize: '9px', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▾</span>
+            <span style={{
+              color: 'var(--color-ink-4)', fontSize: 'var(--text-2xs)',
+              transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s',
+            }}>▾</span>
           </div>
         ) : status.error ? (
-          <span style={{ color: 'var(--re)', fontSize: '12px' }}>Reconnect MT5</span>
+          <span style={{ fontFamily: 'var(--font-display)', color: 'var(--color-down)', fontSize: 'var(--text-base)' }}>Reconnect MT5</span>
         ) : (
-          <span style={{ color: 'var(--t3)', fontSize: '12px' }}>Connect MT5</span>
+          <span style={{ fontFamily: 'var(--font-display)', color: 'var(--color-ink-3)', fontSize: 'var(--text-base)' }}>Connect MT5</span>
         )}
       </button>
 
       {open && (
         <div style={{
-          position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)',
-          width: '340px', zIndex: 50,
-          background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-lg)',
-          boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
-          padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px',
+          position: 'absolute', top: 'calc(100% + 7px)', left: '50%', transform: 'translateX(-50%)',
+          width: '336px', zIndex: 50,
+          background: '#0F0F0F', border: '1px solid var(--color-line-2)',
+          borderRadius: 'var(--radius-md)',
+          padding: '10px', display: 'flex', flexDirection: 'column', gap: '9px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
-            <span style={{ color: 'var(--t3)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em' }}>
-              TRADING ACCOUNTS
-            </span>
+            <Label>Trading accounts</Label>
             <button
               onClick={() => { onSync(); loadAccounts() }}
               title="Sync now"
               style={{
-                background: 'transparent', border: 'none', color: 'var(--t3)', cursor: 'pointer',
-                fontSize: '12px', padding: '2px 4px',
+                background: 'transparent', border: 'none', color: 'var(--color-ink-3)', cursor: 'pointer',
+                fontSize: 'var(--text-base)', padding: '2px 4px',
                 animation: syncing ? 'pulse-dot 1s ease-in-out infinite' : 'none',
               }}
             >
@@ -204,9 +211,12 @@ export default function AccountMenu({
             </button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
             {accounts.length === 0 && (
-              <div style={{ color: 'var(--t3)', fontSize: '12px', padding: '10px', textAlign: 'center' }}>
+              <div style={{
+                fontFamily: 'var(--font-display)', color: 'var(--color-ink-3)',
+                fontSize: 'var(--text-base)', padding: '10px', textAlign: 'center',
+              }}>
                 No accounts connected yet
               </div>
             )}
@@ -218,30 +228,28 @@ export default function AccountMenu({
                   onClick={() => choose(acc)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-                    padding: '10px 10px', borderRadius: 'var(--radius-md)', textAlign: 'left',
-                    background: isSelected ? 'rgba(255,255,255,0.08)' : 'transparent',
-                    border: isSelected ? '1px solid rgba(255,255,255,0.35)' : '1px solid transparent',
-                    cursor: 'pointer', transition: 'all 0.1s',
+                    padding: '8px 9px', borderRadius: 'var(--radius-sm)', textAlign: 'left',
+                    background: isSelected ? 'var(--color-surface-2)' : 'transparent',
+                    borderLeft: `2px solid ${isSelected ? 'var(--color-ink-1)' : 'transparent'}`,
+                    border: 'none', cursor: 'pointer', transition: 'all 0.1s',
                   }}
-                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--s3)' }}
+                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--color-state-hover)' }}
                   onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent' }}
                 >
                   <span style={{
-                    width: '7px', height: '7px', borderRadius: '50%', flexShrink: 0,
+                    width: '5px', height: '5px', borderRadius: '50%', flexShrink: 0,
                     background: DOT_COLOR[acc.status],
-                    boxShadow: acc.status === 'live' ? '0 0 6px var(--gr)' : 'none',
                   }} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>
-                        {acc.login ?? '—'}
-                      </span>
-                      {acc.kind === 'primary' && <RoleBadge text="PRIMARY" tone="accent" />}
-                      {acc.role === 'leader'  && <RoleBadge text="LEADER"  tone="gold" />}
-                      {acc.role === 'follower'   && <RoleBadge text="COPY"    tone="muted" />}
+                      <Num size="sm" tone="neutral">{acc.login ?? '—'}</Num>
+                      {acc.kind === 'primary'  && <RoleBadge text="Primary" />}
+                      {acc.role === 'leader'   && <RoleBadge text="Leader" />}
+                      {acc.role === 'follower' && <RoleBadge text="Copy" />}
                     </div>
                     <span style={{
-                      color: 'var(--t3)', fontSize: '10px',
+                      fontFamily: 'var(--font-display)', color: 'var(--color-ink-3)',
+                      fontSize: 'var(--text-xs)',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {acc.groupName ?? acc.broker ?? (acc.kind === 'primary' ? 'Main account' : 'Copy account')}
@@ -249,26 +257,26 @@ export default function AccountMenu({
                     </span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flexShrink: 0 }}>
-                    <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>{fmtEur(acc.balance)}</span>
-                    <span style={{ color: 'var(--t3)', fontSize: '10px' }}>
+                    <Num size="sm" tone="neutral">{fmtEur(acc.balance)}</Num>
+                    <Num size="2xs" tone="muted">
                       {acc.openCount > 0 ? `${acc.openCount} open` : `eq ${fmtEur(acc.equity)}`}
-                    </span>
+                    </Num>
                   </div>
                 </button>
               )
             })}
           </div>
 
-          <div style={{ height: '1px', background: 'var(--bd)' }} />
+          <div style={{ height: '1px', background: 'var(--color-line-1)' }} />
 
           <div style={{ display: 'flex', gap: '6px' }}>
             <button
               style={actionStyle}
               onClick={() => { setOpen(false); onConnect() }}
-              onMouseEnter={e => { e.currentTarget.style.color = 'var(--t1)'; e.currentTarget.style.background = 'var(--s2)' }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'var(--t2)'; e.currentTarget.style.background = 'var(--s3)' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-ink-1)'; e.currentTarget.style.background = 'var(--color-state-active)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-ink-2)'; e.currentTarget.style.background = 'var(--color-surface-2)' }}
             >
-              MT5 Connection
+              MT5 connection
             </button>
             <button
               style={actionStyle}
@@ -276,14 +284,17 @@ export default function AccountMenu({
                 setOpen(false)
                 window.dispatchEvent(new CustomEvent('vq-switch-tab', { detail: 8 }))
               }}
-              onMouseEnter={e => { e.currentTarget.style.color = 'var(--t1)'; e.currentTarget.style.background = 'var(--s2)' }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'var(--t2)'; e.currentTarget.style.background = 'var(--s3)' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-ink-1)'; e.currentTarget.style.background = 'var(--color-state-active)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-ink-2)'; e.currentTarget.style.background = 'var(--color-surface-2)' }}
             >
-              Copy Trading →
+              Copy trading →
             </button>
           </div>
 
-          <p style={{ color: 'var(--t3)', fontSize: '9.5px', margin: 0, padding: '0 4px', lineHeight: 1.4 }}>
+          <p style={{
+            fontFamily: 'var(--font-display)', color: 'var(--color-ink-3)',
+            fontSize: 'var(--text-xs)', margin: 0, padding: '0 4px', lineHeight: 1.45,
+          }}>
             Journal &amp; analytics always track your primary account. Copy accounts execute mirrors — their history lives in the Copy tab.
           </p>
         </div>

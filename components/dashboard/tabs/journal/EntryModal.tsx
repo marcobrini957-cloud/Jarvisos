@@ -59,27 +59,27 @@ export function EntryModal({
           top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
           width: '520px', maxWidth: 'calc(100vw - 24px)', maxHeight: '90dvh',
           background: 'var(--s1)', border: '1px solid var(--bd2)',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.5)', padding: '24px', overflowY: 'auto',
+          padding: '24px', overflowY: 'auto',
         }}>
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 style={{ color: 'var(--t1)', fontSize: '15px', fontWeight: 500 }}>Journal Entry</h2>
-            <p style={{ color: 'var(--t2)', fontSize: '12px', marginTop: '2px' }}>{displayDate}</p>
+            <h2 style={{ color: 'var(--t1)', fontSize: 'var(--text-md)', fontWeight: 500 }}>Journal Entry</h2>
+            <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', marginTop: '2px' }}>{displayDate}</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '20px', cursor: 'pointer' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}>×</button>
         </div>
 
         {/* Mood selector */}
         <div>
-          <p style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500, marginBottom: '8px' }}>How are you feeling?</p>
+          <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500, marginBottom: '8px' }}>How are you feeling?</p>
           <div className="flex gap-2">
             {MOODS.map(m => (
               <button key={m} onClick={() => setMood(m)}
                 className="flex-1 py-2 vq-r capitalize transition-all"
                 style={{
-                  fontSize: '12px', border: `1.5px solid ${mood === m ? MOOD_COLOR[m] : 'var(--bd2)'}`,
+                  fontSize: 'var(--text-base)', border: `1.5px solid ${mood === m ? MOOD_COLOR[m] : 'var(--bd2)'}`,
                   background: mood === m ? `${MOOD_COLOR[m]}18` : 'var(--s2)',
                   color: mood === m ? MOOD_COLOR[m] : 'var(--t2)', cursor: 'pointer', fontWeight: mood === m ? 500 : 400,
                 }}>
@@ -92,14 +92,14 @@ export function EntryModal({
         {/* Energy level */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Energy Level</p>
-            <span style={{ color: 'var(--go2)', fontSize: '14px', fontWeight: 500 }}>{energy}/10</span>
+            <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Energy Level</p>
+            <span style={{ color: 'var(--go2)', fontSize: 'var(--text-md)', fontWeight: 500 }}>{energy}/10</span>
           </div>
           <input type="range" min={1} max={10} value={energy} onChange={e => setEnergy(Number(e.target.value))}
             className="w-full" style={{ accentColor: 'var(--ac)' }} />
           <div className="flex justify-between mt-1">
-            <span style={{ color: 'var(--t3)', fontSize: '10px' }}>Exhausted</span>
-            <span style={{ color: 'var(--t3)', fontSize: '10px' }}>Peak</span>
+            <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }}>Exhausted</span>
+            <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }}>Peak</span>
           </div>
         </div>
 
@@ -110,23 +110,23 @@ export function EntryModal({
           const losses = dayTrades.filter(t => tradeResult(t.net_profit ?? 0) === 'loss').length
           return (
             <div style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
-              <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
+              <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
                 Today&apos;s Trades — auto-pulled
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                 <div>
-                  <p style={{ color: dayPnl >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: '18px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+                  <p className="vq-num" style={{ color: dayPnl >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: 'var(--text-lg)', fontWeight: 700, letterSpacing: '-0.02em' }}>
                     {dayPnl >= 0 ? '+' : ''}€{dayPnl.toFixed(2)}
                   </p>
-                  <p style={{ color: 'var(--t3)', fontSize: '10px' }}>{dayTrades.length} trades · {wins}W {losses}L</p>
+                  <p className="vq-num" style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }}>{dayTrades.length} trades · {wins}W {losses}L</p>
                 </div>
                 <div style={{ flex: 1, display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {dayTrades.slice(0, 5).map((t, i) => {
                     const r = tradeResult(t.net_profit ?? 0)
                     const color = r === 'win' ? 'var(--gr2)' : r === 'loss' ? 'var(--re)' : 'var(--t3)'
                     return (
-                      <span key={i} style={{
-                        fontSize: '10px', padding: '2px 8px', borderRadius: 'var(--radius-sm)',
+                      <span className="vq-num" key={i} style={{
+                        fontSize: 'var(--text-xs)', padding: '2px 8px', borderRadius: 'var(--radius-sm)',
                         background: r === 'win' ? 'rgba(0,196,106,0.08)' : r === 'loss' ? 'rgba(240,80,75,0.08)' : 'var(--s3)',
                         color, border: `1px solid ${r === 'win' ? 'rgba(0,196,106,0.2)' : r === 'loss' ? 'rgba(240,80,75,0.2)' : 'var(--bd)'}`,
                         fontWeight: 500,
@@ -144,7 +144,7 @@ export function EntryModal({
         {/* Text body */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-            <p style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500, margin: 0 }}>
+            <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500, margin: 0 }}>
               Journal Entry <span style={{ color: 'var(--t3)' }}>— how was your trading day? What did you feel?</span>
             </p>
             <VoiceDictationButton onText={t => setBody(prev => (prev ? prev.trimEnd() + '\n\n' : '') + t)} />
@@ -156,7 +156,7 @@ export function EntryModal({
             placeholder="Write freely — your setups, emotions, lessons learned, what you'd do differently…"
             style={{
               width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
-              padding: '12px', color: 'var(--t1)', fontSize: '13px', lineHeight: '1.7',
+              padding: '12px', color: 'var(--t1)', fontSize: 'var(--text-base)', lineHeight: '1.7',
               resize: 'vertical', outline: 'none',
             }}
             onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
@@ -167,25 +167,25 @@ export function EntryModal({
         {/* Tags + trading day */}
         <div className="flex gap-3">
           <div className="flex-1">
-            <p style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>Tags (comma separated)</p>
+            <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500, marginBottom: '6px' }}>Tags (comma separated)</p>
             <input value={tagInput} onChange={e => setTagInput(e.target.value)}
               placeholder="focused, disciplined, fomo…"
               style={{
                 width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
-                padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
+                padding: '10px 12px', color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none',
               }}
               onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
               onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
             />
           </div>
           <div className="flex flex-col gap-1">
-            <p style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500, marginBottom: '6px' }}>Trading day?</p>
+            <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500, marginBottom: '6px' }}>Trading day?</p>
             <button onClick={() => setTrading(t => !t)}
               className="px-4 py-2.5 vq-r"
               style={{
                 background: trading ? 'rgba(0,196,106,0.15)' : 'var(--s2)',
                 border: `1.5px solid ${trading ? 'rgba(0,196,106,0.35)' : 'var(--bd2)'}`,
-                color: trading ? 'var(--gr2)' : 'var(--t3)', fontSize: '12px', cursor: 'pointer',
+                color: trading ? 'var(--gr2)' : 'var(--t3)', fontSize: 'var(--text-base)', cursor: 'pointer',
               }}>
               {trading ? 'Yes ✓' : 'No'}
             </button>
@@ -205,19 +205,19 @@ export function EntryModal({
                   }}
                   disabled={deleting}
                   className="flex-1 py-2.5 vq-r font-medium"
-                  style={{ background: 'var(--re)', border: 'none', color: 'white', fontSize: '13px', cursor: deleting ? 'not-allowed' : 'pointer' }}>
+                  style={{ background: 'var(--re)', border: 'none', color: 'white', fontSize: 'var(--text-base)', cursor: deleting ? 'not-allowed' : 'pointer' }}>
                   {deleting ? 'Deleting…' : 'Confirm delete'}
                 </button>
                 <button onClick={() => setConfirmDelete(false)}
                   className="py-2.5 px-4 vq-r"
-                  style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
+                  style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: 'var(--text-base)', cursor: 'pointer' }}>
                   Cancel
                 </button>
               </>
             ) : (
               <button onClick={() => setConfirmDelete(true)}
                 className="py-2.5 px-3 vq-r"
-                style={{ background: 'transparent', border: '1px solid rgba(240,80,75,0.25)', color: 'var(--re)', fontSize: '13px', cursor: 'pointer' }}>
+                style={{ background: 'transparent', border: '1px solid rgba(240,80,75,0.25)', color: 'var(--re)', fontSize: 'var(--text-base)', cursor: 'pointer' }}>
                 Delete
               </button>
             )
@@ -226,12 +226,12 @@ export function EntryModal({
             <>
               <button onClick={onClose}
                 className="flex-1 py-2.5 vq-r"
-                style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
+                style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: 'var(--text-base)', cursor: 'pointer' }}>
                 Cancel
               </button>
               <button onClick={handleSave} disabled={saving}
                 className="flex-1 py-2.5 vq-r font-medium"
-                style={{ background: saving ? 'rgba(0,196,106,0.3)' : 'var(--gr)', border: 'none', color: 'white', fontSize: '13px', cursor: saving ? 'not-allowed' : 'pointer' }}>
+                style={{ background: saving ? 'rgba(0,196,106,0.3)' : 'var(--gr)', border: 'none', color: 'white', fontSize: 'var(--text-base)', cursor: saving ? 'not-allowed' : 'pointer' }}>
                 {saving ? 'Saving…' : existing ? 'Update Entry' : '+ Save Entry'}
               </button>
             </>

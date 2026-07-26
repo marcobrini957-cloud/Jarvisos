@@ -52,13 +52,13 @@ export function AddTaskModal({ onSave, onClose }: {
           top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           width: '420px', maxWidth: 'calc(100vw - 32px)',
           background: 'var(--s1)', border: '1px solid var(--bd2)',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.5)', padding: '24px',
+          padding: '24px',
         }}>
         <div className="flex items-center justify-between">
-          <h2 style={{ color: 'var(--t1)', fontSize: '15px', fontWeight: 500 }}>New Task</h2>
+          <h2 style={{ color: 'var(--t1)', fontSize: 'var(--text-md)', fontWeight: 500 }}>New Task</h2>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '20px', cursor: 'pointer' }}>
+            style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}>
             ×
           </button>
         </div>
@@ -76,7 +76,7 @@ export function AddTaskModal({ onSave, onClose }: {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: '12px' }}>Category</label>
+            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Category</label>
             <select
               value={category}
               onChange={e => setCategory(e.target.value as TaskCategory)}
@@ -88,7 +88,7 @@ export function AddTaskModal({ onSave, onClose }: {
             </select>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: '12px' }}>Priority</label>
+            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Priority</label>
             <select
               value={priority}
               onChange={e => setPriority(e.target.value as TaskPriority)}
@@ -101,7 +101,7 @@ export function AddTaskModal({ onSave, onClose }: {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label style={{ color: 'var(--t2)', fontSize: '12px' }}>Due date</label>
+          <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Due date</label>
           <input
             type="date"
             value={dueDate}
@@ -116,7 +116,7 @@ export function AddTaskModal({ onSave, onClose }: {
           <button
             onClick={onClose}
             className="flex-1 py-2.5 vq-r"
-            style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
+            style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: 'var(--text-base)', cursor: 'pointer' }}>
             Cancel
           </button>
           <button
@@ -124,8 +124,8 @@ export function AddTaskModal({ onSave, onClose }: {
             disabled={saving || !title.trim()}
             className="flex-1 py-2.5 vq-r font-medium"
             style={{
-              background: 'var(--ac)', border: 'none', color: 'white',
-              fontSize: '13px', cursor: 'pointer',
+              background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)',
+              fontSize: 'var(--text-base)', cursor: 'pointer',
               opacity: (!title.trim() || saving) ? 0.5 : 1,
             }}>
             {saving ? 'Adding…' : 'Add Task'}

@@ -128,11 +128,11 @@ export function YourEdge({ trades }: { trades: Trade[] }) {
             display: 'flex', flexDirection: 'column', gap: '5px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <span style={{ fontSize: '16px' }}>{e.icon}</span>
-              <span style={{ fontSize: '11px', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{e.label}</span>
+              <span style={{ fontSize: 'var(--text-lg)' }}>{e.icon}</span>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{e.label}</span>
             </div>
-            <span style={{ fontSize: '22px', fontWeight: 700, color: e.color, letterSpacing: '-0.03em', lineHeight: 1 }}>{e.value}</span>
-            <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{e.sub}</span>
+            <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: e.color, letterSpacing: '-0.03em', lineHeight: 1 }}>{e.value}</span>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>{e.sub}</span>
           </div>
         ))}
       </div>

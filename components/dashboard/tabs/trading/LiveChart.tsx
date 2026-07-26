@@ -37,8 +37,8 @@ const TIMEFRAMES: { label: string; interval: string }[] = [
 
 const pillBtn = (active: boolean) => ({
   padding: '4px 11px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
-  fontSize: '11px', fontWeight: 600,
-  background: active ? 'var(--ac)' : 'var(--s3)', color: active ? '#fff' : 'var(--t3)',
+  fontSize: 'var(--text-sm)', fontWeight: 600,
+  background: active ? 'var(--color-surface-3)' : 'var(--s3)', color: active ? 'var(--color-ink-1)' : 'var(--t3)',
   transition: 'all 0.12s',
 } as const)
 

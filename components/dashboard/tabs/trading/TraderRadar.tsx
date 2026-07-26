@@ -344,10 +344,10 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
               background: bg, border: `1px solid ${col}25`,
               minWidth: '80px', flex: '1 1 80px', opacity: a.has ? 1 : 0.7,
             }}>
-              <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.30)', letterSpacing: '0.08em', textAlign: 'center', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 'var(--text-2xs)', color: 'rgba(255,255,255,0.30)', letterSpacing: '0.08em', textAlign: 'center', whiteSpace: 'nowrap' }}>
                 {a.label}
               </span>
-              <span style={{ fontSize: '14px', color: col, fontFamily: 'monospace', fontWeight: 800 }}>
+              <span style={{ fontSize: 'var(--text-md)', color: col, fontFamily: 'monospace', fontWeight: 800 }}>
                 {a.value}
               </span>
               <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.18)', textAlign: 'center' }}>
@@ -366,16 +366,16 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
             width: '100%', padding: '8px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
             background: 'var(--s2)', border: '1px solid var(--bd2)',
-            color: 'var(--t2)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em',
+            color: 'var(--t2)', fontSize: 'var(--text-sm)', fontWeight: 600, letterSpacing: '0.04em',
           }}
         >
           <span>{showLegend ? 'Hide' : 'How is this graded?'}</span>
-          <span style={{ fontSize: '9px', color: 'var(--t3)', transform: showLegend ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▾</span>
+          <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--t3)', transform: showLegend ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▾</span>
         </button>
 
         {showLegend && (
           <div style={{ marginTop: '10px', padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <p style={{ color: 'var(--t3)', fontSize: '11px', lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
               Your <strong style={{ color: 'var(--t1)' }}>OVR</strong> is the average of the skills below, each scored 0–100.
               Skills you haven&apos;t logged data for show <span style={{ color: 'var(--t2)' }}>“—”</span> and are left out of the average — they don&apos;t drag your score down.
               Colours: <span style={{ color: '#00C46A' }}>green ≥ 70</span> · <span style={{ color: '#FFFFFF' }}>amber 45–69</span> · <span style={{ color: '#F0504B' }}>red &lt; 45</span>.
@@ -390,8 +390,8 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
               { label: 'Mindset',       how: 'Starts at 100, penalised for FOMO / anxious / tired emotions and revenge-trade tags. Log emotions to activate.' },
             ].map(item => (
               <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>{item.label}</span>
-                <span style={{ color: 'var(--t3)', fontSize: '11px', lineHeight: 1.5 }}>{item.how}</span>
+                <span style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 600 }}>{item.label}</span>
+                <span style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', lineHeight: 1.5 }}>{item.how}</span>
               </div>
             ))}
           </div>

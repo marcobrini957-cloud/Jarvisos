@@ -56,7 +56,6 @@ export default function OrdersCounter() {
               width: `${CELL_W}px`, height: `${CELL_H}px`, overflow: 'hidden',
               borderRadius: 'var(--radius-md)', background: 'var(--s2)',
               border: '1px solid var(--bd2)',
-              boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.5)',
               position: 'relative',
               transition: 'opacity 0.4s',
             }}
@@ -91,7 +90,7 @@ export default function OrdersCounter() {
         ))}
       </div>
       <div style={{
-        fontSize: '13px', color: 'var(--t3)', letterSpacing: '0.06em',
+        fontSize: 'var(--text-base)', color: 'var(--t3)', letterSpacing: '0.06em',
         textTransform: 'uppercase', fontWeight: 600,
       }}>
         Real-money orders executed

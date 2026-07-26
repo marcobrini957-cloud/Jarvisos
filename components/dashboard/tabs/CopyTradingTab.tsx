@@ -48,7 +48,7 @@ export default function CopyTradingTab() {
 
   if (loading) {
     return (
-      <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t3)', fontSize: '13px' }}>
+      <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t3)', fontSize: 'var(--text-base)' }}>
         Loading…
       </div>
     )
@@ -61,8 +61,8 @@ export default function CopyTradingTab() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--t1)' }}>Copy Trading</div>
-          <div style={{ fontSize: '13px', color: 'var(--t3)', marginTop: '4px' }}>
+          <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--t1)' }}>Copy Trading</div>
+          <div style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', marginTop: '4px' }}>
             Mirror trades across multiple MT5 accounts in real time
           </div>
         </div>
@@ -70,7 +70,7 @@ export default function CopyTradingTab() {
           <button
             onClick={() => setShowCreateGroup(true)}
             style={{
-              padding: '9px 18px', borderRadius: 'var(--radius-md)', fontSize: '13px', fontWeight: 600,
+              padding: '9px 18px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)', fontWeight: 600,
               background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
               color: 'var(--ac)', cursor: 'pointer', flexShrink: 0,
             }}
@@ -89,17 +89,17 @@ export default function CopyTradingTab() {
               textAlign: 'center', padding: '48px 20px',
               background: 'var(--s1)', border: '1px dashed var(--bd)', borderRadius: 'var(--radius-xl)',
             }}>
-              <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚡</div>
-              <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--t1)', marginBottom: '8px' }}>
+              <div style={{ fontSize: 'var(--text-3xl)', marginBottom: '12px' }}>⚡</div>
+              <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: '8px' }}>
                 No copy groups yet
               </div>
-              <div style={{ fontSize: '13px', color: 'var(--t3)', marginBottom: '20px' }}>
+              <div style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', marginBottom: '20px' }}>
                 Create your first group to start mirroring trades
               </div>
               <button
                 onClick={() => setShowCreateGroup(true)}
                 style={{
-                  padding: '10px 24px', borderRadius: 'var(--radius-md)', fontSize: '13px', fontWeight: 600,
+                  padding: '10px 24px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)', fontWeight: 600,
                   background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
                   color: 'var(--ac)', cursor: 'pointer',
                 }}
@@ -119,10 +119,10 @@ export default function CopyTradingTab() {
       <div style={{
         marginTop: '20px', padding: '10px 16px', borderRadius: 'var(--radius-md)',
         background: 'var(--s1)', border: '1px solid var(--bd)',
-        fontSize: '11px', color: 'var(--t3)', lineHeight: 1.6, opacity: 0.85,
+        fontSize: 'var(--text-sm)', color: 'var(--t3)', lineHeight: 1.6, opacity: 0.85,
       }}>
         Running the EA on your own MetaTrader? Add{' '}
-        <code style={{ color: 'var(--ac)', background: 'var(--s2)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
+        <code style={{ color: 'var(--color-ink-1)', background: 'var(--s2)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
           https://bridge.velquor.app
         </code>
         {' '}under <em>Tools → Options → Expert Advisors → Allow WebRequest</em>. Cloud-hosted accounts need no setup.

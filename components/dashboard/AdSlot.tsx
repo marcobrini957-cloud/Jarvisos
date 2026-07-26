@@ -37,7 +37,7 @@ export default function AdSlot({
       <div style={{
         padding: '10px 14px', borderRadius: 'var(--radius-lg)',
         background: 'var(--s1)', border: '1px solid var(--bd)',
-        fontSize: '11px', color: 'var(--t3)', textAlign: 'center',
+        fontSize: 'var(--text-sm)', color: 'var(--t3)', textAlign: 'center',
       }}>
         ✦ Ad-free — thanks for being {profile.tier === 'ultra' ? 'Ultra' : 'Pro'}
       </div>

@@ -7,17 +7,19 @@ import {
   IconSparkles, IconSettings, IconGift,
 } from '@tabler/icons-react'
 
-const TABS: { id: number; label: string; icon: React.ComponentType<{ size?: number; stroke?: number }>; isGold?: boolean }[] = [
-  { id: 0, label: 'Overview',    icon: IconLayoutDashboard },
-  { id: 1, label: 'Trading',     icon: IconChartCandle     },
-  { id: 2, label: 'Portfolio',   icon: IconBriefcase       },
-  { id: 3, label: 'Journal',     icon: IconNotebook        },
+// Analyst used to be gold in both states — the one tab that shouted. In 2.0 it
+// is a tab like any other; what it does is interesting, its colour is not.
+const TABS: { id: number; label: string; icon: React.ComponentType<{ size?: number; stroke?: number }> }[] = [
+  { id: 0, label: 'Overview',   icon: IconLayoutDashboard },
+  { id: 1, label: 'Trading',    icon: IconChartCandle     },
+  { id: 2, label: 'Portfolio',  icon: IconBriefcase       },
+  { id: 3, label: 'Journal',    icon: IconNotebook        },
   { id: 4, label: 'News',       icon: IconWorld           },
-  { id: 5, label: 'Discipline',  icon: IconTargetArrow     },
-  { id: 7, label: 'Tasks',       icon: IconChecklist       },
-  { id: 8, label: 'Copy',        icon: IconArrowsRightLeft },
-  { id: 9, label: 'Partners',    icon: IconGift            },
-  { id: 6, label: 'Analyst', icon: IconSparkles, isGold: true },
+  { id: 5, label: 'Discipline', icon: IconTargetArrow     },
+  { id: 7, label: 'Tasks',      icon: IconChecklist       },
+  { id: 8, label: 'Copy',       icon: IconArrowsRightLeft },
+  { id: 9, label: 'Partners',   icon: IconGift            },
+  { id: 6, label: 'Analyst',    icon: IconSparkles        },
 ]
 
 interface TabBarProps {
@@ -51,28 +53,25 @@ export default function TabBar({ activeTab, onTabChange, showSettings, onSetting
     return () => window.removeEventListener('resize', measure)
   }, [activeTab, showSettings])
 
-  const activeIsGold = TABS.find(t => t.id === activeTab)?.isGold
-
   return (
     <div
       className="flex items-center flex-shrink-0"
       style={{
-        background:    'var(--s1)',
-        borderBottom:  '1px solid var(--bd)',
-        paddingLeft:   '16px',
+        background:    'var(--color-void)',
+        borderBottom:  '1px solid var(--color-line-1)',
+        paddingLeft:   '10px',
         paddingRight:  '8px',
-        height:        '42px',
+        height:        '34px',
         gap:           '2px',
       }}
     >
       <div
         ref={trackRef}
-        className="flex items-center flex-1 overflow-x-auto gap-0.5"
+        className="flex items-center flex-1 overflow-x-auto"
         style={{ height: '100%', position: 'relative', msOverflowStyle: 'none', scrollbarWidth: 'none' } as React.CSSProperties}
       >
         {TABS.map((tab) => {
           const isActive = !showSettings && activeTab === tab.id
-          const isGold   = tab.isGold
           const Icon     = tab.icon
 
           return (
@@ -82,53 +81,49 @@ export default function TabBar({ activeTab, onTabChange, showSettings, onSetting
               onClick={() => onTabChange(tab.id)}
               title={`${tab.label} — press ${TABS.findIndex(t => t.id === tab.id) + 1}`}
               style={{
-                height:       '100%',
-                padding:      '0 13px',
-                fontSize:     '12px',
-                fontWeight:   isActive ? 600 : 400,
-                display:      'flex',
-                alignItems:   'center',
-                gap:          '6px',
-                color:        isActive
-                  ? (isGold ? 'var(--go2)' : 'var(--t1)')
-                  : (isGold ? 'var(--go2)' : '#727272'),
-                background:   'transparent',
-                border:       'none',
-                borderRadius: '0',
-                cursor:       'pointer',
-                whiteSpace:   'nowrap',
-                transition:   'color 0.14s, background 0.14s',
-                flexShrink:   0,
-                letterSpacing: isActive ? '-0.01em' : '0',
+                height:        '100%',
+                padding:       '0 11px',
+                fontFamily:    'var(--font-display)',
+                fontSize:      'var(--text-xs)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                display:       'flex',
+                alignItems:    'center',
+                gap:           '6px',
+                color:         isActive ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
+                background:    'transparent',
+                border:        'none',
+                cursor:        'pointer',
+                whiteSpace:    'nowrap',
+                transition:    'color 0.14s, background 0.14s',
+                flexShrink:    0,
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.color = isGold ? 'var(--go2)' : 'var(--t1)'
-                  e.currentTarget.style.background = 'var(--s2)'
+                  e.currentTarget.style.color = 'var(--color-ink-1)'
+                  e.currentTarget.style.background = 'var(--color-state-hover)'
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive) {
-                  e.currentTarget.style.color = isGold ? 'var(--go2)' : '#727272'
+                  e.currentTarget.style.color = 'var(--color-ink-3)'
                   e.currentTarget.style.background = 'transparent'
                 }
               }}
             >
-              <Icon size={14} stroke={1.7} />
+              <Icon size={13} stroke={1.6} />
               {tab.label}
             </button>
           )
         })}
 
-        {/* Sliding active indicator */}
+        {/* Sliding active indicator — one hairline, no glow */}
         {indicator && (
           <div style={{
-            position: 'absolute', bottom: 0, height: '2px',
+            position: 'absolute', bottom: 0, height: '1px',
             left: indicator.left, width: indicator.width,
-            background: activeIsGold ? 'var(--go2)' : 'var(--ac)',
-            borderRadius: '2px 2px 0 0',
-            boxShadow: `0 0 8px ${activeIsGold ? 'var(--go2)' : 'var(--ac)'}66`,
-            transition: 'left 0.22s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s cubic-bezier(0.4, 0, 0.2, 1), background 0.22s',
+            background: 'var(--color-ink-1)',
+            transition: 'left 0.22s cubic-bezier(0.4, 0, 0.2, 1), width 0.22s cubic-bezier(0.4, 0, 0.2, 1)',
             pointerEvents: 'none',
           }} />
         )}
@@ -137,28 +132,29 @@ export default function TabBar({ activeTab, onTabChange, showSettings, onSetting
       <button
         onClick={onSettingsToggle}
         title="Settings"
-        className="flex items-center justify-center vq-r flex-shrink-0"
+        className="flex items-center justify-center flex-shrink-0"
         style={{
-          width: '28px', height: '28px', marginLeft: '4px',
-          background: showSettings ? 'var(--s3)' : 'transparent',
+          width: '24px', height: '24px', marginLeft: '4px',
+          borderRadius: 'var(--radius-xs)',
+          background: showSettings ? 'var(--color-surface-2)' : 'transparent',
           border: 'none',
-          color: showSettings ? 'var(--ac)' : '#727272',
+          color: showSettings ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
           cursor: 'pointer', transition: 'all 0.12s',
         }}
         onMouseEnter={(e) => {
           if (!showSettings) {
-            e.currentTarget.style.background = 'var(--s2)'
-            e.currentTarget.style.color = 'var(--t1)'
+            e.currentTarget.style.background = 'var(--color-state-hover)'
+            e.currentTarget.style.color = 'var(--color-ink-1)'
           }
         }}
         onMouseLeave={(e) => {
           if (!showSettings) {
             e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = '#727272'
+            e.currentTarget.style.color = 'var(--color-ink-3)'
           }
         }}
       >
-        <IconSettings size={14} stroke={1.8} />
+        <IconSettings size={13} stroke={1.7} />
       </button>
     </div>
   )

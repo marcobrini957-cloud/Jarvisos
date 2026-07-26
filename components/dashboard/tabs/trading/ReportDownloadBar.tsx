@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Label } from '@/components/ui/vq'
 
 // ── Report download bar ───────────────────────────────────────────────────────
 
@@ -47,27 +48,27 @@ export function ReportDownloadBar() {
 
   const inputStyle: React.CSSProperties = {
     background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
-    color: 'var(--t1)', fontSize: '12px', padding: '5px 8px', outline: 'none',
+    color: 'var(--t1)', fontSize: 'var(--text-base)', padding: '5px 8px', outline: 'none',
     colorScheme: 'dark',
   }
 
   const BtnBase: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: '5px',
-    padding: '5px 13px', borderRadius: 'var(--radius-md)', fontSize: '12px',
-    cursor: 'pointer', transition: 'all 0.12s', fontWeight: 500,
+    padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)',
+    fontFamily: 'var(--font-display)',
+    cursor: 'pointer', transition: 'all 0.12s',
   }
 
   return (
     <div style={{
-      borderRadius: 'var(--radius-md)', background: 'var(--s1)', border: '1px solid var(--bd2)',
+      borderRadius: 'var(--radius-md)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
       overflow: 'hidden',
     }}>
       {/* ── Main bar ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', padding: '10px 14px' }}>
         {/* Icon + label */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '4px' }}>
-          <span style={{ fontSize: '13px' }}>📄</span>
-          <span style={{ fontSize: '11px', color: 'var(--t3)', letterSpacing: '0.06em' }}>PDF REPORT</span>
+        <div style={{ display: 'flex', alignItems: 'center', marginRight: '4px' }}>
+          <Label>PDF report</Label>
         </div>
 
         {/* Presets */}
@@ -80,17 +81,17 @@ export function ReportDownloadBar() {
               disabled={!!downloading}
               style={{
                 ...BtnBase,
-                background: busy ? 'var(--ac)' : 'var(--s2)',
-                color:      busy ? '#fff'       : 'var(--t2)',
-                border:     `1px solid ${busy ? 'var(--ac)' : 'var(--bd2)'}`,
+                background: busy ? 'var(--color-surface-3)' : 'transparent',
+                color:      busy ? 'var(--color-ink-1)' : 'var(--color-ink-2)',
+                border:     '1px solid var(--color-line-1)',
                 opacity:    downloading && !busy ? 0.45 : 1,
               }}
               onMouseEnter={e => { if (!downloading) { e.currentTarget.style.background = 'var(--s3)'; e.currentTarget.style.color = 'var(--t1)' } }}
-              onMouseLeave={e => { if (!downloading) { e.currentTarget.style.background = busy ? 'var(--ac)' : 'var(--s2)'; e.currentTarget.style.color = busy ? '#fff' : 'var(--t2)' } }}
+              onMouseLeave={e => { if (!downloading) { e.currentTarget.style.background = busy ? 'var(--color-surface-3)' : 'transparent'; e.currentTarget.style.color = busy ? 'var(--color-ink-1)' : 'var(--color-ink-2)' } }}
             >
               {busy
-                ? <span style={{ width: '10px', height: '10px', borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
-                : <span style={{ fontSize: '11px', opacity: 0.6 }}>↓</span>
+                ? <span style={{ width: '10px', height: '10px', borderRadius: '50%', border: '1px solid var(--color-line-2)', borderTopColor: 'var(--color-ink-1)', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+                : <span style={{ fontSize: 'var(--text-sm)', opacity: 0.6 }}>↓</span>
               }
               {r.label}
             </button>
@@ -102,15 +103,15 @@ export function ReportDownloadBar() {
           onClick={() => setShowCustom(v => !v)}
           style={{
             ...BtnBase,
-            background: showCustom ? 'rgba(255,255,255,0.12)' : 'var(--s2)',
-            color:      showCustom ? 'var(--ac)'              : 'var(--t2)',
-            border:     `1px solid ${showCustom ? 'var(--ac)' : 'var(--bd2)'}`,
+            background: showCustom ? 'var(--color-surface-3)' : 'transparent',
+            color:      showCustom ? 'var(--color-ink-1)' : 'var(--color-ink-2)',
+            border:     '1px solid var(--color-line-1)',
             marginLeft: 'auto',
           }}
           onMouseEnter={e => { e.currentTarget.style.background = 'var(--s3)'; e.currentTarget.style.color = 'var(--t1)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = showCustom ? 'rgba(255,255,255,0.12)' : 'var(--s2)'; e.currentTarget.style.color = showCustom ? 'var(--ac)' : 'var(--t2)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = showCustom ? 'var(--color-surface-3)' : 'transparent'; e.currentTarget.style.color = showCustom ? 'var(--color-ink-1)' : 'var(--color-ink-2)' }}
         >
-          <span style={{ fontSize: '11px' }}>⊞</span>
+          <span style={{ fontSize: 'var(--text-sm)' }}>⊞</span>
           Custom range
         </button>
       </div>
@@ -120,18 +121,18 @@ export function ReportDownloadBar() {
         <div style={{
           display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
           padding: '12px 14px',
-          borderTop: '1px solid var(--bd)',
-          background: 'var(--s2)',
+          borderTop: '1px solid var(--color-line-1)',
+          background: 'var(--color-surface-1)',
           animation: 'fade-in 0.15s ease',
         }}>
-          <span style={{ fontSize: '11px', color: 'var(--t3)' }}>From</span>
+          <Label>From</Label>
           <input
             type="date"
             value={customFrom}
             onChange={e => setCustomFrom(e.target.value)}
             style={inputStyle}
           />
-          <span style={{ fontSize: '11px', color: 'var(--t3)' }}>to</span>
+          <Label>to</Label>
           <input
             type="date"
             value={customTo}
@@ -148,15 +149,15 @@ export function ReportDownloadBar() {
             disabled={!customFrom || !customTo || !!downloading}
             style={{
               ...BtnBase,
-              background: customFrom && customTo ? 'var(--ac)' : 'var(--s3)',
-              color:       customFrom && customTo ? '#fff'       : 'var(--t3)',
+              background: customFrom && customTo ? 'var(--color-ink-1)' : 'var(--color-surface-2)',
+              color:       customFrom && customTo ? 'var(--color-void)' : 'var(--color-ink-3)',
               border:      '1px solid transparent',
               opacity:     !customFrom || !customTo ? 0.5 : 1,
             }}
           >
             {downloading === 'custom'
-              ? <span style={{ width: '10px', height: '10px', borderRadius: '50%', border: '1.5px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
-              : <span style={{ fontSize: '11px' }}>↓</span>
+              ? <span style={{ width: '10px', height: '10px', borderRadius: '50%', border: '1px solid var(--color-line-2)', borderTopColor: 'var(--color-ink-1)', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+              : <span style={{ fontSize: 'var(--text-sm)' }}>↓</span>
             }
             Download
           </button>

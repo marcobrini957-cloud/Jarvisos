@@ -141,13 +141,13 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
   if (closed.length === 0) return null
 
   const subHead = (title: string) => (
-    <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '4px', marginTop: '4px' }}>
+    <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '4px', marginTop: '4px' }}>
       {title}
     </p>
   )
 
   const noData = (msg: string) => (
-    <p style={{ color: 'var(--t3)', fontSize: '12px', fontStyle: 'italic', padding: '8px 0' }}>{msg}</p>
+    <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)', fontStyle: 'italic', padding: '8px 0' }}>{msg}</p>
   )
 
   return (
@@ -315,7 +315,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
 
               {/* Setup Performance (Grouped) */}
               <div>
-                <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '12px' }}>
+                <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '12px' }}>
                   Setup Performance (Grouped)
                 </p>
                 <HorizBar
@@ -328,7 +328,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
 
               {/* Avg R:R by Setup */}
               <div>
-                <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '12px' }}>
+                <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '12px' }}>
                   Avg R:R by Setup
                 </p>
                 {setupRRChart.length > 0 ? (
@@ -339,7 +339,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
                     maxAbs={rrMax}
                   />
                 ) : (
-                  <p style={{ color: 'var(--t3)', fontSize: '12px', fontStyle: 'italic', padding: '8px 0' }}>
+                  <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)', fontStyle: 'italic', padding: '8px 0' }}>
                     Add stop loss to trades to see R:R by setup.
                   </p>
                 )}
@@ -353,7 +353,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
       {/* Insight cards — warnings + key findings */}
       {insights.length > 0 && (
         <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--bd)' }}>
-          <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '12px' }}>
+          <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '12px' }}>
             Key findings
           </p>
           <div className="flex flex-col gap-3">
@@ -382,7 +382,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
             marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--bd)',
             display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center',
           }}>
-            <span style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase', marginRight: '4px' }}>
+            <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.06em', textTransform: 'uppercase', marginRight: '4px' }}>
               Analyzing
             </span>
             {[
@@ -393,7 +393,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
               { label: `${tagCount} tagged · ${uniqueTags} unique tag${uniqueTags !== 1 ? 's' : ''}`, always: false, active: tagCount > 0 },
             ].map(chip => (
               <span key={chip.label} style={{
-                fontSize: '11px', padding: '2px 8px', borderRadius: 'var(--radius-sm)',
+                fontSize: 'var(--text-sm)', padding: '2px 8px', borderRadius: 'var(--radius-sm)',
                 background: (!chip.always && !chip.active) ? 'var(--s2)' : 'var(--s3)',
                 color: (!chip.always && !chip.active) ? 'var(--t3)' : 'var(--t2)',
                 border: '1px solid var(--bd)',
@@ -402,7 +402,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
               </span>
             ))}
             {dateRange && (
-              <span style={{ fontSize: '11px', color: 'var(--t3)', marginLeft: 'auto' }}>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', marginLeft: 'auto' }}>
                 {dateRange}
               </span>
             )}

@@ -103,7 +103,7 @@ function MT5AccountsPanel() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Dot ok={status === null ? null : connected} />
             <div>
-              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: connected ? 'var(--gr2)' : 'var(--t2)' }}>
+              <p style={{ margin: 0, fontSize: 'var(--text-base)', fontWeight: 600, color: connected ? 'var(--gr2)' : 'var(--t2)' }}>
                 {status === null
                   ? 'Checking…'
                   : connected
@@ -111,13 +111,13 @@ function MT5AccountsPanel() {
                     : 'EA not connected'}
               </p>
               {connected && status && (status.ea_version || lastSeenTs) && (
-                <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--t3)' }}>
+                <p style={{ margin: '2px 0 0', fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
                   {[status.ea_version ? `v${status.ea_version}` : null, lastSeenTs ? `last sync ${lastSeenTs}` : null]
                     .filter(Boolean).join(' · ')}
                 </p>
               )}
               {!connected && status !== null && (
-                <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--t3)' }}>
+                <p style={{ margin: '2px 0 0', fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
                   Install the EA and attach it to any chart in MT5
                 </p>
               )}
@@ -128,8 +128,8 @@ function MT5AccountsPanel() {
           <Link
             href="/connect"
             style={{
-              padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: 600,
-              background: connected ? 'var(--s3)' : 'var(--ac)',
+              padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)', fontWeight: 600,
+              background: connected ? 'var(--s3)' : 'var(--color-ink-1)',
               color: connected ? 'var(--t2)' : 'white',
               border: connected ? '1px solid var(--bd2)' : 'none',
               textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
@@ -141,7 +141,7 @@ function MT5AccountsPanel() {
 
         {/* ── API Key ──────────────────────────────────────────────────────── */}
         <div>
-          <p style={{ margin: '0 0 6px', fontSize: '11px', fontWeight: 500, color: 'var(--t3)' }}>
+          <p style={{ margin: '0 0 6px', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--t3)' }}>
             API KEY — paste this into the EA inputs when you attach it
           </p>
           <div style={{
@@ -150,7 +150,7 @@ function MT5AccountsPanel() {
             borderRadius: 'var(--radius-md)', padding: '9px 12px',
           }}>
             <code style={{
-              flex: 1, fontFamily: 'monospace', fontSize: '12px',
+              flex: 1, fontFamily: 'monospace', fontSize: 'var(--text-base)',
               color: 'var(--t1)', wordBreak: 'break-all',
             }}>
               {status ? status.api_key : '…'}
@@ -162,13 +162,13 @@ function MT5AccountsPanel() {
                 padding: '4px 10px', borderRadius: 'var(--radius-md)', border: 'none',
                 background: copied ? 'rgba(0,196,106,0.15)' : 'var(--s3)',
                 color: copied ? 'var(--gr2)' : 'var(--t2)',
-                fontSize: '11px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+                fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
               }}
             >
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
-          <p style={{ margin: '5px 0 0', fontSize: '11px', color: 'var(--t3)' }}>
+          <p style={{ margin: '5px 0 0', fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
             Keep this private — it gives write access to your VELQUOR data.
           </p>
         </div>
@@ -178,10 +178,10 @@ function MT5AccountsPanel() {
           href="/connect"
           style={{
             display: 'flex', alignItems: 'center', gap: '5px',
-            color: 'var(--ac)', fontSize: '12px', fontWeight: 600, textDecoration: 'none',
+            color: 'var(--ac)', fontSize: 'var(--text-base)', fontWeight: 600, textDecoration: 'none',
           }}
         >
-          Step-by-step setup guide <span style={{ fontSize: '10px' }}>▶</span>
+          Step-by-step setup guide <span style={{ fontSize: 'var(--text-xs)' }}>▶</span>
         </Link>
       </div>
     </Panel>
@@ -230,10 +230,10 @@ export default function SettingsTab() {
     const { text, ok } = health ? statusLabel(health[key]) : { text: 'Checking…', ok: false }
     return (
       <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--bd)' }}>
-        <span style={{ color: 'var(--t2)', fontSize: '12px' }}>{label}</span>
+        <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>{label}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Dot ok={health ? ok : null} />
-          <span style={{ color: ok ? 'var(--gr2)' : health ? '#F0504B' : 'var(--t3)', fontSize: '12px', fontWeight: 500 }}>{text}</span>
+          <span style={{ color: ok ? 'var(--gr2)' : health ? '#F0504B' : 'var(--t3)', fontSize: 'var(--text-base)', fontWeight: 500 }}>{text}</span>
         </div>
       </div>
     )
@@ -242,8 +242,8 @@ export default function SettingsTab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '640px' }}>
       <div>
-        <h1 style={{ color: 'var(--t1)', fontSize: '18px', fontWeight: 600 }}>Settings</h1>
-        <p style={{ color: 'var(--t2)', fontSize: '12px', marginTop: '4px' }}>MT5 connection, integrations and preferences</p>
+        <h1 style={{ color: 'var(--t1)', fontSize: 'var(--text-lg)', fontWeight: 600 }}>Settings</h1>
+        <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', marginTop: '4px' }}>MT5 connection, integrations and preferences</p>
       </div>
 
       {/* ── MT5 Accounts ── */}
@@ -253,8 +253,8 @@ export default function SettingsTab() {
       <Panel title="Personalization">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p style={{ color: 'var(--t1)', fontSize: '13px', fontWeight: 500, margin: 0 }}>Daily greeting &amp; affirmation</p>
-            <p style={{ color: 'var(--t3)', fontSize: '11px', marginTop: '2px' }}>
+            <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500, margin: 0 }}>Daily greeting &amp; affirmation</p>
+            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '2px' }}>
               Shows a motivational message when you open the app each day
             </p>
           </div>
@@ -268,17 +268,17 @@ export default function SettingsTab() {
           {healthRow('Supabase (database)', 'supabase_connection')}
           {healthRow('Groq AI (VELQUOR brain)', 'GROQ_API_KEY')}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--bd)' }}>
-            <span style={{ color: 'var(--t2)', fontSize: '12px' }}>Yahoo Finance (portfolio &amp; metals)</span>
+            <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Yahoo Finance (portfolio &amp; metals)</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Dot ok={true} />
-              <span style={{ color: 'var(--gr2)', fontSize: '12px', fontWeight: 500 }}>Active</span>
+              <span style={{ color: 'var(--gr2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Active</span>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
-            <span style={{ color: 'var(--t2)', fontSize: '12px' }}>Forex Factory (calendar)</span>
+            <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Forex Factory (calendar)</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Dot ok={true} />
-              <span style={{ color: 'var(--gr2)', fontSize: '12px', fontWeight: 500 }}>Active</span>
+              <span style={{ color: 'var(--gr2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Active</span>
             </div>
           </div>
         </div>
@@ -289,12 +289,12 @@ export default function SettingsTab() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Dot ok={health ? health['supabase_connection'] === 'OK' : null} />
-            <span style={{ color: 'var(--t2)', fontSize: '12px' }}>
+            <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>
               Supabase Storage — bucket:{' '}
-              <code style={{ color: 'var(--ac)', fontSize: '11px' }}>trade-screenshots</code>
+              <code style={{ color: 'var(--ac)', fontSize: 'var(--text-sm)' }}>trade-screenshots</code>
             </span>
           </div>
-          <p style={{ color: 'var(--t3)', fontSize: '11px', lineHeight: '1.6', margin: 0 }}>
+          <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', lineHeight: '1.6', margin: 0 }}>
             Screenshots are auto-uploaded when you annotate a trade and served via public CDN.
           </p>
         </div>

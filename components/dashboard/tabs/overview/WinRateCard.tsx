@@ -58,7 +58,7 @@ function PeriodMenu({ value, onChange }: { value: PeriodKey; onChange: (k: Perio
         onClick={() => setOpen(v => !v)}
         style={{
           display: 'flex', alignItems: 'center', gap: '5px',
-          fontSize: '10px', fontWeight: 600, letterSpacing: '0.02em',
+          fontSize: 'var(--text-xs)', fontWeight: 600, letterSpacing: '0.02em',
           color: open ? 'var(--t1)' : 'var(--t2)',
           background: 'var(--s2)', border: '1px solid var(--bd2)',
           borderRadius: 'var(--radius-md)', padding: '3px 7px', cursor: 'pointer',
@@ -76,7 +76,7 @@ function PeriodMenu({ value, onChange }: { value: PeriodKey; onChange: (k: Perio
         <div style={{
           position: 'absolute', top: 'calc(100% + 5px)', right: 0, zIndex: 20,
           background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
-          boxShadow: 'var(--shadow-lg)', padding: '4px', minWidth: '104px',
+          padding: '4px', minWidth: '104px',
           animation: 'fade-in 0.12s ease',
         }}>
           {PERIODS.map(p => (
@@ -88,7 +88,7 @@ function PeriodMenu({ value, onChange }: { value: PeriodKey; onChange: (k: Perio
                 padding: '5px 8px', borderRadius: 'var(--radius-sm)', border: 'none',
                 background: p.key === value ? 'rgba(255,255,255,0.06)' : 'transparent',
                 color: p.key === value ? 'var(--t1)' : 'var(--t2)',
-                fontSize: '11px', fontWeight: p.key === value ? 600 : 400, cursor: 'pointer',
+                fontSize: 'var(--text-sm)', fontWeight: p.key === value ? 600 : 400, cursor: 'pointer',
               }}
             >
               {p.label}
@@ -133,8 +133,8 @@ export function WinRateCard({ trades }: { trades: TradeLike[] }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         <WinRing wr={wr} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          <span className="num" style={{ fontSize: '15px', fontWeight: 600, color: 'var(--t1)' }}>{wins}W / {losses}L</span>
-          <span style={{ fontSize: '11px', color: 'var(--t3)' }}>
+          <span className="num" style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--t1)' }}>{wins}W / {losses}L</span>
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
             {count > 0 ? `${count} trades` : 'No trades in period'}
           </span>
         </div>

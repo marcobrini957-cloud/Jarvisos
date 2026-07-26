@@ -29,19 +29,19 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
         <div>
-          <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)', marginBottom: '2px' }}>{label}</p>
-          <p style={{ fontSize: '11px', color: 'var(--t3)' }}>
+          <p style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--t1)', marginBottom: '2px' }}>{label}</p>
+          <p className="vq-num" style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
             {trades.length} trade{trades.length !== 1 ? 's' : ''} · {wins}W {losses}L
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <span style={{ fontSize: '20px', fontWeight: 700, color: totalPnl >= 0 ? 'var(--color-up)' : 'var(--color-down)', letterSpacing: '-0.03em' }}>
+          <span className="vq-num" style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: totalPnl >= 0 ? 'var(--color-up)' : 'var(--color-down)', letterSpacing: '-0.03em' }}>
             {totalPnl >= 0 ? '+' : ''}€{totalPnl.toFixed(2)}
           </span>
           <button onClick={onClose} style={{
             background: 'var(--s3)', border: '1px solid var(--bd2)',
             borderRadius: 'var(--radius-md)', width: '26px', height: '26px',
-            color: 'var(--t3)', cursor: 'pointer', fontSize: '14px',
+            color: 'var(--t3)', cursor: 'pointer', fontSize: 'var(--text-md)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>✕</button>
         </div>
@@ -64,22 +64,22 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)' }}>{t.symbol}</span>
+                  <span style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--t1)' }}>{t.symbol}</span>
                   {t.trade_type && (
                     <span style={{
-                      fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em',
+                      fontSize: 'var(--text-xs)', fontWeight: 600, letterSpacing: '0.06em',
                       color: t.trade_type === 'buy' ? 'var(--color-up)' : 'var(--color-down)',
                       background: t.trade_type === 'buy' ? 'rgba(0,196,106,0.1)' : 'rgba(240,80,75,0.1)',
                       padding: '1px 6px', borderRadius: 'var(--radius-sm)',
                     }}>{t.trade_type.toUpperCase()}</span>
                   )}
                   {t.lot_size != null && (
-                    <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{t.lot_size} lot{t.lot_size !== 1 ? 's' : ''}</span>
+                    <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>{t.lot_size} lot{t.lot_size !== 1 ? 's' : ''}</span>
                   )}
                 </div>
-                <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{openTime} → {closeTime}</span>
+                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>{openTime} → {closeTime}</span>
               </div>
-              <span style={{ fontSize: '14px', fontWeight: 700, color: col, letterSpacing: '-0.02em', flexShrink: 0, marginLeft: '12px' }}>
+              <span className="vq-num" style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: col, letterSpacing: '-0.02em', flexShrink: 0, marginLeft: '12px' }}>
                 {pnl >= 0 ? '+' : ''}€{pnl.toFixed(2)}
               </span>
             </div>
@@ -160,14 +160,14 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '0 0 2px' }}>
         <button onClick={prevMonth} aria-label="Previous month" style={{
           background: 'transparent', border: 'none', color: 'var(--t1)', cursor: 'pointer',
-          fontSize: '17px', lineHeight: 1, padding: '4px 6px',
+          fontSize: 'var(--text-lg)', lineHeight: 1, padding: '4px 6px',
         }}>←</button>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '128px' }}>
-          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em' }}>
+          <span style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em' }}>
             {monthLabel}
           </span>
           {dailyPnl.size > 0 && (
-            <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '-0.01em', marginTop: '1px', color: monthTotal >= 0 ? 'var(--color-up)' : 'var(--color-down)' }}>
+            <span style={{ fontSize: 'var(--text-base)', fontWeight: 700, letterSpacing: '-0.01em', marginTop: '1px', color: monthTotal >= 0 ? 'var(--color-up)' : 'var(--color-down)' }}>
               {fmtSigned(monthTotal)}
             </span>
           )}
@@ -176,14 +176,14 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
           background: 'transparent', border: 'none',
           color: isCurrentMonth ? 'var(--bd3)' : 'var(--t1)',
           cursor: isCurrentMonth ? 'default' : 'pointer',
-          fontSize: '17px', lineHeight: 1, padding: '4px 6px',
+          fontSize: 'var(--text-lg)', lineHeight: 1, padding: '4px 6px',
         }}>→</button>
       </div>
 
       {/* Day headers — Sunday first */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
         {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-          <div key={d} style={{ textAlign: 'center', fontSize: '10px', color: 'var(--t3)', fontWeight: 500, paddingBottom: '3px' }}>{d}</div>
+          <div key={d} style={{ textAlign: 'center', fontSize: 'var(--text-xs)', color: 'var(--t3)', fontWeight: 500, paddingBottom: '3px' }}>{d}</div>
         ))}
       </div>
 
@@ -260,12 +260,12 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
                   background: weekPnl >= 0 ? 'rgba(0,196,106,0.045)' : 'rgba(240,80,75,0.05)',
                   border: `1px solid ${weekPnl >= 0 ? 'rgba(0,196,106,0.12)' : 'rgba(240,80,75,0.14)'}`,
                 }}>
-                  <span style={{ fontSize: '11px', fontWeight: 500, color: 'var(--t3)' }}>Week total</span>
+                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--t3)' }}>Week total</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '-0.02em', color: weekPnl >= 0 ? 'var(--color-up)' : 'var(--color-down)' }}>
+                    <span style={{ fontSize: 'var(--text-base)', fontWeight: 700, letterSpacing: '-0.02em', color: weekPnl >= 0 ? 'var(--color-up)' : 'var(--color-down)' }}>
                       {fmtSigned(weekPnl)}
                     </span>
-                    <span style={{ fontSize: '13px', color: 'var(--t3)', lineHeight: 1 }}>›</span>
+                    <span style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', lineHeight: 1 }}>›</span>
                   </div>
                 </div>
               )}

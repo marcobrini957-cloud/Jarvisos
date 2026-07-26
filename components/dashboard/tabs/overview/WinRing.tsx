@@ -19,7 +19,7 @@ export function WinRing({ wr }: { wr: number }) {
         position: 'absolute', inset: '7px', borderRadius: '50%', background: 'var(--s1)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <span className="num" style={{ color, fontSize: '13px', fontWeight: 600 }}>{pct.toFixed(0)}%</span>
+        <span className="num" style={{ color, fontSize: 'var(--text-base)', fontWeight: 600 }}>{pct.toFixed(0)}%</span>
       </div>
     </div>
   )

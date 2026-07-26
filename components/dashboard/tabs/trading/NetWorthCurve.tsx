@@ -288,7 +288,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
     <div style={{ position: 'relative', height: '12px', marginTop: '5px', flex: 'none' }}>
       {months.map((m, i) => (
         <span key={i} style={{ position: 'absolute', left: `${(m.x / W) * 100}%`, transform: 'translateX(-50%)',
-          fontSize: '9px', color: 'var(--color-ink-3)', fontFamily: 'var(--font-mono)' }}>
+          fontSize: 'var(--text-2xs)', color: 'var(--color-ink-3)', fontFamily: 'var(--font-mono)' }}>
           {m.label}
         </span>
       ))}

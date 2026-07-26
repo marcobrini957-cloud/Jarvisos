@@ -74,7 +74,7 @@ export function TickerSearch({
 
   return (
     <div className="flex flex-col gap-1.5" ref={wrapRef} style={{ position: 'relative' }}>
-      <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>
+      <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
         Stock / ETF / Crypto
       </label>
       <div style={{ position: 'relative' }}>
@@ -93,12 +93,12 @@ export function TickerSearch({
           <button onClick={clear}
             style={{
               position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
-              background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: '16px', lineHeight: 1,
+              background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: 'var(--text-lg)', lineHeight: 1,
             }}
             title="Clear selection">×</button>
         )}
         {loading && (
-          <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: '11px' }}>
+          <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>
             …
           </span>
         )}
@@ -108,7 +108,7 @@ export function TickerSearch({
         <div style={{
           position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 100,
           background: 'var(--s1)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
-          boxShadow: '0 12px 36px rgba(0,0,0,0.6)', overflow: 'hidden',
+          overflow: 'hidden',
         }}>
           {results.map(r => (
             <button key={r.ticker} onClick={() => pick(r)}
@@ -116,14 +116,14 @@ export function TickerSearch({
               style={{ background: 'none', border: 'none', cursor: 'pointer', borderBottom: '1px solid var(--bd)' }}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--s3)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-              <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '13px', minWidth: '60px' }}>{r.ticker}</span>
-              <span style={{ color: 'var(--t2)', fontSize: '12px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
+              <span style={{ color: 'var(--t1)', fontWeight: 700, fontSize: 'var(--text-base)', minWidth: '60px' }}>{r.ticker}</span>
+              <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</span>
               <div className="flex items-center gap-1.5 flex-shrink-0">
-                <span style={{ color: 'var(--t3)', fontSize: '10px' }}>{r.exchange}</span>
+                <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }}>{r.exchange}</span>
                 <span style={{
-                  background: `color-mix(in srgb, ${TYPE_COLOR[r.type] ?? 'var(--ac)'} 15%, transparent)`,
+                  background: `color-mix(in srgb, ${TYPE_COLOR[r.type] ?? 'var(--color-ink-1)'} 15%, transparent)`,
                   color: TYPE_COLOR[r.type] ?? 'var(--ac)',
-                  fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: 'var(--radius-sm)', letterSpacing: '0.06em',
+                  fontSize: 'var(--text-2xs)', fontWeight: 700, padding: '1px 5px', borderRadius: 'var(--radius-sm)', letterSpacing: '0.06em',
                 }}>{r.type.toUpperCase()}</span>
               </div>
             </button>

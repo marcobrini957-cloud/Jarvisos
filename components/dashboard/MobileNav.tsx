@@ -2,18 +2,19 @@
 
 import { useState } from 'react'
 import Icon, { type IconName } from '@/components/ui/Icon'
+import { Label } from '@/components/ui/vq'
 
 // Primary tabs shown in the bottom bar (5 max)
-const PRIMARY_TABS: { id: number; label: string; icon: IconName; isGold?: boolean }[] = [
+const PRIMARY_TABS: { id: number; label: string; icon: IconName }[] = [
   { id: 0,  label: 'Home',    icon: 'home'    },
   { id: 1,  label: 'Trading', icon: 'chart'   },
-  { id: 6,  label: 'Analyst', icon: 'spark', isGold: true },
+  { id: 6,  label: 'Analyst', icon: 'spark'   },
   { id: 3,  label: 'Journal', icon: 'journal' },
   { id: -1, label: 'More',    icon: 'more'    },
 ]
 
 // All tabs for the "More" drawer
-const ALL_TABS: { id: number; label: string; icon: IconName; isGold?: boolean }[] = [
+const ALL_TABS: { id: number; label: string; icon: IconName }[] = [
   { id: 0, label: 'Overview',   icon: 'home'        },
   { id: 1, label: 'Trading',    icon: 'chart'       },
   { id: 2, label: 'Portfolio',  icon: 'briefcase'   },
@@ -23,7 +24,7 @@ const ALL_TABS: { id: number; label: string; icon: IconName; isGold?: boolean }[
   { id: 7, label: 'Tasks',      icon: 'checkSquare' },
   { id: 8, label: 'Copy',       icon: 'swap'        },
   { id: 9, label: 'Partners',   icon: 'gift'        },
-  { id: 6, label: 'Analyst',    icon: 'spark', isGold: true },
+  { id: 6, label: 'Analyst',    icon: 'spark'       },
 ]
 
 interface Props {
@@ -57,8 +58,7 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
           onClick={() => setDrawerOpen(false)}
           style={{
             position: 'fixed', inset: 0, zIndex: 40,
-            background: 'rgba(0,0,0,0.6)',
-            backdropFilter: 'blur(4px)',
+            background: 'rgba(0,0,0,0.72)',
           }}
         />
       )}
@@ -70,35 +70,31 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
         bottom: drawerOpen ? '65px' : '-400px',
         zIndex: 50,
         transition: 'bottom 0.3s cubic-bezier(0.16,1,0.3,1)',
-        background: 'var(--s1)',
-        border: '1px solid var(--bd2)',
-        borderBottom: 'none',
-        borderRadius: '20px 20px 0 0',
-        padding: '12px 0 0',
-        boxShadow: '0 -8px 40px rgba(0,0,0,0.5)',
+        background: '#0A0A0A',
+        borderTop: '1px solid var(--color-line-2)',
+        borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+        padding: '10px 0 0',
       }}>
         {/* Drag handle */}
         <div style={{
-          width: '36px', height: '4px', borderRadius: 'var(--radius-xs)',
-          background: 'var(--bd2)', margin: '0 auto 12px',
+          width: '30px', height: '2px',
+          background: 'var(--color-line-3)', margin: '0 auto 10px',
         }} />
 
         {/* Drawer header */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 20px 12px',
-          borderBottom: '1px solid var(--bd)',
+          padding: '0 16px 10px',
+          borderBottom: '1px solid var(--color-line-1)',
         }}>
-          <span style={{ color: 'var(--t3)', fontSize: '11px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-            All sections
-          </span>
+          <Label>All sections</Label>
           <button
             onClick={() => { onSettingsToggle(); setDrawerOpen(false) }}
             style={{
-              background: showSettings ? 'var(--s3)' : 'transparent',
-              border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
-              padding: '5px 10px', color: showSettings ? 'var(--ac)' : 'var(--t2)',
-              fontSize: '12px', cursor: 'pointer',
+              background: showSettings ? 'var(--color-surface-2)' : 'transparent',
+              border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-sm)',
+              padding: '5px 9px', color: showSettings ? 'var(--color-ink-1)' : 'var(--color-ink-2)',
+              fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', cursor: 'pointer',
             }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
@@ -121,20 +117,20 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
                 style={{
                   display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'center',
-                  gap: '6px', padding: '14px 8px',
-                  borderRadius: 'var(--radius-lg)',
-                  background: isActive ? 'var(--s3)' : 'transparent',
-                  border: isActive ? '1px solid var(--bd2)' : '1px solid transparent',
+                  gap: '6px', padding: '13px 8px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: isActive ? 'var(--color-surface-2)' : 'transparent',
+                  border: '1px solid transparent',
+                  color: isActive ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
                   cursor: 'pointer',
                   transition: 'all 0.12s',
                 }}
               >
                 <Icon name={tab.icon} size={19} />
                 <span style={{
-                  fontSize: '11px', fontWeight: isActive ? 600 : 400,
-                  color: isActive
-                    ? (tab.isGold ? 'var(--go2)' : 'var(--t1)')
-                    : (tab.isGold ? 'var(--go)' : 'var(--t2)'),
+                  fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+                  letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: isActive ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
                 }}>
                   {tab.label}
                 </span>
@@ -150,12 +146,11 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
       {/* Bottom nav bar */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-        background: 'var(--s1)',
-        borderTop: '1px solid var(--bd2)',
+        background: 'var(--color-void)',
+        borderTop: '1px solid var(--color-line-1)',
         display: 'flex', alignItems: 'stretch',
         height: '65px',
         paddingBottom: 'env(safe-area-inset-bottom)',
-        boxShadow: '0 -1px 0 rgba(255,255,255,0.03)',
       }}>
         {PRIMARY_TABS.map(tab => {
           const isMore   = tab.id === -1
@@ -174,32 +169,24 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
                 gap: '4px', paddingBottom: '2px',
                 background: 'transparent', border: 'none',
                 cursor: 'pointer',
-                transition: 'opacity 0.12s',
-                opacity: isActive ? 1 : 0.6,
-              position: 'relative',
+                transition: 'color 0.12s',
+                color: isActive ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
+                position: 'relative',
               }}
             >
+              <Icon name={tab.icon} size={16} />
               <span style={{
-                fontSize: '20px', lineHeight: 1,
-                filter: isActive && tab.isGold ? 'drop-shadow(0 0 6px rgba(255,255,255,0.6))' : 'none',
-              }}>
-                <Icon name={tab.icon} size={16} />
-              </span>
-              <span style={{
-                fontSize: '10px', fontWeight: isActive ? 600 : 400,
-                color: isActive
-                  ? (tab.isGold ? 'var(--go2)' : 'var(--ac)')
-                  : 'var(--t3)',
-                letterSpacing: '0.01em',
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: 'inherit',
               }}>
                 {tab.label}
               </span>
-              {/* Active indicator bar at top */}
+              {/* Active indicator — one hairline at the top edge */}
               {isActive && (
                 <div style={{
-                  position: 'absolute', top: 0, left: '20%', right: '20%',
-                  height: '2px', borderRadius: '0 0 2px 2px',
-                  background: tab.isGold ? 'var(--go2)' : 'var(--ac)',
+                  position: 'absolute', top: 0, left: '22%', right: '22%',
+                  height: '1px', background: 'var(--color-ink-1)',
                 }} />
               )}
             </button>

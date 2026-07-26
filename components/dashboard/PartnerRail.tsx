@@ -23,7 +23,7 @@ export default function PartnerRail({ className }: { className?: string }) {
       }}
     >
       <div style={{
-        fontSize: '10px', fontWeight: 700, letterSpacing: '0.08em',
+        fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.08em',
         textTransform: 'uppercase', color: 'var(--t3)',
       }}>
         Partner offers
@@ -43,10 +43,10 @@ export default function PartnerRail({ className }: { className?: string }) {
           textDecoration: 'none',
         }}
       >
-        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--t1)', marginBottom: '3px' }}>
+        <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--t1)', marginBottom: '3px' }}>
           Want it ad-free?
         </div>
-        <div style={{ fontSize: '11px', color: 'var(--t3)', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', lineHeight: 1.5 }}>
           Pro & Ultra hide all ads — plus AI coaching and copy trading.
         </div>
       </a>

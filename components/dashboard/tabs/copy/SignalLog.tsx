@@ -28,19 +28,19 @@ export function SignalLog({ groupId }: { groupId: string }) {
   }, [groupId])
 
   if (loading) return (
-    <div style={{ padding: '16px', textAlign: 'center', color: 'var(--t3)', fontSize: '12px' }}>
+    <div style={{ padding: '16px', textAlign: 'center', color: 'var(--t3)', fontSize: 'var(--text-base)' }}>
       Loading log…
     </div>
   )
 
   if (error) return (
-    <div style={{ padding: '16px', textAlign: 'center', color: '#F0504B', fontSize: '12px' }}>
+    <div style={{ padding: '16px', textAlign: 'center', color: '#F0504B', fontSize: 'var(--text-base)' }}>
       {error}
     </div>
   )
 
   if (entries.length === 0) return (
-    <div style={{ padding: '12px 0', textAlign: 'center', color: 'var(--t3)', fontSize: '12px' }}>
+    <div style={{ padding: '12px 0', textAlign: 'center', color: 'var(--t3)', fontSize: 'var(--text-base)' }}>
       No activity yet — signals appear here once the leader starts trading.
     </div>
   )
@@ -62,12 +62,12 @@ export function SignalLog({ groupId }: { groupId: string }) {
             borderRadius: 'var(--radius-md)',
             background: 'var(--s2)',
             gap: '10px',
-            fontSize: '11px',
+            fontSize: 'var(--text-sm)',
           }}>
             <div style={{
               padding: '2px 6px', borderRadius: 'var(--radius-sm)', textAlign: 'center',
               background: sig.signal_type === 'OPEN' ? 'rgba(0,196,106,0.1)' : 'rgba(240,80,75,0.1)',
-              color: sigColor, fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em',
+              color: sigColor, fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em',
             }}>
               {sig.signal_type}
             </div>
@@ -75,10 +75,10 @@ export function SignalLog({ groupId }: { groupId: string }) {
             <div>
               <span style={{ color: 'var(--t1)', fontWeight: 600 }}>{sig.symbol}</span>
               {' '}
-              <span style={{ color: sig.trade_type === 'BUY' ? '#00C46A' : '#F0504B', fontSize: '10px' }}>
+              <span style={{ color: sig.trade_type === 'BUY' ? '#00C46A' : '#F0504B', fontSize: 'var(--text-xs)' }}>
                 {sig.trade_type}
               </span>
-              <div style={{ color: 'var(--t3)', fontSize: '10px', marginTop: '1px' }}>
+              <div style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', marginTop: '1px' }}>
                 → {acc.nickname || `#${acc.mt5_login}`}
               </div>
             </div>
@@ -89,7 +89,7 @@ export function SignalLog({ groupId }: { groupId: string }) {
                 background: statusColor, flexShrink: 0,
                 boxShadow: e.status === 'success' ? '0 0 4px #00C46A' : undefined,
               }} />
-              <span style={{ color: statusColor, textTransform: 'capitalize', fontSize: '10px' }}>
+              <span style={{ color: statusColor, textTransform: 'capitalize', fontSize: 'var(--text-xs)' }}>
                 {e.status}
               </span>
             </div>

@@ -9,6 +9,7 @@ import { LogoMark } from '@/components/ui/LogoMark'
 import { useDisplayMode } from '@/context/DisplayModeContext'
 import { useUserProfile } from '@/context/UserProfileContext'
 import { createClient } from '@/lib/supabase/client'
+import { Label, Num, Segmented } from '@/components/ui/vq'
 
 interface MT5Status {
   connected:     boolean
@@ -19,15 +20,6 @@ interface MT5Status {
   error:         string | null
 }
 
-const AVATAR_COLORS = [
-  { label: 'Blue',   value: 'var(--ac)'  },
-  { label: 'Green',  value: 'var(--gr2)' },
-  { label: 'Gold',   value: 'var(--go2)' },
-  { label: 'Purple', value: 'var(--pu)'  },
-  { label: 'Red',    value: 'var(--re)'  },
-  { label: 'Cyan',   value: 'var(--cy2)' },
-]
-
 const TIMEZONES = [
   'Europe/Vienna',
   'Europe/London',
@@ -35,7 +27,7 @@ const TIMEZONES = [
   'Asia/Tokyo',
 ]
 
-const CURRENCIES = ['EUR', 'USD', 'GBP']
+const CURRENCIES = ['EUR', 'USD', 'GBP'] as const
 
 export default function Topbar() {
   const router = useRouter()
@@ -56,7 +48,6 @@ export default function Topbar() {
   const [editName,     setEditName]     = useState(profile.display_name)
   const [editTz,       setEditTz]       = useState(profile.timezone)
   const [editCurrency, setEditCurrency] = useState(profile.currency)
-  const [editColor,    setEditColor]    = useState(profile.avatar_color)
   const [avatarUrl,    setAvatarUrl]    = useState<string | null>(profile.avatar_url ?? null)
   const [uploading,    setUploading]    = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -67,7 +58,6 @@ export default function Topbar() {
     setEditName(profile.display_name)
     setEditTz(profile.timezone)
     setEditCurrency(profile.currency)
-    setEditColor(profile.avatar_color)
     setAvatarUrl(profile.avatar_url ?? null)
   }, [profile])
 
@@ -123,7 +113,7 @@ export default function Topbar() {
   }
 
   async function handleSaveProfile() {
-    await updateProfile({ display_name: editName, avatar_color: editColor, timezone: editTz, currency: editCurrency })
+    await updateProfile({ display_name: editName, timezone: editTz, currency: editCurrency })
     setShowDropdown(false)
   }
 
@@ -186,14 +176,22 @@ export default function Topbar() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    background: 'var(--s2)',
-    border: '1px solid var(--bd2)',
-    borderRadius: 'var(--radius-md)',
-    padding: '8px 10px',
-    color: 'var(--t1)',
-    fontSize: '13px',
+    background: 'var(--color-surface-2)',
+    border: '1px solid var(--color-line-1)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '6px 9px',
+    color: 'var(--color-ink-1)',
+    fontFamily: 'var(--font-display)',
+    fontSize: 'var(--text-base)',
     outline: 'none',
     boxSizing: 'border-box',
+  }
+
+  const ghostButton: React.CSSProperties = {
+    padding: '6px 10px', borderRadius: 'var(--radius-sm)',
+    fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+    background: 'var(--color-surface-2)', border: '1px solid var(--color-line-1)',
+    color: 'var(--color-ink-1)', cursor: 'pointer', transition: 'background 0.12s',
   }
 
   return (
@@ -201,17 +199,19 @@ export default function Topbar() {
       <div
         className="topbar-root flex items-center justify-between flex-shrink-0"
         style={{
-          height: '48px',
-          padding: '0 20px',
-          background: 'linear-gradient(180deg, var(--s2) 0%, var(--s1) 100%)',
-          borderBottom: '1px solid var(--bd2)',
-          boxShadow: '0 1px 0 rgba(255,255,255,0.03), 0 4px 24px rgba(0,0,0,0.55)',
+          height: '40px',
+          padding: '0 12px',
+          background: 'var(--color-void)',
+          borderBottom: '1px solid var(--color-line-1)',
         }}
       >
-        {/* Logo */}
-        <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-          <LogoMark size={26} />
-          <span className="topbar-brand-text" style={{ color: 'var(--t1)', fontWeight: 700, fontSize: '13px', letterSpacing: '-0.01em' }}>
+        {/* Wordmark — Coolvetica Heavy Compressed, the one place it appears */}
+        <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none' }}>
+          <LogoMark size={20} />
+          <span className="topbar-brand-text" style={{
+            fontFamily: 'var(--font-mark)', fontSize: 'var(--text-lg)', lineHeight: 1,
+            letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--color-ink-1)',
+          }}>
             Velquor
           </span>
         </Link>
@@ -228,19 +228,20 @@ export default function Topbar() {
         <button
           onClick={toggleDisplayMode}
           title={displayMode === 'pct' ? 'Switch to EUR values' : 'Switch to % values'}
+          className="vq-num"
           style={{
-            width: '32px', height: '28px',
-            background: 'var(--s2)',
-            border: '1px solid var(--bd2)',
-            borderRadius: 'var(--radius-md)',
-            color: 'var(--t2)',
-            fontSize: '12px', fontWeight: 600,
+            width: '26px', height: '24px',
+            background: 'transparent',
+            border: '1px solid var(--color-line-1)',
+            borderRadius: 'var(--radius-sm)',
+            color: 'var(--color-ink-3)',
+            fontSize: 'var(--text-sm)',
             cursor: 'pointer',
             transition: 'all 0.12s',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--s3)'; e.currentTarget.style.color = 'var(--t1)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'var(--s2)'; e.currentTarget.style.color = 'var(--t2)' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-state-hover)'; e.currentTarget.style.color = 'var(--color-ink-1)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-ink-3)' }}
         >
           {displayMode === 'pct' ? '€' : '%'}
         </button>
@@ -252,67 +253,65 @@ export default function Topbar() {
             style={{ cursor: 'pointer' }}
             onClick={() => setShowDropdown(v => !v)}
           >
-            {/* Avatar circle */}
+            {/* Avatar — a tile, not a coloured disc. The old accent-colour
+                picker is gone: the palette has no accent to pick. */}
             <div style={{
-              width: '28px', height: '28px',
-              background: avatarUrl ? 'transparent' : profile.avatar_color,
-              borderRadius: 'var(--radius-md)',
+              width: '24px', height: '24px',
+              background: avatarUrl ? 'transparent' : 'var(--color-surface-2)',
+              borderRadius: 'var(--radius-xs)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '12px', color: 'white', fontWeight: 700,
               flexShrink: 0, cursor: 'pointer', overflow: 'hidden',
-              border: showDropdown ? '2px solid rgba(255,255,255,0.2)' : '2px solid transparent',
+              border: `1px solid ${showDropdown ? 'var(--color-line-3)' : 'var(--color-line-1)'}`,
               transition: 'border-color 0.12s',
             }}>
               {avatarUrl
                 ? <img src={avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : avatarLetter
+                : <Num size="xs" tone="neutral">{avatarLetter}</Num>
               }
             </div>
-            <div className="hidden sm:flex flex-col" style={{ lineHeight: 1.2 }}>
-              <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 500 }}>{profile.display_name}</span>
-              <span style={{ color: '#686868', fontSize: '10px' }}>{profile.timezone.split('/')[1]?.replace('_', ' ')} · {profile.currency}</span>
+            <div className="hidden sm:flex flex-col" style={{ lineHeight: 1.25 }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', color: 'var(--color-ink-1)' }}>
+                {profile.display_name}
+              </span>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-ink-3)' }}>
+                {profile.timezone.split('/')[1]?.replace('_', ' ')} · {profile.currency}
+              </span>
             </div>
           </div>
 
           {/* Dropdown */}
           {showDropdown && (
             <div style={{
-              position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-              width: '280px', zIndex: 50,
-              background: 'var(--s2)',
-              border: '1px solid var(--bd2)',
-              borderRadius: 'var(--radius-lg)',
-              boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
-              padding: '16px',
+              position: 'absolute', top: 'calc(100% + 7px)', right: 0,
+              width: '272px', zIndex: 50,
+              background: '#0F0F0F',
+              border: '1px solid var(--color-line-2)',
+              borderRadius: 'var(--radius-md)',
+              padding: '14px',
               display: 'flex', flexDirection: 'column', gap: '12px',
             }}>
               {/* Display name */}
               <div>
-                <label style={{ display: 'block', color: 'var(--t3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                  Display Name
-                </label>
+                <Label style={{ display: 'block', marginBottom: '5px' }}>Display name</Label>
                 <input
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
                   style={inputStyle}
-                  onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-                  onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
+                  onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
+                  onBlur={e => (e.target.style.borderColor = 'var(--color-line-1)')}
                 />
               </div>
 
               {/* Profile photo */}
               <div>
-                <label style={{ display: 'block', color: 'var(--t3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '10px' }}>
-                  Profile Photo
-                </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  {/* Photo preview */}
+                <Label style={{ display: 'block', marginBottom: '8px' }}>Profile photo</Label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div
                     onClick={() => !uploading && fileInputRef.current?.click()}
                     style={{
-                      width: '52px', height: '52px', borderRadius: 'var(--radius-lg)', flexShrink: 0,
-                      background: avatarUrl ? 'transparent' : editColor,
-                      border: '1.5px solid var(--bd2)',
+                      width: '44px', height: '44px', borderRadius: 'var(--radius-sm)', flexShrink: 0,
+                      background: avatarUrl ? 'transparent' : 'var(--color-surface-2)',
+                      border: '1px solid var(--color-line-1)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       overflow: 'hidden', cursor: uploading ? 'default' : 'pointer',
                       position: 'relative', transition: 'opacity 0.15s',
@@ -321,33 +320,15 @@ export default function Topbar() {
                   >
                     {avatarUrl
                       ? <img src={avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <span style={{ fontSize: '20px', color: 'white', fontWeight: 700 }}>{avatarLetter}</span>
+                      : <Num size="lg" tone="neutral">{avatarLetter}</Num>
                     }
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      background: 'rgba(0,0,0,0.45)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      opacity: 0, transition: 'opacity 0.15s',
-                      fontSize: '18px',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-                    onMouseLeave={e => (e.currentTarget.style.opacity = '0')}
-                    >
-                      {uploading ? '…' : '📷'}
-                    </div>
                   </div>
 
-                  {/* Upload / remove buttons */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
-                      style={{
-                        padding: '7px 12px', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: 500,
-                        background: 'var(--s3)', border: '1px solid var(--bd2)',
-                        color: 'var(--t1)', cursor: uploading ? 'default' : 'pointer',
-                        opacity: uploading ? 0.6 : 1, transition: 'all 0.12s',
-                      }}
+                      style={{ ...ghostButton, opacity: uploading ? 0.6 : 1 }}
                     >
                       {uploading ? 'Uploading…' : 'Upload photo'}
                     </button>
@@ -356,49 +337,24 @@ export default function Topbar() {
                         onClick={handleRemovePhoto}
                         disabled={uploading}
                         style={{
-                          padding: '7px 12px', borderRadius: 'var(--radius-md)', fontSize: '12px',
-                          background: 'transparent', border: '1px solid rgba(240,80,75,0.2)',
-                          color: 'var(--re)', cursor: 'pointer', transition: 'all 0.12s',
+                          ...ghostButton,
+                          background: 'transparent',
+                          borderColor: 'var(--color-down-dim)',
+                          color: 'var(--color-down)',
                         }}
                       >
                         Remove
                       </button>
                     )}
-                    <p style={{ color: 'var(--t3)', fontSize: '10px', margin: 0 }}>Max 2 MB · JPG or PNG</p>
+                    <Label>Max 2 MB · JPG or PNG</Label>
                   </div>
                 </div>
                 <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handlePhotoUpload} />
               </div>
 
-              {/* Fallback letter color (when no photo) */}
-              {!avatarUrl && (
-                <div>
-                  <label style={{ display: 'block', color: 'var(--t3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px' }}>
-                    Accent Color
-                  </label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {AVATAR_COLORS.map(c => (
-                      <button
-                        key={c.value}
-                        title={c.label}
-                        onClick={() => setEditColor(c.value)}
-                        style={{
-                          width: '24px', height: '24px', borderRadius: 'var(--radius-md)',
-                          background: c.value, border: 'none', cursor: 'pointer', flexShrink: 0,
-                          outline: editColor === c.value ? '2px solid var(--t1)' : '2px solid transparent',
-                          outlineOffset: '2px', transition: 'outline 0.1s',
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Timezone */}
               <div>
-                <label style={{ display: 'block', color: 'var(--t3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                  Timezone
-                </label>
+                <Label style={{ display: 'block', marginBottom: '5px' }}>Timezone</Label>
                 <select
                   value={editTz}
                   onChange={e => setEditTz(e.target.value)}
@@ -412,36 +368,22 @@ export default function Topbar() {
 
               {/* Currency */}
               <div>
-                <label style={{ display: 'block', color: 'var(--t3)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                  Currency
-                </label>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {CURRENCIES.map(c => (
-                    <button
-                      key={c}
-                      onClick={() => setEditCurrency(c)}
-                      style={{
-                        flex: 1, padding: '6px 0',
-                        borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
-                        background: editCurrency === c ? 'var(--ac)' : 'var(--s3)',
-                        border: editCurrency === c ? '1px solid var(--ac)' : '1px solid var(--bd2)',
-                        color: editCurrency === c ? 'white' : 'var(--t2)',
-                        transition: 'all 0.1s',
-                      }}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
+                <Label style={{ display: 'block', marginBottom: '5px' }}>Currency</Label>
+                <Segmented
+                  options={CURRENCIES.map(c => ({ key: c, label: c }))}
+                  value={editCurrency as typeof CURRENCIES[number]}
+                  onChange={setEditCurrency}
+                />
               </div>
 
               {/* Save */}
               <button
                 onClick={handleSaveProfile}
                 style={{
-                  width: '100%', padding: '9px',
-                  background: 'var(--ac)', border: 'none', borderRadius: 'var(--radius-md)',
-                  color: 'white', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                  width: '100%', padding: '8px',
+                  background: 'var(--color-ink-1)', border: 'none', borderRadius: 'var(--radius-sm)',
+                  color: 'var(--color-void)', fontFamily: 'var(--font-display)',
+                  fontSize: 'var(--text-base)', cursor: 'pointer',
                   transition: 'opacity 0.12s',
                 }}
                 onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
@@ -450,17 +392,15 @@ export default function Topbar() {
                 Save
               </button>
 
-              {/* Divider + sign out */}
-              <div style={{ height: '1px', background: 'var(--bd)' }} />
+              <div style={{ height: '1px', background: 'var(--color-line-1)' }} />
               <button
                 onClick={handleLogout}
                 style={{
-                  width: '100%', padding: '8px',
-                  background: 'transparent', border: '1px solid rgba(240,80,75,0.2)',
-                  borderRadius: 'var(--radius-md)', color: 'var(--re)', fontSize: '13px', fontWeight: 500,
-                  cursor: 'pointer', transition: 'all 0.12s',
+                  ...ghostButton,
+                  width: '100%', background: 'transparent',
+                  borderColor: 'var(--color-down-dim)', color: 'var(--color-down)',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(240,80,75,0.08)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-down-dim)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
               >
                 Sign out

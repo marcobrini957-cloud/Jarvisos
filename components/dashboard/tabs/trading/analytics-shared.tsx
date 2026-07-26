@@ -32,23 +32,23 @@ export function StatRow({ label, trades: rowTrades, avgPnl, highlight }: {
       borderBottom: '1px solid var(--bd)',
       background: highlight ? 'rgba(255,255,255,0.04)' : 'transparent',
     }}>
-      <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: highlight ? 500 : 400 }}>{label}</span>
+      <span style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: highlight ? 500 : 400 }}>{label}</span>
       {/* W / BE / L counts */}
       <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-        <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: 'var(--radius-xs)', background: 'rgba(0,196,106,0.15)', color: 'var(--gr2)' }}>{wins}W</span>
+        <span style={{ fontSize: 'var(--text-xs)', padding: '1px 5px', borderRadius: 'var(--radius-xs)', background: 'rgba(0,196,106,0.15)', color: 'var(--gr2)' }}>{wins}W</span>
         {breakeven > 0 && (
-          <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: 'var(--radius-xs)', background: 'rgba(255,255,255,0.12)', color: 'var(--ac)' }}>{breakeven}BE</span>
+          <span style={{ fontSize: 'var(--text-xs)', padding: '1px 5px', borderRadius: 'var(--radius-xs)', background: 'rgba(255,255,255,0.12)', color: 'var(--color-ink-1)' }}>{breakeven}BE</span>
         )}
-        <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: 'var(--radius-xs)', background: 'rgba(240,80,75,0.15)', color: 'var(--re)' }}>{losses}L</span>
+        <span style={{ fontSize: 'var(--text-xs)', padding: '1px 5px', borderRadius: 'var(--radius-xs)', background: 'rgba(240,80,75,0.15)', color: 'var(--re)' }}>{losses}L</span>
       </div>
       {/* Win rate bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
         <div style={{ flex: 1, height: '4px', background: 'var(--s3)', borderRadius: 'var(--radius-xs)' }}>
           <div style={{ width: `${wr}%`, height: '100%', background: winRateColor(wr), borderRadius: 'var(--radius-xs)' }} />
         </div>
-        <span style={{ color: winRateColor(wr), fontSize: '11px', fontWeight: 600, minWidth: '30px' }}>{wr.toFixed(0)}%</span>
+        <span className="vq-num" style={{ color: winRateColor(wr), fontSize: 'var(--text-sm)', fontWeight: 600, minWidth: '30px' }}>{wr.toFixed(0)}%</span>
       </div>
-      <span style={{ color: avgPnl >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: '11px', textAlign: 'right' }}>
+      <span className="vq-num" style={{ color: avgPnl >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: 'var(--text-sm)', textAlign: 'right' }}>
         avg {avgPnl >= 0 ? '+' : ''}€{avgPnl.toFixed(2)}
       </span>
     </div>
@@ -63,7 +63,7 @@ export function TableHeader() {
       borderBottom: '1px solid var(--bd2)',
     }}>
       {['', 'W / BE / L', 'Win rate', 'Avg P&L'].map((h, i) => (
-        <span key={i} style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em', textAlign: i > 0 ? 'right' : 'left' }}>
+        <span key={i} style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.05em', textAlign: i > 0 ? 'right' : 'left' }}>
           {h}
         </span>
       ))}

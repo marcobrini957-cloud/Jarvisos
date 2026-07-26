@@ -13,7 +13,7 @@ export function HowItWorks() {
       background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
       padding: '20px', marginTop: '24px',
     }}>
-      <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.06em', marginBottom: '16px' }}>
+      <div style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.06em', marginBottom: '16px' }}>
         HOW IT WORKS
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -23,13 +23,13 @@ export function HowItWorks() {
               width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
               background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '11px', fontWeight: 700, color: 'var(--ac)',
+              fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--ac)',
             }}>
               {s.n}
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)', marginBottom: '3px' }}>{s.title}</div>
-              <div style={{ fontSize: '12px', color: 'var(--t3)', lineHeight: 1.5 }}>{s.desc}</div>
+              <div style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--t1)', marginBottom: '3px' }}>{s.title}</div>
+              <div style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', lineHeight: 1.5 }}>{s.desc}</div>
             </div>
           </div>
         ))}

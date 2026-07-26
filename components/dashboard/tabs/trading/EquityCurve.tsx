@@ -162,8 +162,8 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
               onClick={() => { setPeriod(p); setHover(null) }}
               style={{
                 padding: '3px 10px', borderRadius: 'var(--radius-md)', border: 'none',
-                cursor: 'pointer', fontSize: '11px', fontWeight: 600,
-                background: period === p ? 'var(--ac)' : 'var(--s3)',
+                cursor: 'pointer', fontSize: 'var(--text-sm)', fontWeight: 600,
+                background: period === p ? 'var(--color-surface-3)' : 'var(--s3)',
                 color:      period === p ? 'white'     : 'var(--t3)',
                 transition: 'all 0.12s',
               }}
@@ -187,13 +187,13 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
         marginBottom: '10px', minHeight: '44px', flex: 'none' }}>
         <div>
-          <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em',
+          <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.05em',
             textTransform: 'uppercase', marginBottom: '4px' }}>
             {activeDateStr}
           </p>
-          <p style={{
+          <p className="vq-num" style={{
             color: activeVal >= 0 ? 'var(--gr2)' : 'var(--re)',
-            fontSize: '28px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1,
+            fontSize: 'var(--text-3xl)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1,
             transition: 'color 0.1s',
           }}>
             {activeVal >= 0 ? '+' : '-'}€{Math.abs(activeVal).toFixed(2)}
@@ -203,23 +203,23 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
         {n > 0 && (
           <div style={{ display: 'flex', gap: '20px', paddingBottom: '2px' }}>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em',
+              <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.05em',
                 textTransform: 'uppercase', marginBottom: '3px' }}>Peak</p>
-              <p style={{ color: 'var(--am2)', fontSize: '14px', fontWeight: 600 }}>
+              <p className="vq-num" style={{ color: 'var(--am2)', fontSize: 'var(--text-md)', fontWeight: 600 }}>
                 +€{Math.max(0, ...equity).toFixed(2)}
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em',
+              <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.05em',
                 textTransform: 'uppercase', marginBottom: '3px' }}>Max DD</p>
-              <p style={{ color: maxDD > 0.01 ? 'var(--re)' : 'var(--t3)', fontSize: '14px', fontWeight: 600 }}>
+              <p className="vq-num" style={{ color: maxDD > 0.01 ? 'var(--re)' : 'var(--t3)', fontSize: 'var(--text-md)', fontWeight: 600 }}>
                 {maxDD > 0.01 ? `-€${maxDD.toFixed(2)}` : '€0.00'}
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.05em',
+              <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.05em',
                 textTransform: 'uppercase', marginBottom: '3px' }}>Trades</p>
-              <p style={{ color: 'var(--t2)', fontSize: '14px', fontWeight: 600 }}>{filtered.length}</p>
+              <p className="vq-num" style={{ color: 'var(--t2)', fontSize: 'var(--text-md)', fontWeight: 600 }}>{filtered.length}</p>
             </div>
           </div>
         )}
@@ -232,7 +232,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'var(--s2)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--bd2)',
         }}>
-          <p style={{ color: 'var(--t3)', fontSize: '13px' }}>No closed trades {periodLabel}</p>
+          <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>No closed trades {periodLabel}</p>
         </div>
       )}
 
@@ -360,7 +360,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
           {[0, Math.floor((n - 1) / 2), n - 1].map(i => {
             const d = sampled[i]?.date ? new Date(sampled[i].date) : null
             return (
-              <span key={i} style={{ fontSize: '9px', color: 'var(--t3)', fontFamily: 'monospace' }}>
+              <span key={i} style={{ fontSize: 'var(--text-2xs)', color: 'var(--t3)', fontFamily: 'monospace' }}>
                 {d ? `${d.getUTCDate()} ${MON[d.getUTCMonth()]}` : ''}
               </span>
             )

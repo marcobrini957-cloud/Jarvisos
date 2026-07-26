@@ -52,10 +52,10 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
         padding: '7px 14px', background: 'rgba(255,255,255,0.03)',
         borderTop: '1px solid var(--bd2)', borderBottom: '1px solid var(--bd)',
       }}>
-        <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--am2)', textTransform: 'uppercase' }}>
+        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--am2)', textTransform: 'uppercase' }}>
           {label}
         </span>
-        <span style={{ fontSize: '10px', color: 'var(--t3)', ...MONO }}>{events.length} RELEASES</span>
+        <span className="vq-num" style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', ...MONO }}>{events.length} RELEASES</span>
       </div>
 
       {events.map((e, i) => {
@@ -75,13 +75,13 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
               gridTemplateColumns: '68px 20px 44px 1fr 96px 96px 96px',
               gap: '10px', alignItems: 'center',
             }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--t1)', ...MONO }}>{eventTime(e)}</span>
+              <span style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--t1)', ...MONO }}>{eventTime(e)}</span>
               <span title="High impact" style={{
                 width: '9px', height: '9px', borderRadius: 'var(--radius-xs)', background: 'var(--re)',
                 boxShadow: past ? 'none' : '0 0 6px rgba(240,80,75,0.6)',
               }} />
-              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.06em', ...MONO }}>{e.currency}</span>
-              <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.06em', ...MONO }}>{e.currency}</span>
+              <span style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {e.title}
               </span>
               {[
@@ -89,7 +89,7 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
                 { label: 'FCT', value: e.forecast, color: 'var(--t2)' },
                 { label: 'PRV', value: e.previous, color: 'var(--t3)' },
               ].map(cell => (
-                <span key={cell.label} style={{ fontSize: '12px', textAlign: 'right', ...MONO, color: cell.value ? cell.color : 'var(--t3)' }}>
+                <span key={cell.label} style={{ fontSize: 'var(--text-base)', textAlign: 'right', ...MONO, color: cell.value ? cell.color : 'var(--t3)' }}>
                   <span style={{ fontSize: '8.5px', color: 'var(--t3)', marginRight: '6px', letterSpacing: '0.08em' }}>{cell.label}</span>
                   {cell.value || '—'}
                 </span>
@@ -98,7 +98,7 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
             {/* One-glance explainer: what it is + what a hot/miss print does */}
             <p style={{
               margin: '4px 0 0', paddingLeft: '78px',
-              fontSize: '11px', color: 'var(--t3)', lineHeight: 1.5,
+              fontSize: 'var(--text-sm)', color: 'var(--t3)', lineHeight: 1.5,
             }}>
               {brief.what} <span style={{ color: 'var(--t2)' }}>{brief.effect}</span>
             </p>
@@ -165,13 +165,12 @@ export default function MacroTab() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{
             width: '10px', height: '10px', borderRadius: 'var(--radius-xs)', background: 'var(--re)',
-            boxShadow: '0 0 8px rgba(240,80,75,0.7)',
-          }} />
+            }} />
           <div>
-            <h2 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--t1)', letterSpacing: '0.02em', margin: 0 }}>
+            <h2 style={{ fontSize: 'var(--text-md)', fontWeight: 800, color: 'var(--t1)', letterSpacing: '0.02em', margin: 0 }}>
               MARKET NEWS
             </h2>
-            <p style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.1em', margin: '2px 0 0' }}>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', letterSpacing: '0.1em', margin: '2px 0 0' }}>
               USD · RED FOLDERS ONLY · FOREXFACTORY FEED
             </p>
           </div>
@@ -184,9 +183,9 @@ export default function MacroTab() {
             { label: 'NEW YORK', tz: 'America/New_York' },
           ].map(c => (
             <div key={c.label} style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '9px', color: 'var(--t3)', letterSpacing: '0.12em', margin: 0 }}>{c.label}</p>
+              <p style={{ fontSize: 'var(--text-2xs)', color: 'var(--t3)', letterSpacing: '0.12em', margin: 0 }}>{c.label}</p>
               {/* second-precision — server/client can never agree (React #418) */}
-              <p suppressHydrationWarning style={{ fontSize: '14px', fontWeight: 700, color: 'var(--t1)', margin: '1px 0 0' }}>{clock(c.tz)}</p>
+              <p suppressHydrationWarning style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--t1)', margin: '1px 0 0' }}>{clock(c.tz)}</p>
             </div>
           ))}
         </div>
@@ -202,31 +201,31 @@ export default function MacroTab() {
         {nextEvent ? (
           <>
             <div>
-              <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--re)', letterSpacing: '0.14em', margin: 0 }}>
+              <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--re)', letterSpacing: '0.14em', margin: 0 }}>
                 NEXT RELEASE
               </p>
-              <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.01em', margin: '4px 0 2px' }}>
+              <h3 style={{ fontSize: 'var(--text-xl)', fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.01em', margin: '4px 0 2px' }}>
                 {nextEvent.title}
               </h3>
-              <p style={{ fontSize: '12px', color: 'var(--t2)', margin: 0, ...MONO }}>
+              <p style={{ fontSize: 'var(--text-base)', color: 'var(--t2)', margin: 0, ...MONO }}>
                 {nextEvent.currency} · {eventDate(nextEvent).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })} {eventTime(nextEvent)}
                 {nextEvent.forecast && ` · FCT ${nextEvent.forecast}`}
                 {nextEvent.previous && ` · PRV ${nextEvent.previous}`}
               </p>
-              <p style={{ fontSize: '12px', color: 'var(--t3)', margin: '6px 0 0', lineHeight: 1.55, maxWidth: '560px' }}>
+              <p style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', margin: '6px 0 0', lineHeight: 1.55, maxWidth: '560px' }}>
                 {briefFor(nextEvent.title).what}{' '}
                 <span style={{ color: 'var(--t2)' }}>{briefFor(nextEvent.title).effect}</span>
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '28px', fontWeight: 800, color: 'var(--re)', letterSpacing: '0.01em', margin: 0, ...MONO }}>
+              <p style={{ fontSize: 'var(--text-3xl)', fontWeight: 800, color: 'var(--re)', letterSpacing: '0.01em', margin: 0, ...MONO }}>
                 {fmtCountdown(eventDate(nextEvent).getTime() - now)}
               </p>
-              <p style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.1em', margin: '2px 0 0' }}>UNTIL RELEASE</p>
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', letterSpacing: '0.1em', margin: '2px 0 0' }}>UNTIL RELEASE</p>
             </div>
           </>
         ) : (
-          <p style={{ fontSize: '13px', color: 'var(--t2)', margin: 0 }}>
+          <p style={{ fontSize: 'var(--text-base)', color: 'var(--t2)', margin: 0 }}>
             {loading ? 'Loading calendar…' : 'No further high-impact releases this week. Markets are clear.'}
           </p>
         )}
@@ -241,18 +240,18 @@ export default function MacroTab() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '11px 14px',
         }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.1em' }}>
+          <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.1em' }}>
             THIS WEEK — RED FOLDERS
           </span>
-          <span style={{ fontSize: '10px', color: 'var(--t3)', ...MONO }}>
+          <span className="vq-num" style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', ...MONO }}>
             {calendar.length} EVENTS
           </span>
         </div>
 
         {loading ? (
-          <p style={{ padding: '24px 14px', fontSize: '12px', color: 'var(--t3)' }}>Loading ForexFactory feed…</p>
+          <p style={{ padding: '24px 14px', fontSize: 'var(--text-base)', color: 'var(--t3)' }}>Loading ForexFactory feed…</p>
         ) : calendar.length === 0 ? (
-          <p style={{ padding: '24px 14px', fontSize: '12px', color: 'var(--t3)' }}>
+          <p style={{ padding: '24px 14px', fontSize: 'var(--text-base)', color: 'var(--t3)' }}>
             No high-impact USD events this week.
           </p>
         ) : (

@@ -22,7 +22,7 @@ function GradeBtn({ value, selected, onChange }: { value: string; selected: bool
   const colors: Record<string, string> = { S: 'var(--go2)', A: 'var(--gr2)', B: 'var(--ac)', C: 'var(--am2)', D: 'var(--re)', F: '#FFFFFF' }
   return (
     <button onClick={onChange} style={{
-      width: '36px', height: '36px', borderRadius: 'var(--radius-md)', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
+      width: '36px', height: '36px', borderRadius: 'var(--radius-md)', fontWeight: 600, fontSize: 'var(--text-md)', cursor: 'pointer',
       background:  selected ? `${colors[value]}20` : 'var(--s2)',
       border:      selected ? `1px solid ${colors[value]}` : '1px solid var(--bd2)',
       color:       selected ? colors[value] : 'var(--t3)',
@@ -93,7 +93,7 @@ export function WeeklyReviewSection() {
   const ta: React.CSSProperties = {
     width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)',
     borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--t1)',
-    fontSize: '13px', outline: 'none', resize: 'vertical', lineHeight: '1.6', minHeight: '80px',
+    fontSize: 'var(--text-base)', outline: 'none', resize: 'vertical', lineHeight: '1.6', minHeight: '80px',
   }
 
   return (
@@ -101,11 +101,11 @@ export function WeeklyReviewSection() {
       {/* Week selector */}
       <div className="flex items-center justify-between">
         <div>
-          <p style={{ color: 'var(--t1)', fontSize: '14px', fontWeight: 600 }}>Weekly Review</p>
-          <p style={{ color: 'var(--t3)', fontSize: '12px', marginTop: '2px' }}>Reflect on your week · get AI analysis</p>
+          <p style={{ color: 'var(--t1)', fontSize: 'var(--text-md)', fontWeight: 600 }}>Weekly Review</p>
+          <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)', marginTop: '2px' }}>Reflect on your week · get AI analysis</p>
         </div>
         <select value={selectedWeek} onChange={e => setSelectedWeek(e.target.value)}
-          style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '7px 12px', color: 'var(--t1)', fontSize: '12px', outline: 'none', cursor: 'pointer' }}>
+          style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '7px 12px', color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none', cursor: 'pointer' }}>
           {weekOptions.map(w => <option key={w} value={w}>{w === currentWeek ? `This week — ${weekLabel(w)}` : weekLabel(w)}</option>)}
         </select>
       </div>
@@ -118,7 +118,7 @@ export function WeeklyReviewSection() {
                 <div className="flex flex-wrap gap-2">
                   {WEEK_MOODS.map(m => (
                     <button key={m.key} onClick={() => setMood(m.key)} style={{
-                      padding: '8px 14px', borderRadius: 'var(--radius-md)', fontSize: '13px', cursor: 'pointer',
+                      padding: '8px 14px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)', cursor: 'pointer',
                       background: mood === m.key ? `${WEEK_MOOD_COLOR[m.key]}18` : 'var(--s2)',
                       border: mood === m.key ? `1px solid ${WEEK_MOOD_COLOR[m.key]}` : '1px solid var(--bd2)',
                       color: mood === m.key ? WEEK_MOOD_COLOR[m.key] : 'var(--t2)', fontWeight: mood === m.key ? 500 : 400,
@@ -127,8 +127,8 @@ export function WeeklyReviewSection() {
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label style={{ color: 'var(--t2)', fontSize: '12px' }}>Energy this week</label>
-                    <span style={{ color: 'var(--t1)', fontSize: '13px', fontWeight: 500 }}>{energy}/10</span>
+                    <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Energy this week</label>
+                    <span style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500 }}>{energy}/10</span>
                   </div>
                   <input type="range" min={1} max={10} value={energy} onChange={e => setEnergy(Number(e.target.value))} style={{ width: '100%', accentColor: 'var(--ac)' }} />
                 </div>
@@ -150,11 +150,11 @@ export function WeeklyReviewSection() {
             </Panel>
             <div className="flex gap-3">
               <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 vq-r font-medium"
-                style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '13px', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+                style={{ background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)', fontSize: 'var(--text-base)', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : '💾 Save Review'}
               </button>
               <button onClick={handleGenerate} disabled={generating} className="flex-1 py-2.5 vq-r font-medium"
-                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)', color: 'var(--go2)', fontSize: '13px', cursor: 'pointer', opacity: generating ? 0.6 : 1 }}>
+                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)', color: 'var(--go2)', fontSize: 'var(--text-base)', cursor: 'pointer', opacity: generating ? 0.6 : 1 }}>
                 {generating ? '✨ VELQUOR is thinking…' : '✨ Get VELQUOR Analysis'}
               </button>
             </div>
@@ -164,22 +164,22 @@ export function WeeklyReviewSection() {
             <Panel title="Self Grade">
               <div className="flex flex-col gap-4">
                 <div>
-                  <p style={{ color: 'var(--t2)', fontSize: '12px', marginBottom: '8px' }}>Trading</p>
+                  <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', marginBottom: '8px' }}>Trading</p>
                   <div className="flex gap-1.5 flex-wrap">{GRADES.map(g => <GradeBtn key={g} value={g} selected={tGrade === g} onChange={() => setTGrade(g === tGrade ? '' : g)} />)}</div>
                 </div>
                 <div>
-                  <p style={{ color: 'var(--t2)', fontSize: '12px', marginBottom: '8px' }}>Life &amp; Mindset</p>
+                  <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', marginBottom: '8px' }}>Life &amp; Mindset</p>
                   <div className="flex gap-1.5 flex-wrap">{GRADES.map(g => <GradeBtn key={g} value={g} selected={lGrade === g} onChange={() => setLGrade(g === lGrade ? '' : g)} />)}</div>
                 </div>
               </div>
             </Panel>
             <Panel title="✨ VELQUOR Analysis">
               {!aiText && !generating ? (
-                <p style={{ color: 'var(--t3)', fontSize: '12px', lineHeight: 1.6 }}>Fill in your review and click "Get VELQUOR Analysis" for a personalised deep dive using your real trade data.</p>
+                <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)', lineHeight: 1.6 }}>Fill in your review and click "Get VELQUOR Analysis" for a personalised deep dive using your real trade data.</p>
               ) : generating ? (
-                <p style={{ color: 'var(--t1)', fontSize: '12px', lineHeight: '1.7', whiteSpace: 'pre-line' }}>{aiText}<span style={{ color: 'var(--go2)' }}>▌</span></p>
+                <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', lineHeight: '1.7', whiteSpace: 'pre-line' }}>{aiText}<span style={{ color: 'var(--go2)' }}>▌</span></p>
               ) : (
-                <p style={{ color: 'var(--t1)', fontSize: '12px', lineHeight: '1.7', whiteSpace: 'pre-line' }}>{aiText}</p>
+                <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', lineHeight: '1.7', whiteSpace: 'pre-line' }}>{aiText}</p>
               )}
             </Panel>
             {reviews.filter(r => r.week_start !== selectedWeek).length > 0 && (
@@ -192,10 +192,10 @@ export function WeeklyReviewSection() {
                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <div>
-                        <p style={{ color: 'var(--t1)', fontSize: '12px' }}>{weekLabel(r.week_start)}</p>
-                        <p style={{ color: 'var(--t3)', fontSize: '11px' }}>{r.overall_mood ?? '—'} · {r.trading_grade ?? '?'} / {r.life_grade ?? '?'}</p>
+                        <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)' }}>{weekLabel(r.week_start)}</p>
+                        <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>{r.overall_mood ?? '—'} · {r.trading_grade ?? '?'} / {r.life_grade ?? '?'}</p>
                       </div>
-                      {r.ai_analysis && <span style={{ color: 'var(--go2)', fontSize: '11px' }}>✨</span>}
+                      {r.ai_analysis && <span style={{ color: 'var(--go2)', fontSize: 'var(--text-sm)' }}>✨</span>}
                     </button>
                   ))}
                 </div>

@@ -155,10 +155,10 @@ export default function VelquorTab() {
               </div>
 
               <div style={introStyle(1)}>
-                <h1 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.03em', margin: 0 }}>
+                <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.03em', margin: 0 }}>
                   VELQUOR Analyst
                 </h1>
-                <p style={{ fontSize: '14px', fontWeight: 500, color: 'var(--t2)', lineHeight: 1.65, maxWidth: '520px', margin: '10px auto 0' }}>
+                <p style={{ fontSize: 'var(--text-md)', fontWeight: 500, color: 'var(--t2)', lineHeight: 1.65, maxWidth: '520px', margin: '10px auto 0' }}>
                   Your trading desk analyst. It reads your actual trade history, journal, and
                   discipline data — then answers with your numbers, not generic advice.
                   Ask why you lose on certain days, which setup carries you, or what to fix first.
@@ -171,8 +171,8 @@ export default function VelquorTab() {
                     padding: '12px 14px', borderRadius: 'var(--radius-md)', textAlign: 'left',
                     background: 'rgba(255,255,255,0.02)', border: '1px solid var(--bd2)',
                   }}>
-                    <p style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{c.label}</p>
-                    <p style={{ fontSize: '11px', color: 'var(--t3)', margin: '3px 0 0', lineHeight: 1.45 }}>{c.sub}</p>
+                    <p style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{c.label}</p>
+                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', margin: '3px 0 0', lineHeight: 1.45 }}>{c.sub}</p>
                   </div>
                 ))}
               </div>
@@ -186,7 +186,7 @@ export default function VelquorTab() {
                       inputRef.current?.focus()
                     }}
                     style={{
-                      padding: '7px 14px', borderRadius: 'var(--radius-xl)', fontSize: '11.5px', fontWeight: 600,
+                      padding: '7px 14px', borderRadius: 'var(--radius-xl)', fontSize: 'var(--text-sm)', fontWeight: 600,
                       background: 'transparent', border: '1px solid rgba(255,255,255,0.28)',
                       color: 'var(--go2)', cursor: 'pointer', transition: 'all 0.12s',
                     }}
@@ -223,7 +223,7 @@ export default function VelquorTab() {
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   {msg.content === '' && streaming ? (
-                    <span style={{ color: 'var(--go2)', fontSize: '14px' }}>▌</span>
+                    <span style={{ color: 'var(--go2)', fontSize: 'var(--text-md)' }}>▌</span>
                   ) : (
                     <>
                       <p style={{ color: 'var(--t1)', fontSize: '13.5px', fontWeight: 450, lineHeight: 1.75, margin: 0, whiteSpace: 'pre-line' }}>
@@ -238,7 +238,7 @@ export default function VelquorTab() {
                             background: speakingIdx === i ? 'rgba(255,255,255,0.15)' : 'transparent',
                             border: '1px solid rgba(255,255,255,0.25)',
                             color: speakingIdx === i ? 'var(--go2)' : 'var(--t3)',
-                            fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+                            fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer',
                           }}
                         >
                           {speakingIdx === i ? 'Stop' : 'Read aloud'}
@@ -261,8 +261,7 @@ export default function VelquorTab() {
             display: 'flex', alignItems: 'flex-end', gap: '10px',
             background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-lg)',
             padding: '10px 12px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
-          }}>
+            }}>
             <textarea
               ref={inputRef}
               value={input}
@@ -300,13 +299,13 @@ export default function VelquorTab() {
             </button>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 4px 0' }}>
-            <span style={{ fontSize: '10.5px', color: 'var(--t3)' }}>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)' }}>
               Answers are built from your own data. Not financial advice.
             </span>
             {messages.length > 0 && !streaming && (
               <button
                 onClick={() => setMessages([])}
-                style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '10.5px', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xs)', fontWeight: 600, cursor: 'pointer', padding: 0 }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--t1)')}
                 onMouseLeave={e => (e.currentTarget.style.color = 'var(--t3)')}
               >

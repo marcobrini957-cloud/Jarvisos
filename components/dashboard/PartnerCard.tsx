@@ -66,13 +66,13 @@ export default function PartnerCard({
           <div style={{ fontSize: compact ? '13px' : '14px', fontWeight: 700, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {partner.name}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--t3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {partner.headline}
           </div>
         </div>
         {(partner.award ?? partner.plan) && (
           <span style={{
-            flexShrink: 0, fontSize: '10px', fontWeight: 700, letterSpacing: '0.02em',
+            flexShrink: 0, fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.02em',
             padding: '3px 8px', borderRadius: 'var(--radius-xl)',
             background: `${accent}1f`, color: accent, whiteSpace: 'nowrap',
           }}>
@@ -82,18 +82,18 @@ export default function PartnerCard({
       </div>
 
       {!compact && (
-        <p style={{ margin: 0, fontSize: '12.5px', lineHeight: 1.55, color: 'var(--t2)' }}>
+        <p style={{ margin: 0, fontSize: 'var(--text-base)', lineHeight: 1.55, color: 'var(--t2)' }}>
           {partner.blurb}
         </p>
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: 'auto' }}>
         <span style={{
-          fontSize: '12px', fontWeight: 600, color: accent,
+          fontSize: 'var(--text-base)', fontWeight: 600, color: accent,
           display: 'inline-flex', alignItems: 'center', gap: '5px',
         }}>
           {partner.ctaLabel}
-          <span aria-hidden style={{ fontSize: '13px' }}>→</span>
+          <span aria-hidden style={{ fontSize: 'var(--text-base)' }}>→</span>
         </span>
         <span style={{ fontSize: '9.5px', color: 'var(--t3)', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Ad
