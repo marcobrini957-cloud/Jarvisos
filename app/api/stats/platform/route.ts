@@ -4,19 +4,26 @@ import { getAuthUser } from '@/lib/api/auth'
 
 // Platform-wide counters for the Partners hero.
 //
-// These are the real rows in the database, not a time-derived animation. The
-// odometer that used to sit there counted "412,000,000 real-money orders
-// executed" at 11/second — a number nobody could stand behind, on a page whose
-// links earn commission. If a figure is shown as fact it has to be countable,
-// so this endpoint counts it.
+// This is Velquor's own database — no partner API, no external feed. Every
+// figure is a row count in our own tables, filled by our own pipeline:
+// MT5 terminal → VelquorBridge EA → bridge.velquor.app → Supabase.
 //
-// Aggregate across all users (no per-user scoping) — hence head+count only,
-// which returns no row data.
+// It exists because the odometer that used to sit in the hero counted
+// "412,000,000 real-money orders executed" at 11/second from a hardcoded base.
+// If a number is shown as fact on a page whose links earn commission, it has to
+// be countable — so this counts it.
+//
+// Aggregate across all users (deliberately not user-scoped), hence head+count.
 export interface PlatformStats {
-  orders:    number   // closed positions synced from MT5 (balance ops excluded)
-  mirrored:  number   // copy-engine executions
-  accounts:  number   // distinct MT5 logins that have ever synced
-  syncs:     number   // account snapshots written by the bridge
+  /** Closed positions synced from MT5. Excludes deposits/withdrawals, which
+      arrive as `symbol = 'BALANCE'` rows and are not orders. */
+  orders:   number
+  /** Copy-engine executions — one row per signal delivered to a follower. */
+  mirrored: number
+  /** Distinct MT5 logins that have either traded or are wired as copy
+      accounts. Snapshot rows are not used for this: followers heartbeat onto
+      copy_accounts, so counting snapshot logins alone reported 1. */
+  accounts: number
 }
 
 export async function GET() {
@@ -25,26 +32,23 @@ export async function GET() {
 
   const supabase = await createClient()
 
-  const [orders, mirrored, syncs] = await Promise.all([
+  const [orders, mirrored, tradeLogins, copyLogins] = await Promise.all([
     supabase.from('trades').select('*', { count: 'exact', head: true }).neq('symbol', 'BALANCE'),
     supabase.from('copy_log').select('*', { count: 'exact', head: true }),
-    supabase.from('account_snapshots').select('*', { count: 'exact', head: true }),
+    // Both of these are small, bounded tables — no need for a distinct-count
+    // round trip the JS client cannot express anyway.
+    supabase.from('trades').select('mt5_login').not('mt5_login', 'is', null),
+    supabase.from('copy_accounts').select('mt5_login').not('mt5_login', 'is', null),
   ])
 
-  // Distinct logins needs rows; the column is small and the table is bounded by
-  // snapshot volume, so pull only the newest slice and dedupe.
-  const { data: logins } = await supabase
-    .from('account_snapshots')
-    .select('mt5_login')
-    .not('mt5_login', 'is', null)
-    .order('snapshot_at', { ascending: false })
-    .limit(5000)
+  const logins = new Set<string>()
+  for (const r of tradeLogins.data ?? []) logins.add(String(r.mt5_login))
+  for (const r of copyLogins.data  ?? []) logins.add(String(r.mt5_login))
 
   const stats: PlatformStats = {
     orders:   orders.count   ?? 0,
     mirrored: mirrored.count ?? 0,
-    syncs:    syncs.count    ?? 0,
-    accounts: new Set((logins ?? []).map(r => r.mt5_login)).size,
+    accounts: logins.size,
   }
 
   return NextResponse.json(stats, {
