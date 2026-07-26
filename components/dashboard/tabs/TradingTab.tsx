@@ -143,7 +143,7 @@ export default function TradingTab() {
             'Paste your API key into the EA inputs',
             'Every trade syncs by itself from then on',
           ].map((text, i) => (
-            <div key={text} style={{ padding: '12px 16px', borderRadius: '10px', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
+            <div key={text} style={{ padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
               <span style={{ fontSize: '18px' }}>{i + 1}</span>
               <span style={{ color: 'var(--t2)', fontSize: '13px' }}>{text}</span>
             </div>
@@ -151,9 +151,9 @@ export default function TradingTab() {
           <Link
             href="/connect"
             style={{
-              marginTop: '6px', padding: '13px 16px', borderRadius: '10px',
+              marginTop: '6px', padding: '13px 16px', borderRadius: 'var(--radius-md)',
               background: 'var(--ac)', color: '#fff', fontSize: '13px', fontWeight: 700,
-              textAlign: 'center', boxShadow: '0 8px 24px rgba(77,143,255,0.25)',
+              textAlign: 'center', boxShadow: '0 8px 24px rgba(255,255,255,0.25)',
             }}
           >
             Connect MetaTrader 5 →
@@ -329,7 +329,7 @@ export default function TradingTab() {
             if (tot === 0) return null
             const net       = wonPips - lostPips
             // Green arc = pips won, red = pips given back — the pip payoff balance.
-            return <MetricRing pct={(wonPips / tot) * 100} color="var(--gr2)" glow="rgba(0,232,122,0.45)" track="var(--re)" center={`${net >= 0 ? '+' : ''}${Math.round(net)}`} sub="pips" />
+            return <MetricRing pct={(wonPips / tot) * 100} color="var(--gr2)" glow="rgba(0,196,106,0.45)" track="var(--re)" center={`${net >= 0 ? '+' : ''}${Math.round(net)}`} sub="pips" />
           }}
         />
         <PeriodMetricCard
@@ -353,7 +353,7 @@ export default function TradingTab() {
           getVisual={(p) => {
             const { totalDays, pct } = calcConsistency(filterByPeriod(trades, p))
             if (totalDays === 0) return null
-            const [color, glow] = pct >= 60 ? ['var(--gr2)', 'rgba(0,232,122,0.45)'] : pct >= 40 ? ['var(--am2)', 'rgba(240,168,64,0.45)'] : ['var(--re)', 'rgba(255,61,80,0.45)']
+            const [color, glow] = pct >= 60 ? ['var(--gr2)', 'rgba(0,196,106,0.45)'] : pct >= 40 ? ['var(--am2)', 'rgba(255,255,255,0.45)'] : ['var(--re)', 'rgba(240,80,75,0.45)']
             return <MetricRing pct={pct} color={color} glow={glow} center={`${pct.toFixed(0)}%`} sub="green" />
           }}
         />
@@ -407,7 +407,7 @@ export default function TradingTab() {
                   },
                 ].map(m => (
                   <div key={m.label} style={{
-                    padding: '10px 12px', borderRadius: '8px',
+                    padding: '10px 12px', borderRadius: 'var(--radius-md)',
                     background: 'var(--s2)', border: '1px solid var(--bd)',
                   }}>
                     <p style={{ color: 'var(--t3)', fontSize: '10px', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '4px' }}>{m.label}</p>
@@ -428,7 +428,7 @@ export default function TradingTab() {
                   <div key={item.label} className="flex items-center gap-2 mb-2">
                     <span style={{ color:'var(--t2)', fontSize:'12px', minWidth:'56px' }}>{item.label}</span>
                     <div className="flex-1 rounded-full overflow-hidden" style={{ height:'4px', background:'var(--s3)' }}>
-                      <div style={{ width:`${item.wr}%`, height:'100%', background:item.color, borderRadius:'4px' }}/>
+                      <div style={{ width:`${item.wr}%`, height:'100%', background:item.color, borderRadius:'var(--radius-sm)' }}/>
                     </div>
                     <span className="num" style={{ color:'var(--t1)', fontSize:'13px', fontWeight:700, minWidth:'40px', textAlign:'right' }}>{item.wr.toFixed(1)}%</span>
                   </div>
@@ -446,7 +446,7 @@ export default function TradingTab() {
                   <div key={item.label} className="flex items-center gap-2 mb-2">
                     <span style={{ color:'var(--t2)', fontSize:'12px', minWidth:'64px' }}>{item.label}</span>
                     <div className="flex-1 rounded-full overflow-hidden" style={{ height:'4px', background:'var(--s3)' }}>
-                      <div style={{ width:`${item.wr}%`, height:'100%', background:item.color, borderRadius:'4px' }}/>
+                      <div style={{ width:`${item.wr}%`, height:'100%', background:item.color, borderRadius:'var(--radius-sm)' }}/>
                     </div>
                     <span className="num" style={{ color:'var(--t1)', fontSize:'13px', fontWeight:700, minWidth:'40px', textAlign:'right' }}>{item.wr.toFixed(1)}%</span>
                   </div>
@@ -573,12 +573,12 @@ export default function TradingTab() {
             <img
               src={screenshotViewing}
               alt="Trade screenshot"
-              style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '12px', boxShadow: '0 32px 80px rgba(0,0,0,0.8)', pointerEvents: 'auto' }}
+              style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 'var(--radius-lg)', boxShadow: '0 32px 80px rgba(0,0,0,0.8)', pointerEvents: 'auto' }}
             />
           </div>
           <button
             onClick={() => setScreenshotViewing(null)}
-            style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 52, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: 'white', fontSize: '18px', width: '36px', height: '36px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 52, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 'var(--radius-md)', color: 'white', fontSize: '18px', width: '36px', height: '36px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             ×
           </button>
@@ -607,7 +607,7 @@ export default function TradingTab() {
                   const c = heatColor(h.winRate, h.trades)
                   return (
                     <div key={h.day}
-                      className="flex-1 flex flex-col items-center justify-center rounded-md py-2 gap-0.5"
+                      className="flex-1 flex flex-col items-center justify-center vq-r py-2 gap-0.5"
                       style={{ background:c.bg, minHeight:'52px' }}
                       title={`${session} ${h.day}: ${Math.round(h.winRate*100)}% (${h.trades} trades)`}>
                       <span style={{ fontSize:'11px', color:'var(--t3)' }}>{h.day}</span>

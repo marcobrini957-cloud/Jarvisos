@@ -1,6 +1,7 @@
 'use client'
 
 import Badge from './Badge'
+import { Num } from './vq'
 import type { Trade } from '@/types'
 
 interface TradeRowProps {
@@ -29,50 +30,48 @@ function formatDate(iso: string | null): string {
 }
 
 export default function TradeRow({ trade, compact = false }: TradeRowProps) {
-  const isProfit = (trade.net_profit ?? 0) >= 0
-
   return (
     <div
-      className="flex items-center gap-3 px-4 py-3 rounded-md transition-colors cursor-pointer group"
-      style={{ borderBottom: '1px solid var(--bd)' }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--s3)')}
+      className="flex items-center gap-3 group"
+      style={{ padding: '7px 14px', borderBottom: '1px solid var(--color-line-1)' }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-state-hover)')}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
     >
-      {/* Symbol + Direction */}
-      <div className="flex flex-col gap-1 min-w-[80px]">
-        <span style={{ color: 'var(--t1)', fontWeight: 500, fontSize: '13px' }}>
-          {trade.symbol}
-        </span>
-        <div className="flex items-center gap-1">
-          <Badge variant={trade.trade_type}>{trade.trade_type.toUpperCase()}</Badge>
-          {trade.screenshot_missing && (
-            <Badge variant="screenshot">no screenshot</Badge>
-          )}
-        </div>
+      {/* Symbol + direction */}
+      <div className="flex items-center gap-2 min-w-[128px]">
+        <Num size="sm" tone="neutral">{trade.symbol}</Num>
+        <Badge variant={trade.trade_type}>{trade.trade_type}</Badge>
+        {trade.screenshot_missing && <Badge variant="screenshot">no shot</Badge>}
       </div>
 
-      {/* Session + Date */}
+      {/* Session + date */}
       {!compact && (
-        <div className="flex flex-col gap-1 min-w-[90px]">
+        <div className="flex items-center gap-2 min-w-[132px]">
           {trade.session && (
             <Badge variant={trade.session}>
-              {trade.session === 'new_york' ? 'NY' : trade.session.charAt(0).toUpperCase() + trade.session.slice(1)}
+              {trade.session === 'new_york' ? 'NY' : trade.session}
             </Badge>
           )}
-          <span style={{ color: 'var(--t3)', fontSize: '11px' }}>
-            {formatDate(trade.open_time)} · {formatTime(trade.open_time)}
-          </span>
+          <Num size="xs" tone="muted">
+            {formatDate(trade.open_time)} {formatTime(trade.open_time)}
+          </Num>
         </div>
       )}
 
       {/* Setup */}
       {!compact && trade.setup_type && (
-        <div className="flex-1 hidden md:block">
-          <span style={{ color: 'var(--t2)', fontSize: '12px' }}>
+        <div className="flex-1 hidden md:flex items-center gap-2" style={{ minWidth: 0 }}>
+          <span style={{
+            fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+            color: 'var(--color-ink-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
             {trade.setup_type}
           </span>
           {trade.emotion_pre && (
-            <span style={{ color: 'var(--t3)', fontSize: '11px', marginLeft: '8px' }}>
+            <span style={{
+              fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
+              color: 'var(--color-ink-3)',
+            }}>
               {trade.emotion_pre}
             </span>
           )}
@@ -80,13 +79,9 @@ export default function TradeRow({ trade, compact = false }: TradeRowProps) {
       )}
 
       {/* P&L */}
-      <div className="flex flex-col items-end gap-1 ml-auto">
-        <span style={{ color: isProfit ? 'var(--gr2)' : 'var(--re)', fontWeight: 500, fontSize: '13px' }}>
-          {formatProfit(trade.net_profit)}
-        </span>
-        <span style={{ color: 'var(--t3)', fontSize: '11px' }}>
-          {formatPips(trade.pips)}
-        </span>
+      <div className="flex items-center gap-3 ml-auto">
+        <Num size="xs" tone="muted">{formatPips(trade.pips)}</Num>
+        <Num size="sm" value={trade.net_profit ?? 0} tone="auto">{formatProfit(trade.net_profit)}</Num>
       </div>
     </div>
   )

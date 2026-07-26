@@ -122,7 +122,7 @@ export function YourEdge({ trades }: { trades: Trade[] }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
         {edges.map((e, i) => (
           <div key={i} style={{
-            padding: '14px 16px', borderRadius: '10px',
+            padding: '14px 16px', borderRadius: 'var(--radius-md)',
             background: `${e.color}0D`,
             border: `1px solid ${e.color}28`,
             display: 'flex', flexDirection: 'column', gap: '5px',

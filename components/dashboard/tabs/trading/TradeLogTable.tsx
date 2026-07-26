@@ -21,7 +21,7 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
             <div className="flex items-center gap-1.5 flex-wrap">
               {['all','XAUUSD','NAS100'].map(s => (
                 <button key={s} onClick={() => { setSymbol(s) }}
-                  style={{ fontSize:'11px', padding:'2px 8px', borderRadius:'6px', border:'none', cursor:'pointer',
+                  style={{ fontSize:'11px', padding:'2px 8px', borderRadius:'var(--radius-md)', border:'none', cursor:'pointer',
                     background: symbolFilter===s ? 'var(--ac)' : 'var(--s3)',
                     color:      symbolFilter===s ? 'white'     : 'var(--t2)' }}>
                   {s === 'all' ? 'All' : s}
@@ -30,7 +30,7 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
               <div style={{ width:'1px', height:'14px', background:'var(--bd2)' }}/>
               {['all','buy','sell'].map(d => (
                 <button key={d} onClick={() => { setDir(d) }}
-                  style={{ fontSize:'11px', padding:'2px 8px', borderRadius:'6px', border:'none', cursor:'pointer',
+                  style={{ fontSize:'11px', padding:'2px 8px', borderRadius:'var(--radius-md)', border:'none', cursor:'pointer',
                     background: dirFilter===d ? 'var(--ac)' : 'var(--s3)',
                     color:      dirFilter===d ? 'white'     : 'var(--t2)' }}>
                   {d.charAt(0).toUpperCase() + d.slice(1)}
@@ -53,19 +53,19 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
               </div>
             ) : paginated.map((trade: Trade) => {
               const result = tradeResult(trade.net_profit ?? 0)
-              const rowBg  = result === 'win'  ? 'rgba(99,153,34,0.07)'
-                           : result === 'loss' ? 'rgba(226,75,74,0.07)'
+              const rowBg  = result === 'win'  ? 'rgba(0,196,106,0.07)'
+                           : result === 'loss' ? 'rgba(240,80,75,0.07)'
                            : 'transparent'
-              const hoverBg = result === 'win'  ? 'rgba(99,153,34,0.13)'
-                            : result === 'loss' ? 'rgba(226,75,74,0.13)'
+              const hoverBg = result === 'win'  ? 'rgba(0,196,106,0.13)'
+                            : result === 'loss' ? 'rgba(240,80,75,0.13)'
                             : 'var(--s3)'
               const resultBadge = (
                 <span style={{
                   fontSize: '10px', fontWeight: 700, letterSpacing: '0.04em',
-                  padding: '2px 7px', borderRadius: '4px', flexShrink: 0,
-                  background: result === 'win'  ? 'rgba(99,153,34,0.18)'
-                            : result === 'loss' ? 'rgba(226,75,74,0.18)'
-                            : 'rgba(88,166,255,0.12)',
+                  padding: '2px 7px', borderRadius: 'var(--radius-sm)', flexShrink: 0,
+                  background: result === 'win'  ? 'rgba(0,196,106,0.18)'
+                            : result === 'loss' ? 'rgba(240,80,75,0.18)'
+                            : 'rgba(255,255,255,0.12)',
                   color:      result === 'win'  ? 'var(--gr2)'
                             : result === 'loss' ? 'var(--re)'
                             : 'var(--ac)',
@@ -137,7 +137,7 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
                   <button
                     onClick={e => { e.stopPropagation(); onViewScreenshot(trade.screenshot_close_url || trade.screenshot_open_url || trade.screenshot_user_url || '') }}
                     title="View screenshot"
-                    style={{ background: 'rgba(88,166,255,0.1)', border: '1px solid rgba(88,166,255,0.2)', borderRadius: '4px', cursor: 'pointer', fontSize: '8.5px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--ac)', flexShrink: 0, padding: '2px 4px', lineHeight: 1.2, opacity: 0.8 }}
+                    style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '8.5px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--ac)', flexShrink: 0, padding: '2px 4px', lineHeight: 1.2, opacity: 0.8 }}
                     onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
                     onMouseLeave={e => (e.currentTarget.style.opacity = '0.8')}
                   >

@@ -88,7 +88,7 @@ export default function DisciplineTab() {
         {metrics.map(m => (
           <div
             key={m.title}
-            className="relative rounded-lg p-4 overflow-hidden"
+            className="relative vq-r p-4 overflow-hidden"
             style={{ background: 'var(--s2)', border: '1px solid var(--bd)' }}>
             <p style={{ color: 'var(--t2)', fontSize: '11px', letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500 }}>
               {m.title}
@@ -114,7 +114,7 @@ export default function DisciplineTab() {
               <button
                 onClick={() => setShowAddHabit(true)}
                 style={{
-                  fontSize: '11px', padding: '3px 10px', borderRadius: '6px',
+                  fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-md)',
                   border: 'none', cursor: 'pointer', background: 'var(--gr)',
                   color: 'white', fontWeight: 500,
                 }}>
@@ -134,7 +134,7 @@ export default function DisciplineTab() {
                 </p>
                 <button
                   onClick={() => setShowAddHabit(true)}
-                  style={{ background: 'var(--gr)', border: 'none', color: 'white', fontSize: '12px', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>
+                  style={{ background: 'var(--gr)', border: 'none', color: 'white', fontSize: '12px', padding: '8px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
                   + Add First Habit
                 </button>
               </div>
@@ -159,7 +159,7 @@ export default function DisciplineTab() {
                       {/* Toggle button */}
                       <button
                         onClick={() => toggleHabit(habit.id, today)}
-                        className="flex items-center justify-center rounded-lg flex-shrink-0 transition-all"
+                        className="flex items-center justify-center vq-r flex-shrink-0 transition-all"
                         style={{
                           width: '36px', height: '36px', fontSize: '18px',
                           background: done ? `${color}20` : 'var(--s2)',
@@ -238,7 +238,7 @@ export default function DisciplineTab() {
                         </div>
                       </div>
                       <div className="rounded-full overflow-hidden" style={{ height: '3px', background: 'var(--s3)' }}>
-                        <div style={{ width: `${rate}%`, height: '100%', background: color, borderRadius: '4px' }} />
+                        <div style={{ width: `${rate}%`, height: '100%', background: color, borderRadius: 'var(--radius-sm)' }} />
                       </div>
                     </div>
                   )
@@ -259,7 +259,7 @@ export default function DisciplineTab() {
               <button
                 onClick={() => setShowAddTask(true)}
                 style={{
-                  fontSize: '11px', padding: '3px 10px', borderRadius: '6px',
+                  fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-md)',
                   border: 'none', cursor: 'pointer', background: 'var(--ac)',
                   color: 'white', fontWeight: 500,
                 }}>
@@ -276,7 +276,7 @@ export default function DisciplineTab() {
                 <p style={{ color: 'var(--t3)', fontSize: '13px' }}>No tasks for today.</p>
                 <button
                   onClick={() => setShowAddTask(true)}
-                  style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '12px', padding: '6px 16px', borderRadius: '6px', cursor: 'pointer' }}>
+                  style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '12px', padding: '6px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
                   + Add one
                 </button>
               </div>
@@ -302,8 +302,8 @@ export default function DisciplineTab() {
 
           {/* VELQUOR tip */}
           <div
-            className="rounded-lg p-4"
-            style={{ background: 'rgba(232,201,106,0.05)', border: '1px solid rgba(232,201,106,0.15)' }}>
+            className="vq-r p-4"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)' }}>
             <p style={{ color: 'var(--go2)', fontSize: '11px', fontWeight: 500, marginBottom: '6px' }}>💡 VELQUOR TIP</p>
             <p style={{ color: 'var(--t2)', fontSize: '12px', lineHeight: 1.6 }}>
               Traders who maintain consistent daily habits — especially journaling and pre-trade checklists — show 23% higher win rates on average.

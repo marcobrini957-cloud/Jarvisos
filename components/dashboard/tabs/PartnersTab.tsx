@@ -25,16 +25,16 @@ export default function PartnersTab() {
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <div style={{
         position: 'relative', overflow: 'hidden',
-        borderRadius: '24px', border: '1px solid var(--bd2)',
+        borderRadius: 'var(--radius-xl)', border: '1px solid var(--bd2)',
         padding: 'clamp(32px, 6vw, 56px) 24px clamp(28px, 4vw, 40px)',
         marginBottom: '20px', textAlign: 'center',
-        background: 'radial-gradient(120% 90% at 50% -20%, rgba(76,141,255,0.28) 0%, rgba(122,79,255,0.14) 30%, var(--s1) 62%)',
+        background: 'radial-gradient(120% 90% at 50% -20%, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.14) 30%, var(--s1) 62%)',
       }}>
         {/* atmospheric horizon glow */}
         <div style={{
           position: 'absolute', top: '-40%', left: '50%', transform: 'translateX(-50%)',
           width: '160%', height: '120%', pointerEvents: 'none',
-          background: 'radial-gradient(circle at 50% 100%, rgba(76,141,255,0.35), transparent 55%)',
+          background: 'radial-gradient(circle at 50% 100%, rgba(255,255,255,0.35), transparent 55%)',
           filter: 'blur(20px)',
         }} />
         <div style={{ position: 'relative' }}>
@@ -57,7 +57,7 @@ export default function PartnersTab() {
               key={f.id}
               onClick={() => setFilter(f.id)}
               style={{
-                padding: '9px 18px', borderRadius: '999px',
+                padding: '9px 18px', borderRadius: 'var(--radius-xl)',
                 fontSize: '13px', fontWeight: 600, cursor: 'pointer',
                 border: '1px solid ' + (active ? 'var(--t1)' : 'var(--bd2)'),
                 background: active ? 'var(--t1)' : 'var(--s2)',
@@ -78,7 +78,7 @@ export default function PartnersTab() {
 
       {/* ── Affiliate transparency disclosure ────────────────────── */}
       <div style={{
-        marginTop: '20px', padding: '12px 16px', borderRadius: '12px',
+        marginTop: '20px', padding: '12px 16px', borderRadius: 'var(--radius-lg)',
         background: 'var(--s1)', border: '1px solid var(--bd)',
         fontSize: '11px', color: 'var(--t3)', lineHeight: 1.6, opacity: 0.9,
       }}>

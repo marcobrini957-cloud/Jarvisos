@@ -184,14 +184,14 @@ export default function MobileOverviewTab() {
       <NetWorthCurve portfolioValue={totalValueEur} />
 
       {/* ── Daily Max Loss ─────────────────────────────────────── */}
-      <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid rgba(255,61,80,0.15)' }}>
+      <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(240,80,75,0.15)' }}>
         <span style={{ fontSize: '10px', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>Daily Risk</span>
         <DailyMaxLoss allRows={allRows} />
       </div>
 
       {/* ── Today's Focus ──────────────────────────────────────── */}
       {(habits.length > 0 || focusTasks.length > 0) && (
-        <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid var(--bd2)' }}>
+        <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--bd2)' }}>
           <span style={{ fontSize: '10px', color: 'var(--am2)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '12px' }}>Today's Focus</span>
 
           {habits.length > 0 && (
@@ -209,7 +209,7 @@ export default function MobileOverviewTab() {
                         background: done ? 'var(--gr)' : 'transparent',
                         border: `2px solid ${done ? 'var(--gr2)' : 'var(--bd2)'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: done ? '0 0 7px rgba(0,232,122,0.4)' : 'none',
+                        boxShadow: done ? '0 0 7px rgba(0,196,106,0.4)' : 'none',
                       }}>
                         {done && <span style={{ fontSize: '9px', color: 'white', fontWeight: 700 }}>✓</span>}
                       </div>
@@ -238,7 +238,7 @@ export default function MobileOverviewTab() {
                   return (
                     <div key={task.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '9px' }}>
                       <div style={{
-                        width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0, marginTop: '2px',
+                        width: '16px', height: '16px', borderRadius: 'var(--radius-sm)', flexShrink: 0, marginTop: '2px',
                         background: task.status === 'done' ? 'var(--gr)' : 'transparent',
                         border: `2px solid ${task.status === 'done' ? 'var(--gr2)' : overdue ? 'var(--re)' : 'var(--bd2)'}`,
                       }} />
@@ -259,7 +259,7 @@ export default function MobileOverviewTab() {
 
       {/* ── Edge Report — day-trading insights + hard numbers ───── */}
       {(edgeInsights.length > 0 || edgeFacts.length > 0) && (
-        <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: '14px', border: '1px solid rgba(255,176,48,0.15)' }}>
+        <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.15)' }}>
           <span style={{ fontSize: '10px', color: 'var(--go2)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>
             Edge Report
           </span>

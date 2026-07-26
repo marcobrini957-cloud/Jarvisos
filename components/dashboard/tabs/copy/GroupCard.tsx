@@ -67,8 +67,8 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
   const cloudBadge = (
     <span style={{
       fontSize: '9px', fontWeight: 700, letterSpacing: '0.05em', padding: '2px 7px',
-      borderRadius: '20px', background: 'rgba(0,255,133,0.1)',
-      border: '1px solid rgba(0,255,133,0.25)', color: '#00FF85', flexShrink: 0,
+      borderRadius: 'var(--radius-xl)', background: 'rgba(0,196,106,0.1)',
+      border: '1px solid rgba(0,196,106,0.25)', color: '#00C46A', flexShrink: 0,
     }}>
       CLOUD
     </span>
@@ -79,7 +79,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
       onClick={() => unhostAccount(acc)}
       title="Stop the hosted cloud terminal"
       style={{
-        fontSize: '10px', padding: '4px 10px', borderRadius: '6px',
+        fontSize: '10px', padding: '4px 10px', borderRadius: 'var(--radius-md)',
         background: 'var(--s1)', border: '1px solid var(--bd)',
         color: 'var(--t3)', cursor: 'pointer',
       }}
@@ -91,9 +91,9 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
       onClick={() => setHostAccount(acc)}
       title="Run this account in a VELQUOR cloud terminal"
       style={{
-        fontSize: '10px', padding: '4px 10px', borderRadius: '6px', fontWeight: 600,
-        background: 'rgba(0,255,133,0.08)', border: '1px solid rgba(0,255,133,0.3)',
-        color: '#00FF85', cursor: 'pointer', whiteSpace: 'nowrap',
+        fontSize: '10px', padding: '4px 10px', borderRadius: 'var(--radius-md)', fontWeight: 600,
+        background: 'rgba(0,196,106,0.08)', border: '1px solid rgba(0,196,106,0.3)',
+        color: '#00C46A', cursor: 'pointer', whiteSpace: 'nowrap',
       }}
     >
       Host in Cloud
@@ -103,7 +103,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
   return (
     <>
       <div style={{
-        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '16px',
+        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
         overflow: 'hidden', marginBottom: '16px',
       }}>
         {/* Group header */}
@@ -114,12 +114,12 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
               width: 8, height: 8, borderRadius: '50%',
-              background: group.active ? '#00FF85' : '#444',
-              boxShadow: group.active ? '0 0 6px #00FF85' : undefined,
+              background: group.active ? '#00C46A' : '#444',
+              boxShadow: group.active ? '0 0 6px #00C46A' : undefined,
             }} />
             <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--t1)' }}>{group.name}</span>
             <span style={{
-              fontSize: '10px', padding: '2px 8px', borderRadius: '20px',
+              fontSize: '10px', padding: '2px 8px', borderRadius: 'var(--radius-xl)',
               background: 'var(--s2)', color: 'var(--t3)', letterSpacing: '0.06em',
             }}>
               {group.lot_mode === 'fixed'
@@ -132,10 +132,10 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             <button
               onClick={toggleActive} disabled={toggling}
               style={{
-                padding: '5px 12px', borderRadius: '8px', fontSize: '11px',
-                background: group.active ? 'rgba(255,51,71,0.1)' : 'rgba(0,255,133,0.1)',
-                border:     group.active ? '1px solid rgba(255,51,71,0.3)' : '1px solid rgba(0,255,133,0.3)',
-                color:      group.active ? '#FF3347' : '#00FF85',
+                padding: '5px 12px', borderRadius: 'var(--radius-md)', fontSize: '11px',
+                background: group.active ? 'rgba(240,80,75,0.1)' : 'rgba(0,196,106,0.1)',
+                border:     group.active ? '1px solid rgba(240,80,75,0.3)' : '1px solid rgba(0,196,106,0.3)',
+                color:      group.active ? '#F0504B' : '#00C46A',
                 cursor:     'pointer', fontWeight: 600,
               }}
             >
@@ -144,7 +144,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             <button
               onClick={deleteGroup}
               style={{
-                padding: '5px 12px', borderRadius: '8px', fontSize: '11px',
+                padding: '5px 12px', borderRadius: 'var(--radius-md)', fontSize: '11px',
                 background: 'var(--s2)', border: '1px solid var(--bd)',
                 color: 'var(--t3)', cursor: 'pointer',
               }}
@@ -180,8 +180,8 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             {leader ? (
               <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '10px 14px', borderRadius: '10px',
-                background: 'rgba(122,79,255,0.06)', border: '1px solid rgba(122,79,255,0.15)',
+                padding: '10px 14px', borderRadius: 'var(--radius-md)',
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {statusDot(leader.status, leader.last_seen_at)}
@@ -199,7 +199,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                   {hostButton(leader)}
                   <button
                     onClick={() => removeAccount(leader.id)}
-                    style={{ fontSize: '11px', color: '#FF3347', background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ fontSize: '11px', color: '#F0504B', background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     Remove
                   </button>
@@ -207,7 +207,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
               </div>
             ) : (
               <div style={{
-                padding: '12px 14px', borderRadius: '10px', textAlign: 'center',
+                padding: '12px 14px', borderRadius: 'var(--radius-md)', textAlign: 'center',
                 background: 'var(--s2)', border: '1px dashed var(--bd)',
                 fontSize: '12px', color: 'var(--t3)',
               }}>
@@ -236,7 +236,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
 
             {followers.length === 0 ? (
               <div style={{
-                padding: '12px 14px', borderRadius: '10px', textAlign: 'center',
+                padding: '12px 14px', borderRadius: 'var(--radius-md)', textAlign: 'center',
                 background: 'var(--s2)', border: '1px dashed var(--bd)',
                 fontSize: '12px', color: 'var(--t3)',
               }}>
@@ -247,7 +247,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                 {followers.map(follower => (
                   <div key={follower.id} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '10px 14px', borderRadius: '10px',
+                    padding: '10px 14px', borderRadius: 'var(--radius-md)',
                     background: 'var(--s2)', border: '1px solid var(--bd)',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -267,7 +267,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                       <button
                         onClick={() => toggleAccountStatus(follower)}
                         style={{
-                          fontSize: '10px', padding: '4px 10px', borderRadius: '6px',
+                          fontSize: '10px', padding: '4px 10px', borderRadius: 'var(--radius-md)',
                           background: 'var(--s1)', border: '1px solid var(--bd)',
                           color: 'var(--t3)', cursor: 'pointer',
                         }}
@@ -276,7 +276,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                       </button>
                       <button
                         onClick={() => removeAccount(follower.id)}
-                        style={{ fontSize: '11px', color: '#FF3347', background: 'none', border: 'none', cursor: 'pointer' }}
+                        style={{ fontSize: '11px', color: '#F0504B', background: 'none', border: 'none', cursor: 'pointer' }}
                       >
                         ✕
                       </button>
@@ -292,8 +292,8 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             accounts, so collapsed by default to keep the card clean */}
         {(leader || followers.length > 0) && (
           <div style={{
-            margin: '0 20px 16px', padding: '12px 14px', borderRadius: '10px',
-            background: 'rgba(0,255,133,0.03)', border: '1px solid rgba(0,255,133,0.1)',
+            margin: '0 20px 16px', padding: '12px 14px', borderRadius: 'var(--radius-md)',
+            background: 'rgba(0,196,106,0.03)', border: '1px solid rgba(0,196,106,0.1)',
           }}>
             <button
               onClick={() => setShowEaConfig(v => !v)}
@@ -302,7 +302,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                 background: 'none', border: 'none', padding: 0, cursor: 'pointer',
               }}
             >
-              <span style={{ fontSize: '10px', color: '#00FF85', letterSpacing: '0.08em', fontWeight: 700 }}>
+              <span style={{ fontSize: '10px', color: '#00C46A', letterSpacing: '0.08em', fontWeight: 700 }}>
                 EA CONFIGURATION <span style={{ color: 'var(--t3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>· for accounts on your own MetaTrader</span>
               </span>
               <span style={{
@@ -312,16 +312,16 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             </button>
             {showEaConfig && <div style={{ marginTop: '8px' }}>
             <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--t2)', lineHeight: '1.7' }}>
-              <div><span style={{ color: 'var(--t3)' }}>InpCopyMode</span> = <span style={{ color: '#FFD700' }}>COPY_LEADER</span> <span style={{ color: '#555' }}>// or COPY_FOLLOWER</span></div>
-              <div><span style={{ color: 'var(--t3)' }}>InpCopyGroupId</span> = <span style={{ color: '#7A4FFF' }}>"{group.id}"</span></div>
-              <div><span style={{ color: 'var(--t3)' }}>InpCopyLotMode</span> = <span style={{ color: '#FFD700' }}>
+              <div><span style={{ color: 'var(--t3)' }}>InpCopyMode</span> = <span style={{ color: '#FFFFFF' }}>COPY_LEADER</span> <span style={{ color: '#555' }}>// or COPY_FOLLOWER</span></div>
+              <div><span style={{ color: 'var(--t3)' }}>InpCopyGroupId</span> = <span style={{ color: '#FFFFFF' }}>"{group.id}"</span></div>
+              <div><span style={{ color: 'var(--t3)' }}>InpCopyLotMode</span> = <span style={{ color: '#FFFFFF' }}>
                 {group.lot_mode === 'fixed' ? 'LOT_FIXED' : 'LOT_PROPORTIONAL'}
               </span></div>
               {group.lot_mode === 'fixed'
-                ? <div><span style={{ color: 'var(--t3)' }}>InpCopyLotFixed</span> = <span style={{ color: '#00FF85' }}>{group.lot_fixed}</span></div>
-                : <div><span style={{ color: 'var(--t3)' }}>InpCopyLotMult</span> = <span style={{ color: '#00FF85' }}>{group.lot_multiplier}</span></div>
+                ? <div><span style={{ color: 'var(--t3)' }}>InpCopyLotFixed</span> = <span style={{ color: '#00C46A' }}>{group.lot_fixed}</span></div>
+                : <div><span style={{ color: 'var(--t3)' }}>InpCopyLotMult</span> = <span style={{ color: '#00C46A' }}>{group.lot_multiplier}</span></div>
               }
-              <div><span style={{ color: 'var(--t3)' }}>InpCopyMaxLot</span> = <span style={{ color: '#00FF85' }}>{group.max_lot}</span></div>
+              <div><span style={{ color: 'var(--t3)' }}>InpCopyMaxLot</span> = <span style={{ color: '#00C46A' }}>{group.max_lot}</span></div>
             </div>
             </div>}
           </div>

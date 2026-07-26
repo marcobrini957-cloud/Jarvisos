@@ -6,7 +6,7 @@ export const MOOD_COLOR: Record<Mood, string> = {
   great:   'var(--gr2)',
   good:    'var(--gr)',
   neutral: 'var(--am2)',
-  low:     '#E27A4A',
+  low:     '#FFFFFF',
   bad:     'var(--re)',
 }
 export const MOOD_SCORE: Record<Mood, number> = { great: 9, good: 7, neutral: 5, low: 3, bad: 1 }

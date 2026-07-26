@@ -26,7 +26,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
 
   const EMOTIONS = ['confident', 'neutral', 'anxious', 'tired', 'fomo']
   const EMOTION_COLORS: Record<string, string> = {
-    confident: 'var(--gr2)', neutral: 'var(--t2)', anxious: 'var(--am2)', tired: 'var(--re)', fomo: '#e05cae',
+    confident: 'var(--gr2)', neutral: 'var(--t2)', anxious: 'var(--am2)', tired: 'var(--re)', fomo: '#FFFFFF',
   }
 
   function toggleTag(t: string) {
@@ -94,13 +94,13 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
 
   const inputStyle = {
     width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)',
-    borderRadius: '8px', padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
+    borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
   }
 
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
-      <div className="modal-sheet fixed z-50 rounded-xl flex flex-col gap-4"
+      <div className="modal-sheet fixed z-50 vq-r flex flex-col gap-4"
         style={{
           top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           width: '520px', maxWidth: 'calc(100vw - 24px)', maxHeight: '90dvh',
@@ -131,7 +131,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
                   <>
                     <span style={{ color, fontWeight: 500 }}>{pnl >= 0 ? '+' : ''}€{pnl.toFixed(2)}</span>
                     {result === 'breakeven' && (
-                      <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '3px', background: 'rgba(88,166,255,0.12)', color: 'var(--ac)', fontWeight: 600 }}>BE</span>
+                      <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: 'var(--radius-xs)', background: 'rgba(255,255,255,0.12)', color: 'var(--ac)', fontWeight: 600 }}>BE</span>
                     )}
                   </>
                 )
@@ -177,7 +177,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
             {EMOTIONS.map(em => (
               <button key={em} onClick={() => setEmotion(em === emotion ? '' : em)}
                 style={{
-                  padding: '5px 12px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
+                  padding: '5px 12px', borderRadius: 'var(--radius-md)', fontSize: '12px', cursor: 'pointer',
                   background: emotion === em ? `${EMOTION_COLORS[em]}15` : 'var(--s2)',
                   border:     emotion === em ? `1px solid ${EMOTION_COLORS[em]}` : '1px solid var(--bd2)',
                   color:      emotion === em ? EMOTION_COLORS[em] : 'var(--t2)',
@@ -195,9 +195,9 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
             {MISTAKE_TAGS.map(t => (
               <button key={t} onClick={() => toggleTag(t)}
                 style={{
-                  padding: '4px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer',
-                  background: tags.includes(t) ? 'rgba(226,75,74,0.12)' : 'var(--s2)',
-                  border:     tags.includes(t) ? '1px solid rgba(226,75,74,0.35)' : '1px solid var(--bd2)',
+                  padding: '4px 10px', borderRadius: 'var(--radius-md)', fontSize: '11px', cursor: 'pointer',
+                  background: tags.includes(t) ? 'rgba(240,80,75,0.12)' : 'var(--s2)',
+                  border:     tags.includes(t) ? '1px solid rgba(240,80,75,0.35)' : '1px solid var(--bd2)',
                   color:      tags.includes(t) ? 'var(--re)' : 'var(--t3)',
                 }}>
                 #{t}
@@ -213,8 +213,8 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
             {[{ val: true, label: 'Yes' }, { val: false, label: 'No' }].map(opt => (
               <button key={String(opt.val)} onClick={() => setFollowed(followed === opt.val ? null : opt.val)}
                 style={{
-                  padding: '4px 14px', borderRadius: '6px', fontSize: '12px', cursor: 'pointer',
-                  background: followed === opt.val ? (opt.val ? 'rgba(99,153,34,0.15)' : 'rgba(226,75,74,0.12)') : 'var(--s2)',
+                  padding: '4px 14px', borderRadius: 'var(--radius-md)', fontSize: '12px', cursor: 'pointer',
+                  background: followed === opt.val ? (opt.val ? 'rgba(0,196,106,0.15)' : 'rgba(240,80,75,0.12)') : 'var(--s2)',
                   border:     followed === opt.val ? `1px solid ${opt.val ? 'var(--gr2)' : 'var(--re)'}` : '1px solid var(--bd2)',
                   color:      followed === opt.val ? (opt.val ? 'var(--gr2)' : 'var(--re)') : 'var(--t3)',
                 }}>
@@ -232,14 +232,14 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
               {[{ url: trade.screenshot_open_url, label: 'Entry' },
                 { url: trade.screenshot_close_url, label: 'Exit' }].map(shot => shot.url && (
                 <a key={shot.label} href={shot.url} target="_blank" rel="noreferrer"
-                  className="relative flex-1 rounded-lg overflow-hidden"
+                  className="relative flex-1 vq-r overflow-hidden"
                   style={{ border: '1px solid var(--bd2)', maxHeight: '110px' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={shot.url} alt={`${shot.label} chart`}
                     style={{ width: '100%', height: '110px', objectFit: 'cover' }} />
                   <span style={{
                     position: 'absolute', top: '6px', left: '6px', fontSize: '10px', fontWeight: 700,
-                    letterSpacing: '0.05em', padding: '2px 7px', borderRadius: '4px',
+                    letterSpacing: '0.05em', padding: '2px 7px', borderRadius: 'var(--radius-sm)',
                     background: 'rgba(0,0,0,0.7)', color: shot.label === 'Entry' ? 'var(--ac)' : 'var(--am2)',
                   }}>
                     {shot.label}
@@ -254,17 +254,17 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
         <div className="flex flex-col gap-2">
           <label style={{ color: 'var(--t2)', fontSize: '12px', fontWeight: 500 }}>Your Chart Screenshot</label>
           {screenshotUrl ? (
-            <div className="relative rounded-lg overflow-hidden" style={{ maxHeight: '180px' }}>
+            <div className="relative vq-r overflow-hidden" style={{ maxHeight: '180px' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={screenshotUrl} alt="Chart screenshot" style={{ width: '100%', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--bd2)' }} />
+              <img src={screenshotUrl} alt="Chart screenshot" style={{ width: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--bd2)' }} />
               <button onClick={() => setScreenshotUrl('')}
-                style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(0,0,0,0.7)', border: 'none', color: 'white', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '12px' }}>
+                style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(0,0,0,0.7)', border: 'none', color: 'white', borderRadius: 'var(--radius-sm)', padding: '2px 6px', cursor: 'pointer', fontSize: '12px' }}>
                 Remove
               </button>
             </div>
           ) : (
             <label style={{ cursor: 'pointer' }}>
-              <div className="flex flex-col items-center justify-center rounded-lg py-6 gap-2"
+              <div className="flex flex-col items-center justify-center vq-r py-6 gap-2"
                 style={{ border: '1px dashed var(--bd2)', background: 'var(--s2)' }}>
                 {uploading ? (
                   <span style={{ color: 'var(--t3)', fontSize: '12px' }}>Uploading…</span>
@@ -283,7 +283,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
 
         {/* Save */}
         <button onClick={handleSave} disabled={saving || saved}
-          className="w-full py-3 rounded-md font-medium"
+          className="w-full py-3 vq-r font-medium"
           style={{
             background: saved ? 'var(--gr)' : 'var(--ac)', border: 'none',
             color: 'white', fontSize: '13px', cursor: (saving || saved) ? 'default' : 'pointer',
@@ -294,8 +294,8 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
         {/* AI Feedback */}
         {saved && (aiFetching || aiFeedback) && (
           <div style={{
-            padding: '12px 14px', borderRadius: '8px',
-            background: 'rgba(77,143,255,0.07)', border: '1px solid rgba(77,143,255,0.2)',
+            padding: '12px 14px', borderRadius: 'var(--radius-md)',
+            background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.2)',
           }}>
             <p style={{ fontSize: '10px', color: 'var(--ac)', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '6px' }}>
               VELQUOR Feedback

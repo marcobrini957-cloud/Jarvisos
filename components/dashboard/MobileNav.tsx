@@ -79,7 +79,7 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
       }}>
         {/* Drag handle */}
         <div style={{
-          width: '36px', height: '4px', borderRadius: '2px',
+          width: '36px', height: '4px', borderRadius: 'var(--radius-xs)',
           background: 'var(--bd2)', margin: '0 auto 12px',
         }} />
 
@@ -96,7 +96,7 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
             onClick={() => { onSettingsToggle(); setDrawerOpen(false) }}
             style={{
               background: showSettings ? 'var(--s3)' : 'transparent',
-              border: '1px solid var(--bd2)', borderRadius: '8px',
+              border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
               padding: '5px 10px', color: showSettings ? 'var(--ac)' : 'var(--t2)',
               fontSize: '12px', cursor: 'pointer',
             }}
@@ -122,7 +122,7 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
                   display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'center',
                   gap: '6px', padding: '14px 8px',
-                  borderRadius: '12px',
+                  borderRadius: 'var(--radius-lg)',
                   background: isActive ? 'var(--s3)' : 'transparent',
                   border: isActive ? '1px solid var(--bd2)' : '1px solid transparent',
                   cursor: 'pointer',
@@ -181,7 +181,7 @@ export default function MobileNav({ activeTab, onTabChange, showSettings, onSett
             >
               <span style={{
                 fontSize: '20px', lineHeight: 1,
-                filter: isActive && tab.isGold ? 'drop-shadow(0 0 6px rgba(212,160,52,0.6))' : 'none',
+                filter: isActive && tab.isGold ? 'drop-shadow(0 0 6px rgba(255,255,255,0.6))' : 'none',
               }}>
                 <Icon name={tab.icon} size={16} />
               </span>

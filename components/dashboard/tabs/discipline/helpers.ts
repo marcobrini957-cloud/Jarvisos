@@ -30,7 +30,7 @@ export const inputStyle: React.CSSProperties = {
   width: '100%',
   background: 'var(--s2)',
   border: '1px solid var(--bd2)',
-  borderRadius: '8px',
+  borderRadius: 'var(--radius-md)',
   padding: '10px 12px',
   color: 'var(--t1)',
   fontSize: '13px',

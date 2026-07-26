@@ -1,3 +1,5 @@
+import { Label, Num } from './vq'
+
 interface MetricCardProps {
   title: string
   value: string
@@ -8,6 +10,7 @@ interface MetricCardProps {
   className?: string
 }
 
+/** Single figure in a hairline box. Same anatomy as one cell of MetricStrip. */
 export default function MetricCard({
   title,
   value,
@@ -19,51 +22,33 @@ export default function MetricCard({
   const isPositive = changePositive === true
   const isNegative = changePositive === false
 
-  // Colour the value itself if it looks like a P&L (starts with + or -)
-  const valueIsProfit = value.startsWith('+')
-  const valueIsLoss   = value.startsWith('-')
-  const valueColor    = valueIsProfit ? 'var(--gr2)' : valueIsLoss ? 'var(--re)' : 'var(--t1)'
+  // A value that opens with a sign is a P&L, and takes the P&L colour.
+  const tone = value.startsWith('+') ? 'up' : value.startsWith('-') ? 'down' : 'neutral'
 
   return (
     <div
-      className={`rounded-xl flex flex-col gap-1.5 ${className}`}
+      className={`flex flex-col ${className}`}
       style={{
-        background: 'var(--s1)',
-        border: '1px solid var(--bd)',
-        padding: '18px 20px 16px',
+        background:   'var(--color-surface-1)',
+        border:       '1px solid var(--color-line-1)',
+        borderRadius: 'var(--radius-md)',
+        padding:      '11px 14px',
+        gap:          '5px',
+        minWidth:     0,
       }}
     >
-      <p style={{
-        color: 'var(--t3)',
-        fontSize: '11px',
-        fontWeight: 500,
-        letterSpacing: '0.04em',
-        textTransform: 'uppercase',
-      }}>
-        {title}
-      </p>
+      <Label>{title}</Label>
 
-      <p
-        className="num"
-        style={{
-          color:       valueColor,
-          fontSize:    '28px',
-          fontWeight:  '700',
-          lineHeight:  1.1,
-          letterSpacing: '-0.03em',
-        }}
-      >
-        {value}
-      </p>
+      <Num size="xl" tone={tone}>{value}</Num>
 
       {(change || subtitle) && (
-        <p style={{
-          fontSize: '12px',
-          fontWeight: 400,
-          color: isPositive ? 'var(--gr2)' : isNegative ? 'var(--re)' : 'var(--t3)',
+        <span style={{
+          fontFamily: 'var(--font-display)',
+          fontSize:   'var(--text-xs)',
+          color:      isPositive ? 'var(--color-up)' : isNegative ? 'var(--color-down)' : 'var(--color-ink-3)',
         }}>
           {change || subtitle}
-        </p>
+        </span>
       )}
     </div>
   )

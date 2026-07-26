@@ -6,8 +6,8 @@ export function PlanGateBanner() {
     <div style={{ textAlign: 'center', padding: '60px 20px' }}>
       <div style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: 56, height: 56, borderRadius: '14px',
-        background: 'rgba(122,79,255,0.12)', border: '1px solid rgba(122,79,255,0.2)',
+        width: 56, height: 56, borderRadius: 'var(--radius-lg)',
+        background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
         fontSize: '24px', marginBottom: '20px',
       }}>
         ⚡
@@ -20,7 +20,7 @@ export function PlanGateBanner() {
       </div>
       <div style={{
         display: 'inline-flex', gap: '12px', padding: '16px 24px',
-        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '14px',
+        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-lg)',
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--t1)' }}>Pro</div>
@@ -28,7 +28,7 @@ export function PlanGateBanner() {
         </div>
         <div style={{ width: 1, background: 'var(--bd)' }} />
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFD700' }}>Ultra</div>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF' }}>Ultra</div>
           <div style={{ fontSize: '11px', color: 'var(--t3)' }}>3 copy groups · 5 followers each</div>
         </div>
       </div>

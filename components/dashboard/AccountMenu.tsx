@@ -44,14 +44,14 @@ function timeAgo(iso: string | null): string {
 
 function RoleBadge({ text, tone }: { text: string; tone: 'accent' | 'gold' | 'muted' }) {
   const colors = {
-    accent: { bg: 'rgba(88,166,255,0.12)',  fg: 'var(--ac)'  },
-    gold:   { bg: 'rgba(240,180,41,0.12)',  fg: 'var(--go2)' },
+    accent: { bg: 'rgba(255,255,255,0.12)',  fg: 'var(--ac)'  },
+    gold:   { bg: 'rgba(255,255,255,0.12)',  fg: 'var(--go2)' },
     muted:  { bg: 'rgba(255,255,255,0.06)', fg: 'var(--t3)'  },
   }[tone]
   return (
     <span style={{
       background: colors.bg, color: colors.fg, fontSize: '9px', fontWeight: 700,
-      letterSpacing: '0.06em', padding: '1px 6px', borderRadius: '4px', flexShrink: 0,
+      letterSpacing: '0.06em', padding: '1px 6px', borderRadius: 'var(--radius-sm)', flexShrink: 0,
     }}>
       {text}
     </span>
@@ -127,7 +127,7 @@ export default function AccountMenu({
   }
 
   const actionStyle: React.CSSProperties = {
-    flex: 1, padding: '8px 0', borderRadius: '7px', fontSize: '11px', fontWeight: 600,
+    flex: 1, padding: '8px 0', borderRadius: 'var(--radius-md)', fontSize: '11px', fontWeight: 600,
     background: 'var(--s3)', border: '1px solid var(--bd2)', color: 'var(--t2)',
     cursor: 'pointer', transition: 'all 0.12s',
   }
@@ -136,7 +136,7 @@ export default function AccountMenu({
     <div ref={rootRef} style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+        className="flex items-center gap-2 px-3 py-1.5 vq-r"
         style={{
           background: open ? 'var(--s2)' : 'transparent',
           border: '1px solid var(--bd2)',
@@ -161,8 +161,8 @@ export default function AccountMenu({
             )}
             {pillOpen > 0 && (
               <span className="topbar-mt5-open" style={{
-                background: 'rgba(88,166,255,0.12)', color: 'var(--ac)',
-                fontSize: '11px', padding: '1px 7px', borderRadius: '4px',
+                background: 'rgba(255,255,255,0.12)', color: 'var(--ac)',
+                fontSize: '11px', padding: '1px 7px', borderRadius: 'var(--radius-sm)',
               }}>
                 {pillOpen} open
               </span>
@@ -183,7 +183,7 @@ export default function AccountMenu({
         <div style={{
           position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)',
           width: '340px', zIndex: 50,
-          background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '12px',
+          background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-lg)',
           boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
           padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px',
         }}>
@@ -218,9 +218,9 @@ export default function AccountMenu({
                   onClick={() => choose(acc)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-                    padding: '10px 10px', borderRadius: '9px', textAlign: 'left',
-                    background: isSelected ? 'rgba(88,166,255,0.08)' : 'transparent',
-                    border: isSelected ? '1px solid rgba(88,166,255,0.35)' : '1px solid transparent',
+                    padding: '10px 10px', borderRadius: 'var(--radius-md)', textAlign: 'left',
+                    background: isSelected ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    border: isSelected ? '1px solid rgba(255,255,255,0.35)' : '1px solid transparent',
                     cursor: 'pointer', transition: 'all 0.1s',
                   }}
                   onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--s3)' }}

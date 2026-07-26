@@ -41,9 +41,9 @@ export function TraderDnaCard() {
           <TraderDnaVisual dna={data.dna} focus={data.focus || undefined} />
           {!data.aiCoaching && (
             <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 10, textAlign: 'center',
-              background: 'rgba(200,133,26,0.06)', border: '1px solid rgba(200,133,26,0.16)' }}>
+              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)' }}>
               <span style={{ fontSize: 12.5, color: 'var(--t2)' }}>
-                Upgrade to <strong style={{ color: 'var(--go2, #C8851A)' }}>Pro</strong> for your AI biggest-opportunity focus —
+                Upgrade to <strong style={{ color: 'var(--go2, #FFFFFF)' }}>Pro</strong> for your AI biggest-opportunity focus —
                 the one change that moves the needle most.
               </span>
             </div>

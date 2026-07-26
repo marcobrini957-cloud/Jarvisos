@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from 'react'
 import { InfoTip } from './InfoTip'
+import { Label, Num, Segmented } from './vq'
 
 export type Period = 'D' | 'W' | 'M' | 'Q' | 'Y'
 
@@ -11,6 +12,7 @@ const PERIOD_LABELS: Record<Period, string> = {
 
 interface PeriodMetricCardProps {
   title:          string
+  /** Deprecated — the 2.0 language has no accent colour. Kept for callers. */
   barColor?:      string
   periods?:       Period[]
   getValue:       (period: Period) => { value: string; change?: string; changePositive?: boolean | null }
@@ -28,7 +30,6 @@ interface PeriodMetricCardProps {
 
 export default function PeriodMetricCard({
   title,
-  barColor = 'var(--ac)',
   periods = ['D', 'W', 'M', 'Q', 'Y'],
   getValue,
   getVisual,
@@ -43,100 +44,55 @@ export default function PeriodMetricCard({
   const visual   = getVisual?.(period)
   const infoNode = getInfo ? getInfo(period) : info
 
-  const isPositive    = changePositive === true
-  const isNegative    = changePositive === false
-  const valueIsProfit = value.startsWith('+')
-  const valueIsLoss   = value.startsWith('-')
-  const valueColor    = valueIsProfit ? 'var(--gr2)' : valueIsLoss ? 'var(--re)' : 'var(--t1)'
+  const isPositive = changePositive === true
+  const isNegative = changePositive === false
+  const tone = value.startsWith('+') ? 'up' : value.startsWith('-') ? 'down' : 'neutral'
 
   return (
     <div
-      className={`rounded-xl flex flex-col gap-2 ${className}`}
+      className={`flex flex-col ${className}`}
       style={{
-        background: 'var(--s1)',
-        border:     '1px solid var(--bd2)',
-        boxShadow:  'var(--shadow-sm)',
-        padding:    '16px 18px 15px',
-        position:   'relative',
-        overflow:   'hidden',
+        background:   'var(--color-surface-1)',
+        border:       '1px solid var(--color-line-1)',
+        borderRadius: 'var(--radius-md)',
+        padding:      '10px 14px 12px',
+        gap:          '7px',
+        position:     'relative',
+        minWidth:     0,
       }}
     >
-      {/* Subtle top glow when positive */}
-      {valueIsProfit && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
-          background: `linear-gradient(90deg, transparent, rgba(76,217,100,0.4), transparent)`,
-        }} />
-      )}
-      {valueIsLoss && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
-          background: `linear-gradient(90deg, transparent, rgba(255,59,48,0.4), transparent)`,
-        }} />
-      )}
-
-      {/* Info eye — pinned to the absolute top-right corner of the card */}
+      {/* Info eye — pinned to the top-right corner */}
       {infoNode && (
-        <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 3 }}>
+        <div style={{ position: 'absolute', top: '9px', right: '10px', zIndex: 3 }}>
           <InfoTip title={infoTitle ?? title} text={infoNode} />
         </div>
       )}
 
-      {/* Title (eye is pinned to the corner above) */}
-      <p className="label-caps" style={{ paddingRight: infoNode ? '22px' : 0 }}>{title}</p>
+      <Label style={{ paddingRight: infoNode ? '20px' : 0 }}>{title}</Label>
 
-      {/* Period selector — its own line, directly under the title */}
-      <div className="flex items-center self-start" style={{ gap: '1px', background: 'var(--s3)', borderRadius: '6px', padding: '2px' }}>
-        {periods.map(p => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            title={PERIOD_LABELS[p]}
-            style={{
-              fontSize:     '10px',
-              fontWeight:   period === p ? 600 : 400,
-              padding:      '2px 7px',
-              borderRadius: '4px',
-              border:       'none',
-              cursor:       'pointer',
-              background:   period === p ? barColor : 'transparent',
-              color:        period === p ? 'white'   : 'var(--t3)',
-              transition:   'all 0.12s',
-              lineHeight:   '16px',
-            }}
-            onMouseEnter={e => { if (period !== p) e.currentTarget.style.color = 'var(--t2)' }}
-            onMouseLeave={e => { if (period !== p) e.currentTarget.style.color = 'var(--t3)' }}
-          >
-            {p}
-          </button>
-        ))}
+      {/* Period selector on its own line, under the title */}
+      <div className="self-start">
+        <Segmented
+          options={periods.map(p => ({ key: p, label: p }))}
+          value={period}
+          onChange={setPeriod}
+          titles={PERIOD_LABELS}
+        />
       </div>
 
-      {/* Text on the left, chart on the right */}
-      <div className="flex items-center justify-between gap-3" style={{ marginTop: '2px' }}>
-        <div className="flex flex-col gap-1" style={{ minWidth: 0 }}>
-          {/* Big number */}
-          <p
-            className="num"
-            style={{
-              color:         valueColor,
-              fontSize:      '26px',
-              fontWeight:    700,
-              lineHeight:    1.1,
-              letterSpacing: '-0.04em',
-            }}
-          >
-            {value}
-          </p>
+      {/* Figure on the left, graphic on the right */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col" style={{ minWidth: 0, gap: '3px' }}>
+          <Num size="2xl" tone={tone}>{value}</Num>
 
-          {/* Change */}
           {change && (
-            <p style={{
-              fontSize: '12px',
-              color: isPositive ? 'var(--gr2)' : isNegative ? 'var(--re)' : 'var(--t3)',
+            <span style={{
+              fontFamily: 'var(--font-display)',
+              fontSize:   'var(--text-xs)',
+              color:      isPositive ? 'var(--color-up)' : isNegative ? 'var(--color-down)' : 'var(--color-ink-3)',
             }}>
               {change}
-            </p>
+            </span>
           )}
         </div>
 

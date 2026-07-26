@@ -137,7 +137,7 @@ export default function TabBar({ activeTab, onTabChange, showSettings, onSetting
       <button
         onClick={onSettingsToggle}
         title="Settings"
-        className="flex items-center justify-center rounded-lg flex-shrink-0"
+        className="flex items-center justify-center vq-r flex-shrink-0"
         style={{
           width: '28px', height: '28px', marginLeft: '4px',
           background: showSettings ? 'var(--s3)' : 'transparent',

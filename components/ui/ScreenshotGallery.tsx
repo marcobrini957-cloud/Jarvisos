@@ -34,7 +34,7 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
     return (
       <div style={{
         padding: '32px', textAlign: 'center',
-        background: 'var(--s2)', borderRadius: '10px', border: '1px dashed var(--bd2)',
+        background: 'var(--s2)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--bd2)',
       }}>
         <p style={{ color: 'var(--t3)', fontSize: '13px' }}>No chart screenshots yet.</p>
         <p style={{ color: 'var(--t3)', fontSize: '11px', marginTop: '4px' }}>
@@ -60,7 +60,7 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
               key={trade.id}
               onClick={() => setLightbox(trade)}
               style={{
-                cursor: 'pointer', borderRadius: '8px', overflow: 'hidden',
+                cursor: 'pointer', borderRadius: 'var(--radius-md)', overflow: 'hidden',
                 border: '1px solid var(--bd2)', background: 'var(--s2)',
                 transition: 'all 0.12s',
               }}
@@ -127,13 +127,13 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
               alt={`${lightbox.symbol} chart`}
               style={{
                 width: '100%', maxHeight: 'calc(90vh - 80px)',
-                objectFit: 'contain', borderRadius: '10px',
+                objectFit: 'contain', borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--bd2)',
               }}
             />
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'var(--s1)', borderRadius: '8px', padding: '10px 16px',
+              background: 'var(--s1)', borderRadius: 'var(--radius-md)', padding: '10px 16px',
               border: '1px solid var(--bd2)',
             }}>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
@@ -150,7 +150,7 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
                   {fmtDate(lightbox.open_time)}
                 </span>
                 {lightbox.setup_type && (
-                  <span style={{ fontSize: '11px', color: 'var(--t2)', background: 'var(--s3)', padding: '2px 8px', borderRadius: '4px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--t2)', background: 'var(--s3)', padding: '2px 8px', borderRadius: 'var(--radius-sm)' }}>
                     {lightbox.setup_type}
                   </span>
                 )}
@@ -158,7 +158,7 @@ export default function ScreenshotGallery({ trades }: ScreenshotGalleryProps) {
               <button
                 onClick={() => setLightbox(null)}
                 style={{
-                  background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px',
+                  background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
                   color: 'var(--t2)', cursor: 'pointer', fontSize: '13px', padding: '4px 12px',
                 }}
               >

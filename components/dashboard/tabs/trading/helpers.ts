@@ -137,7 +137,7 @@ export function buildHeatmap(trades: Trade[]) {
 
 export function heatColor(wr: number, count: number) {
   if (count === 0) return { bg: 'var(--s3)', color: 'var(--t3)' }
-  if (wr >= 0.65)  return { bg: 'rgba(99,153,34,0.30)',   color: 'var(--gr2)' }
-  if (wr >= 0.45)  return { bg: 'rgba(186,117,23,0.22)',  color: 'var(--am2)' }
-  return              { bg: 'rgba(226,75,74,0.20)',  color: 'var(--re)' }
+  if (wr >= 0.65)  return { bg: 'rgba(0,196,106,0.30)',   color: 'var(--gr2)' }
+  if (wr >= 0.45)  return { bg: 'rgba(255,255,255,0.22)',  color: 'var(--am2)' }
+  return              { bg: 'rgba(240,80,75,0.20)',  color: 'var(--re)' }
 }

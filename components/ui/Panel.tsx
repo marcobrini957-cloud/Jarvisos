@@ -1,11 +1,19 @@
 import { ReactNode } from 'react'
 
+/**
+ * Panel is the legacy box that twelve tabs already compose. It now renders the
+ * same thing `Surface` does in components/ui/vq — hairline, 6px radius, 9/14
+ * title bar, no shadow, no shimmer, no accent glow — so converting a tab is a
+ * content job, not a re-boxing job. Kept as a separate component only because
+ * of the prop surface (`accent`, `noPadding`, `fill`) callers rely on.
+ */
 interface PanelProps {
   title?:     ReactNode
   children:   ReactNode
   className?: string
   action?:    ReactNode
   noPadding?: boolean
+  /** Left lead rule. Only P&L colours belong here now. */
   accent?:    string
   /** Make the content area flex-fill the panel height (for charts that should
       grow to fill the box). */
@@ -15,41 +23,36 @@ interface PanelProps {
 export default function Panel({ title, children, className = '', action, noPadding = false, accent, fill = false }: PanelProps) {
   return (
     <div
-      className={`rounded-xl flex flex-col ${className}`}
+      className={`flex flex-col ${className}`}
       style={{
-        background:  'var(--s1)',
-        border:      '1px solid var(--bd2)',
-        borderLeft:  accent ? `3px solid ${accent}` : undefined,
-        boxShadow:   accent
-          ? `0 0 0 1px rgba(255,255,255,0.025), 0 2px 20px rgba(0,0,0,0.55), 0 0 40px ${accent}10`
-          : '0 0 0 1px rgba(255,255,255,0.025), 0 2px 16px rgba(0,0,0,0.5)',
-        overflow: 'hidden',
-        position: 'relative',
+        background:   'var(--color-surface-1)',
+        border:       '1px solid var(--color-line-1)',
+        borderLeft:   accent ? `2px solid ${accent}` : undefined,
+        borderRadius: 'var(--radius-md)',
+        overflow:     'hidden',
+        position:     'relative',
+        minWidth:     0,
       }}
     >
-      {/* Top shimmer on accented panels */}
-      {accent && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
-          background: `linear-gradient(90deg, transparent 0%, ${accent}55 30%, ${accent}88 50%, ${accent}55 70%, transparent 100%)`,
-          pointerEvents: 'none',
-        }} />
-      )}
-
       {title && (
         <div className="flex items-center justify-between" style={{
-          padding: '13px 18px 12px',
-          borderBottom: '1px solid var(--bd)',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 100%)',
+          gap: '10px', padding: '9px 14px',
+          borderBottom: '1px solid var(--color-line-1)',
         }}>
-          <span style={{ color: 'var(--t1)', fontSize: '13px', fontWeight: 600, letterSpacing: '-0.005em' }}>
+          <span style={{
+            fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+            color: 'var(--color-ink-1)', letterSpacing: '0.01em',
+          }}>
             {title}
           </span>
-          {action && <div>{action}</div>}
+          {action && <div className="flex items-center" style={{ gap: '8px' }}>{action}</div>}
         </div>
       )}
 
-      <div className={`${noPadding ? '' : 'p-4'} ${fill ? 'flex-1 flex flex-col min-h-0' : ''}`}>
+      <div
+        className={fill ? 'flex-1 flex flex-col min-h-0' : ''}
+        style={{ padding: noPadding ? undefined : '12px 14px', minWidth: 0 }}
+      >
         {children}
       </div>
     </div>

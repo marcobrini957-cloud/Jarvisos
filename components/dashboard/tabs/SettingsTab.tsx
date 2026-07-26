@@ -12,9 +12,9 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
     <button
       onClick={() => onChange(!value)}
       style={{
-        width: '40px', height: '22px', borderRadius: '11px',
-        background: value ? 'rgba(232,201,106,0.8)' : 'var(--s3)',
-        border: `1px solid ${value ? 'rgba(232,201,106,0.5)' : 'var(--bd2)'}`,
+        width: '40px', height: '22px', borderRadius: 'var(--radius-md)',
+        background: value ? 'rgba(255,255,255,0.8)' : 'var(--s3)',
+        border: `1px solid ${value ? 'rgba(255,255,255,0.5)' : 'var(--bd2)'}`,
         cursor: 'pointer', padding: '0', position: 'relative',
         transition: 'background 0.2s ease, border-color 0.2s ease', flexShrink: 0,
       }}
@@ -33,7 +33,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
 
 // ── Status dot ─────────────────────────────────────────────────────────────────
 function Dot({ ok }: { ok: boolean | null }) {
-  const color = ok === null ? 'var(--t3)' : ok ? 'var(--gr2)' : '#ef4444'
+  const color = ok === null ? 'var(--t3)' : ok ? 'var(--gr2)' : '#F0504B'
   return (
     <span style={{
       width: '8px', height: '8px', borderRadius: '50%',
@@ -96,9 +96,9 @@ function MT5AccountsPanel() {
         {/* ── Connection badge ─────────────────────────────────────────────── */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '12px 14px', borderRadius: '10px',
-          background: connected ? 'rgba(0,255,133,0.06)' : 'var(--s3)',
-          border: `1px solid ${connected ? 'rgba(0,255,133,0.2)' : 'var(--bd2)'}`,
+          padding: '12px 14px', borderRadius: 'var(--radius-md)',
+          background: connected ? 'rgba(0,196,106,0.06)' : 'var(--s3)',
+          border: `1px solid ${connected ? 'rgba(0,196,106,0.2)' : 'var(--bd2)'}`,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Dot ok={status === null ? null : connected} />
@@ -128,7 +128,7 @@ function MT5AccountsPanel() {
           <Link
             href="/connect"
             style={{
-              padding: '6px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 600,
+              padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: 600,
               background: connected ? 'var(--s3)' : 'var(--ac)',
               color: connected ? 'var(--t2)' : 'white',
               border: connected ? '1px solid var(--bd2)' : 'none',
@@ -147,7 +147,7 @@ function MT5AccountsPanel() {
           <div style={{
             display: 'flex', alignItems: 'center', gap: '8px',
             background: 'var(--s2)', border: '1px solid var(--bd2)',
-            borderRadius: '9px', padding: '9px 12px',
+            borderRadius: 'var(--radius-md)', padding: '9px 12px',
           }}>
             <code style={{
               flex: 1, fontFamily: 'monospace', fontSize: '12px',
@@ -159,8 +159,8 @@ function MT5AccountsPanel() {
               onClick={copyKey}
               disabled={!status?.api_key}
               style={{
-                padding: '4px 10px', borderRadius: '6px', border: 'none',
-                background: copied ? 'rgba(0,255,133,0.15)' : 'var(--s3)',
+                padding: '4px 10px', borderRadius: 'var(--radius-md)', border: 'none',
+                background: copied ? 'rgba(0,196,106,0.15)' : 'var(--s3)',
                 color: copied ? 'var(--gr2)' : 'var(--t2)',
                 fontSize: '11px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
               }}
@@ -233,7 +233,7 @@ export default function SettingsTab() {
         <span style={{ color: 'var(--t2)', fontSize: '12px' }}>{label}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Dot ok={health ? ok : null} />
-          <span style={{ color: ok ? 'var(--gr2)' : health ? '#ef4444' : 'var(--t3)', fontSize: '12px', fontWeight: 500 }}>{text}</span>
+          <span style={{ color: ok ? 'var(--gr2)' : health ? '#F0504B' : 'var(--t3)', fontSize: '12px', fontWeight: 500 }}>{text}</span>
         </div>
       </div>
     )

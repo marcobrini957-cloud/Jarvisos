@@ -37,9 +37,9 @@ export default function PartnerRail({ className }: { className?: string }) {
       <a
         href="/pricing"
         style={{
-          marginTop: '4px', padding: '12px', borderRadius: '12px', display: 'block',
-          background: 'linear-gradient(135deg, rgba(122,79,255,0.14), rgba(122,79,255,0.04))',
-          border: '1px solid rgba(122,79,255,0.28)', cursor: 'pointer', textAlign: 'left',
+          marginTop: '4px', padding: '12px', borderRadius: 'var(--radius-lg)', display: 'block',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04))',
+          border: '1px solid rgba(255,255,255,0.28)', cursor: 'pointer', textAlign: 'left',
           textDecoration: 'none',
         }}
       >

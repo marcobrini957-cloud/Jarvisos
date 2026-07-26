@@ -61,7 +61,7 @@ function PeriodMenu({ value, onChange }: { value: PeriodKey; onChange: (k: Perio
           fontSize: '10px', fontWeight: 600, letterSpacing: '0.02em',
           color: open ? 'var(--t1)' : 'var(--t2)',
           background: 'var(--s2)', border: '1px solid var(--bd2)',
-          borderRadius: '6px', padding: '3px 7px', cursor: 'pointer',
+          borderRadius: 'var(--radius-md)', padding: '3px 7px', cursor: 'pointer',
           transition: 'color 0.12s, border-color 0.12s',
         }}
       >
@@ -75,7 +75,7 @@ function PeriodMenu({ value, onChange }: { value: PeriodKey; onChange: (k: Perio
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 5px)', right: 0, zIndex: 20,
-          background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
+          background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
           boxShadow: 'var(--shadow-lg)', padding: '4px', minWidth: '104px',
           animation: 'fade-in 0.12s ease',
         }}>
@@ -85,7 +85,7 @@ function PeriodMenu({ value, onChange }: { value: PeriodKey; onChange: (k: Perio
               onClick={() => { onChange(p.key); setOpen(false) }}
               style={{
                 display: 'block', width: '100%', textAlign: 'left',
-                padding: '5px 8px', borderRadius: '5px', border: 'none',
+                padding: '5px 8px', borderRadius: 'var(--radius-sm)', border: 'none',
                 background: p.key === value ? 'rgba(255,255,255,0.06)' : 'transparent',
                 color: p.key === value ? 'var(--t1)' : 'var(--t2)',
                 fontSize: '11px', fontWeight: p.key === value ? 600 : 400, cursor: 'pointer',
@@ -121,7 +121,7 @@ export function WinRateCard({ trades }: { trades: TradeLike[] }) {
 
   return (
     <div className="metric-card" style={{
-      padding: '16px', background: 'rgba(255,255,255,0.025)', borderRadius: '12px',
+      padding: '16px', background: 'rgba(255,255,255,0.025)', borderRadius: 'var(--radius-lg)',
       border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>

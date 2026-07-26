@@ -119,8 +119,8 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
   const yOf   = (v: number) => PAD.t + (1 - (v - minVal) / range) * cH
   const zeroY = yOf(0)
 
-  const lineColor = finalVal >= 0 ? '#00E87A' : '#FF3D50'
-  const fillColor = finalVal >= 0 ? '#00CC6A' : '#FF3D50'
+  const lineColor = finalVal >= 0 ? '#00C46A' : '#F0504B'
+  const fillColor = finalVal >= 0 ? '#00C46A' : '#F0504B'
 
   const points  = equity.map((v, i) => ({ x: xOf(i), y: yOf(v) }))
   const linePath = n === 0 ? '' : n === 1
@@ -161,7 +161,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
             <button key={p}
               onClick={() => { setPeriod(p); setHover(null) }}
               style={{
-                padding: '3px 10px', borderRadius: '6px', border: 'none',
+                padding: '3px 10px', borderRadius: 'var(--radius-md)', border: 'none',
                 cursor: 'pointer', fontSize: '11px', fontWeight: 600,
                 background: period === p ? 'var(--ac)' : 'var(--s3)',
                 color:      period === p ? 'white'     : 'var(--t3)',
@@ -230,7 +230,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
         <div style={{
           flex: 1, minHeight: '160px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'var(--s2)', borderRadius: '10px', border: '1px dashed var(--bd2)',
+          background: 'var(--s2)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--bd2)',
         }}>
           <p style={{ color: 'var(--t3)', fontSize: '13px' }}>No closed trades {periodLabel}</p>
         </div>
@@ -274,7 +274,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
             {maxDD > 0.01 && finalVal < peak && (
               <line
                 x1={xOf(peakIdx)} y1={yOf(peak)} x2={xOf(n-1)} y2={yOf(peak)}
-                stroke="#E09020" strokeWidth="1" strokeDasharray="4,3" opacity="0.4"
+                stroke="#FFFFFF" strokeWidth="1" strokeDasharray="4,3" opacity="0.4"
                 vectorEffect="non-scaling-stroke"
               />
             )}
@@ -287,7 +287,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
             {/* Peak dot */}
             {peakIdx > 0 && peakIdx < n - 1 && (
               <circle cx={xOf(peakIdx)} cy={yOf(peak)} r="3.5"
-                fill="#E09020" stroke="#000000" strokeWidth="1.5" />
+                fill="#FFFFFF" stroke="#000000" strokeWidth="1.5" />
             )}
 
             {/* Final dot (hidden when hovering over last point) */}
@@ -299,7 +299,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
             {/* Y-axis labels */}
             {[maxVal, 0, minVal].filter((v, i, a) => a.indexOf(v) === i).map((v, i) => (
               <text key={i} x={PAD.l - 8} y={yOf(v) + 4}
-                textAnchor="end" fontSize="10" fill="rgba(104,129,168,0.55)" fontFamily="monospace">
+                textAnchor="end" fontSize="10" fill="rgba(255,255,255,0.55)" fontFamily="monospace">
                 {v >= 0 ? `+${v.toFixed(0)}` : v.toFixed(0)}
               </text>
             ))}
@@ -313,7 +313,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
                 ? `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}`
                 : ''
               const valStr   = `${val >= 0 ? '+' : '-'}€${Math.abs(val).toFixed(2)}`
-              const hColor   = val >= 0 ? '#00E87A' : '#FF3D50'
+              const hColor   = val >= 0 ? '#00C46A' : '#F0504B'
               const tipW     = 148
               const tipH     = 50
               const isRight  = hover.x > W - PAD.r - tipW - 20
@@ -327,7 +327,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
                   <line x1={PAD.l} y1={hover.y} x2={W - PAD.r} y2={hover.y}
                     stroke="rgba(255,255,255,0.05)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
 
-                  <rect x={2} y={hover.y - 9} width={PAD.l - 6} height={18} rx="4" fill="#4D8FFF" />
+                  <rect x={2} y={hover.y - 9} width={PAD.l - 6} height={18} rx="4" fill="#FFFFFF" />
                   <text x={PAD.l - 9} y={hover.y + 4} textAnchor="end"
                     fontSize="9" fill="white" fontWeight="700" fontFamily="monospace">
                     {val >= 0 ? '+' : ''}{val.toFixed(0)}
@@ -339,7 +339,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
                   <rect x={tx} y={ty} width={tipW} height={tipH}
                     rx="7" fill="#111111" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
                   <text x={tx + 11} y={ty + 17} fontSize="10"
-                    fill="rgba(104,129,168,0.8)" fontFamily="monospace">
+                    fill="rgba(255,255,255,0.8)" fontFamily="monospace">
                     {dateStr}
                   </text>
                   <text x={tx + 11} y={ty + 38} fontSize="16" fontWeight="700"

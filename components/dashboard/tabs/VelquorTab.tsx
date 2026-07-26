@@ -129,8 +129,8 @@ export default function VelquorTab() {
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes vq-analyst-ring {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(232,201,106,0.25); }
-          50%      { box-shadow: 0 0 0 14px rgba(232,201,106,0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.25); }
+          50%      { box-shadow: 0 0 0 14px rgba(255,255,255,0); }
         }
       `}</style>
 
@@ -146,8 +146,8 @@ export default function VelquorTab() {
             }}>
               <div style={introStyle(0)}>
                 <div style={{
-                  display: 'inline-flex', padding: '14px', borderRadius: '20px',
-                  background: 'rgba(232,201,106,0.07)', border: '1px solid rgba(232,201,106,0.2)',
+                  display: 'inline-flex', padding: '14px', borderRadius: 'var(--radius-xl)',
+                  background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.2)',
                   animation: animate ? 'vq-analyst-ring 2.4s ease-in-out 1.2s 3' : 'none',
                 }}>
                   <LogoMark size={44} />
@@ -168,7 +168,7 @@ export default function VelquorTab() {
               <div style={{ ...introStyle(2), display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px', width: '100%', maxWidth: '640px', marginTop: '6px' }}>
                 {CAPABILITIES.map(c => (
                   <div key={c.label} style={{
-                    padding: '12px 14px', borderRadius: '10px', textAlign: 'left',
+                    padding: '12px 14px', borderRadius: 'var(--radius-md)', textAlign: 'left',
                     background: 'rgba(255,255,255,0.02)', border: '1px solid var(--bd2)',
                   }}>
                     <p style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{c.label}</p>
@@ -186,11 +186,11 @@ export default function VelquorTab() {
                       inputRef.current?.focus()
                     }}
                     style={{
-                      padding: '7px 14px', borderRadius: '999px', fontSize: '11.5px', fontWeight: 600,
-                      background: 'transparent', border: '1px solid rgba(232,201,106,0.28)',
+                      padding: '7px 14px', borderRadius: 'var(--radius-xl)', fontSize: '11.5px', fontWeight: 600,
+                      background: 'transparent', border: '1px solid rgba(255,255,255,0.28)',
                       color: 'var(--go2)', cursor: 'pointer', transition: 'all 0.12s',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,201,106,0.08)')}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     {p.label}
@@ -205,7 +205,7 @@ export default function VelquorTab() {
               <div key={i} style={{ display: 'flex', justifyContent: 'flex-end', margin: '20px 0' }}>
                 <div style={{
                   maxWidth: '78%', padding: '11px 16px',
-                  background: 'rgba(55,138,221,0.14)', border: '1px solid rgba(55,138,221,0.22)',
+                  background: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)',
                   borderRadius: '14px 14px 3px 14px',
                 }}>
                   <p style={{ color: 'var(--t1)', fontSize: '13.5px', fontWeight: 500, lineHeight: 1.65, margin: 0, whiteSpace: 'pre-line' }}>
@@ -216,8 +216,8 @@ export default function VelquorTab() {
             ) : (
               <div key={i} style={{ display: 'flex', gap: '12px', margin: '20px 0', alignItems: 'flex-start' }}>
                 <div style={{
-                  flexShrink: 0, marginTop: '2px', borderRadius: '9px', overflow: 'hidden',
-                  outline: speakingIdx === i ? '2px solid rgba(232,201,106,0.5)' : 'none',
+                  flexShrink: 0, marginTop: '2px', borderRadius: 'var(--radius-md)', overflow: 'hidden',
+                  outline: speakingIdx === i ? '2px solid rgba(255,255,255,0.5)' : 'none',
                 }}>
                   <LogoMark size={26} />
                 </div>
@@ -234,9 +234,9 @@ export default function VelquorTab() {
                         <button
                           onClick={() => speak(msg.content, i)}
                           style={{
-                            marginTop: '8px', padding: '3px 10px', borderRadius: '6px',
-                            background: speakingIdx === i ? 'rgba(232,201,106,0.15)' : 'transparent',
-                            border: '1px solid rgba(232,201,106,0.25)',
+                            marginTop: '8px', padding: '3px 10px', borderRadius: 'var(--radius-md)',
+                            background: speakingIdx === i ? 'rgba(255,255,255,0.15)' : 'transparent',
+                            border: '1px solid rgba(255,255,255,0.25)',
                             color: speakingIdx === i ? 'var(--go2)' : 'var(--t3)',
                             fontSize: '11px', fontWeight: 600, cursor: 'pointer',
                           }}
@@ -259,7 +259,7 @@ export default function VelquorTab() {
         <div style={{ maxWidth: '760px', margin: '0 auto' }}>
           <div style={{
             display: 'flex', alignItems: 'flex-end', gap: '10px',
-            background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '14px',
+            background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-lg)',
             padding: '10px 12px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
           }}>
@@ -285,7 +285,7 @@ export default function VelquorTab() {
               onClick={handleSubmit}
               disabled={streaming || !input.trim()}
               style={{
-                width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
+                width: '34px', height: '34px', borderRadius: 'var(--radius-md)', flexShrink: 0,
                 border: 'none',
                 background: input.trim() && !streaming ? 'var(--go2)' : 'var(--s3)',
                 color: input.trim() && !streaming ? '#111' : 'var(--t3)',

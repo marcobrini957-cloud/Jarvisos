@@ -1,15 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Num } from './vq'
 
 // Official forex session hours (UTC, DST-independent)
 // London: 08:00–16:30 UTC | NY: 13:30–22:00 UTC | Asian: 22:00–08:00 UTC
 // Overlap (London + NY both open): 13:30–16:30 UTC
 const SESSIONS = [
-  { id: 'asian',   name: 'Asian',   color: 'var(--pu2)', start: 22 * 60,       end: 8 * 60,        wrapsDay: true },
-  { id: 'london',  name: 'London',  color: 'var(--cy2)', start: 8 * 60,        end: 16 * 60 + 30,  wrapsDay: false },
-  { id: 'overlap', name: 'Overlap', color: 'var(--go2)', start: 13 * 60 + 30,  end: 16 * 60 + 30,  wrapsDay: false },
-  { id: 'ny',      name: 'New York',color: 'var(--ac2)', start: 13 * 60 + 30,  end: 22 * 60,       wrapsDay: false },
+  { id: 'asian',   name: 'Asian',   start: 22 * 60,       end: 8 * 60,        wrapsDay: true },
+  { id: 'london',  name: 'London',  start: 8 * 60,        end: 16 * 60 + 30,  wrapsDay: false },
+  { id: 'overlap', name: 'Overlap', start: 13 * 60 + 30,  end: 16 * 60 + 30,  wrapsDay: false },
+  { id: 'ny',      name: 'New York',start: 13 * 60 + 30,  end: 22 * 60,       wrapsDay: false },
 ]
 
 function utcMins(): number {
@@ -36,15 +37,25 @@ function formatCountdown(mins: number): string {
 
 function formatUTCTime(): string {
   const n = new Date()
-  return n.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'UTC', hour12: false }) + ' UTC'
+  return n.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'UTC', hour12: false })
 }
 
 function formatLocalTime(): string {
   return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Vienna', hour12: false })
 }
 
+function Rule() {
+  return <span style={{ width: '1px', height: '11px', background: 'var(--color-line-2)' }} />
+}
+
+/**
+ * Session state as one line of instrument text. Each session used to have its
+ * own colour (purple Asian, cyan London, gold overlap) — four hues that said
+ * nothing a word does not. Open is ink-1, closed is ink-3, and the only
+ * colour left in the row is none.
+ */
 export default function SessionClock() {
-  const [tick, setTick] = useState(0)
+  const [, setTick] = useState(0)
 
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 1000)
@@ -53,92 +64,72 @@ export default function SessionClock() {
 
   const mins = utcMins()
   const active = SESSIONS.filter(s => s.id !== 'overlap' && isActive(s, mins))
-  const isOverlap = isActive(SESSIONS[2], mins) // overlap
+  const isOverlap = isActive(SESSIONS[2], mins)
 
-  // Primary session label
   let primaryLabel: string
-  let primaryColor: string
-  if (isOverlap) {
-    primaryLabel = 'London/NY Overlap'
-    primaryColor = 'var(--go2)'
-  } else if (active.some(s => s.id === 'london')) {
-    primaryLabel = 'London Session'
-    primaryColor = 'var(--cy2)'
-  } else if (active.some(s => s.id === 'ny')) {
-    primaryLabel = 'New York Session'
-    primaryColor = 'var(--ac2)'
-  } else if (active.some(s => s.id === 'asian')) {
-    primaryLabel = 'Asian Session'
-    primaryColor = 'var(--pu2)'
-  } else {
-    primaryLabel = 'Markets Closed'
-    primaryColor = 'var(--t3)'
-  }
+  if (isOverlap)                              primaryLabel = 'London / NY overlap'
+  else if (active.some(s => s.id === 'london')) primaryLabel = 'London session'
+  else if (active.some(s => s.id === 'ny'))     primaryLabel = 'New York session'
+  else if (active.some(s => s.id === 'asian'))  primaryLabel = 'Asian session'
+  else                                          primaryLabel = 'Markets closed'
 
-  // Next session event
-  const upcomingEvents: { label: string; mins: number; color: string }[] = []
+  const upcoming: { label: string; mins: number }[] = []
   for (const s of SESSIONS) {
     if (s.id === 'overlap') continue
-    const active = isActive(s, mins)
-    if (active) {
-      const minsLeft = s.wrapsDay
+    if (isActive(s, mins)) {
+      const left = s.wrapsDay
         ? (mins >= s.start ? (1440 - mins + s.end) : (s.end - mins))
         : s.end - mins
-      upcomingEvents.push({ label: `${s.name} closes`, mins: minsLeft, color: s.color })
+      upcoming.push({ label: `${s.name} closes`, mins: left })
     } else {
-      const minsLeft = minsUntil(s.start, mins)
-      upcomingEvents.push({ label: `${s.name} opens`, mins: minsLeft, color: s.color })
+      upcoming.push({ label: `${s.name} opens`, mins: minsUntil(s.start, mins) })
     }
   }
-  upcomingEvents.sort((a, b) => a.mins - b.mins)
-  const next = upcomingEvents[0]
+  upcoming.sort((a, b) => a.mins - b.mins)
+  const next = upcoming[0]
 
-  const isMarketOpen = active.length > 0
+  const open = active.length > 0
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+    <div className="session-clock-row" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
 
-      {/* Live dot + session */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span className={isMarketOpen ? 'live-dot' : 'live-dot'} style={{
-          background: isMarketOpen ? primaryColor : 'var(--t3)',
-          boxShadow: isMarketOpen ? `0 0 0 2px ${primaryColor}22, 0 0 10px ${primaryColor}55` : 'none',
-          animation: isMarketOpen ? 'pulse-dot 1.8s ease-in-out infinite' : 'none',
+      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={{
+          width: '5px', height: '5px', borderRadius: '50%',
+          background: open ? 'var(--color-ink-1)' : 'var(--color-ink-4)',
+          animation: open ? 'pulse-dot 1.8s ease-in-out infinite' : 'none',
         }} />
-        <span style={{ fontSize: '13px', fontWeight: 600, color: isMarketOpen ? primaryColor : 'var(--t3)' }}>
+        <span style={{
+          fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+          color: open ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
+        }}>
           {primaryLabel}
         </span>
-      </div>
+      </span>
 
-      {/* Divider */}
-      <div style={{ width: '1px', height: '16px', background: 'var(--bd2)' }} />
+      <Rule />
 
-      {/* Times — second-precision strings can never match between server
-          prerender and hydration, hence the suppression (React #418) */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <span suppressHydrationWarning style={{ fontSize: '12px', color: 'var(--t2)', fontFamily: 'monospace', letterSpacing: '0.02em' }}>
-          {formatLocalTime()} CET
-        </span>
-        <span suppressHydrationWarning style={{ fontSize: '11px', color: 'var(--t3)', fontFamily: 'monospace' }}>
-          {formatUTCTime()}
-        </span>
-      </div>
+      {/* Second-precision strings can never match between server prerender and
+          hydration, hence the suppression (React #418) */}
+      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }} suppressHydrationWarning>
+        <Num size="xs" tone="neutral">{formatLocalTime()}</Num>
+        <Num size="xs" tone="muted">{formatUTCTime()} UTC</Num>
+      </span>
 
-      {/* Divider */}
-      {next && <div style={{ width: '1px', height: '16px', background: 'var(--bd2)' }} />}
+      {next && <Rule />}
 
-      {/* Next event */}
       {next && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{next.label} in</span>
-          <span suppressHydrationWarning style={{
-            fontSize: '12px', fontWeight: 700, color: next.color,
-            background: `${next.color}15`, padding: '1px 7px', borderRadius: '4px',
-            border: `1px solid ${next.color}30`, fontFamily: 'monospace',
+        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{
+            fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
+            color: 'var(--color-ink-3)',
           }}>
-            {formatCountdown(next.mins)}
+            {next.label} in
           </span>
-        </div>
+          <Num size="xs" tone="neutral" style={{ letterSpacing: '-0.01em' }}>
+            <span suppressHydrationWarning>{formatCountdown(next.mins)}</span>
+          </Num>
+        </span>
       )}
     </div>
   )

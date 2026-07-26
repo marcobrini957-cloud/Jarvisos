@@ -35,7 +35,7 @@ export default function AdSlot({
     if (!showPaidNote) return null
     return (
       <div style={{
-        padding: '10px 14px', borderRadius: '12px',
+        padding: '10px 14px', borderRadius: 'var(--radius-lg)',
         background: 'var(--s1)', border: '1px solid var(--bd)',
         fontSize: '11px', color: 'var(--t3)', textAlign: 'center',
       }}>

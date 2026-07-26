@@ -49,7 +49,7 @@ export function HostAccountModal({
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
     }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '16px',
+        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
         padding: '28px', width: '100%', maxWidth: '400px',
         boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
       }}>
@@ -62,7 +62,7 @@ export function HostAccountModal({
         </div>
 
         {isMain ? (
-          <div style={{ fontSize: '12px', color: '#00FF85', padding: '10px 12px', background: 'rgba(0,255,133,0.06)', border: '1px solid rgba(0,255,133,0.2)', borderRadius: '8px', marginBottom: '16px', lineHeight: 1.5 }}>
+          <div style={{ fontSize: '12px', color: '#00C46A', padding: '10px 12px', background: 'rgba(0,196,106,0.06)', border: '1px solid rgba(0,196,106,0.2)', borderRadius: 'var(--radius-md)', marginBottom: '16px', lineHeight: 1.5 }}>
             ✓ This is your connected VELQUOR terminal — no password needed. It will be restarted in
             {' '}{account.role} mode and keeps syncing your dashboard as before.
           </div>
@@ -76,9 +76,9 @@ export function HostAccountModal({
                     key={s.name} type="button"
                     onClick={() => setServer(s.name)}
                     style={{
-                      fontSize: '11px', padding: '5px 10px', borderRadius: '20px',
-                      background: server === s.name ? 'rgba(122,79,255,0.15)' : 'var(--s2)',
-                      border:     server === s.name ? '1px solid rgba(122,79,255,0.5)' : '1px solid var(--bd)',
+                      fontSize: '11px', padding: '5px 10px', borderRadius: 'var(--radius-xl)',
+                      background: server === s.name ? 'rgba(255,255,255,0.15)' : 'var(--s2)',
+                      border:     server === s.name ? '1px solid rgba(255,255,255,0.5)' : '1px solid var(--bd)',
                       color:      server === s.name ? 'var(--ac)' : 'var(--t3)',
                       cursor: 'pointer',
                     }}
@@ -114,7 +114,7 @@ export function HostAccountModal({
         )}
 
         {error && (
-          <div style={{ fontSize: '12px', color: '#FF3347', padding: '8px 12px', background: 'rgba(255,51,71,0.08)', borderRadius: '8px', marginBottom: '14px', lineHeight: 1.5 }}>
+          <div style={{ fontSize: '12px', color: '#F0504B', padding: '8px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)', marginBottom: '14px', lineHeight: 1.5 }}>
             {error}
           </div>
         )}

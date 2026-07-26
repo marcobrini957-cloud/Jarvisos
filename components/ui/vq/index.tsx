@@ -150,10 +150,12 @@ export function MetricStrip({ metrics }: { metrics: Metric[] }) {
 
 // ── Segmented control ─────────────────────────────────────────────────────────
 
-export function Segmented<T extends string>({ options, value, onChange }: {
+export function Segmented<T extends string>({ options, value, onChange, titles }: {
   options: { key: T; label: string }[]
   value:   T
   onChange: (k: T) => void
+  /** Optional hover text per key — for controls labelled by initial (D/W/M). */
+  titles?:  Partial<Record<T, string>>
 }) {
   return (
     <div style={{
@@ -166,6 +168,7 @@ export function Segmented<T extends string>({ options, value, onChange }: {
           <button
             key={o.key}
             onClick={() => onChange(o.key)}
+            title={titles?.[o.key]}
             style={{
               fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
               letterSpacing: '0.1em', textTransform: 'uppercase',
@@ -231,7 +234,7 @@ export function RunStrip({ run, height = 13 }: { run: RunMark[]; height?: number
     <div style={{ display: 'flex', gap: '2px', alignItems: 'flex-end', height }}>
       {run.map((m, i) => (
         <span key={i} style={{
-          width: '3px', borderRadius: '1px', background: RUN_COLOR[m],
+          width: '3px', borderRadius: 'var(--radius-xs)', background: RUN_COLOR[m],
           height: m === 'none' ? height * 0.3 : m === 'flat' ? height * 0.45 : height,
         }} />
       ))}

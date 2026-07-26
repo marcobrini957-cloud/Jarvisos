@@ -62,7 +62,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
 
       {/* Modal */}
       <div
-        className="fixed z-50 rounded-xl p-6 flex flex-col gap-4"
+        className="fixed z-50 vq-r p-6 flex flex-col gap-4"
         style={{
           top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
           width: '420px', maxWidth: 'calc(100vw - 32px)',
@@ -88,8 +88,8 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
 
         {/* Status pill */}
         {isConnected && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-md"
-            style={{ background: 'rgba(99,153,34,0.1)', border: '1px solid rgba(99,153,34,0.2)' }}>
+          <div className="flex items-center gap-2 px-3 py-2 vq-r"
+            style={{ background: 'rgba(0,196,106,0.1)', border: '1px solid rgba(0,196,106,0.2)' }}>
             <span className="rounded-full" style={{ width: '7px', height: '7px', background: 'var(--gr2)', display: 'inline-block' }} />
             <span style={{ color: 'var(--gr2)', fontSize: '12px' }}>Currently connected — update credentials below to reconnect</span>
           </div>
@@ -114,7 +114,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
               onChange={e => setLogin(e.target.value)}
               placeholder="e.g. 1234567"
               style={{
-                background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
+                background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
                 padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
               }}
               onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
@@ -131,7 +131,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
               onChange={e => setPassword(e.target.value)}
               placeholder="Your investor / read-only password"
               style={{
-                background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
+                background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
                 padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
               }}
               onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
@@ -153,7 +153,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
                 setServer(b?.servers[0]?.name ?? '')
               }}
               style={{
-                background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
+                background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
                 padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
               }}
             >
@@ -174,7 +174,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
                       type="button"
                       onClick={() => setServer(srv.name)}
                       style={{
-                        flex: '1 1 30%', padding: '9px 8px', borderRadius: '8px', cursor: 'pointer',
+                        flex: '1 1 30%', padding: '9px 8px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
                         fontSize: '12px', fontWeight: 500,
                         background: active ? 'var(--ac)' : 'var(--s2)',
                         color: active ? 'white' : 'var(--t2)',
@@ -200,7 +200,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
                 onChange={e => setServer(e.target.value)}
                 placeholder="e.g. live2.mybroker.com:443"
                 style={{
-                  background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px',
+                  background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
                   padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
                 }}
                 onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
@@ -216,7 +216,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
 
         {/* Error */}
         {error && (
-          <p style={{ color: 'var(--re)', fontSize: '12px', background: 'rgba(226,75,74,0.08)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(226,75,74,0.2)' }}>
+          <p style={{ color: 'var(--re)', fontSize: '12px', background: 'rgba(240,80,75,0.08)', padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(240,80,75,0.2)' }}>
             {error}
           </p>
         )}
@@ -225,7 +225,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-md"
+            className="flex-1 py-2.5 vq-r"
             style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}
           >
             Cancel
@@ -233,9 +233,9 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 py-2.5 rounded-md font-medium"
+            className="flex-1 py-2.5 vq-r font-medium"
             style={{
-              background: saving ? 'rgba(55,138,221,0.3)' : 'var(--ac)',
+              background: saving ? 'rgba(255,255,255,0.3)' : 'var(--ac)',
               border: 'none', color: 'white', fontSize: '13px', cursor: saving ? 'not-allowed' : 'pointer',
             }}
           >

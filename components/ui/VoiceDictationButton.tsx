@@ -68,9 +68,9 @@ export default function VoiceDictationButton({ onText }: { onText: (text: string
         title={recording ? 'Stop and transcribe' : 'Dictate instead of typing'}
         style={{
           display: 'flex', alignItems: 'center', gap: '7px',
-          padding: '6px 12px', borderRadius: '8px', fontSize: '11.5px', fontWeight: 600,
-          background: recording ? 'rgba(255,61,80,0.12)' : 'var(--s2)',
-          border: `1px solid ${recording ? 'rgba(255,61,80,0.4)' : 'var(--bd2)'}`,
+          padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: '11.5px', fontWeight: 600,
+          background: recording ? 'rgba(240,80,75,0.12)' : 'var(--s2)',
+          border: `1px solid ${recording ? 'rgba(240,80,75,0.4)' : 'var(--bd2)'}`,
           color: recording ? 'var(--re)' : busy ? 'var(--t3)' : 'var(--t2)',
           cursor: busy ? 'default' : 'pointer', transition: 'all 0.15s',
         }}

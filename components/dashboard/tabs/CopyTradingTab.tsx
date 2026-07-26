@@ -70,8 +70,8 @@ export default function CopyTradingTab() {
           <button
             onClick={() => setShowCreateGroup(true)}
             style={{
-              padding: '9px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: 600,
-              background: 'rgba(122,79,255,0.15)', border: '1px solid rgba(122,79,255,0.3)',
+              padding: '9px 18px', borderRadius: 'var(--radius-md)', fontSize: '13px', fontWeight: 600,
+              background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
               color: 'var(--ac)', cursor: 'pointer', flexShrink: 0,
             }}
           >
@@ -87,7 +87,7 @@ export default function CopyTradingTab() {
           {groups.length === 0 ? (
             <div style={{
               textAlign: 'center', padding: '48px 20px',
-              background: 'var(--s1)', border: '1px dashed var(--bd)', borderRadius: '16px',
+              background: 'var(--s1)', border: '1px dashed var(--bd)', borderRadius: 'var(--radius-xl)',
             }}>
               <div style={{ fontSize: '32px', marginBottom: '12px' }}>⚡</div>
               <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--t1)', marginBottom: '8px' }}>
@@ -99,8 +99,8 @@ export default function CopyTradingTab() {
               <button
                 onClick={() => setShowCreateGroup(true)}
                 style={{
-                  padding: '10px 24px', borderRadius: '10px', fontSize: '13px', fontWeight: 600,
-                  background: 'rgba(122,79,255,0.15)', border: '1px solid rgba(122,79,255,0.3)',
+                  padding: '10px 24px', borderRadius: 'var(--radius-md)', fontSize: '13px', fontWeight: 600,
+                  background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
                   color: 'var(--ac)', cursor: 'pointer',
                 }}
               >
@@ -117,12 +117,12 @@ export default function CopyTradingTab() {
 
       {/* MT5 URL whitelist reminder — only relevant for own-MetaTrader (EA) accounts */}
       <div style={{
-        marginTop: '20px', padding: '10px 16px', borderRadius: '10px',
+        marginTop: '20px', padding: '10px 16px', borderRadius: 'var(--radius-md)',
         background: 'var(--s1)', border: '1px solid var(--bd)',
         fontSize: '11px', color: 'var(--t3)', lineHeight: 1.6, opacity: 0.85,
       }}>
         Running the EA on your own MetaTrader? Add{' '}
-        <code style={{ color: 'var(--ac)', background: 'var(--s2)', padding: '1px 6px', borderRadius: '4px' }}>
+        <code style={{ color: 'var(--ac)', background: 'var(--s2)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
           https://bridge.velquor.app
         </code>
         {' '}under <em>Tools → Options → Expert Advisors → Allow WebRequest</em>. Cloud-hosted accounts need no setup.

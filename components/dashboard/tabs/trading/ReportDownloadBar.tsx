@@ -46,20 +46,20 @@ export function ReportDownloadBar() {
   ]
 
   const inputStyle: React.CSSProperties = {
-    background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '6px',
+    background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
     color: 'var(--t1)', fontSize: '12px', padding: '5px 8px', outline: 'none',
     colorScheme: 'dark',
   }
 
   const BtnBase: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: '5px',
-    padding: '5px 13px', borderRadius: '6px', fontSize: '12px',
+    padding: '5px 13px', borderRadius: 'var(--radius-md)', fontSize: '12px',
     cursor: 'pointer', transition: 'all 0.12s', fontWeight: 500,
   }
 
   return (
     <div style={{
-      borderRadius: '10px', background: 'var(--s1)', border: '1px solid var(--bd2)',
+      borderRadius: 'var(--radius-md)', background: 'var(--s1)', border: '1px solid var(--bd2)',
       overflow: 'hidden',
     }}>
       {/* ── Main bar ── */}
@@ -102,13 +102,13 @@ export function ReportDownloadBar() {
           onClick={() => setShowCustom(v => !v)}
           style={{
             ...BtnBase,
-            background: showCustom ? 'rgba(77,143,255,0.12)' : 'var(--s2)',
+            background: showCustom ? 'rgba(255,255,255,0.12)' : 'var(--s2)',
             color:      showCustom ? 'var(--ac)'              : 'var(--t2)',
             border:     `1px solid ${showCustom ? 'var(--ac)' : 'var(--bd2)'}`,
             marginLeft: 'auto',
           }}
           onMouseEnter={e => { e.currentTarget.style.background = 'var(--s3)'; e.currentTarget.style.color = 'var(--t1)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = showCustom ? 'rgba(77,143,255,0.12)' : 'var(--s2)'; e.currentTarget.style.color = showCustom ? 'var(--ac)' : 'var(--t2)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = showCustom ? 'rgba(255,255,255,0.12)' : 'var(--s2)'; e.currentTarget.style.color = showCustom ? 'var(--ac)' : 'var(--t2)' }}
         >
           <span style={{ fontSize: '11px' }}>⊞</span>
           Custom range

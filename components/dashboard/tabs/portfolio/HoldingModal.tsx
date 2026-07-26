@@ -99,7 +99,7 @@ export function HoldingModal({
 
   const inp = {
     width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)',
-    borderRadius: '8px', padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
+    borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
   }
   const focus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => (e.target.style.borderColor = 'var(--ac)')
   const blur  = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => (e.target.style.borderColor = 'var(--bd2)')
@@ -116,7 +116,7 @@ export function HoldingModal({
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
-      <div className="fixed z-50 rounded-xl flex flex-col gap-4"
+      <div className="fixed z-50 vq-r flex flex-col gap-4"
         style={{
           top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
           width: '460px', maxWidth: 'calc(100vw - 32px)',
@@ -144,10 +144,10 @@ export function HoldingModal({
           <div className="flex gap-2 flex-wrap">
             {(['stock', 'etf', 'crypto', 'metal', 'cash'] as const).map(t => (
               <button key={t} onClick={() => setAsset(t)}
-                className="px-3 py-1.5 rounded-md"
+                className="px-3 py-1.5 vq-r"
                 style={{
                   border: `1px solid ${assetType === t ? (t === 'metal' ? 'var(--go2)' : 'var(--ac)') : 'var(--bd2)'}`,
-                  background: assetType === t ? (t === 'metal' ? 'rgba(210,153,34,0.12)' : 'rgba(88,166,255,0.1)') : 'var(--s2)',
+                  background: assetType === t ? (t === 'metal' ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.1)') : 'var(--s2)',
                   color: assetType === t ? (t === 'metal' ? 'var(--go2)' : 'var(--ac)') : 'var(--t2)',
                   fontSize: '12px', cursor: 'pointer', fontWeight: assetType === t ? 600 : 400,
                   textTransform: 'capitalize',
@@ -167,7 +167,7 @@ export function HoldingModal({
               <div className="grid grid-cols-4 gap-2">
                 {Object.entries(METAL_OPTIONS).map(([k, v]) => (
                   <button key={k} onClick={() => setMetalTicker(k)}
-                    className="py-3 rounded-lg flex flex-col items-center gap-1"
+                    className="py-3 vq-r flex flex-col items-center gap-1"
                     style={{
                       border: `1px solid ${metalTicker === k ? v.color : 'var(--bd2)'}`,
                       background: metalTicker === k ? `color-mix(in srgb, ${v.color} 12%, transparent)` : 'var(--s2)',
@@ -181,7 +181,7 @@ export function HoldingModal({
             </div>
 
             {/* Live spot price box */}
-            <div className="rounded-lg p-3" style={{ background: 'var(--s2)', border: `1px solid ${metalMeta?.color ?? 'var(--bd2)'}40` }}>
+            <div className="vq-r p-3" style={{ background: 'var(--s2)', border: `1px solid ${metalMeta?.color ?? 'var(--bd2)'}40` }}>
               {spotLoading ? (
                 <p style={{ color: 'var(--t3)', fontSize: '12px' }}>Fetching live spot price…</p>
               ) : spotPerGram !== null ? (
@@ -222,7 +222,7 @@ export function HoldingModal({
 
             {/* P&L preview */}
             {costPreview !== null && (
-              <div className="rounded-lg p-3 grid grid-cols-3 gap-3" style={{ background: 'var(--s2)', border: '1px solid var(--bd2)' }}>
+              <div className="vq-r p-3 grid grid-cols-3 gap-3" style={{ background: 'var(--s2)', border: '1px solid var(--bd2)' }}>
                 <div>
                   <p style={{ color: 'var(--t3)', fontSize: '10px', marginBottom: '3px' }}>Cost basis</p>
                   <p style={{ color: 'var(--t1)', fontSize: '13px', fontWeight: 600 }}>
@@ -283,7 +283,7 @@ export function HoldingModal({
               const invested = parseFloat(qty) * parseFloat(avgPrice)
               if (isNaN(invested) || invested <= 0) return null
               return (
-                <div className="rounded-lg p-3" style={{ background: 'var(--s2)', border: '1px solid var(--bd2)' }}>
+                <div className="vq-r p-3" style={{ background: 'var(--s2)', border: '1px solid var(--bd2)' }}>
                   <p style={{ color: 'var(--t3)', fontSize: '11px', marginBottom: '4px' }}>Cost basis preview</p>
                   <p style={{ color: 'var(--go2)', fontSize: '15px', fontWeight: 500 }}>
                     €{invested.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -298,19 +298,19 @@ export function HoldingModal({
         )}
 
         {error && (
-          <p style={{ color: 'var(--re)', fontSize: '12px', background: 'rgba(226,75,74,0.08)', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(226,75,74,0.2)' }}>
+          <p style={{ color: 'var(--re)', fontSize: '12px', background: 'rgba(240,80,75,0.08)', padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(240,80,75,0.2)' }}>
             {error}
           </p>
         )}
 
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-md"
+          <button onClick={onClose} className="flex-1 py-2.5 vq-r"
             style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
             Cancel
           </button>
-          <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-md font-medium"
+          <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 vq-r font-medium"
             style={{
-              background: saving ? 'rgba(88,166,255,0.3)' : (isMetal ? (metalMeta?.color ?? 'var(--go2)') : 'var(--ac)'),
+              background: saving ? 'rgba(255,255,255,0.3)' : (isMetal ? (metalMeta?.color ?? 'var(--go2)') : 'var(--ac)'),
               border: 'none', color: 'white', fontSize: '13px', cursor: saving ? 'not-allowed' : 'pointer',
             }}>
             {saving ? 'Saving…' : existing ? 'Update Holding' : 'Add Holding'}

@@ -68,7 +68,7 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
             padding: '9px 14px',
             borderBottom: '1px solid var(--bd)',
             opacity: past ? 0.45 : 1,
-            background: isNext && at - now < 3600_000 ? 'rgba(255,61,80,0.04)' : 'transparent',
+            background: isNext && at - now < 3600_000 ? 'rgba(240,80,75,0.04)' : 'transparent',
           }}>
             <div style={{
               display: 'grid',
@@ -77,8 +77,8 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
             }}>
               <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--t1)', ...MONO }}>{eventTime(e)}</span>
               <span title="High impact" style={{
-                width: '9px', height: '9px', borderRadius: '2px', background: 'var(--re)',
-                boxShadow: past ? 'none' : '0 0 6px rgba(255,61,80,0.6)',
+                width: '9px', height: '9px', borderRadius: 'var(--radius-xs)', background: 'var(--re)',
+                boxShadow: past ? 'none' : '0 0 6px rgba(240,80,75,0.6)',
               }} />
               <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.06em', ...MONO }}>{e.currency}</span>
               <span style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -159,13 +159,13 @@ export default function MacroTab() {
       {/* ── Terminal header ── */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
-        background: 'var(--s1)', border: '1px solid var(--bd2)', borderRadius: '12px',
+        background: 'var(--s1)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-lg)',
         padding: '14px 18px',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{
-            width: '10px', height: '10px', borderRadius: '2px', background: 'var(--re)',
-            boxShadow: '0 0 8px rgba(255,61,80,0.7)',
+            width: '10px', height: '10px', borderRadius: 'var(--radius-xs)', background: 'var(--re)',
+            boxShadow: '0 0 8px rgba(240,80,75,0.7)',
           }} />
           <div>
             <h2 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--t1)', letterSpacing: '0.02em', margin: 0 }}>
@@ -194,9 +194,9 @@ export default function MacroTab() {
 
       {/* ── Next release hero ── */}
       <div style={{
-        background: nextEvent ? 'linear-gradient(135deg, rgba(255,61,80,0.08), rgba(255,61,80,0.02))' : 'var(--s1)',
-        border: `1px solid ${nextEvent ? 'rgba(255,61,80,0.25)' : 'var(--bd2)'}`,
-        borderRadius: '12px', padding: '18px 20px',
+        background: nextEvent ? 'linear-gradient(135deg, rgba(240,80,75,0.08), rgba(240,80,75,0.02))' : 'var(--s1)',
+        border: `1px solid ${nextEvent ? 'rgba(240,80,75,0.25)' : 'var(--bd2)'}`,
+        borderRadius: 'var(--radius-lg)', padding: '18px 20px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px',
       }}>
         {nextEvent ? (
@@ -234,7 +234,7 @@ export default function MacroTab() {
 
       {/* ── Week table ── */}
       <div style={{
-        background: 'var(--s1)', border: '1px solid var(--bd2)', borderRadius: '12px',
+        background: 'var(--s1)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-lg)',
         overflow: 'hidden',
       }}>
         <div style={{

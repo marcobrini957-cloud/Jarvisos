@@ -30,7 +30,7 @@ export default function PartnerCard({
       style={{
         display: 'flex', flexDirection: 'column', gap: compact ? '8px' : '12px',
         padding: compact ? '14px' : '18px',
-        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '16px',
+        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
         textDecoration: 'none', position: 'relative', overflow: 'hidden',
         transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s',
       }}
@@ -51,7 +51,7 @@ export default function PartnerCard({
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{
           width: compact ? '30px' : '38px', height: compact ? '30px' : '38px',
-          borderRadius: '9px', flexShrink: 0,
+          borderRadius: 'var(--radius-md)', flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: `${accent}1f`, color: accent,
           fontWeight: 700, fontSize: compact ? '12px' : '14px',
@@ -73,7 +73,7 @@ export default function PartnerCard({
         {(partner.award ?? partner.plan) && (
           <span style={{
             flexShrink: 0, fontSize: '10px', fontWeight: 700, letterSpacing: '0.02em',
-            padding: '3px 8px', borderRadius: '999px',
+            padding: '3px 8px', borderRadius: 'var(--radius-xl)',
             background: `${accent}1f`, color: accent, whiteSpace: 'nowrap',
           }}>
             {partner.award ?? partner.plan}

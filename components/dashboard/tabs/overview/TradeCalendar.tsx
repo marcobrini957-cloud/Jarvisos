@@ -23,7 +23,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
       padding: '16px',
       background: 'var(--s1)',
       border: `1px solid ${totalPnl >= 0 ? 'rgba(0,196,106,0.2)' : 'rgba(240,80,75,0.2)'}`,
-      borderRadius: '12px',
+      borderRadius: 'var(--radius-lg)',
       animation: 'fadeIn 0.15s ease',
     }}>
       {/* Header */}
@@ -40,7 +40,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
           </span>
           <button onClick={onClose} style={{
             background: 'var(--s3)', border: '1px solid var(--bd2)',
-            borderRadius: '6px', width: '26px', height: '26px',
+            borderRadius: 'var(--radius-md)', width: '26px', height: '26px',
             color: 'var(--t3)', cursor: 'pointer', fontSize: '14px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>✕</button>
@@ -59,7 +59,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '9px 12px',
               background: 'rgba(255,255,255,0.025)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-md)',
               border: `1px solid ${pnl > BE_THRESHOLD ? 'rgba(0,196,106,0.1)' : pnl < -BE_THRESHOLD ? 'rgba(240,80,75,0.1)' : 'var(--bd)'}`,
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
@@ -70,7 +70,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
                       fontSize: '10px', fontWeight: 600, letterSpacing: '0.06em',
                       color: t.trade_type === 'buy' ? 'var(--color-up)' : 'var(--color-down)',
                       background: t.trade_type === 'buy' ? 'rgba(0,196,106,0.1)' : 'rgba(240,80,75,0.1)',
-                      padding: '1px 6px', borderRadius: '4px',
+                      padding: '1px 6px', borderRadius: 'var(--radius-sm)',
                     }}>{t.trade_type.toUpperCase()}</span>
                   )}
                   {t.lot_size != null && (
@@ -218,7 +218,7 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
 
                   const bg = isWinDay  ? 'rgba(0,196,106,0.09)'
                            : isLossDay ? 'rgba(240,80,75,0.10)'
-                           : has       ? 'rgba(232,201,106,0.08)'  // break-even day
+                           : has       ? 'rgba(255,255,255,0.08)'  // break-even day
                            : 'transparent'
 
                   return (
@@ -256,7 +256,7 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
                 <div style={{
                   marginTop: '5px',
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '8px 12px', borderRadius: '8px',
+                  padding: '8px 12px', borderRadius: 'var(--radius-md)',
                   background: weekPnl >= 0 ? 'rgba(0,196,106,0.045)' : 'rgba(240,80,75,0.05)',
                   border: `1px solid ${weekPnl >= 0 ? 'rgba(0,196,106,0.12)' : 'rgba(240,80,75,0.14)'}`,
                 }}>

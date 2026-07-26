@@ -37,7 +37,7 @@ function MetricTile({ label, value, sub, aside, valueColor }: {
 }) {
   return (
     <div className="metric-card" style={{
-      padding: '16px', borderRadius: '12px',
+      padding: '16px', borderRadius: 'var(--radius-lg)',
       background: 'rgba(255,255,255,0.02)', border: '1px solid var(--bd2)',
       display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0,
     }}>

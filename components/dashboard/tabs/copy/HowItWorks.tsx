@@ -10,7 +10,7 @@ export function HowItWorks() {
   ]
   return (
     <div style={{
-      background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '16px',
+      background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
       padding: '20px', marginTop: '24px',
     }}>
       <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.06em', marginBottom: '16px' }}>
@@ -21,7 +21,7 @@ export function HowItWorks() {
           <div key={s.n} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
             <div style={{
               width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-              background: 'rgba(122,79,255,0.15)', border: '1px solid rgba(122,79,255,0.3)',
+              background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '11px', fontWeight: 700, color: 'var(--ac)',
             }}>

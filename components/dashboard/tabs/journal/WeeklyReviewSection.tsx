@@ -15,14 +15,14 @@ const WEEK_MOODS = [
   { key: 'terrible', label: '😤 Terrible'},
 ]
 const WEEK_MOOD_COLOR: Record<string, string> = {
-  amazing: 'var(--go2)', good: 'var(--gr2)', average: 'var(--am2)', tough: 'var(--re)', terrible: '#e05cae',
+  amazing: 'var(--go2)', good: 'var(--gr2)', average: 'var(--am2)', tough: 'var(--re)', terrible: '#FFFFFF',
 }
 
 function GradeBtn({ value, selected, onChange }: { value: string; selected: boolean; onChange: () => void }) {
-  const colors: Record<string, string> = { S: 'var(--go2)', A: 'var(--gr2)', B: 'var(--ac)', C: 'var(--am2)', D: 'var(--re)', F: '#e05cae' }
+  const colors: Record<string, string> = { S: 'var(--go2)', A: 'var(--gr2)', B: 'var(--ac)', C: 'var(--am2)', D: 'var(--re)', F: '#FFFFFF' }
   return (
     <button onClick={onChange} style={{
-      width: '36px', height: '36px', borderRadius: '8px', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
+      width: '36px', height: '36px', borderRadius: 'var(--radius-md)', fontWeight: 600, fontSize: '14px', cursor: 'pointer',
       background:  selected ? `${colors[value]}20` : 'var(--s2)',
       border:      selected ? `1px solid ${colors[value]}` : '1px solid var(--bd2)',
       color:       selected ? colors[value] : 'var(--t3)',
@@ -92,7 +92,7 @@ export function WeeklyReviewSection() {
 
   const ta: React.CSSProperties = {
     width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)',
-    borderRadius: '8px', padding: '10px 12px', color: 'var(--t1)',
+    borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--t1)',
     fontSize: '13px', outline: 'none', resize: 'vertical', lineHeight: '1.6', minHeight: '80px',
   }
 
@@ -105,7 +105,7 @@ export function WeeklyReviewSection() {
           <p style={{ color: 'var(--t3)', fontSize: '12px', marginTop: '2px' }}>Reflect on your week · get AI analysis</p>
         </div>
         <select value={selectedWeek} onChange={e => setSelectedWeek(e.target.value)}
-          style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '8px', padding: '7px 12px', color: 'var(--t1)', fontSize: '12px', outline: 'none', cursor: 'pointer' }}>
+          style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '7px 12px', color: 'var(--t1)', fontSize: '12px', outline: 'none', cursor: 'pointer' }}>
           {weekOptions.map(w => <option key={w} value={w}>{w === currentWeek ? `This week — ${weekLabel(w)}` : weekLabel(w)}</option>)}
         </select>
       </div>
@@ -118,7 +118,7 @@ export function WeeklyReviewSection() {
                 <div className="flex flex-wrap gap-2">
                   {WEEK_MOODS.map(m => (
                     <button key={m.key} onClick={() => setMood(m.key)} style={{
-                      padding: '8px 14px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer',
+                      padding: '8px 14px', borderRadius: 'var(--radius-md)', fontSize: '13px', cursor: 'pointer',
                       background: mood === m.key ? `${WEEK_MOOD_COLOR[m.key]}18` : 'var(--s2)',
                       border: mood === m.key ? `1px solid ${WEEK_MOOD_COLOR[m.key]}` : '1px solid var(--bd2)',
                       color: mood === m.key ? WEEK_MOOD_COLOR[m.key] : 'var(--t2)', fontWeight: mood === m.key ? 500 : 400,
@@ -149,12 +149,12 @@ export function WeeklyReviewSection() {
               <textarea value={goals} onChange={e => setGoals(e.target.value)} placeholder="3 main goals for next week…" style={{ ...ta, minHeight: '60px' }} onFocus={e => (e.target.style.borderColor = 'var(--pu)')} onBlur={e => (e.target.style.borderColor = 'var(--bd2)')} />
             </Panel>
             <div className="flex gap-3">
-              <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-md font-medium"
+              <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 vq-r font-medium"
                 style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '13px', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : '💾 Save Review'}
               </button>
-              <button onClick={handleGenerate} disabled={generating} className="flex-1 py-2.5 rounded-md font-medium"
-                style={{ background: 'rgba(232,201,106,0.1)', border: '1px solid rgba(232,201,106,0.3)', color: 'var(--go2)', fontSize: '13px', cursor: 'pointer', opacity: generating ? 0.6 : 1 }}>
+              <button onClick={handleGenerate} disabled={generating} className="flex-1 py-2.5 vq-r font-medium"
+                style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.3)', color: 'var(--go2)', fontSize: '13px', cursor: 'pointer', opacity: generating ? 0.6 : 1 }}>
                 {generating ? '✨ VELQUOR is thinking…' : '✨ Get VELQUOR Analysis'}
               </button>
             </div>

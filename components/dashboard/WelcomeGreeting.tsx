@@ -100,11 +100,11 @@ export default function WelcomeGreeting() {
         style={{
           maxWidth: '460px', width: '100%',
           background: 'var(--s1)',
-          border: '1px solid rgba(232,201,106,0.18)',
-          borderRadius: '20px',
+          border: '1px solid rgba(255,255,255,0.18)',
+          borderRadius: 'var(--radius-xl)',
           padding: 'clamp(28px, 5vw, 44px) clamp(24px, 5vw, 40px)',
           textAlign: 'center',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(232,201,106,0.06)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)',
           transform: rendered ? 'translateY(0) scale(1)' : 'translateY(24px) scale(0.96)',
           transition: 'transform 0.45s cubic-bezier(0.16,1,0.3,1)',
         }}
@@ -133,9 +133,9 @@ export default function WelcomeGreeting() {
 
         {/* Gold rule */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(232,201,106,0.18)' }} />
-          <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'rgba(232,201,106,0.55)' }} />
-          <div style={{ flex: 1, height: '1px', background: 'rgba(232,201,106,0.18)' }} />
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.18)' }} />
+          <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'rgba(255,255,255,0.55)' }} />
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.18)' }} />
         </div>
 
         {/* Daily affirmation */}
@@ -155,16 +155,16 @@ export default function WelcomeGreeting() {
           onClick={dismiss}
           style={{
             width: '100%', padding: '13px 0',
-            background: 'rgba(232,201,106,0.1)',
-            border: '1px solid rgba(232,201,106,0.32)',
-            borderRadius: '10px',
+            background: 'rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.32)',
+            borderRadius: 'var(--radius-md)',
             color: 'var(--go2)', fontSize: '13px', fontWeight: 600,
             cursor: 'pointer', letterSpacing: '0.04em',
             textTransform: 'uppercase',
             transition: 'background 0.2s ease',
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(232,201,106,0.18)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(232,201,106,0.1)' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.18)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}
         >
           Let&apos;s win
         </button>

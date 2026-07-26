@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Label, Num, Segmented } from './vq'
 
 interface SessionRow {
   name: string; key: string
@@ -17,24 +18,29 @@ interface DirRow {
 }
 interface Analytics { sessions: SessionRow[]; symbols: SymbolRow[]; directions: DirRow[] }
 
-const SESSION_COLOR: Record<string, string> = {
-  london:   'var(--ac)',
-  new_york: 'var(--gr2)',
-  asian:    'var(--pu)',
-  unknown:  'var(--t3)',
+// Sessions are told apart by name and by how bright the marker is, not by hue.
+const SESSION_INK: Record<string, string> = {
+  london:   'var(--color-ink-1)',
+  new_york: 'var(--color-ink-2)',
+  asian:    'var(--color-ink-3)',
+  unknown:  'var(--color-ink-4)',
 }
 
 function fmt(n: number) {
   return `${n >= 0 ? '+' : ''}€${Math.abs(n).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function WinBar({ wr, wins, losses }: { wr: number; wins: number; losses: number }) {
+function WinBar({ wr }: { wr: number; wins: number; losses: number }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <div style={{ flex: 1, height: '5px', borderRadius: '3px', background: 'var(--s3)', overflow: 'hidden' }}>
-        <div style={{ width: `${wr}%`, height: '100%', background: wr >= 50 ? 'var(--gr2)' : 'var(--re)', borderRadius: '3px', transition: 'width 0.4s ease' }} />
+      <div style={{ flex: 1, height: '3px', background: 'var(--color-surface-2)', overflow: 'hidden' }}>
+        <div style={{
+          width: `${wr}%`, height: '100%',
+          background: wr >= 50 ? 'var(--color-up)' : 'var(--color-down)',
+          transition: 'width 0.4s ease',
+        }} />
       </div>
-      <span style={{ fontSize: '11px', fontWeight: 600, color: wr >= 50 ? 'var(--gr2)' : 'var(--re)', minWidth: '34px', textAlign: 'right' }}>{wr}%</span>
+      <Num size="xs" tone={wr >= 50 ? 'up' : 'down'} style={{ minWidth: '32px', textAlign: 'right' }}>{wr}%</Num>
     </div>
   )
 }
@@ -54,60 +60,50 @@ export default function SessionAnalyticsChart() {
       .finally(() => setLoading(false))
   }, [])
 
-  const tabBtn = (id: Tab, label: string) => (
-    <button
-      key={id}
-      onClick={() => setTab(id)}
-      style={{
-        padding: '4px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 600,
-        background: tab === id ? 'var(--ac)' : 'transparent',
-        border: tab === id ? 'none' : '1px solid var(--bd2)',
-        color: tab === id ? 'white' : 'var(--t3)',
-        cursor: 'pointer', transition: 'all 0.12s',
-      }}
-    >{label}</button>
-  )
-
-  if (loading) return <div style={{ padding: '24px', textAlign: 'center', color: 'var(--t3)', fontSize: '12px' }}>Loading…</div>
+  if (loading) return <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-ink-3)', fontSize: 'var(--text-base)' }}>Loading…</div>
 
   const noData = !data || (data.sessions.length === 0 && data.symbols.length === 0)
   if (noData) return (
-    <div style={{ padding: '24px', textAlign: 'center', color: 'var(--t3)', fontSize: '12px' }}>
+    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--color-ink-3)', fontSize: 'var(--text-base)' }}>
       Analytics appear once you have closed trades.
     </div>
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-      {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: '6px' }}>
-        {tabBtn('sessions',  'By Session')}
-        {tabBtn('symbols',   'By Symbol')}
-        {tabBtn('direction', 'Buy vs Sell')}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="self-start">
+        <Segmented
+          options={[
+            { key: 'sessions',  label: 'Session' },
+            { key: 'symbols',   label: 'Symbol' },
+            { key: 'direction', label: 'Buy / Sell' },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
       </div>
 
       {/* Sessions */}
       {tab === 'sessions' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
           {data!.sessions.map(s => (
             <div key={s.key} style={{
-              padding: '12px 14px', borderRadius: '10px',
-              background: 'var(--s2)', border: '1px solid var(--bd2)',
+              padding: '9px 12px', background: 'var(--color-surface-1)',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: SESSION_COLOR[s.key] ?? 'var(--t3)' }} />
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--t1)' }}>{s.name}</span>
-                  <span style={{ fontSize: '11px', color: 'var(--t3)' }}>{s.total} trades</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '7px', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                  <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: SESSION_INK[s.key] ?? 'var(--color-ink-4)' }} />
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', color: 'var(--color-ink-1)' }}>{s.name}</span>
+                  <Num size="xs" tone="muted">{s.total} trades</Num>
                 </div>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: s.pnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{fmt(s.pnl)}</span>
+                <Num size="sm" value={s.pnl} tone="auto">{fmt(s.pnl)}</Num>
               </div>
               <WinBar wr={s.wr} wins={s.wins} losses={s.losses} />
-              <div style={{ display: 'flex', gap: '16px', marginTop: '6px' }}>
-                <span style={{ fontSize: '10px', color: 'var(--gr2)' }}>{s.wins}W</span>
-                <span style={{ fontSize: '10px', color: 'var(--re)' }}>{s.losses}L</span>
-                {s.be > 0 && <span style={{ fontSize: '10px', color: 'var(--t3)' }}>{s.be} BE</span>}
-                <span style={{ fontSize: '10px', color: 'var(--t3)' }}>{s.pips > 0 ? '+' : ''}{s.pips} pips</span>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
+                <Num size="2xs" tone="up">{s.wins}W</Num>
+                <Num size="2xs" tone="down">{s.losses}L</Num>
+                {s.be > 0 && <Num size="2xs" tone="muted">{s.be} BE</Num>}
+                <Num size="2xs" tone="muted">{s.pips > 0 ? '+' : ''}{s.pips} pips</Num>
               </div>
             </div>
           ))}
@@ -123,17 +119,16 @@ export default function SessionAnalyticsChart() {
               <div key={s.symbol}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--t1)', minWidth: '72px' }}>{s.symbol}</span>
-                    <span style={{ fontSize: '10px', color: 'var(--t3)' }}>{s.total} trades · {s.wr}% WR</span>
+                    <Num size="sm" tone="neutral" style={{ minWidth: '72px' }}>{s.symbol}</Num>
+                    <Num size="2xs" tone="muted">{s.total} trades · {s.wr}% WR</Num>
                   </div>
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: s.pnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{fmt(s.pnl)}</span>
+                  <Num size="sm" value={s.pnl} tone="auto">{fmt(s.pnl)}</Num>
                 </div>
-                <div style={{ height: '4px', borderRadius: '2px', background: 'var(--s3)', overflow: 'hidden' }}>
+                <div style={{ height: '3px', background: 'var(--color-surface-2)', overflow: 'hidden' }}>
                   <div style={{
                     width: `${(Math.abs(s.pnl) / maxPnl) * 100}%`,
                     height: '100%',
-                    background: s.pnl >= 0 ? 'var(--gr2)' : 'var(--re)',
-                    borderRadius: '2px',
+                    background: s.pnl >= 0 ? 'var(--color-up)' : 'var(--color-down)',
                     transition: 'width 0.4s ease',
                   }} />
                 </div>
@@ -148,17 +143,21 @@ export default function SessionAnalyticsChart() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           {data!.directions.map(d => (
             <div key={d.dir} style={{
-              padding: '16px', borderRadius: '12px',
-              background: d.dir === 'buy' ? 'rgba(0,232,122,0.06)' : 'rgba(77,143,255,0.06)',
-              border: `1px solid ${d.dir === 'buy' ? 'rgba(0,232,122,0.18)' : 'rgba(77,143,255,0.18)'}`,
+              padding: '11px 14px', borderRadius: 'var(--radius-md)',
+              background: 'var(--color-surface-1)',
+              border: '1px solid var(--color-line-1)',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                <span style={{ fontSize: '16px' }}>{d.dir === 'buy' ? '↑' : '↓'}</span>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--t1)', textTransform: 'capitalize' }}>{d.dir}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '7px' }}>
+                <Num size="sm" tone={d.dir === 'buy' ? 'up' : 'down'}>{d.dir === 'buy' ? '↑' : '↓'}</Num>
+                <Label>{d.dir}</Label>
               </div>
-              <p style={{ margin: '0 0 6px', fontSize: '20px', fontWeight: 800, letterSpacing: '-0.03em', color: d.pnl >= 0 ? 'var(--gr2)' : 'var(--re)' }}>{fmt(d.pnl)}</p>
+              <div style={{ marginBottom: '7px' }}>
+                <Num size="xl" value={d.pnl} tone="auto">{fmt(d.pnl)}</Num>
+              </div>
               <WinBar wr={d.wr} wins={d.wins} losses={d.losses} />
-              <p style={{ margin: '5px 0 0', fontSize: '11px', color: 'var(--t3)' }}>{d.wins}W · {d.losses}L · {d.total} trades</p>
+              <div style={{ marginTop: '6px' }}>
+                <Num size="2xs" tone="muted">{d.wins}W · {d.losses}L · {d.total} trades</Num>
+              </div>
             </div>
           ))}
         </div>

@@ -54,7 +54,7 @@ export default function OrdersCounter() {
             key={i}
             style={{
               width: `${CELL_W}px`, height: `${CELL_H}px`, overflow: 'hidden',
-              borderRadius: '10px', background: 'var(--s2)',
+              borderRadius: 'var(--radius-md)', background: 'var(--s2)',
               border: '1px solid var(--bd2)',
               boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.5)',
               position: 'relative',

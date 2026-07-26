@@ -17,10 +17,10 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
     <div
       style={{
         position: 'relative', overflow: 'hidden',
-        borderRadius: '20px',
+        borderRadius: 'var(--radius-xl)',
         border: '1px solid var(--bd2)',
         background: partner.featured
-          ? `linear-gradient(105deg, ${accent}26 0%, rgba(122,79,255,0.10) 45%, var(--s1) 78%)`
+          ? `linear-gradient(105deg, ${accent}26 0%, rgba(255,255,255,0.10) 45%, var(--s1) 78%)`
           : 'var(--s1)',
         padding: 'clamp(20px, 3vw, 30px)',
         display: 'flex', alignItems: 'center', gap: '20px',
@@ -34,7 +34,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
           position: 'absolute', top: '16px', right: '16px',
           fontSize: '10px', fontWeight: 800, letterSpacing: '0.08em',
           color: 'var(--t1)', background: 'rgba(255,255,255,0.10)',
-          border: '1px solid var(--bd2)', borderRadius: '7px', padding: '4px 9px',
+          border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '4px 9px',
         }}>
           FEATURED
         </span>
@@ -47,8 +47,8 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
           <span style={{ fontSize: 'clamp(18px, 2.4vw, 24px)', fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.02em' }}>
             {partner.name}
           </span>
-          {partner.plan && <Chip color="#3B82F6" bg="rgba(59,130,246,0.16)">{partner.plan}</Chip>}
-          {partner.award && <Chip color="#E7B84B" bg="rgba(231,184,75,0.15)">{partner.award}</Chip>}
+          {partner.plan && <Chip color="#FFFFFF" bg="rgba(255,255,255,0.16)">{partner.plan}</Chip>}
+          {partner.award && <Chip color="#FFFFFF" bg="rgba(255,255,255,0.15)">{partner.award}</Chip>}
         </div>
 
         {/* Tradable assets */}
@@ -64,7 +64,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--t1)' }}>{partner.rating.toFixed(1)}</span>
                 <span style={{ fontSize: '13px', color: 'var(--t2)' }}>· {ratingLabel(partner.rating)}</span>
-                <IconRosetteDiscountCheckFilled size={16} style={{ color: '#3B82F6' }} />
+                <IconRosetteDiscountCheckFilled size={16} style={{ color: '#FFFFFF' }} />
               </div>
               <Stars rating={partner.rating} />
             </div>
@@ -96,7 +96,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
               display: 'inline-flex', alignItems: 'center', gap: '7px',
               background: 'var(--t1)', color: 'var(--bg)',
               fontSize: '13px', fontWeight: 700, textDecoration: 'none',
-              padding: '10px 18px', borderRadius: '10px',
+              padding: '10px 18px', borderRadius: 'var(--radius-md)',
             }}
           >
             {partner.ctaLabel}
@@ -109,7 +109,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
               display: 'inline-flex', alignItems: 'center',
               background: 'transparent', color: 'var(--t1)',
               fontSize: '13px', fontWeight: 600, textDecoration: 'none',
-              padding: '10px 18px', borderRadius: '10px',
+              padding: '10px 18px', borderRadius: 'var(--radius-md)',
               border: '1px solid var(--bd2)',
             }}
           >
@@ -128,7 +128,7 @@ function Chip({ children, color, bg }: { children: React.ReactNode; color: strin
   return (
     <span style={{
       fontSize: '10px', fontWeight: 800, letterSpacing: '0.06em',
-      color, background: bg, borderRadius: '6px', padding: '3px 8px',
+      color, background: bg, borderRadius: 'var(--radius-md)', padding: '3px 8px',
     }}>
       {children}
     </span>
@@ -154,7 +154,7 @@ function Stars({ rating }: { rating: number }) {
       {[0, 1, 2, 3, 4].map(i => <IconStarFilled key={i} size={13} style={{ color: 'var(--s3)' }} />)}
       {/* filled overlay clipped to pct */}
       <div style={{ position: 'absolute', top: 0, left: 0, display: 'inline-flex', gap: '2px', width: `${pct}%`, overflow: 'hidden', whiteSpace: 'nowrap' }}>
-        {[0, 1, 2, 3, 4].map(i => <IconStarFilled key={i} size={13} style={{ color: '#E7B84B', flexShrink: 0 }} />)}
+        {[0, 1, 2, 3, 4].map(i => <IconStarFilled key={i} size={13} style={{ color: '#FFFFFF', flexShrink: 0 }} />)}
       </div>
     </div>
   )
@@ -165,7 +165,7 @@ function StackedLogo({ accent, initials, logo }: { accent: string; initials: str
   const layer = (offset: number, opacity: number, top = false): React.CSSProperties => ({
     position: 'absolute', width: `${size}px`, height: `${size}px`,
     right: `${offset}px`, top: `${offset}px`,
-    borderRadius: '22px',
+    borderRadius: 'var(--radius-xl)',
     background: top ? `linear-gradient(145deg, ${accent}, ${accent}bb)` : accent,
     opacity, boxShadow: top ? `0 16px 40px ${accent}55` : 'none',
     display: 'flex', alignItems: 'center', justifyContent: 'center',

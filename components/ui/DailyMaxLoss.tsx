@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { Label, Num } from './vq'
 import type { Trade } from '@/types'
 
 interface DailyMaxLossProps {
@@ -41,7 +42,8 @@ export default function DailyMaxLoss({ allRows }: DailyMaxLossProps) {
   const lossAmt  = Math.abs(todayLoss)           // positive loss amount
   const pct      = limit > 0 ? Math.min(1, lossAmt / limit) : 0
   const limitHit = lossAmt >= limit
-  const barColor = pct >= 0.8 ? 'var(--re)' : pct >= 0.5 ? 'var(--am2)' : 'var(--gr2)'
+  // A risk gauge is one of the few places amber is a state and not decoration.
+  const barColor = pct >= 0.8 ? 'var(--color-down)' : pct >= 0.5 ? 'var(--color-warn)' : 'var(--color-ink-4)'
 
   function saveLimit() {
     const v = parseFloat(editVal)
@@ -63,12 +65,14 @@ export default function DailyMaxLoss({ allRows }: DailyMaxLossProps) {
       {/* Banner if limit hit */}
       {limitHit && (
         <div style={{
-          padding: '10px 14px', borderRadius: '8px',
-          background: 'rgba(255,51,71,0.12)', border: '1px solid rgba(255,51,71,0.35)',
+          padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+          background: 'var(--color-down-dim)', borderLeft: '2px solid var(--color-down)',
           display: 'flex', alignItems: 'center', gap: '8px',
         }}>
-          <span style={{ fontSize: '16px' }}>⛔</span>
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--re)' }}>
+          <span style={{
+            fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+            color: 'var(--color-down)',
+          }}>
             Daily limit hit — step away from the charts
           </span>
         </div>
@@ -78,14 +82,12 @@ export default function DailyMaxLoss({ allRows }: DailyMaxLossProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>
-              Daily Loss Limit
-            </span>
+            <Label>Daily loss limit</Label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: barColor }}>
+              <Num size="sm" style={{ color: lossAmt > 0 ? barColor : 'var(--color-ink-1)' }}>
                 €{lossAmt.toFixed(2)}
-              </span>
-              <span style={{ fontSize: '12px', color: 'var(--t3)' }}>/</span>
+              </Num>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)' }}>/</span>
               {editing ? (
                 <input
                   autoFocus
@@ -93,29 +95,31 @@ export default function DailyMaxLoss({ allRows }: DailyMaxLossProps) {
                   onChange={e => setEditVal(e.target.value)}
                   onBlur={saveLimit}
                   onKeyDown={e => { if (e.key === 'Enter') saveLimit(); if (e.key === 'Escape') setEditing(false) }}
+                  className="vq-num"
                   style={{
-                    width: '60px', background: 'var(--s2)', border: '1px solid var(--ac)',
-                    borderRadius: '4px', padding: '1px 6px', color: 'var(--t1)', fontSize: '12px', outline: 'none',
+                    width: '58px', background: 'var(--color-surface-2)',
+                    border: '1px solid var(--color-line-3)',
+                    borderRadius: 'var(--radius-xs)', padding: '1px 6px',
+                    color: 'var(--color-ink-1)', fontSize: 'var(--text-sm)', outline: 'none',
                   }}
                 />
               ) : (
-                <button onClick={startEdit} style={{
+                <button onClick={startEdit} className="vq-num" style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: '12px', color: 'var(--t2)', fontWeight: 600,
+                  fontSize: 'var(--text-sm)', color: 'var(--color-ink-2)',
                   padding: '0', textDecoration: 'underline dotted',
                 }}>
                   €{limit.toFixed(0)}
                 </button>
               )}
-              <span style={{ fontSize: '11px', color: 'var(--t3)' }}>({(pct * 100).toFixed(0)}%)</span>
+              <Num size="xs" tone="muted">({(pct * 100).toFixed(0)}%)</Num>
             </div>
           </div>
-          <div style={{ height: '6px', background: 'var(--s3)', borderRadius: '3px', overflow: 'hidden' }}>
+          <div style={{ height: '3px', background: 'var(--color-surface-2)', overflow: 'hidden' }}>
             <div style={{
               width: `${pct * 100}%`, height: '100%',
-              background: barColor, borderRadius: '3px',
+              background: barColor,
               transition: 'width 0.3s ease, background 0.3s ease',
-              boxShadow: pct >= 0.5 ? `0 0 6px ${barColor}66` : 'none',
             }} />
           </div>
         </div>

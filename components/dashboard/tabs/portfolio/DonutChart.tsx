@@ -36,10 +36,10 @@ export function DonutChart({ slices }: { slices: Array<{ pct: number; color: str
 // ── Breakdown categories (order = donut order) ────────────────────────────────
 
 export const BREAKDOWN_CATS: Array<{ key: string; label: string; color: string }> = [
-  { key: 'etf',    label: 'ETFs',    color: '#00FF85' },
-  { key: 'tech',   label: 'Tech',    color: '#4D8FFF' },
-  { key: 'stock',  label: 'Stocks',  color: '#A87EFF' },
-  { key: 'metal',  label: 'Metals',  color: '#FFB830' },
-  { key: 'crypto', label: 'Crypto',  color: '#F5B040' },
+  { key: 'etf',    label: 'ETFs',    color: '#00C46A' },
+  { key: 'tech',   label: 'Tech',    color: '#FFFFFF' },
+  { key: 'stock',  label: 'Stocks',  color: '#FFFFFF' },
+  { key: 'metal',  label: 'Metals',  color: '#FFFFFF' },
+  { key: 'crypto', label: 'Crypto',  color: '#FFFFFF' },
   { key: 'cash',   label: 'Cash',    color: '#707070' },
 ]

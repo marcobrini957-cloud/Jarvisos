@@ -122,7 +122,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
   const ovr    = scored.length > 0
     ? Math.round(scored.reduce((s, a) => s + a.score, 0) / scored.length)
     : 0
-  const scoreCol = (s: number) => s >= 70 ? '#4ade80' : s >= 45 ? '#facc15' : '#f87171'
+  const scoreCol = (s: number) => s >= 70 ? '#00C46A' : s >= 45 ? '#FFFFFF' : '#F0504B'
   const ovrColor = scoreCol(ovr)
 
   // ── SVG geometry ──────────────────────────────────────────────────────────
@@ -180,8 +180,8 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
           </filter>
           {/* Data fill gradient — blue → purple */}
           <linearGradient id="rfill2" x1="0.3" y1="0" x2="0.7" y2="1">
-            <stop offset="0%"   stopColor="#3b82f6" stopOpacity="0.32" />
-            <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.10" />
+            <stop offset="0%"   stopColor="#FFFFFF" stopOpacity="0.32" />
+            <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.10" />
           </linearGradient>
         </defs>
 
@@ -242,12 +242,12 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
 
         {/* ── Data polygon outline — glow pass ── */}
         <path d={dataPath()} fill="none"
-          stroke="#3b82f6" strokeWidth="4"
+          stroke="#FFFFFF" strokeWidth="4"
           filter="url(#rglow2)" opacity="0.40"
         />
         {/* ── Data polygon outline — crisp pass ── */}
         <path d={dataPath()} fill="none"
-          stroke="#93c5fd" strokeWidth="1.8" opacity="0.90"
+          stroke="#FFFFFF" strokeWidth="1.8" opacity="0.90"
         />
 
         {/* ── Vertex dots ── */}
@@ -257,7 +257,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
           if (!a.has) {
             return (
               <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)}
-                r="4" fill="rgba(2,6,23,0.95)" stroke="rgba(255,255,255,0.22)"
+                r="4" fill="rgba(0,0,0,0.95)" stroke="rgba(255,255,255,0.22)"
                 strokeWidth="1.5" strokeDasharray="2 2" />
             )
           }
@@ -265,7 +265,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
           return (
             <g key={i} filter="url(#dglow2)">
               <circle cx={p.x.toFixed(1)} cy={p.y.toFixed(1)}
-                r="7" fill="rgba(2,6,23,0.95)" stroke={col} strokeWidth="2.5" />
+                r="7" fill="rgba(0,0,0,0.95)" stroke={col} strokeWidth="2.5" />
               <circle cx={p.x.toFixed(1)} cy={p.y.toFixed(1)}
                 r="3.5" fill={col} />
             </g>
@@ -307,7 +307,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         {/* Outer glow ring */}
         <circle cx={cx} cy={cy} r="50" fill={ovrColor} opacity="0.06" filter="url(#oglow2)" />
         {/* Dark bg */}
-        <circle cx={cx} cy={cy} r="48" fill="rgba(2,6,23,0.88)" />
+        <circle cx={cx} cy={cy} r="48" fill="rgba(0,0,0,0.88)" />
         {/* Accent ring */}
         <circle cx={cx} cy={cy} r="48" fill="none" stroke={ovrColor} strokeWidth="1.5" opacity="0.55" />
         <circle cx={cx} cy={cy} r="44" fill="none" stroke={ovrColor} strokeWidth="0.5" opacity="0.18" />
@@ -335,12 +335,12 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
           const col = a.has ? scoreCol(a.score) : 'rgba(255,255,255,0.38)'
           const bg  = !a.has
             ? 'rgba(255,255,255,0.02)' : a.score >= 70
-            ? 'rgba(74,222,128,0.08)' : a.score >= 45
-            ? 'rgba(77,143,255,0.08)' : 'rgba(248,113,113,0.08)'
+            ? 'rgba(0,196,106,0.08)' : a.score >= 45
+            ? 'rgba(255,255,255,0.08)' : 'rgba(240,80,75,0.08)'
           return (
             <div key={a.id} style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
-              padding: '8px 12px', borderRadius: '8px',
+              padding: '8px 12px', borderRadius: 'var(--radius-md)',
               background: bg, border: `1px solid ${col}25`,
               minWidth: '80px', flex: '1 1 80px', opacity: a.has ? 1 : 0.7,
             }}>
@@ -364,7 +364,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
           onClick={() => setShowLegend(v => !v)}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-            width: '100%', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer',
+            width: '100%', padding: '8px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
             background: 'var(--s2)', border: '1px solid var(--bd2)',
             color: 'var(--t2)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.04em',
           }}
@@ -374,11 +374,11 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         </button>
 
         {showLegend && (
-          <div style={{ marginTop: '10px', padding: '14px 16px', borderRadius: '10px', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ marginTop: '10px', padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--s2)', border: '1px solid var(--bd2)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <p style={{ color: 'var(--t3)', fontSize: '11px', lineHeight: 1.6 }}>
               Your <strong style={{ color: 'var(--t1)' }}>OVR</strong> is the average of the skills below, each scored 0–100.
               Skills you haven&apos;t logged data for show <span style={{ color: 'var(--t2)' }}>“—”</span> and are left out of the average — they don&apos;t drag your score down.
-              Colours: <span style={{ color: '#4ade80' }}>green ≥ 70</span> · <span style={{ color: '#facc15' }}>amber 45–69</span> · <span style={{ color: '#f87171' }}>red &lt; 45</span>.
+              Colours: <span style={{ color: '#00C46A' }}>green ≥ 70</span> · <span style={{ color: '#FFFFFF' }}>amber 45–69</span> · <span style={{ color: '#F0504B' }}>red &lt; 45</span>.
             </p>
 
             {[

@@ -27,13 +27,13 @@ export function NetWorthCard({ holdingsValueEur, holdingsLoading }: {
     <div style={{
       position: 'relative', overflow: 'hidden',
       background: 'linear-gradient(135deg, var(--s1) 0%, var(--s2) 100%)',
-      border: '1px solid var(--bd)', borderRadius: '14px',
+      border: '1px solid var(--bd)', borderRadius: 'var(--radius-lg)',
       padding: 'clamp(20px, 3vw, 28px)',
     }}>
       {/* corner glow */}
       <div style={{
         position: 'absolute', top: '-40%', right: '-10%', width: '55%', height: '160%',
-        background: 'radial-gradient(ellipse, rgba(77,143,255,0.07), transparent 65%)',
+        background: 'radial-gradient(ellipse, rgba(255,255,255,0.07), transparent 65%)',
         pointerEvents: 'none',
       }} />
 
@@ -54,7 +54,7 @@ export function NetWorthCard({ holdingsValueEur, holdingsLoading }: {
           {rows.map(r => (
             <div key={r.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '7px 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '2px', background: r.color, flexShrink: 0 }} />
+                <span style={{ width: 8, height: 8, borderRadius: 'var(--radius-xs)', background: r.color, flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
                   <p style={{ margin: 0, color: 'var(--t2)', fontSize: '12.5px', fontWeight: 600 }}>{r.label}</p>
                   <p style={{ margin: 0, color: 'var(--t3)', fontSize: '10.5px' }}>{r.sub}</p>
@@ -68,7 +68,7 @@ export function NetWorthCard({ holdingsValueEur, holdingsLoading }: {
           ))}
 
           {/* allocation bar */}
-          <div style={{ display: 'flex', height: '6px', borderRadius: '3px', overflow: 'hidden', marginTop: '6px', background: 'var(--s3)' }}>
+          <div style={{ display: 'flex', height: '6px', borderRadius: 'var(--radius-xs)', overflow: 'hidden', marginTop: '6px', background: 'var(--s3)' }}>
             {!loading && total > 0 && (
               <>
                 <div style={{ width: `${tradingPct}%`, background: 'var(--ac)', transition: 'width 0.6s cubic-bezier(0.16,1,0.3,1)' }} />

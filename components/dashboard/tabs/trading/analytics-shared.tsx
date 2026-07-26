@@ -30,21 +30,21 @@ export function StatRow({ label, trades: rowTrades, avgPnl, highlight }: {
       alignItems: 'center', gap: '8px',
       padding: '8px 0',
       borderBottom: '1px solid var(--bd)',
-      background: highlight ? 'rgba(88,166,255,0.04)' : 'transparent',
+      background: highlight ? 'rgba(255,255,255,0.04)' : 'transparent',
     }}>
       <span style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: highlight ? 500 : 400 }}>{label}</span>
       {/* W / BE / L counts */}
       <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-        <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '3px', background: 'rgba(99,153,34,0.15)', color: 'var(--gr2)' }}>{wins}W</span>
+        <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: 'var(--radius-xs)', background: 'rgba(0,196,106,0.15)', color: 'var(--gr2)' }}>{wins}W</span>
         {breakeven > 0 && (
-          <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '3px', background: 'rgba(88,166,255,0.12)', color: 'var(--ac)' }}>{breakeven}BE</span>
+          <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: 'var(--radius-xs)', background: 'rgba(255,255,255,0.12)', color: 'var(--ac)' }}>{breakeven}BE</span>
         )}
-        <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '3px', background: 'rgba(226,75,74,0.15)', color: 'var(--re)' }}>{losses}L</span>
+        <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: 'var(--radius-xs)', background: 'rgba(240,80,75,0.15)', color: 'var(--re)' }}>{losses}L</span>
       </div>
       {/* Win rate bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <div style={{ flex: 1, height: '4px', background: 'var(--s3)', borderRadius: '2px' }}>
-          <div style={{ width: `${wr}%`, height: '100%', background: winRateColor(wr), borderRadius: '2px' }} />
+        <div style={{ flex: 1, height: '4px', background: 'var(--s3)', borderRadius: 'var(--radius-xs)' }}>
+          <div style={{ width: `${wr}%`, height: '100%', background: winRateColor(wr), borderRadius: 'var(--radius-xs)' }} />
         </div>
         <span style={{ color: winRateColor(wr), fontSize: '11px', fontWeight: 600, minWidth: '30px' }}>{wr.toFixed(0)}%</span>
       </div>

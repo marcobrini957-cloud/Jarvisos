@@ -279,7 +279,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
                 const barW  = Math.max(2, (Math.abs(d.value) / maxAbs) * BAR_MAX)
                 const isPos = d.value >= 0
                 const y     = i * ROW_H
-                const barColor = isPos ? '#22c55e' : '#ef4444'
+                const barColor = isPos ? '#00C46A' : '#F0504B'
                 const barX  = isPos ? LABEL_W + BAR_MAX : LABEL_W + BAR_MAX - barW
                 return (
                   <g key={d.label}>
@@ -393,7 +393,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
               { label: `${tagCount} tagged · ${uniqueTags} unique tag${uniqueTags !== 1 ? 's' : ''}`, always: false, active: tagCount > 0 },
             ].map(chip => (
               <span key={chip.label} style={{
-                fontSize: '11px', padding: '2px 8px', borderRadius: '4px',
+                fontSize: '11px', padding: '2px 8px', borderRadius: 'var(--radius-sm)',
                 background: (!chip.always && !chip.active) ? 'var(--s2)' : 'var(--s3)',
                 color: (!chip.always && !chip.active) ? 'var(--t3)' : 'var(--t2)',
                 border: '1px solid var(--bd)',

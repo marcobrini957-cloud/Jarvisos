@@ -35,7 +35,7 @@ export function AddHabitModal({ onSave, onClose }: {
         onClick={onClose}
       />
       <div
-        className="fixed z-50 rounded-xl flex flex-col gap-4"
+        className="fixed z-50 vq-r flex flex-col gap-4"
         style={{
           top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           width: '400px', maxWidth: 'calc(100vw - 32px)',
@@ -60,7 +60,7 @@ export function AddHabitModal({ onSave, onClose }: {
                 key={em}
                 onClick={() => setIcon(em)}
                 style={{
-                  width: '36px', height: '36px', borderRadius: '8px', fontSize: '18px', cursor: 'pointer',
+                  width: '36px', height: '36px', borderRadius: 'var(--radius-md)', fontSize: '18px', cursor: 'pointer',
                   background: icon === em ? 'var(--ac)' : 'var(--s2)',
                   border: icon === em ? '1px solid var(--ac)' : '1px solid var(--bd2)',
                 }}>
@@ -98,14 +98,14 @@ export function AddHabitModal({ onSave, onClose }: {
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-md"
+            className="flex-1 py-2.5 vq-r"
             style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !name.trim()}
-            className="flex-1 py-2.5 rounded-md font-medium"
+            className="flex-1 py-2.5 vq-r font-medium"
             style={{
               background: 'var(--gr)', border: 'none', color: 'white',
               fontSize: '13px', cursor: 'pointer',

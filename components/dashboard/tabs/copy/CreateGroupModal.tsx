@@ -41,7 +41,7 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
     }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '16px',
+        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
         padding: '28px', width: '100%', maxWidth: '400px',
         boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
       }}>
@@ -61,10 +61,10 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
                 <button
                   key={m} type="button" onClick={() => setSizing(m)}
                   style={{
-                    flex: 1, padding: '9px 0', borderRadius: '8px', fontSize: '12px',
+                    flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: '12px',
                     fontWeight: sizing === m ? 700 : 400,
-                    background: sizing === m ? 'rgba(122,79,255,0.15)' : 'var(--s2)',
-                    border:     sizing === m ? '1px solid rgba(122,79,255,0.5)' : '1px solid var(--bd)',
+                    background: sizing === m ? 'rgba(255,255,255,0.15)' : 'var(--s2)',
+                    border:     sizing === m ? '1px solid rgba(255,255,255,0.5)' : '1px solid var(--bd)',
                     color:      sizing === m ? 'var(--ac)' : 'var(--t3)',
                     cursor:     'pointer',
                   }}
@@ -103,7 +103,7 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
           )}
 
           {error && (
-            <div style={{ fontSize: '12px', color: '#FF3347', padding: '8px 12px', background: 'rgba(255,51,71,0.08)', borderRadius: '8px' }}>
+            <div style={{ fontSize: '12px', color: '#F0504B', padding: '8px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)' }}>
               {error}
             </div>
           )}

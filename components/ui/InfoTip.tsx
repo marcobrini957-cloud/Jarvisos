@@ -65,17 +65,17 @@ export function InfoTip({ text, title }: { text: ReactNode; title?: string }) {
         title="What is this?"
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: '18px', height: '18px', borderRadius: '50%', cursor: 'pointer',
-          background: open ? 'var(--ac)' : 'var(--s3)',
-          border: '1px solid var(--bd2)', padding: 0, flexShrink: 0,
+          width: '16px', height: '16px', borderRadius: 'var(--radius-xs)', cursor: 'pointer',
+          background: open ? 'var(--color-surface-3)' : 'transparent',
+          border: '1px solid var(--color-line-1)', padding: 0, flexShrink: 0,
           transition: 'background 0.12s',
         }}
-        onMouseEnter={e => { if (!open) e.currentTarget.style.background = 'var(--s2)' }}
-        onMouseLeave={e => { if (!open) e.currentTarget.style.background = 'var(--s3)' }}
+        onMouseEnter={e => { if (!open) e.currentTarget.style.background = 'var(--color-state-hover)' }}
+        onMouseLeave={e => { if (!open) e.currentTarget.style.background = 'transparent' }}
       >
         {/* eye icon */}
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-          stroke={open ? '#fff' : 'var(--t3)'} strokeWidth="2"
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+          stroke={open ? 'var(--color-ink-1)' : 'var(--color-ink-3)'} strokeWidth="2"
           strokeLinecap="round" strokeLinejoin="round">
           <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
           <circle cx="12" cy="12" r="3" />
@@ -88,18 +88,20 @@ export function InfoTip({ text, title }: { text: ReactNode; title?: string }) {
           role="tooltip"
           style={{
             position: 'fixed', left: pos.left, top: pos.top, bottom: pos.bottom,
-            zIndex: 1000, width: 'min(240px, calc(100vw - 24px))',
-            padding: '12px 14px', borderRadius: '10px',
-            background: 'var(--s1)', border: '1px solid var(--bd2)',
-            boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
-            textAlign: 'left',
+            zIndex: 1000, width: 'min(250px, calc(100vw - 24px))',
+            padding: '10px 12px', borderRadius: 'var(--radius-md)',
+            background: '#0F0F0F', border: '1px solid var(--color-line-2)',
+            textAlign: 'left', fontFamily: 'var(--font-display)',
           }}
           onClick={e => e.stopPropagation()}
         >
           {title && (
-            <p style={{ color: 'var(--t1)', fontSize: '12px', fontWeight: 700, marginBottom: '4px' }}>{title}</p>
+            <p style={{
+              color: 'var(--color-ink-1)', fontSize: 'var(--text-base)',
+              letterSpacing: '0.01em', marginBottom: '4px',
+            }}>{title}</p>
           )}
-          <p style={{ color: 'var(--t2)', fontSize: '11.5px', lineHeight: 1.55 }}>{text}</p>
+          <p style={{ color: 'var(--color-ink-2)', fontSize: 'var(--text-sm)', lineHeight: 1.55 }}>{text}</p>
         </div>,
         document.body,
       )}

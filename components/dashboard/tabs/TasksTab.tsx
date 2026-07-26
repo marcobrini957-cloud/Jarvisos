@@ -22,7 +22,7 @@ function AddTaskModal({ onSave, onClose }: {
 
   const inputStyle = {
     width: '100%', background: 'var(--s2)', border: '1px solid var(--bd2)',
-    borderRadius: '8px', padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
+    borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--t1)', fontSize: '13px', outline: 'none',
   }
 
   async function handleSave() {
@@ -51,7 +51,7 @@ function AddTaskModal({ onSave, onClose }: {
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
-      <div className="fixed z-50 rounded-xl flex flex-col gap-4"
+      <div className="fixed z-50 vq-r flex flex-col gap-4"
         style={{
           top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           width: '420px', maxWidth: 'calc(100vw - 32px)',
@@ -105,11 +105,11 @@ function AddTaskModal({ onSave, onClose }: {
         </div>
 
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-md"
+          <button onClick={onClose} className="flex-1 py-2.5 vq-r"
             style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer' }}>
             Cancel
           </button>
-          <button onClick={handleSave} disabled={saving || !title.trim()} className="flex-1 py-2.5 rounded-md font-medium"
+          <button onClick={handleSave} disabled={saving || !title.trim()} className="flex-1 py-2.5 vq-r font-medium"
             style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '13px', cursor: 'pointer', opacity: (!title.trim() || saving) ? 0.5 : 1 }}>
             {saving ? 'Adding…' : 'Add Task'}
           </button>
@@ -218,7 +218,7 @@ export default function TasksTab() {
           { title: 'Overdue',      value: String(overdueTasks.length), sub: 'needs attention', color: overdueTasks.length > 0 ? 'var(--re)' : 'var(--gr)' },
           { title: 'Total Done',   value: String(doneTasks.length),    sub: 'all time',         color: 'var(--pu)' },
         ].map(m => (
-          <div key={m.title} className="relative rounded-lg p-4 overflow-hidden"
+          <div key={m.title} className="relative vq-r p-4 overflow-hidden"
             style={{ background: 'var(--s2)', border: '1px solid var(--bd)' }}>
             <p style={{ color: 'var(--t2)', fontSize: '11px', letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 500 }}>{m.title}</p>
             <p style={{ color: 'var(--t1)', fontSize: '22px', fontWeight: 500, lineHeight: 1.2, marginTop: '4px' }}>{m.value}</p>
@@ -234,7 +234,7 @@ export default function TasksTab() {
           noPadding
           action={
             <button onClick={() => setShowModal(true)}
-              style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: 'var(--ac)', color: 'white', fontWeight: 500 }}>
+              style={{ fontSize: '11px', padding: '3px 10px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer', background: 'var(--ac)', color: 'white', fontWeight: 500 }}>
               + Add Task
             </button>
           }>
@@ -246,7 +246,7 @@ export default function TasksTab() {
             <div className="flex flex-col items-center justify-center py-8 gap-3">
               <p style={{ color: 'var(--t3)', fontSize: '13px' }}>No tasks for today.</p>
               <button onClick={() => setShowModal(true)}
-                style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '12px', padding: '6px 16px', borderRadius: '6px', cursor: 'pointer' }}>
+                style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '12px', padding: '6px 16px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
                 + Add one
               </button>
             </div>

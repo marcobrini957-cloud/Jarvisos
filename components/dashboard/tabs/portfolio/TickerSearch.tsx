@@ -107,7 +107,7 @@ export function TickerSearch({
       {open && results.length > 0 && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 100,
-          background: 'var(--s1)', border: '1px solid var(--bd2)', borderRadius: '10px',
+          background: 'var(--s1)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
           boxShadow: '0 12px 36px rgba(0,0,0,0.6)', overflow: 'hidden',
         }}>
           {results.map(r => (
@@ -123,7 +123,7 @@ export function TickerSearch({
                 <span style={{
                   background: `color-mix(in srgb, ${TYPE_COLOR[r.type] ?? 'var(--ac)'} 15%, transparent)`,
                   color: TYPE_COLOR[r.type] ?? 'var(--ac)',
-                  fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: '4px', letterSpacing: '0.06em',
+                  fontSize: '9px', fontWeight: 700, padding: '1px 5px', borderRadius: 'var(--radius-sm)', letterSpacing: '0.06em',
                 }}>{r.type.toUpperCase()}</span>
               </div>
             </button>

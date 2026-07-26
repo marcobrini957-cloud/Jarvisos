@@ -36,6 +36,14 @@ export default function DashboardShell() {
   const [activeTab,    setActiveTab]    = useState(0)
   const [showSettings, setShowSettings] = useState(false)
 
+  // The 2.0 language is scoped to `.vq2` (see globals.css). It sits on the
+  // shell below, and on <body> as well so InfoTip's portal — which renders
+  // outside this tree — inherits the same tokens.
+  useEffect(() => {
+    document.body.classList.add('vq2')
+    return () => document.body.classList.remove('vq2')
+  }, [])
+
   // Ping last_seen_at so dev console can show "Online Now"
   useEffect(() => {
     fetch('/api/dev/ping', { method: 'POST' }).catch(() => {})
@@ -83,7 +91,7 @@ export default function DashboardShell() {
   return (
     <UserProfileProvider>
       <WelcomeGreeting />
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflowX: 'hidden' }}>
+      <div className="vq2" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflowX: 'hidden' }}>
         <Topbar />
 
         {/* Desktop tab bar — hidden on mobile */}
@@ -101,7 +109,7 @@ export default function DashboardShell() {
           {/* Main content — padded bottom on mobile for the nav bar */}
           <main
             className="flex-1 overflow-y-auto overflow-x-hidden dashboard-main sm:pb-0 pb-24"
-            style={{ padding: 'clamp(16px, 2vw, 28px)' }}
+            style={{ padding: 'clamp(12px, 1.1vw, 18px)' }}
           >
             {/* keyed wrapper re-mounts on tab change → vq-tab-in entrance plays */}
             <div key={showSettings ? 'settings' : activeTab} className="vq-tab-in">

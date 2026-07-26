@@ -650,3 +650,165 @@ html { scroll-behavior: smooth; }
   text-transform: uppercase;
   color: var(--color-ink-3);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   `.vq2` — the 2.0 language, scoped to the dashboard
+   ───────────────────────────────────────────────────────────────────────────
+   The Overview was rebuilt directly on the tokens above. The other eleven tabs
+   carry ~2,700 inline styles that read the legacy Void Black vars, and hand-
+   porting every one of them before anything looks right would have left the app
+   half-redesigned for days. So the legacy vars are *re-pointed* here: inside
+   `.vq2` they resolve to 2.0 values, which moves every unconverted surface,
+   border, ink and radius onto the new language in one step. Tabs are then
+   converted structurally on top of this, not from scratch.
+
+   Surfaces are given as their composite over black (0.04 white on #000 =
+   #0A0A0A) rather than as alpha. Visually identical on this background, but
+   dropdowns, modals and the sticky chrome stay opaque — alpha there would let
+   the page show through.
+
+   Landing, auth and /dev keep the old palette: this class is only on the
+   dashboard shell (and on <body> while it is mounted, for InfoTip's portal).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.vq2 {
+  /* Surfaces — composites of surface-1/2/3 over void */
+  --bg: #000000;
+  --s1: #0A0A0A;
+  --s2: #141414;
+  --s3: #1F1F1F;
+  --s4: #292929;
+
+  /* Hairlines only. bd2 collapses onto line-1: the old two-weight border
+     system made every nested card announce itself. */
+  --bd:  rgba(255,255,255,0.08);
+  --bd2: rgba(255,255,255,0.08);
+  --bd3: rgba(255,255,255,0.24);
+
+  /* Ink — brighter primary, dimmer secondaries than Void Black had */
+  --t1: #ffffff;
+  --t2: rgba(255,255,255,0.48);
+  --t3: rgba(255,255,255,0.28);
+
+  /* P&L is the only chroma. Every other accent resolves to ink, so the old
+     blue/purple/cyan/gold decoration disappears without touching the files
+     that reference it. Genuine warnings opt into --color-warn by hand. */
+  --ac:  #ffffff;
+  --ac2: rgba(255,255,255,0.72);
+  --pu:  rgba(255,255,255,0.72);
+  --pu2: rgba(255,255,255,0.72);
+  --cy:  rgba(255,255,255,0.72);
+  --cy2: rgba(255,255,255,0.72);
+  --go:  rgba(255,255,255,0.72);
+  --go2: #ffffff;
+  --am:  rgba(255,255,255,0.72);
+  --am2: #ffffff;
+
+  --gr:  var(--color-up);
+  --gr2: var(--color-up);
+  --re:  var(--color-down);
+  --re2: var(--color-down);
+
+  /* No shadow anywhere: depth comes from the hairline and the surface step */
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+
+  --r-sm: var(--radius-sm);
+  --r-md: var(--radius-md);
+  --r-lg: var(--radius-lg);
+  --r-xl: var(--radius-xl);
+
+  /* Words are Coolvetica; figures are mono, carried by <Num>/.num */
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+
+  /* Coolvetica ships one weight. Without this, every legacy `fontWeight: 600`
+     and `font-semibold` in the tabs gets a synthesised faux-bold — smeared
+     stems at 12px. Weights are ignored instead; hierarchy comes from size,
+     ink and case. JetBrains Mono has real 400–700 faces and is unaffected. */
+  font-synthesis: none;
+  -webkit-font-synthesis: none;
+}
+
+.vq2 input, .vq2 textarea, .vq2 select, .vq2 button { font-family: inherit; }
+
+.vq2 .num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.02em;
+}
+
+.vq2 .label-caps {
+  font-family: var(--font-display);
+  font-size: var(--text-2xs);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--color-ink-3);
+}
+
+/* Card deck → terminal panel */
+.vq2 .card {
+  background: var(--s1);
+  border: 1px solid var(--color-line-1);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+.vq2 .card-glow,
+.vq2 .card-glow-blue,
+.vq2 .card-glow-green,
+.vq2 .card-glow-red,
+.vq2 .card-glow-gold,
+.vq2 .card-glow-purple,
+.vq2 .card-glow-cyan { box-shadow: none; }
+
+/* Banned: text glow, text gradients, ambient blobs, glowing dots */
+.vq2 .glow-green,
+.vq2 .glow-red,
+.vq2 .glow-gold,
+.vq2 .glow-blue,
+.vq2 .glow-cyan { text-shadow: none; }
+
+.vq2 .gradient-gold,
+.vq2 .gradient-green {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: currentColor;
+}
+
+.vq2 .ambient-blue,
+.vq2 .ambient-gold,
+.vq2 .ambient-green,
+.vq2 .ambient-cyan { display: none; }
+
+.vq2 .live-dot,
+.vq2 .live-dot-green,
+.vq2 .live-dot-red {
+  width: 5px; height: 5px;
+  box-shadow: none;
+}
+
+.vq2 .input-base {
+  background: var(--s2);
+  border: 1px solid var(--color-line-1);
+  border-radius: var(--radius-sm);
+  padding: 6px 9px;
+  font-size: var(--text-base);
+}
+.vq2 .input-base:focus { border-color: var(--color-line-3); }
+
+.vq2 .glass {
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.vq2 ::selection { background: rgba(255,255,255,0.22); color: #ffffff; }
+.vq2 :focus-visible { outline: 1px solid var(--color-line-3); outline-offset: 1px; }
+
+/* Tailwind's radius utilities are replaced by one token inside the dashboard —
+   the old markup mixed rounded-md/lg/xl/2xl on adjacent boxes. */
+.vq2 .vq-r { border-radius: var(--radius-md); }

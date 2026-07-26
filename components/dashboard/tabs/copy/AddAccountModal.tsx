@@ -83,7 +83,7 @@ export function AddAccountModal({
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
     }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: '16px',
+        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
         padding: '28px', width: '100%', maxWidth: '420px', maxHeight: '90vh', overflowY: 'auto',
         boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
       }}>
@@ -101,10 +101,10 @@ export function AddAccountModal({
                   key={r} type="button"
                   onClick={() => setRole(r)}
                   style={{
-                    flex: 1, padding: '9px 0', borderRadius: '8px', fontSize: '12px',
+                    flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: '12px',
                     fontWeight: role === r ? 700 : 400,
-                    background: role === r ? 'rgba(122,79,255,0.15)' : 'var(--s2)',
-                    border:     role === r ? '1px solid rgba(122,79,255,0.5)' : '1px solid var(--bd)',
+                    background: role === r ? 'rgba(255,255,255,0.15)' : 'var(--s2)',
+                    border:     role === r ? '1px solid rgba(255,255,255,0.5)' : '1px solid var(--bd)',
                     color:      role === r ? 'var(--ac)' : 'var(--t3)',
                     cursor:     'pointer', textTransform: 'uppercase', letterSpacing: '0.06em',
                   }}
@@ -129,11 +129,11 @@ export function AddAccountModal({
                   key={m} type="button"
                   onClick={() => setMethod(m)}
                   style={{
-                    flex: 1, padding: '9px 0', borderRadius: '8px', fontSize: '12px',
+                    flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: '12px',
                     fontWeight: method === m ? 700 : 400,
-                    background: method === m ? 'rgba(0,255,133,0.08)' : 'var(--s2)',
-                    border:     method === m ? '1px solid rgba(0,255,133,0.35)' : '1px solid var(--bd)',
-                    color:      method === m ? '#00FF85' : 'var(--t3)',
+                    background: method === m ? 'rgba(0,196,106,0.08)' : 'var(--s2)',
+                    border:     method === m ? '1px solid rgba(0,196,106,0.35)' : '1px solid var(--bd)',
+                    color:      method === m ? '#00C46A' : 'var(--t3)',
                     cursor:     'pointer',
                   }}
                 >
@@ -157,7 +157,7 @@ export function AddAccountModal({
               style={inputStyle}
             />
             {isMainAccount && method === 'cloud' && (
-              <span style={{ fontSize: '10px', color: '#00FF85' }}>
+              <span style={{ fontSize: '10px', color: '#00C46A' }}>
                 ✓ This is your connected VELQUOR terminal — no password needed, we reuse it.
               </span>
             )}
@@ -174,9 +174,9 @@ export function AddAccountModal({
                       key={s.name} type="button"
                       onClick={() => setMt5Server(s.name)}
                       style={{
-                        fontSize: '11px', padding: '5px 10px', borderRadius: '20px',
-                        background: mt5Server === s.name ? 'rgba(122,79,255,0.15)' : 'var(--s2)',
-                        border:     mt5Server === s.name ? '1px solid rgba(122,79,255,0.5)' : '1px solid var(--bd)',
+                        fontSize: '11px', padding: '5px 10px', borderRadius: 'var(--radius-xl)',
+                        background: mt5Server === s.name ? 'rgba(255,255,255,0.15)' : 'var(--s2)',
+                        border:     mt5Server === s.name ? '1px solid rgba(255,255,255,0.5)' : '1px solid var(--bd)',
                         color:      mt5Server === s.name ? 'var(--ac)' : 'var(--t3)',
                         cursor: 'pointer',
                       }}
@@ -238,7 +238,7 @@ export function AddAccountModal({
           </label>
 
           {error && (
-            <div style={{ fontSize: '12px', color: '#FF3347', padding: '8px 12px', background: 'rgba(255,51,71,0.08)', borderRadius: '8px', lineHeight: 1.5 }}>
+            <div style={{ fontSize: '12px', color: '#F0504B', padding: '8px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)', lineHeight: 1.5 }}>
               {error}
             </div>
           )}

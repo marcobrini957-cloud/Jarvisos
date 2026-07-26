@@ -121,8 +121,8 @@ export default function PortfolioTab() {
 
       {/* CSV result banner */}
       {csvResult && (
-        <div className="flex items-center justify-between px-4 py-3 rounded-lg"
-          style={{ background: 'rgba(52,199,89,0.08)', border: '1px solid rgba(52,199,89,0.25)' }}>
+        <div className="flex items-center justify-between px-4 py-3 vq-r"
+          style={{ background: 'rgba(0,196,106,0.08)', border: '1px solid rgba(0,196,106,0.25)' }}>
           <p style={{ color: 'var(--gr2)', fontSize: '13px', fontWeight: 600 }}>{csvResult}</p>
           <button onClick={() => setCsvResult(null)}
             style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: '18px', cursor: 'pointer', lineHeight: 1, flexShrink: 0 }}>×</button>
@@ -131,8 +131,8 @@ export default function PortfolioTab() {
 
       {/* Price error banner */}
       {priceError && !priceLoading && (
-        <div className="flex items-center justify-between px-4 py-3 rounded-lg"
-          style={{ background: 'rgba(255,51,71,0.08)', border: '1px solid rgba(255,51,71,0.25)' }}>
+        <div className="flex items-center justify-between px-4 py-3 vq-r"
+          style={{ background: 'rgba(240,80,75,0.08)', border: '1px solid rgba(240,80,75,0.25)' }}>
           <div>
             <p style={{ color: 'var(--re)', fontSize: '13px', fontWeight: 600 }}>Live prices unavailable</p>
             <p style={{ color: 'var(--t3)', fontSize: '12px', marginTop: '2px' }}>
@@ -140,7 +140,7 @@ export default function PortfolioTab() {
             </p>
           </div>
           <button onClick={() => reload()}
-            style={{ background: 'var(--re)', border: 'none', color: 'white', fontSize: '12px', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', flexShrink: 0 }}>
+            style={{ background: 'var(--re)', border: 'none', color: 'white', fontSize: '12px', padding: '6px 14px', borderRadius: 'var(--radius-md)', cursor: 'pointer', flexShrink: 0 }}>
             Retry
           </button>
         </div>
@@ -187,7 +187,7 @@ export default function PortfolioTab() {
           <Panel title="Holdings" noPadding action={
             <div className="portfolio-panel-actions flex gap-2">
               {/* Sort toggle */}
-              <div className="flex rounded-md overflow-hidden" style={{ border: '1px solid var(--bd2)' }}>
+              <div className="flex vq-r overflow-hidden" style={{ border: '1px solid var(--bd2)' }}>
                 {([['default', 'Default'], ['pnl', 'P&L %'], ['alloc', 'Size']] as const).map(([val, label]) => (
                   <button key={val} onClick={() => setSortBy(val)}
                     style={{
@@ -199,44 +199,44 @@ export default function PortfolioTab() {
                 ))}
               </div>
               <button onClick={() => reload()} disabled={priceLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
+                className="flex items-center gap-1.5 px-3 py-1.5 vq-r"
                 style={{ background: 'var(--s3)', border: '1px solid var(--bd2)', color: priceLoading ? 'var(--t3)' : 'var(--t2)', fontSize: '12px', cursor: priceLoading ? 'not-allowed' : 'pointer' }}>
                 {priceLoading ? '⟳ …' : '⟳'}
               </button>
               {selectMode ? (
                 <>
                   <button onClick={toggleSelectAll}
-                    style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: '6px', color: 'var(--t2)', cursor: 'pointer' }}>
+                    style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', color: 'var(--t2)', cursor: 'pointer' }}>
                     {selected.size === sortedHoldings.length ? 'Deselect all' : 'Select all'}
                   </button>
                   <button onClick={deleteSelected} disabled={selected.size === 0 || deleting}
-                    style={{ padding: '4px 10px', fontSize: '11px', background: selected.size > 0 ? 'rgba(255,61,80,0.15)' : 'var(--s3)', border: `1px solid ${selected.size > 0 ? 'rgba(255,61,80,0.35)' : 'var(--bd2)'}`, borderRadius: '6px', color: selected.size > 0 ? 'var(--re)' : 'var(--t3)', cursor: selected.size > 0 ? 'pointer' : 'default', fontWeight: 600 }}>
+                    style={{ padding: '4px 10px', fontSize: '11px', background: selected.size > 0 ? 'rgba(240,80,75,0.15)' : 'var(--s3)', border: `1px solid ${selected.size > 0 ? 'rgba(240,80,75,0.35)' : 'var(--bd2)'}`, borderRadius: 'var(--radius-md)', color: selected.size > 0 ? 'var(--re)' : 'var(--t3)', cursor: selected.size > 0 ? 'pointer' : 'default', fontWeight: 600 }}>
                     {deleting ? 'Deleting…' : `Delete${selected.size > 0 ? ` (${selected.size})` : ''}`}
                   </button>
                   <button onClick={() => { setSelectMode(false); setSelected(new Set()) }}
-                    style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: '6px', color: 'var(--t2)', cursor: 'pointer' }}>
+                    style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', color: 'var(--t2)', cursor: 'pointer' }}>
                     Cancel
                   </button>
                 </>
               ) : (
                 <>
                   <button onClick={() => setSelectMode(true)}
-                    style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: '6px', color: 'var(--t2)', cursor: 'pointer' }}>
+                    style={{ padding: '4px 10px', fontSize: '11px', background: 'var(--s3)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', color: 'var(--t2)', cursor: 'pointer' }}>
                     Select
                   </button>
                   <button onClick={() => setCsvModal('add')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
+                    className="flex items-center gap-1.5 px-3 py-1.5 vq-r"
                     style={{ background: 'var(--s3)', border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '12px', cursor: 'pointer' }}>
                     ↑ CSV
                   </button>
                   <button onClick={() => setCsvModal('update')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
+                    className="flex items-center gap-1.5 px-3 py-1.5 vq-r"
                     title="Upload a CSV to refresh existing holdings and add new ones — never creates duplicates"
                     style={{ background: 'var(--am)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
                     ⟳ Update
                   </button>
                   <button onClick={() => setModal({ open: true })}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md"
+                    className="flex items-center gap-1.5 px-3 py-1.5 vq-r"
                     style={{ background: 'var(--gr)', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
                     + Add
                   </button>
@@ -265,7 +265,7 @@ export default function PortfolioTab() {
               <div className="flex flex-col items-center justify-center py-10 gap-3">
                 <p style={{ color: 'var(--t2)', fontSize: '13px' }}>No holdings yet.</p>
                 <button onClick={() => setModal({ open: true })}
-                  style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '13px', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer' }}>
+                  style={{ background: 'var(--ac)', border: 'none', color: 'white', fontSize: '13px', padding: '8px 20px', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
                   + Add your first holding
                 </button>
               </div>
@@ -288,9 +288,9 @@ export default function PortfolioTab() {
                   <div key={h.id}
                     className="flex items-center px-4 py-3 transition-colors group"
                     onClick={selectMode ? () => toggleSelect(h.id) : undefined}
-                    style={{ borderBottom: '1px solid var(--bd)', cursor: selectMode ? 'pointer' : 'default', background: selectMode && selected.has(h.id) ? 'rgba(255,61,80,0.06)' : undefined }}
+                    style={{ borderBottom: '1px solid var(--bd)', cursor: selectMode ? 'pointer' : 'default', background: selectMode && selected.has(h.id) ? 'rgba(240,80,75,0.06)' : undefined }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--s3)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = selectMode && selected.has(h.id) ? 'rgba(255,61,80,0.06)' : 'transparent')}>
+                    onMouseLeave={e => (e.currentTarget.style.background = selectMode && selected.has(h.id) ? 'rgba(240,80,75,0.06)' : 'transparent')}>
 
                     {/* Asset — fixed width, no overflow */}
                     <div style={{ width: '110px', flexShrink: 0, minWidth: 0 }}>
@@ -307,8 +307,8 @@ export default function PortfolioTab() {
 
                     {/* Allocation bar — flex fills remaining space */}
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '6px', paddingRight: '8px' }}>
-                      <div style={{ flex: 1, height: '4px', background: 'var(--s3)', borderRadius: '4px', overflow: 'hidden' }}>
-                        <div style={{ width: `${alloc}%`, height: '100%', background: color, borderRadius: '4px' }} />
+                      <div style={{ flex: 1, height: '4px', background: 'var(--s3)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+                        <div style={{ width: `${alloc}%`, height: '100%', background: color, borderRadius: 'var(--radius-sm)' }} />
                       </div>
                       <span style={{ color: 'var(--t2)', fontSize: '11px', width: '34px', textAlign: 'right', flexShrink: 0 }}>{alloc.toFixed(1)}%</span>
                     </div>
@@ -431,7 +431,7 @@ export default function PortfolioTab() {
                       <div key={cat.key}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                            <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: cat.color, flexShrink: 0, display: 'inline-block' }} />
+                            <span style={{ width: '8px', height: '8px', borderRadius: 'var(--radius-xs)', background: cat.color, flexShrink: 0, display: 'inline-block' }} />
                             <span style={{ color: 'var(--t2)', fontSize: '12px' }}>{cat.label}</span>
                             {isOver && <span style={{ color: 'var(--am2)', fontSize: '10px' }}>⚠</span>}
                           </div>
@@ -440,8 +440,8 @@ export default function PortfolioTab() {
                             <span style={{ color: cat.color, fontSize: '12px', fontWeight: 700, minWidth: '38px', textAlign: 'right' }}>{pct.toFixed(1)}%</span>
                           </div>
                         </div>
-                        <div style={{ height: '3px', background: 'var(--s3)', borderRadius: '3px', overflow: 'hidden' }}>
-                          <div style={{ width: `${pct}%`, height: '100%', borderRadius: '3px', background: cat.color, opacity: 0.75 }} />
+                        <div style={{ height: '3px', background: 'var(--s3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', borderRadius: 'var(--radius-xs)', background: cat.color, opacity: 0.75 }} />
                         </div>
                       </div>
                     )
@@ -472,7 +472,7 @@ export default function PortfolioTab() {
           </Panel>
 
           {/* Price source note */}
-          <div className="rounded-lg p-3" style={{ background: 'var(--s2)', border: '1px solid var(--bd)' }}>
+          <div className="vq-r p-3" style={{ background: 'var(--s2)', border: '1px solid var(--bd)' }}>
             <p style={{ color: 'var(--t3)', fontSize: '11px', lineHeight: '1.6' }}>
               Prices from <strong style={{ color: 'var(--t2)' }}>Yahoo Finance</strong> · updated every 5 min · EUR/USD live FX · metals via futures (GC=F, SI=F) in USD/troy oz converted to EUR/gram
             </p>

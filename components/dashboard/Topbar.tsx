@@ -188,7 +188,7 @@ export default function Topbar() {
     width: '100%',
     background: 'var(--s2)',
     border: '1px solid var(--bd2)',
-    borderRadius: '7px',
+    borderRadius: 'var(--radius-md)',
     padding: '8px 10px',
     color: 'var(--t1)',
     fontSize: '13px',
@@ -232,7 +232,7 @@ export default function Topbar() {
             width: '32px', height: '28px',
             background: 'var(--s2)',
             border: '1px solid var(--bd2)',
-            borderRadius: '7px',
+            borderRadius: 'var(--radius-md)',
             color: 'var(--t2)',
             fontSize: '12px', fontWeight: 600,
             cursor: 'pointer',
@@ -256,7 +256,7 @@ export default function Topbar() {
             <div style={{
               width: '28px', height: '28px',
               background: avatarUrl ? 'transparent' : profile.avatar_color,
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-md)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '12px', color: 'white', fontWeight: 700,
               flexShrink: 0, cursor: 'pointer', overflow: 'hidden',
@@ -281,7 +281,7 @@ export default function Topbar() {
               width: '280px', zIndex: 50,
               background: 'var(--s2)',
               border: '1px solid var(--bd2)',
-              borderRadius: '12px',
+              borderRadius: 'var(--radius-lg)',
               boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
               padding: '16px',
               display: 'flex', flexDirection: 'column', gap: '12px',
@@ -310,7 +310,7 @@ export default function Topbar() {
                   <div
                     onClick={() => !uploading && fileInputRef.current?.click()}
                     style={{
-                      width: '52px', height: '52px', borderRadius: '12px', flexShrink: 0,
+                      width: '52px', height: '52px', borderRadius: 'var(--radius-lg)', flexShrink: 0,
                       background: avatarUrl ? 'transparent' : editColor,
                       border: '1.5px solid var(--bd2)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -343,7 +343,7 @@ export default function Topbar() {
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
                       style={{
-                        padding: '7px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 500,
+                        padding: '7px 12px', borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: 500,
                         background: 'var(--s3)', border: '1px solid var(--bd2)',
                         color: 'var(--t1)', cursor: uploading ? 'default' : 'pointer',
                         opacity: uploading ? 0.6 : 1, transition: 'all 0.12s',
@@ -356,8 +356,8 @@ export default function Topbar() {
                         onClick={handleRemovePhoto}
                         disabled={uploading}
                         style={{
-                          padding: '7px 12px', borderRadius: '7px', fontSize: '12px',
-                          background: 'transparent', border: '1px solid rgba(255,61,80,0.2)',
+                          padding: '7px 12px', borderRadius: 'var(--radius-md)', fontSize: '12px',
+                          background: 'transparent', border: '1px solid rgba(240,80,75,0.2)',
                           color: 'var(--re)', cursor: 'pointer', transition: 'all 0.12s',
                         }}
                       >
@@ -383,7 +383,7 @@ export default function Topbar() {
                         title={c.label}
                         onClick={() => setEditColor(c.value)}
                         style={{
-                          width: '24px', height: '24px', borderRadius: '6px',
+                          width: '24px', height: '24px', borderRadius: 'var(--radius-md)',
                           background: c.value, border: 'none', cursor: 'pointer', flexShrink: 0,
                           outline: editColor === c.value ? '2px solid var(--t1)' : '2px solid transparent',
                           outlineOffset: '2px', transition: 'outline 0.1s',
@@ -422,7 +422,7 @@ export default function Topbar() {
                       onClick={() => setEditCurrency(c)}
                       style={{
                         flex: 1, padding: '6px 0',
-                        borderRadius: '7px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                        borderRadius: 'var(--radius-md)', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                         background: editCurrency === c ? 'var(--ac)' : 'var(--s3)',
                         border: editCurrency === c ? '1px solid var(--ac)' : '1px solid var(--bd2)',
                         color: editCurrency === c ? 'white' : 'var(--t2)',
@@ -440,7 +440,7 @@ export default function Topbar() {
                 onClick={handleSaveProfile}
                 style={{
                   width: '100%', padding: '9px',
-                  background: 'var(--ac)', border: 'none', borderRadius: '8px',
+                  background: 'var(--ac)', border: 'none', borderRadius: 'var(--radius-md)',
                   color: 'white', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
                   transition: 'opacity 0.12s',
                 }}
@@ -456,11 +456,11 @@ export default function Topbar() {
                 onClick={handleLogout}
                 style={{
                   width: '100%', padding: '8px',
-                  background: 'transparent', border: '1px solid rgba(255,51,71,0.2)',
-                  borderRadius: '8px', color: 'var(--re)', fontSize: '13px', fontWeight: 500,
+                  background: 'transparent', border: '1px solid rgba(240,80,75,0.2)',
+                  borderRadius: 'var(--radius-md)', color: 'var(--re)', fontSize: '13px', fontWeight: 500,
                   cursor: 'pointer', transition: 'all 0.12s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,51,71,0.08)' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(240,80,75,0.08)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
               >
                 Sign out
