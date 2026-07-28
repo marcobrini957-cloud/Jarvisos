@@ -3,6 +3,9 @@ import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUserId } from '@/lib/api/auth'
 import { withinAiLimit } from '@/lib/api/aiRateLimit'
+import {
+  decided, realClosedTrades, monthlyFacts, groupBy, segmentLine, describeWindow,
+} from '@/lib/ai/chatFacts'
 import { BE_THRESHOLD } from '@/lib/trading/stats'
 
 export const maxDuration = 60
@@ -12,17 +15,22 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 // ── Supabase context ──────────────────────────────────────────────────────────
 
 async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  // A year, not thirty days: month questions ("how was my July") need whole
+  // calendar months to answer, and the old fixed window meant any named month
+  // was answered with the last-30-days figure instead.
+  const since = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()
 
   const [tradesRes, journalRes, snapshotRes, holdingsRes] = await Promise.all([
     supabase
       .from('trades')
-      .select('symbol,trade_type,net_profit,pips,session,setup_type,tags,emotion_pre,followed_plan,open_time,close_time')
+      // status + lot_size are needed to tell a real trade from a balance
+      // operation — a deposit used to count as a large win.
+      .select('symbol,trade_type,net_profit,pips,session,setup_type,tags,emotion_pre,followed_plan,open_time,close_time,status,lot_size')
       .eq('user_id', userId)
       .eq('status', 'closed')
       .gte('close_time', since)
       .order('close_time', { ascending: false })
-      .limit(100),
+      .limit(2000),
     supabase
       .from('journal_entries')
       .select('entry_date,mood,energy_level,body_text,tags,is_trading_day')
@@ -43,50 +51,44 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>, 
       .eq('is_active', true),
   ])
 
-  const t = (tradesRes.data ?? [])
-  const wins     = t.filter(x => (x.net_profit ?? 0) > BE_THRESHOLD)
-  const losses   = t.filter(x => (x.net_profit ?? 0) < -BE_THRESHOLD)
-  const winRate  = t.length > 0 ? (wins.length / t.length * 100).toFixed(1) : '0'
-  const totalPnl = t.reduce((s, x) => s + (x.net_profit ?? 0), 0).toFixed(2)
-  const avgWin   = wins.length   > 0 ? (wins.reduce((s,x)=>s+(x.net_profit??0),0)/wins.length).toFixed(2)   : '0'
-  const avgLoss  = losses.length > 0 ? (losses.reduce((s,x)=>s+(x.net_profit??0),0)/losses.length).toFixed(2) : '0'
+  // Balance operations are not trades. Everything below runs on real fills only.
+  const t = realClosedTrades((tradesRes.data ?? []) as never)
 
-  const tagMap = new Map<string, { w: number; t: number }>()
-  for (const tr of t) {
+  const cutoff30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const last30   = t.filter(x => (x.close_time ?? '') >= cutoff30)
+
+  const all    = decided(t)
+  const recent = decided(last30)
+  const months = monthlyFacts(t, 6)
+
+  const avgWinN  = last30.filter(x => (x.net_profit ?? 0) > 0)
+  const avgLossN = last30.filter(x => (x.net_profit ?? 0) < 0)
+  const avgWin  = avgWinN.length  > 0 ? (avgWinN.reduce((s,x)=>s+(x.net_profit??0),0)/avgWinN.length).toFixed(2)   : '0'
+  const avgLoss = avgLossN.length > 0 ? (avgLossN.reduce((s,x)=>s+(x.net_profit??0),0)/avgLossN.length).toFixed(2) : '0'
+
+  const tagTrades = new Map<string, typeof t>()
+  for (const tr of last30) {
     for (const tag of tr.tags ?? []) {
-      const s = tagMap.get(tag) ?? { w: 0, t: 0 }
-      s.t++
-      if ((tr.net_profit ?? 0) > BE_THRESHOLD) s.w++
-      tagMap.set(tag, s)
+      const arr = tagTrades.get(tag)
+      if (arr) arr.push(tr); else tagTrades.set(tag, [tr])
     }
   }
-  const tagSummary = Array.from(tagMap.entries())
-    .map(([tag, s]) => `${tag}: ${(s.w/s.t*100).toFixed(0)}% WR (${s.t} trades)`)
-    .join(', ')
+  const tagSummary = Array.from(tagTrades.entries())
+    .map(([tag, ts]) => segmentLine(tag, decided(ts)))
+    .join('\n  ')
 
-  const sessionMap = new Map<string, { w: number; t: number }>()
-  for (const tr of t) {
-    const s = tr.session ?? 'unknown'
-    const cur = sessionMap.get(s) ?? { w: 0, t: 0 }
-    cur.t++
-    if ((tr.net_profit ?? 0) > BE_THRESHOLD) cur.w++
-    sessionMap.set(s, cur)
-  }
-  const sessionSummary = Array.from(sessionMap.entries())
-    .map(([s, v]) => `${s}: ${(v.w/v.t*100).toFixed(0)}% WR (${v.t} trades)`)
-    .join(', ')
+  const sessionSummary = Array.from(groupBy(last30, tr => tr.session ?? 'unknown').entries())
+    .map(([s, ts]) => segmentLine(s, decided(ts)))
+    .join('\n  ')
 
-  const emoMap = new Map<string, { pnl: number; t: number }>()
-  for (const tr of t) {
-    if (!tr.emotion_pre) continue
-    const cur = emoMap.get(tr.emotion_pre) ?? { pnl: 0, t: 0 }
-    cur.pnl += tr.net_profit ?? 0
-    cur.t++
-    emoMap.set(tr.emotion_pre, cur)
-  }
-  const emotionSummary = Array.from(emoMap.entries())
-    .map(([e, v]) => `${e}: avg €${(v.pnl/v.t).toFixed(2)} (${v.t} trades)`)
-    .join(', ')
+  const emotionSummary = Array.from(groupBy(last30, tr => tr.emotion_pre).entries())
+    .map(([e, ts]) => {
+      const d = decided(ts)
+      return `${e}: avg €${(d.netPnl / ts.length).toFixed(2)}/trade over ${ts.length} trades, ${d.winRate}% WR`
+    })
+    .join('\n  ')
+
+  const monthSummary = months.map(m => `  ${m.label} — ${describeWindow(m, m.key)}`).join('\n')
 
   const recentTrades = t.slice(0, 10).map(tr =>
     `[${tr.symbol} ${tr.trade_type?.toUpperCase()} | ${tr.session ?? '?'} | ${tr.setup_type ?? 'no tag'} | ${(tr.net_profit ?? 0) >= 0 ? '+' : ''}€${(tr.net_profit ?? 0).toFixed(2)}]`
@@ -111,11 +113,28 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>, 
 
 ACCOUNT: ${acct}
 
-LAST 30 DAYS — ${t.length} trades:
-Win Rate: ${winRate}% | Total P&L: €${totalPnl} | Avg Win: €${avgWin} | Avg Loss: €${avgLoss}
-By Session: ${sessionSummary || 'no data'}
-By Setup/Tag: ${tagSummary || 'no tags yet'}
-By Emotion: ${emotionSummary || 'no emotion data'}
+HOW A WIN RATE IS DEFINED HERE — this is the product's rule, do not use another:
+win rate = wins / (wins + losses). A trade that closes within ±€${BE_THRESHOLD} is a
+break-even and is excluded from BOTH sides. Balance operations (deposits and
+withdrawals) are not trades and are already excluded from everything below.
+Every percentage in this block is already computed correctly — quote it as
+given. Never re-derive a rate from trade counts, and never divide by total
+trades.
+
+${describeWindow(recent, 'LAST 30 DAYS')}
+Avg Win: €${avgWin} | Avg Loss: €${avgLoss}
+
+BY CALENDAR MONTH (use these for any question naming a month):
+${monthSummary || '  no closed trades'}
+
+${describeWindow(all, 'ALL TIME (last 12 months of history)')}
+
+LAST 30 DAYS BY SESSION:
+  ${sessionSummary || 'no data'}
+LAST 30 DAYS BY SETUP/TAG:
+  ${tagSummary || 'no tags yet'}
+LAST 30 DAYS BY EMOTION:
+  ${emotionSummary || 'no emotion data'}
 
 RECENT TRADES (last 10):
 ${recentTrades || 'none'}
@@ -183,6 +202,10 @@ HOW TO RESPOND
 ═══════════════════════════════════════════
 
 - Always reference actual numbers from Marco's data when available
+- Quote the figures above exactly as given. Never compute a win rate yourself,
+  and never divide wins by total trades — break-evens are already excluded
+- If he names a month, answer from the BY CALENDAR MONTH block for that month,
+  not from the 30-day window. Say which window you are quoting
 - Be direct — identify patterns, name problems, give specific observations
 - If something is concerning (overtrading, trading angry, loss streaks), say it clearly
 - For psychology/mindset questions: give concrete, practical coaching advice
