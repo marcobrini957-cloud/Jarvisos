@@ -254,7 +254,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
 
         {/* Y-axis labels (absolute €) */}
         {yTicks.map((v, i) => (
-          <text key={i} x={PAD.l - 8} y={yOf(v) + 4} textAnchor="end" fontSize="10.5"
+          <text key={i} x={PAD.l - 8} y={yOf(v) + 4} textAnchor="end" fontSize="11"
             fill="rgba(255,255,255,0.44)" fontFamily="JetBrains Mono, monospace">
             €{eur0(v)}
           </text>
@@ -276,7 +276,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
               <circle cx={hover.x} cy={hover.y} r="10" fill={lineColor} opacity="0.1" />
               <circle cx={hover.x} cy={hover.y} r="5" fill={lineColor} stroke="#000" strokeWidth="2" />
               <rect x={tx} y={ty} width={tipW} height={tipH} rx="6" fill="#0A0A0A" stroke="rgba(255,255,255,0.24)" strokeWidth="1" />
-              <text x={tx + 11} y={ty + 17} fontSize="10.5" fill="rgba(255,255,255,0.48)" fontFamily="JetBrains Mono, monospace">{dateStr}</text>
+              <text x={tx + 11} y={ty + 17} fontSize="11" fill="rgba(255,255,255,0.48)" fontFamily="JetBrains Mono, monospace">{dateStr}</text>
               <text x={tx + 11} y={ty + 38} fontSize="17" fontWeight="500" fill="#fff" fontFamily="JetBrains Mono, monospace">€{eur2(val)}</text>
             </g>
           )

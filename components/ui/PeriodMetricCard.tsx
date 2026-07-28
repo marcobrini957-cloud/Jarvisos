@@ -87,8 +87,8 @@ export default function PeriodMetricCard({
           {/* The figure gives way before the ring does: at 390px a
               "+€1488.70" at 26px used to run under the donut. */}
           {isFigure
-            ? <Num size="2xl" tone={tone} style={{ fontSize: 'clamp(15px, 4.1vw, 26px)', whiteSpace: 'nowrap' }}>{value}</Num>
-            : <span style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(15px, 4.1vw, 26px)', color: 'var(--color-ink-1)' }}>{value}</span>}
+            ? <Num size="2xl" tone={tone} style={{ fontSize: 'clamp(15px, 4.1vw, 24px)', whiteSpace: 'nowrap' }}>{value}</Num>
+            : <span style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(15px, 4.1vw, 24px)', color: 'var(--color-ink-1)' }}>{value}</span>}
 
           {change && (
             <NumText style={{

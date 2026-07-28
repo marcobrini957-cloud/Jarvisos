@@ -467,6 +467,28 @@ h1, h2, h3 { text-wrap: balance; }
     min-width: 614px;
   }
 
+  /* News rows carried 68+20+44+3×96 of fixed columns plus gaps — about 480px
+     of hard minimum in a 390px viewport, so the last figure was sliced off the
+     right edge. The three readings drop to their own line under the headline
+     instead of being squeezed off it. */
+  .vq-macro-row {
+    grid-template-columns: 56px 14px 40px 1fr !important;
+    gap: 8px !important;
+    row-gap: 6px !important;
+  }
+  .vq-macro-figures {
+    grid-column: 1 / -1;
+    padding-left: 56px;
+    justify-content: flex-start;
+  }
+  .vq-macro-figures > span {
+    width: auto !important;
+    text-align: left !important;
+    /* Keep "FCT 3.75%" together — without this the reading wrapped under its
+       own label and the row grew a phantom third line. */
+    white-space: nowrap;
+  }
+
   /* ── Trading — Live Chart height on phones ────────────────────────── */
   .tv-chart-wrap {
     height: 340px !important;
@@ -605,15 +627,23 @@ html { scroll-behavior: smooth; }
   --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Terminal scale — small, finite, named. No improvising sizes. */
-  --text-2xs:  9px;
-  --text-xs:   10.5px;
-  --text-sm:   11.5px;   /* table data */
-  --text-base: 12.5px;   /* UI default */
+  /* Recalibrated 2026-07-28 after measuring every rendered size across all
+     twelve tabs. The old bottom three steps were 9 / 10.5 / 11.5 — over two
+     thousand text nodes sat there, eight hundred of them carrying digits, and
+     mono figures at 9px are not readable at arm's length. The steps were also
+     only ~8% apart, which is not a scale, it is rounding noise.
+     The floor is up and the bottom is a clean 10/11/12/13/14 progression; the
+     top two come down, because a 34px hero plus a row of 26px metrics spent
+     more vertical space on five numbers than the data underneath them. */
+  --text-2xs:  10px;
+  --text-xs:   11px;
+  --text-sm:   12px;     /* table data */
+  --text-base: 13px;     /* UI default */
   --text-md:   14px;
   --text-lg:   17px;
   --text-xl:   21px;     /* metric values */
-  --text-2xl:  26px;
-  --text-3xl:  34px;     /* page display */
+  --text-2xl:  24px;
+  --text-3xl:  30px;     /* page display */
 
   /* ── Surfaces ──
      One hue at graded alpha rather than solid greys: composites over any

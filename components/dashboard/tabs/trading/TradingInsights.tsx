@@ -286,7 +286,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
                     {/* Row bg on hover handled via CSS — skip for now */}
                     <text
                       x={LABEL_W - 8} y={y + ROW_H / 2 + 4}
-                      textAnchor="end" fontSize="11.5" fill="rgba(255,255,255,0.65)"
+                      textAnchor="end" fontSize="12" fill="rgba(255,255,255,0.65)"
                       fontFamily="var(--font-display)"
                     >
                       {d.label}
@@ -296,7 +296,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
                       x={isPos ? barX + barW + 5 : barX - 5}
                       y={y + ROW_H / 2 + 4}
                       textAnchor={isPos ? 'start' : 'end'}
-                      fontSize="10.5" fill={barColor}
+                      fontSize="11" fill={barColor}
                       fontFamily="var(--font-mono)"
                       fontWeight="600"
                     >

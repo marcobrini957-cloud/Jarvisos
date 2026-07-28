@@ -70,9 +70,13 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
             opacity: past ? 0.45 : 1,
             background: isNext && at - now < 3600_000 ? 'rgba(240,80,75,0.04)' : 'transparent',
           }}>
-            <div style={{
+            {/* The three readings live in their own group so they can drop to
+                a second line on a phone. They used to be three fixed 96px grid
+                columns, which with the rest made ~480px of hard minimum in a
+                390px viewport — the last one was sliced off the right edge. */}
+            <div className="vq-macro-row" style={{
               display: 'grid',
-              gridTemplateColumns: '68px 20px 44px 1fr 96px 96px 96px',
+              gridTemplateColumns: '68px 20px 44px 1fr auto',
               gap: '10px', alignItems: 'center',
             }}>
               <Num size="sm" tone="neutral">{eventTime(e)}</Num>
@@ -80,19 +84,21 @@ function DayGroup({ label, events, now }: { label: string; events: FFEvent[]; no
                 width: '5px', height: '5px', borderRadius: '50%', background: 'var(--color-down)',
               }} />
               <Num size="xs" tone="muted">{e.currency}</Num>
-              <span style={{ fontSize: 'var(--text-base)', color: 'var(--color-ink-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span className="vq-macro-title" style={{ fontSize: 'var(--text-base)', color: 'var(--color-ink-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {e.title}
               </span>
-              {[
-                { label: 'ACT', value: e.actual,   color: actualTone(e) },
-                { label: 'FCT', value: e.forecast, color: 'var(--color-ink-2)' },
-                { label: 'PRV', value: e.previous, color: 'var(--color-ink-3)' },
-              ].map(cell => (
-                <span key={cell.label} style={{ fontSize: 'var(--text-sm)', textAlign: 'right', ...MONO, color: cell.value ? cell.color : 'var(--color-ink-4)' }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)', color: 'var(--color-ink-4)', marginRight: '6px', letterSpacing: '0.14em' }}>{cell.label}</span>
-                  {cell.value || '—'}
-                </span>
-              ))}
+              <div className="vq-macro-figures" style={{ display: 'flex', gap: '10px' }}>
+                {[
+                  { label: 'ACT', value: e.actual,   color: actualTone(e) },
+                  { label: 'FCT', value: e.forecast, color: 'var(--color-ink-2)' },
+                  { label: 'PRV', value: e.previous, color: 'var(--color-ink-3)' },
+                ].map(cell => (
+                  <span key={cell.label} style={{ width: '96px', fontSize: 'var(--text-sm)', textAlign: 'right', ...MONO, color: cell.value ? cell.color : 'var(--color-ink-4)' }}>
+                    <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)', color: 'var(--color-ink-4)', marginRight: '6px', letterSpacing: '0.14em' }}>{cell.label}</span>
+                    {cell.value || '—'}
+                  </span>
+                ))}
+              </div>
             </div>
             {/* One-glance explainer: what it is + what a hot/miss print does */}
             <p style={{

@@ -120,7 +120,7 @@ export default function WelcomeGreeting() {
         {/* Name headline */}
         <h1 style={{
           color: 'var(--t1)',
-          fontSize: 'clamp(22px, 5vw, 28px)',
+          fontSize: 'clamp(21px, 5vw, 30px)',
           fontWeight: 700, lineHeight: 1.25,
           marginBottom: '24px',
         }}>
@@ -140,7 +140,7 @@ export default function WelcomeGreeting() {
         {/* Daily affirmation */}
         <p style={{
           color: 'var(--t1)',
-          fontSize: 'clamp(14px, 3vw, 17px)',
+          fontSize: 'clamp(13px, 3vw, 17px)',
           fontWeight: 400, lineHeight: 1.65,
           marginBottom: '32px',
           fontStyle: 'italic',

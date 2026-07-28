@@ -34,7 +34,7 @@ export default function PartnersTab() {
       }}>
         <h1 style={{
           fontFamily: 'var(--font-mark)', textTransform: 'uppercase',
-          fontSize: 'clamp(22px, 3.4vw, 34px)', color: 'var(--color-ink-1)',
+          fontSize: 'clamp(21px, 3.4vw, 30px)', color: 'var(--color-ink-1)',
           letterSpacing: '0.02em', lineHeight: 1.05, margin: '0 0 14px',
         }}>
           Built for trading

@@ -192,7 +192,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
           return (
             <text key={v}
               x={(p.x + 5).toFixed(1)} y={(p.y + 1).toFixed(1)}
-              fontSize="9" fill="rgba(255,255,255,0.18)"
+              fontSize="10" fill="rgba(255,255,255,0.18)"
               fontFamily="var(--font-mono)" textAnchor="start"
             >{v}</text>
           )
@@ -265,7 +265,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
               {/* metric name */}
               <text
                 x={lx.toFixed(1)} y={(ly - 12).toFixed(1)}
-                textAnchor={anchor} fontSize="9"
+                textAnchor={anchor} fontSize="10"
                 fill="rgba(255,255,255,0.30)"
                 fontFamily="var(--font-display)"
                 style={{ letterSpacing: '0.12em' }}
@@ -279,7 +279,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
               {/* context sub-line */}
               <text
                 x={lx.toFixed(1)} y={(ly + 20).toFixed(1)}
-                textAnchor={anchor} fontSize="9"
+                textAnchor={anchor} fontSize="10"
                 fill="rgba(255,255,255,0.20)"
                 fontFamily="var(--font-display)"
               >{a.sub}</text>
@@ -295,15 +295,15 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         <circle cx={cx} cy={cy} r="48" fill="none" stroke={ovrColor} strokeWidth="1.5" opacity="0.55" />
         <circle cx={cx} cy={cy} r="44" fill="none" stroke={ovrColor} strokeWidth="0.5" opacity="0.18" />
         {/* Label */}
-        <text x={cx} y={cy - 13} textAnchor="middle" fontSize="9"
+        <text x={cx} y={cy - 13} textAnchor="middle" fontSize="10"
           fill="rgba(255,255,255,0.28)" fontFamily="var(--font-display)"
           style={{ letterSpacing: '0.20em' }}>OVR</text>
         {/* Score */}
-        <text x={cx} y={cy + 22} textAnchor="middle" fontSize="34"
+        <text x={cx} y={cy + 22} textAnchor="middle" fontSize="30"
           fill={ovrColor} fontFamily="var(--font-mono)" fontWeight="600">{ovr}</text>
         {/* How many skills actually counted toward the OVR */}
         {scored.length < N && (
-          <text x={cx} y={cy + 64} textAnchor="middle" fontSize="9"
+          <text x={cx} y={cy + 64} textAnchor="middle" fontSize="10"
             fill="rgba(255,255,255,0.30)" fontFamily="var(--font-display)"
             style={{ letterSpacing: '0.10em' }}>{scored.length}/{N} SKILLS SCORED</text>
         )}

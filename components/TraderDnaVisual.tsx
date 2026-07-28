@@ -1,5 +1,7 @@
 'use client'
 
+import { NumText } from '@/components/ui/vq'
+
 // Signature Trader DNA visual: a radar of the five behavioral dimensions plus
 // trait chips and the AI focus callout. Pure presentational — used live in the
 // dashboard and with demo data in the landing showcase.
@@ -77,7 +79,7 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
           {dna.dimensions.map((d, i) => {
             const p = axisPoint(i, n, RMAX + 22)
             return (
-              <text key={i} x={p.x} y={p.y} fontSize="8.5" fill="var(--color-ink-3)"
+              <text key={i} x={p.x} y={p.y} fontSize="10" fill="var(--color-ink-3)"
                 textAnchor="middle" dominantBaseline="middle" style={{ letterSpacing: 0.3 }}>
                 {d.label.split(' ')[0]}
               </text>
@@ -86,8 +88,8 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
         </svg>
         {/* center overall score */}
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div style={{ fontSize: 34, fontWeight: 800, color: 'var(--t1, #fff)', lineHeight: 1 }}>{dna.overall}</div>
-          <div style={{ fontSize: 8, letterSpacing: 2, color: 'var(--color-ink-4)', marginTop: 2 }}>DNA SCORE</div>
+          <div className="vq-num" style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--t1, #fff)', lineHeight: 1 }}>{dna.overall}</div>
+          <div style={{ fontSize: 'var(--text-2xs)', letterSpacing: '0.18em', color: 'var(--color-ink-4)', marginTop: 2 }}>DNA SCORE</div>
         </div>
       </div>
 
@@ -96,11 +98,11 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 16 }}>
           {dna.dimensions.map(d => (
             <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 11, color: 'var(--color-ink-2)', width: 130, flexShrink: 0 }}>{d.label}</span>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-2)', width: 130, flexShrink: 0 }}>{d.label}</span>
               <div style={{ flex: 1, height: 6, background: 'var(--color-surface-2)', borderRadius: 4, overflow: 'hidden' }}>
                 <div style={{ width: `${Math.max(3, d.score)}%`, height: '100%', background: scoreColor(d.score), borderRadius: 4, transition: 'width .8s ease' }} />
               </div>
-              <span style={{ fontSize: 12, fontWeight: 700, color: scoreColor(d.score), width: 26, textAlign: 'right' }}>{d.score}</span>
+              <span className="vq-num" style={{ fontSize: 'var(--text-md)', color: scoreColor(d.score), width: 32, textAlign: 'right' }}>{d.score}</span>
             </div>
           ))}
         </div>
@@ -122,9 +124,9 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
             <span style={{ width: 6, height: 6, borderRadius: 4, background: 'var(--color-ink-1)' }} />
-            <span style={{ fontSize: 10, letterSpacing: 1.5, color: 'var(--color-ink-2)' }}>YOUR BIGGEST OPPORTUNITY</span>
+            <span style={{ fontSize: 'var(--text-2xs)', letterSpacing: '0.16em', color: 'var(--color-ink-2)' }}>YOUR BIGGEST OPPORTUNITY</span>
           </div>
-          <p style={{ fontSize: 13.5, lineHeight: 1.6, color: 'var(--t1, #fff)', margin: 0 }}>{focus}</p>
+          <p style={{ fontSize: 'var(--text-base)', lineHeight: 1.6, color: 'var(--t1, #fff)', margin: 0 }}>{focus}</p>
         </div>
       )}
 
@@ -137,8 +139,8 @@ function Trait({ label, value, good, bad }: { label: string; value: string; good
   const color = good ? 'var(--color-ink-1)' : bad ? 'var(--color-down)' : 'var(--color-ink-2)'
   return (
     <div style={{ padding: '7px 11px', borderRadius: 4, background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)' }}>
-      <div style={{ fontSize: 8.5, letterSpacing: 1, color: 'var(--color-ink-4)', marginBottom: 3 }}>{label.toUpperCase()}</div>
-      <div style={{ fontSize: 12, fontWeight: 600, color }}>{value}</div>
+      <div style={{ fontSize: 'var(--text-2xs)', letterSpacing: '0.14em', color: 'var(--color-ink-4)', marginBottom: 3 }}>{label.toUpperCase()}</div>
+      <NumText style={{ fontSize: 'var(--text-md)', color }}>{value}</NumText>
     </div>
   )
 }

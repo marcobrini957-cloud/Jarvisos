@@ -299,7 +299,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
             {/* Y-axis labels */}
             {[maxVal, 0, minVal].filter((v, i, a) => a.indexOf(v) === i).map((v, i) => (
               <text key={i} x={PAD.l - 8} y={yOf(v) + 4}
-                textAnchor="end" fontSize="10.5" fill="rgba(255,255,255,0.55)" fontFamily="var(--font-mono)">
+                textAnchor="end" fontSize="11" fill="rgba(255,255,255,0.55)" fontFamily="var(--font-mono)">
                 {v >= 0 ? `+${v.toFixed(0)}` : v.toFixed(0)}
               </text>
             ))}
@@ -329,7 +329,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
 
                   <rect x={2} y={hover.y - 9} width={PAD.l - 6} height={18} rx="4" fill="#FFFFFF" />
                   <text x={PAD.l - 9} y={hover.y + 4} textAnchor="end"
-                    fontSize="9" fill="white" fontWeight="700" fontFamily="var(--font-mono)">
+                    fontSize="10" fill="white" fontWeight="700" fontFamily="var(--font-mono)">
                     {val >= 0 ? '+' : ''}{val.toFixed(0)}
                   </text>
 
@@ -338,7 +338,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
 
                   <rect x={tx} y={ty} width={tipW} height={tipH}
                     rx="6" fill="#111111" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-                  <text x={tx + 11} y={ty + 17} fontSize="10.5"
+                  <text x={tx + 11} y={ty + 17} fontSize="11"
                     fill="rgba(255,255,255,0.8)" fontFamily="var(--font-mono)">
                     {dateStr}
                   </text>

@@ -90,7 +90,9 @@ export default function OrdersCounter() {
                   style={{
                     height: `${CELL_H}px`, display: 'flex',
                     alignItems: 'center', justifyContent: 'center',
-                    fontSize: `${Math.round(CELL_H * 0.55)}px`,
+                    // Was CELL_H * 0.55, which landed on 25px — a size the
+                    // scale does not have. Pinned to the step instead.
+                    fontSize: 'var(--text-2xl)',
                     color: 'var(--color-ink-1)',
                   }}
                 >
