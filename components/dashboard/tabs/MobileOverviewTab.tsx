@@ -166,7 +166,7 @@ export default function MobileOverviewTab() {
           Two bands of three instead of four tinted tiles: same figures,
           roughly half the vertical space, one surface treatment. */}
       <MetricStrip metrics={[
-        { label: 'Balance', value: fmtEur(balance, 0), tone: 'neutral',
+        { label: 'MT5 Balance', value: fmtEur(balance, 0), tone: 'neutral',
           meta: equity > 0 && equity !== balance ? `Eq ${fmtEur(equity, 0)}` : `${wins}W/${losses}L` },
         { label: 'Month', value: stats ? formatValue(monthPnl, monthPnlPct, displayMode, { showSign: true }) : '—',
           num: monthPnl, meta: `${monthWins}W · ${monthLosses}L` },

@@ -1,9 +1,9 @@
 'use client'
 
 import { useMemo } from 'react'
-import { BE_THRESHOLD } from '@/hooks/useTrades'
 import Icon, { type IconName } from '@/components/ui/Icon'
 import { Surface, Row, RunStrip, Num, type RunMark } from '@/components/ui/vq'
+import { currentStreaks, recentRun } from '@/lib/trading/streaks'
 import type { Trade } from '@/types'
 
 // ── Streak Card ───────────────────────────────────────────────────────────────
@@ -45,33 +45,14 @@ export function StreakCard({ trades, journalStreak, habitStreak, journalDays, ha
   journalDays?:  boolean[]   // last 7 days, oldest → newest
   habitDays?:    boolean[]
 }) {
-  // Wins + break-evens in a row — only a real loss (< -BE_THRESHOLD) resets
-  const tradeStreak = useMemo(() => {
-    let streak = 0
-    for (const t of [...trades].reverse()) {
-      if ((t.net_profit ?? 0) < -BE_THRESHOLD) break
-      streak++
-    }
-    return streak
-  }, [trades])
+  // Both of these used to reverse the array on the assumption it arrived
+  // oldest-first; useTrades sorts newest-first, so the "current" streak was
+  // counted from the account's very first trade and never moved. Order is
+  // established inside lib/trading/streaks now, not assumed here.
+  const { losses: lossStreak, withoutLoss: tradeStreak } = useMemo(
+    () => currentStreaks(trades), [trades])
 
-  const lossStreak = useMemo(() => {
-    let streak = 0
-    for (const t of [...trades].reverse()) {
-      if ((t.net_profit ?? 0) < -BE_THRESHOLD) streak++
-      else break
-    }
-    return streak
-  }, [trades])
-
-  // last 12 outcomes, oldest → newest
-  const tradeRun = useMemo<RunMark[]>(() => {
-    const recent = trades.slice(-12).map<RunMark>(t => {
-      const p = t.net_profit ?? 0
-      return p > BE_THRESHOLD ? 'up' : p < -BE_THRESHOLD ? 'down' : 'flat'
-    })
-    return [...Array(Math.max(0, 12 - recent.length)).fill('none' as RunMark), ...recent]
-  }, [trades])
+  const tradeRun = useMemo<RunMark[]>(() => recentRun(trades, 12), [trades])
 
   const toRun = (days?: boolean[]): RunMark[] => {
     const d = (days ?? []).slice(-7).map<RunMark>(v => (v ? 'up' : 'none'))
@@ -89,7 +70,9 @@ export function StreakCard({ trades, journalStreak, habitStreak, journalDays, ha
       <StreakRow
         icon={isLosing ? 'trendDown' : 'streak'}
         label={isLosing ? 'Loss run' : 'Win streak'}
-        unit={isLosing ? 'losses in a row' : 'trades without a loss'}
+        unit={isLosing
+          ? (lossStreak === 1 ? 'loss in a row' : 'losses in a row')
+          : (tradeStreak === 1 ? 'trade without a loss' : 'trades without a loss')}
         value={isLosing ? lossStreak : tradeStreak}
         run={tradeRun}
         tone={isLosing ? 'down' : tradeStreak >= 3 ? 'up' : 'muted'}
@@ -118,20 +101,7 @@ export function StreakCard({ trades, journalStreak, habitStreak, journalDays, ha
 // ── Streak Badge ──────────────────────────────────────────────────────────────
 
 export function StreakBadge({ trades }: { trades: Trade[] }) {
-  const streak = useMemo(() => {
-    let wins = 0, losses = 0
-    for (const t of [...trades].reverse()) {
-      const pnl = t.net_profit ?? 0
-      if (pnl > BE_THRESHOLD) {
-        if (losses > 0) break
-        wins++
-      } else if (pnl < -BE_THRESHOLD) {
-        if (wins > 0) break
-        losses++
-      }
-    }
-    return { wins, losses }
-  }, [trades])
+  const streak = useMemo(() => currentStreaks(trades), [trades])
 
   const pill: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: '6px',

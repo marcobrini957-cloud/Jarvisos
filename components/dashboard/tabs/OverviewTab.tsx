@@ -203,7 +203,7 @@ export default function OverviewTab() {
           Five figures in the height one padded card used to take. */}
       <MetricStrip metrics={[
         {
-          label: 'Balance',
+          label: 'MT5 Balance',
           value: fmtEur(balance),
           tone:  'neutral',
           meta:  equity > 0 && equity !== balance ? `Equity ${fmtEur(equity)}` : `${stats?.totalTrades ?? 0} trades`,
