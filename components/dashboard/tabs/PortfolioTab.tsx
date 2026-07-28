@@ -28,6 +28,8 @@ export default function PortfolioTab() {
   const [selectMode, setSelectMode] = useState(false)
   const [selected,   setSelected]   = useState<Set<string>>(new Set())
   const [deleting,   setDeleting]   = useState(false)
+  const [search,     setSearch]     = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
 
   function toggleSelect(id: string) {
     setSelected(prev => {
@@ -77,7 +79,17 @@ export default function PortfolioTab() {
     setCsvResult(`Portfolio updated — ${added} added, ${updated} refreshed. No duplicates created.`)
   }
 
-  const sortedHoldings = [...holdings].sort((a, b) => {
+  // Ticker or name, case-insensitive. With repeated CSV imports a portfolio can
+  // hold the same instrument several times, so finding one by typing beats
+  // scrolling a list where NVDA appears three rows apart.
+  const query = search.trim().toLowerCase()
+  const visibleHoldings = query
+    ? holdings.filter(h =>
+        h.ticker.toLowerCase().includes(query) ||
+        (h.name ?? '').toLowerCase().includes(query))
+    : holdings
+
+  const sortedHoldings = [...visibleHoldings].sort((a, b) => {
     if (sortBy === 'pnl') {
       // Holdings with prices first, sorted by pnlPct desc
       if (a.pnlPct === null && b.pnlPct === null) return 0
@@ -186,6 +198,45 @@ export default function PortfolioTab() {
         <div className="lg:col-span-3">
           <Panel title="Holdings" noPadding action={
             <div className="portfolio-panel-actions flex gap-2">
+              {/* Search — an icon until it is needed, then an input. A permanent
+                  search box in a header this crowded costs more room than it is
+                  worth on a portfolio with six rows. */}
+              {searchOpen || query ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <input
+                    autoFocus
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Escape') { setSearch(''); setSearchOpen(false) } }}
+                    placeholder="Search holdings…"
+                    aria-label="Search holdings by name or ticker"
+                    style={{
+                      width: '150px', background: 'var(--s2)',
+                      border: '1px solid var(--color-line-3)', borderRadius: 'var(--radius-sm)',
+                      padding: '4px 9px', color: 'var(--color-ink-1)',
+                      fontSize: 'var(--text-base)', outline: 'none',
+                    }}
+                  />
+                  <button
+                    onClick={() => { setSearch(''); setSearchOpen(false) }}
+                    aria-label="Clear search"
+                    style={{ background: 'none', border: 'none', color: 'var(--color-ink-3)', cursor: 'pointer', display: 'flex', padding: '4px' }}
+                  >
+                    <Icon name="close" size={12} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  aria-label="Search holdings"
+                  title="Search holdings"
+                  className="flex items-center"
+                  style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', background: 'transparent', border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', cursor: 'pointer' }}
+                >
+                  <Icon name="search" size={12} />
+                </button>
+              )}
+
               {/* Sort toggle */}
               <Segmented
                 options={[{ key: 'default', label: 'Default' }, { key: 'pnl', label: 'P&L %' }, { key: 'alloc', label: 'Size' }]}
@@ -255,6 +306,16 @@ export default function PortfolioTab() {
               <div className="flex items-center justify-center py-8">
                 <span style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>Loading…</span>
               </div>
+            ) : query && sortedHoldings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2">
+                <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>
+                  Nothing matches &ldquo;{search.trim()}&rdquo;.
+                </p>
+                <button onClick={() => { setSearch(''); setSearchOpen(false) }}
+                  style={{ background: 'none', border: 'none', color: 'var(--color-ink-3)', fontSize: 'var(--text-sm)', cursor: 'pointer', textDecoration: 'underline dotted' }}>
+                  Clear search
+                </button>
+              </div>
             ) : holdings.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 gap-3">
                 <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>No holdings yet.</p>
@@ -304,13 +365,21 @@ export default function PortfolioTab() {
                       <div style={{ flex: 1, height: '3px', background: 'var(--color-surface-2)', overflow: 'hidden' }}>
                         <div style={{ width: `${alloc}%`, height: '100%', background: 'var(--color-ink-3)' }} />
                       </div>
+                      {/* A share of the portfolio is not a gain — this stays ink. */}
                       <span className="vq-num" style={{ color: 'var(--t2)', fontSize: 'var(--text-sm)', width: '34px', textAlign: 'right', flexShrink: 0 }}>{alloc.toFixed(1)}%</span>
                     </div>
 
-                    {/* Current value */}
+                    {/* Current value — takes the position's direction, so a row
+                        can be read as won/lost from the market-value column
+                        alone. Cost basis below stays ink on purpose: what you
+                        paid is history and cannot itself be a gain or a loss,
+                        and colouring it would make every row a wall of green. */}
                     <div style={{ width: '82px', flexShrink: 0, textAlign: 'right' }}>
                       {h.currentValueEur !== null ? (
-                        <p className="vq-num" style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500 }}>{fmtEur(h.currentValueEur)}</p>
+                        <p className="vq-num" style={{
+                          color: h.pnlEur === null ? 'var(--t1)' : isProfit ? 'var(--color-up)' : 'var(--color-down)',
+                          fontSize: 'var(--text-base)',
+                        }}>{fmtEur(h.currentValueEur)}</p>
                       ) : (
                         <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>—</p>
                       )}
@@ -357,7 +426,7 @@ export default function PortfolioTab() {
                             {fmtPct(h.change1d)}
                           </p>
                           {h.currentValueEur !== null && (
-                            <p className="vq-num" style={{ color: h.change1d >= 0 ? 'var(--gr2)' : 'var(--re)', fontSize: 'var(--text-sm)', opacity: 0.8 }}>
+                            <p className="vq-num" style={{ color: h.change1d >= 0 ? 'var(--color-up)' : 'var(--color-down)', fontSize: 'var(--text-sm)', opacity: 0.8 }}>
                               {h.change1d >= 0 ? '+' : '−'}€{Math.abs(h.currentValueEur * h.change1d / 100).toFixed(2)}
                             </p>
                           )}

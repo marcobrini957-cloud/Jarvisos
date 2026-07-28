@@ -13,6 +13,7 @@ export type IconName =
   | 'shield' | 'key' | 'lock' | 'mail' | 'upload' | 'camera' | 'doc' | 'bolt'
   | 'home' | 'briefcase' | 'globe' | 'checkSquare' | 'swap' | 'gift'
   | 'more' | 'settings' | 'close' | 'pencil' | 'repeat' | 'folder' | 'download'
+  | 'search'
 
 /** Runtime guard — anything persisted as an icon (habits) is validated against this. */
 export function isIconName(v: unknown): v is IconName {
@@ -56,6 +57,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
   repeat:    <><path d="M2.5 7V5.5a2 2 0 0 1 2-2h7" /><path d="M9.5 1.5 11.5 3.5 9.5 5.5" /><path d="M13.5 9v1.5a2 2 0 0 1-2 2h-7" /><path d="M6.5 14.5 4.5 12.5 6.5 10.5" /></>,
   folder:    <><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.75h5.5a1 1 0 0 1 1 1v6.25a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4.5Z" /></>,
   download:  <><path d="M8 2.5v8" /><path d="m5 7.5 3 3 3-3" /><path d="M2.5 12v1a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1" /></>,
+  search:    <><circle cx="7" cy="7" r="4.5" /><path d="M10.4 10.4 14 14" /></>,
 }
 
 export default function Icon({
