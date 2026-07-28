@@ -485,6 +485,46 @@ Verified logged-in at 1512px and 390px across all nine keyboard-reachable tabs
 plus the weekly review, the habit modal and the open `Select`; tsc clean, 88
 tests, prod build green.
 
+### Stage 3c — the type scale, recalibrated from measurement (2026-07-28)
+
+Marco: "some are legit too small to even read and some are also too big and
+take unnecessary space." So the sizes were **measured** rather than judged —
+every text node on all twelve tabs, with its computed size, whether it was mono
+and whether it held digits.
+
+The audit found fifteen distinct sizes in use, six off the scale entirely, and
+the bottom of the ladder carrying most of the product: **1,102 nodes at 9px and
+904 at 10.5px, 822 of them containing digits.** Mono figures at 9px are not
+readable at arm's length, and the bottom three steps sat ~8% apart — not a
+scale, rounding noise.
+
+| | old | new |
+|---|---|---|
+| 2xs | 9 | **10** |
+| xs | 10.5 | **11** |
+| sm | 11.5 | **12** |
+| base | 12.5 | **13** |
+| md | 14 | 14 |
+| lg | 17 | 17 |
+| xl | 21 | 21 |
+| 2xl | 26 | **24** |
+| 3xl | 34 | **30** |
+
+Floor up so the dense end is legible; the top two down, because a 34px hero
+above a row of 26px metrics spent more height on five numbers than on the data
+beneath them. Every rendered size now lands on a step — 8, 8.5, 9, 10.5, 11.5,
+12.5, 13, 25, 26 and 34 were all in play before.
+
+`TraderDnaVisual.tsx` was the worst offender and explains itself: it lives in
+`components/`, not `components/dashboard/`, so **every earlier sweep missed the
+directory**. Its sizes were raw numbers (8, 8.5, 11, 12, 13.5) and none of its
+figures carried the mono voice. When auditing, glob `components/**`, not
+`components/dashboard/**`.
+
+Caught while verifying: News event rows carried ~480px of fixed grid columns in
+a 390px viewport, so the last reading was sliced off the right edge on every
+phone. The three readings now drop to their own line.
+
 **Stage 4 — NEXT.** Landing, pricing, auth, legal.
 **Stage 5.** Delete the legacy palette and the `.vq2` bridge once nothing reads
 the old vars; drop the glow/gradient helper classes and the remaining emoji.
