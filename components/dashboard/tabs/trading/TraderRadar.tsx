@@ -124,7 +124,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
     : 0
   // A skill score is not a P&L. Green belongs to money, so strength reads as
   // brightness and only a genuinely weak score keeps the red.
-  const scoreCol = (s: number) => s >= 70 ? '#FFFFFF' : s >= 45 ? 'rgba(255,255,255,0.55)' : '#F0504B'
+  const scoreCol = (s: number) => s >= 70 ? '#FFFFFF' : s >= 45 ? 'rgba(255,255,255,0.55)' : 'var(--color-down)'
   const ovrColor = scoreCol(ovr)
 
   // ── SVG geometry ──────────────────────────────────────────────────────────
@@ -192,7 +192,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
           return (
             <text key={v}
               x={(p.x + 5).toFixed(1)} y={(p.y + 1).toFixed(1)}
-              fontSize="8" fill="rgba(255,255,255,0.18)"
+              fontSize="9" fill="rgba(255,255,255,0.18)"
               fontFamily="var(--font-mono)" textAnchor="start"
             >{v}</text>
           )
@@ -265,23 +265,23 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
               {/* metric name */}
               <text
                 x={lx.toFixed(1)} y={(ly - 12).toFixed(1)}
-                textAnchor={anchor} fontSize="8.5"
+                textAnchor={anchor} fontSize="9"
                 fill="rgba(255,255,255,0.30)"
-                fontFamily="system-ui, sans-serif"
+                fontFamily="var(--font-display)"
                 style={{ letterSpacing: '0.12em' }}
               >{a.label}</text>
               {/* main value */}
               <text
                 x={lx.toFixed(1)} y={(ly + 6).toFixed(1)}
-                textAnchor={anchor} fontSize="16"
-                fill={col} fontFamily="var(--font-mono)" fontWeight="800"
+                textAnchor={anchor} fontSize="17"
+                fill={col} fontFamily="var(--font-mono)" fontWeight="700"
               >{a.value}</text>
               {/* context sub-line */}
               <text
                 x={lx.toFixed(1)} y={(ly + 20).toFixed(1)}
-                textAnchor={anchor} fontSize="8"
+                textAnchor={anchor} fontSize="9"
                 fill="rgba(255,255,255,0.20)"
-                fontFamily="system-ui"
+                fontFamily="var(--font-display)"
               >{a.sub}</text>
             </g>
           )
@@ -296,15 +296,15 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         <circle cx={cx} cy={cy} r="44" fill="none" stroke={ovrColor} strokeWidth="0.5" opacity="0.18" />
         {/* Label */}
         <text x={cx} y={cy - 13} textAnchor="middle" fontSize="9"
-          fill="rgba(255,255,255,0.28)" fontFamily="system-ui"
+          fill="rgba(255,255,255,0.28)" fontFamily="var(--font-display)"
           style={{ letterSpacing: '0.20em' }}>OVR</text>
         {/* Score */}
-        <text x={cx} y={cy + 22} textAnchor="middle" fontSize="40"
+        <text x={cx} y={cy + 22} textAnchor="middle" fontSize="34"
           fill={ovrColor} fontFamily="var(--font-mono)" fontWeight="600">{ovr}</text>
         {/* How many skills actually counted toward the OVR */}
         {scored.length < N && (
           <text x={cx} y={cy + 64} textAnchor="middle" fontSize="9"
-            fill="rgba(255,255,255,0.30)" fontFamily="system-ui"
+            fill="rgba(255,255,255,0.30)" fontFamily="var(--font-display)"
             style={{ letterSpacing: '0.10em' }}>{scored.length}/{N} SKILLS SCORED</text>
         )}
       </svg>
@@ -361,7 +361,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
             <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
               Your <strong style={{ color: 'var(--t1)' }}>OVR</strong> is the average of the skills below, each scored 0–100.
               Skills you haven&apos;t logged data for show <span style={{ color: 'var(--t2)' }}>“—”</span> and are left out of the average — they don&apos;t drag your score down.
-              Colours: <span style={{ color: '#00C46A' }}>green ≥ 70</span> · <span style={{ color: '#FFFFFF' }}>amber 45–69</span> · <span style={{ color: '#F0504B' }}>red &lt; 45</span>.
+              Colours: <span style={{ color: 'var(--color-up)' }}>green ≥ 70</span> · <span style={{ color: '#FFFFFF' }}>amber 45–69</span> · <span style={{ color: 'var(--color-down)' }}>red &lt; 45</span>.
             </p>
 
             {[

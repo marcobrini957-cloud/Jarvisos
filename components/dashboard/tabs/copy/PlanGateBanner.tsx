@@ -1,5 +1,7 @@
 'use client'
 
+import Icon from '@/components/ui/Icon'
+
 // ── Plan Gate Banner ──────────────────────────────────────────────────────────
 export function PlanGateBanner() {
   return (
@@ -8,9 +10,9 @@ export function PlanGateBanner() {
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: 56, height: 56, borderRadius: 'var(--radius-lg)',
         background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)',
-        fontSize: 'var(--text-2xl)', marginBottom: '20px',
+        color: 'var(--color-ink-2)', marginBottom: '20px',
       }}>
-        ⚡
+        <Icon name="bolt" size={24} />
       </div>
       <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--t1)', marginBottom: '10px' }}>
         Copy Trading requires Pro or Ultra

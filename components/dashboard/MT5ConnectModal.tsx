@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { BROKERS } from '@/lib/brokers'
+import Icon from '@/components/ui/Icon'
+import { Select } from '@/components/ui/vq'
 
 interface MT5ConnectModalProps {
   onClose: () => void
@@ -97,8 +99,8 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
         {/* Success state */}
         {done && (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ fontSize: 'var(--text-3xl)', marginBottom: '8px' }}>✓</div>
-            <p style={{ color: 'var(--gr2)', fontSize: 'var(--text-md)', fontWeight: 600, margin: 0 }}>MT5 account connected!</p>
+            <div style={{ color: 'var(--color-up)', marginBottom: '8px', display: 'flex', justifyContent: 'center' }}><Icon name="check" size={26} strokeWidth={1.75} /></div>
+            <p style={{ color: 'var(--color-up)', fontSize: 'var(--text-md)', margin: 0 }}>MT5 account connected</p>
             <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', margin: '4px 0 0' }}>Starting your cloud terminal — first sync lands in a minute or two.</p>
           </div>
         )}
@@ -143,22 +145,19 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
 
           <div className="flex flex-col gap-1.5">
             <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Broker</label>
-            <select
+            <Select
+              ariaLabel="Broker"
               value={brokerId}
-              onChange={e => {
-                const id = e.target.value
+              onChange={id => {
                 setBrokerId(id)
                 const b = BROKERS.find(x => x.id === id)
                 setServer(b?.servers[0]?.name ?? '')
               }}
-              style={{
-                background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
-                padding: '10px 12px', color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none',
-              }}
-            >
-              {BROKERS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-              <option value="__other">Other / not listed</option>
-            </select>
+              options={[
+                ...BROKERS.map(b => ({ key: b.id, label: b.name })),
+                { key: '__other', label: 'Other / not listed' },
+              ]}
+            />
           </div>
 
           {broker && !isOther && (

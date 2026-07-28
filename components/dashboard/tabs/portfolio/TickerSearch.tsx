@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Icon from '@/components/ui/Icon'
 
 // ── Ticker Search ─────────────────────────────────────────────────────────────
 
@@ -95,7 +96,7 @@ export function TickerSearch({
               position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
               background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: 'var(--text-lg)', lineHeight: 1,
             }}
-            title="Clear selection">×</button>
+            title="Clear selection"><Icon name="close" size={13} /></button>
         )}
         {loading && (
           <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>

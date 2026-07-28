@@ -12,7 +12,12 @@ export type IconName =
   | 'trendUp' | 'trendDown' | 'chart' | 'calendar' | 'clock' | 'spark'
   | 'shield' | 'key' | 'lock' | 'mail' | 'upload' | 'camera' | 'doc' | 'bolt'
   | 'home' | 'briefcase' | 'globe' | 'checkSquare' | 'swap' | 'gift'
-  | 'more' | 'settings'
+  | 'more' | 'settings' | 'close' | 'pencil' | 'repeat' | 'folder' | 'download'
+
+/** Runtime guard — anything persisted as an icon (habits) is validated against this. */
+export function isIconName(v: unknown): v is IconName {
+  return typeof v === 'string' && v in PATHS
+}
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // an ascending run of bars — a streak of results, not a flame
@@ -45,6 +50,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
   gift:      <><rect x="2" y="6.5" width="12" height="7" rx="1" /><path d="M2 9h12" /><path d="M8 6.5v7" /><path d="M8 6.5C6.5 6.5 4.5 6 4.5 4.5S7 3 8 6.5Z" /><path d="M8 6.5c1.5 0 3.5-.5 3.5-2S9 3 8 6.5Z" /></>,
   more:      <><circle cx="3.5" cy="8" r=".9" fill="currentColor" stroke="none" /><circle cx="8" cy="8" r=".9" fill="currentColor" stroke="none" /><circle cx="12.5" cy="8" r=".9" fill="currentColor" stroke="none" /></>,
   settings:  <><circle cx="8" cy="8" r="2.25" /><path d="M8 1.5v1.75M8 12.75v1.75M14.5 8h-1.75M3.25 8H1.5M12.6 3.4l-1.24 1.24M4.64 11.36 3.4 12.6M12.6 12.6l-1.24-1.24M4.64 4.64 3.4 3.4" /></>,
+  // dismiss — a drawn cross, not the multiplication sign it used to be
+  close:     <path d="M4 4l8 8M12 4l-8 8" />,
+  pencil:    <><path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 2.3L5.6 12.5 2.5 13.5l1-3.1 7.7-8.1Z" /><path d="M10.2 3.4l2.3 2.3" /></>,
+  repeat:    <><path d="M2.5 7V5.5a2 2 0 0 1 2-2h7" /><path d="M9.5 1.5 11.5 3.5 9.5 5.5" /><path d="M13.5 9v1.5a2 2 0 0 1-2 2h-7" /><path d="M6.5 14.5 4.5 12.5 6.5 10.5" /></>,
+  folder:    <><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.75h5.5a1 1 0 0 1 1 1v6.25a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4.5Z" /></>,
+  download:  <><path d="M8 2.5v8" /><path d="m5 7.5 3 3 3-3" /><path d="M2.5 12v1a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1" /></>,
 }
 
 export default function Icon({

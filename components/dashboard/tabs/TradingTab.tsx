@@ -371,7 +371,7 @@ export default function TradingTab() {
                   {
                     label: 'Profit factor',
                     value: !stats ? '—' : stats.profitFactor >= 99 ? '∞' : stats.profitFactor.toFixed(2),
-                    color: !stats ? 'var(--color-ink-3)' : stats.profitFactor >= 1.5 ? 'var(--color-up)' : stats.profitFactor >= 1 ? 'var(--color-ink-1)' : 'var(--color-down)',
+                    color: !stats ? 'var(--color-ink-3)' : stats.profitFactor >= 1.5 ? 'var(--color-ink-1)' : stats.profitFactor >= 1 ? 'var(--color-ink-2)' : 'var(--color-down)',
                     sub:   !stats ? '' : stats.profitFactor >= 1.5 ? 'Strong edge' : stats.profitFactor >= 1 ? 'Breakeven+' : 'Losing',
                   },
                   {
@@ -417,7 +417,7 @@ export default function TradingTab() {
                   <div key={item.label} className="flex items-center gap-2 mb-2">
                     <span style={{ color:'var(--color-ink-2)', fontSize:'var(--text-base)', minWidth:'56px' }}>{item.label}</span>
                     <div className="flex-1 overflow-hidden" style={{ height:'3px', background:'var(--color-surface-2)' }}>
-                      <div style={{ width:`${item.wr}%`, height:'100%', background: item.wr >= 50 ? 'var(--color-up)' : 'var(--color-down)' }}/>
+                      <div style={{ width:`${item.wr}%`, height:'100%', background: item.wr >= 50 ? 'var(--color-ink-1)' : 'var(--color-down)' }}/>
                     </div>
                     <Num size="sm" tone="neutral" style={{ minWidth:'40px', textAlign:'right' }}>{item.wr.toFixed(1)}%</Num>
                   </div>
@@ -435,7 +435,7 @@ export default function TradingTab() {
                   <div key={item.label} className="flex items-center gap-2 mb-2">
                     <span style={{ color:'var(--color-ink-2)', fontSize:'var(--text-base)', minWidth:'64px' }}>{item.label}</span>
                     <div className="flex-1 overflow-hidden" style={{ height:'3px', background:'var(--color-surface-2)' }}>
-                      <div style={{ width:`${item.wr}%`, height:'100%', background: item.wr >= 50 ? 'var(--color-up)' : 'var(--color-down)' }}/>
+                      <div style={{ width:`${item.wr}%`, height:'100%', background: item.wr >= 50 ? 'var(--color-ink-1)' : 'var(--color-down)' }}/>
                     </div>
                     <Num size="sm" tone="neutral" style={{ minWidth:'40px', textAlign:'right' }}>{item.wr.toFixed(1)}%</Num>
                   </div>

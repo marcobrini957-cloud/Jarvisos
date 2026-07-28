@@ -5,6 +5,7 @@ import { useUserProfile } from '@/context/UserProfileContext'
 import { getCookieConsent, onConsentChange } from '@/components/CookieConsent'
 import { pickHousePartner } from '@/lib/partners'
 import PartnerCard from './PartnerCard'
+import Icon from '@/components/ui/Icon'
 
 // Env seam for a real ad network. Set NEXT_PUBLIC_ADSENSE_CLIENT (ca-pub-…)
 // and NEXT_PUBLIC_ADSENSE_SLOT to switch a slot from house ads to network fill.
@@ -37,9 +38,11 @@ export default function AdSlot({
       <div style={{
         padding: '10px 14px', borderRadius: 'var(--radius-md)',
         background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
-        fontSize: 'var(--text-sm)', color: 'var(--t3)', textAlign: 'center',
+        fontSize: 'var(--text-sm)', color: 'var(--t3)',
+        display: 'flex', gap: '7px', alignItems: 'center', justifyContent: 'center',
       }}>
-        ✦ Ad-free — thanks for being {profile.tier === 'ultra' ? 'Ultra' : 'Pro'}
+        <Icon name="spark" size={12} />
+        Ad-free — thanks for being {profile.tier === 'ultra' ? 'Ultra' : 'Pro'}
       </div>
     )
   }

@@ -2,6 +2,17 @@
 
 import { useState } from 'react'
 import { inputStyle } from './helpers'
+import Icon from '@/components/ui/Icon'
+import { Segmented } from '@/components/ui/vq'
+import { HABIT_ICONS, DEFAULT_HABIT_ICON } from './habitIcon'
+
+const CATEGORIES = [
+  { key: 'trading', label: 'Trading' },
+  { key: 'mindset', label: 'Mindset' },
+  { key: 'health',  label: 'Health'  },
+  { key: 'growth',  label: 'Growth'  },
+  { key: 'general', label: 'General' },
+]
 
 // ── Add Habit Modal ───────────────────────────────────────────────────────────
 
@@ -10,11 +21,9 @@ export function AddHabitModal({ onSave, onClose }: {
   onClose: () => void
 }) {
   const [name,     setName]     = useState('')
-  const [icon,     setIcon]     = useState('✅')
+  const [icon,     setIcon]     = useState<string>(DEFAULT_HABIT_ICON)
   const [category, setCategory] = useState('general')
   const [saving,   setSaving]   = useState(false)
-
-  const ICONS = ['✅','📓','💪','😴','🧠','📵','📊','📚','🏃','🥗','💧','🧘','📈','⏰','🎯','💡']
 
   async function handleSave() {
     if (!name.trim()) return
@@ -47,7 +56,7 @@ export function AddHabitModal({ onSave, onClose }: {
           <button
             onClick={onClose}
             style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}>
-            ×
+            <Icon name="close" size={13} />
           </button>
         </div>
 
@@ -55,16 +64,20 @@ export function AddHabitModal({ onSave, onClose }: {
         <div>
           <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', marginBottom: '6px', display: 'block' }}>Icon</label>
           <div className="flex flex-wrap gap-1.5">
-            {ICONS.map(em => (
+            {HABIT_ICONS.map(n => (
               <button
-                key={em}
-                onClick={() => setIcon(em)}
+                key={n}
+                onClick={() => setIcon(n)}
+                aria-label={n}
+                aria-pressed={icon === n}
+                className="flex items-center justify-center"
                 style={{
-                  width: '36px', height: '36px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-lg)', cursor: 'pointer',
-                  background: icon === em ? 'var(--color-surface-3)' : 'var(--s2)',
-                  border: icon === em ? '1px solid var(--ac)' : '1px solid var(--bd2)',
+                  width: '36px', height: '36px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                  background: icon === n ? 'var(--color-surface-3)' : 'var(--s2)',
+                  border: `1px solid ${icon === n ? 'var(--color-line-3)' : 'var(--bd2)'}`,
+                  color: icon === n ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
                 }}>
-                {em}
+                <Icon name={n} size={16} />
               </button>
             ))}
           </div>
@@ -77,22 +90,17 @@ export function AddHabitModal({ onSave, onClose }: {
           placeholder="Habit name (e.g. Morning journal)"
           autoFocus
           style={inputStyle}
-          onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+          onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
           onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
         />
 
         <div className="flex flex-col gap-1.5">
           <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Category</label>
-          <select
+          <Segmented
+            options={CATEGORIES}
             value={category}
-            onChange={e => setCategory(e.target.value)}
-            style={{ ...inputStyle, cursor: 'pointer' }}>
-            <option value="trading">Trading</option>
-            <option value="mindset">Mindset</option>
-            <option value="health">Health</option>
-            <option value="growth">Growth</option>
-            <option value="general">General</option>
-          </select>
+            onChange={setCategory}
+          />
         </div>
 
         <div className="flex gap-2">

@@ -13,7 +13,9 @@
  * See DESIGN.md.
  */
 
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode, CSSProperties } from 'react'
+import { splitFigures } from '@/lib/ui/figures'
 
 // ── Figures ───────────────────────────────────────────────────────────────────
 
@@ -144,6 +146,140 @@ export function MetricStrip({ metrics }: { metrics: Metric[] }) {
           )}
         </div>
       ))}
+    </div>
+  )
+}
+
+/**
+ * Mixed strings — "17 trades", "+€120/day avg", "61% WR". `Num` assumes the
+ * whole string is a figure and `<span>` assumes none of it is; both are wrong
+ * here, which is how sub-lines ended up entirely in Coolvetica while the value
+ * above them was mono. This gives each run its own voice. See lib/ui/figures.
+ */
+export function NumText({ children, style }: { children: string; style?: CSSProperties }) {
+  return (
+    <span style={style}>
+      {splitFigures(children).map((run, i) =>
+        run.figure
+          ? <span key={i} className="vq-num">{run.text}</span>
+          : <span key={i}>{run.text}</span>
+      )}
+    </span>
+  )
+}
+
+// ── Select ────────────────────────────────────────────────────────────────────
+
+/**
+ * A menu we draw ourselves. `<select>` renders the OS control — Aqua chrome, a
+ * system chevron, a popup in the platform's font — which is exactly the "looks
+ * like every other web app" tell the ban list exists to prevent. Same API shape
+ * as the native element so swapping one in is a local edit.
+ *
+ * Options stay inside the trigger's stacking context, so this is for controls
+ * that live in normal flow; the list is capped and scrolls rather than escaping
+ * a modal.
+ */
+export function Select<T extends string>({
+  options, value, onChange, width, align = 'left', ariaLabel,
+}: {
+  options:   { key: T; label: string }[]
+  value:     T
+  onChange:  (k: T) => void
+  width?:    string | number
+  align?:    'left' | 'right'
+  ariaLabel?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const current = options.find(o => o.key === value)?.label ?? ''
+
+  return (
+    <div ref={ref} style={{ position: 'relative', width }}>
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={ariaLabel}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '8px', width: '100%',
+          fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+          color: 'var(--color-ink-1)', textAlign: 'left',
+          background: 'var(--s2)',
+          border: `1px solid ${open ? 'var(--color-line-3)' : 'var(--bd2)'}`,
+          borderRadius: 'var(--radius-sm)', padding: '6px 9px', cursor: 'pointer',
+          transition: 'border-color 0.12s',
+        }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {current}
+        </span>
+        <svg width="9" height="9" viewBox="0 0 16 16" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          aria-hidden="true"
+          style={{
+            flexShrink: 0, color: 'var(--color-ink-4)',
+            transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s',
+          }}>
+          <path d="M3 5.5 8 10.5l5-5" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          style={{
+            position: 'absolute', top: 'calc(100% + 4px)', zIndex: 40,
+            left: align === 'left' ? 0 : undefined,
+            right: align === 'right' ? 0 : undefined,
+            minWidth: '100%', maxHeight: '244px', overflowY: 'auto',
+            background: 'var(--s2)', border: '1px solid var(--bd2)',
+            borderRadius: 'var(--radius-sm)', padding: '3px',
+          }}
+        >
+          {options.map(o => {
+            const on = o.key === value
+            return (
+              <button
+                key={o.key}
+                type="button"
+                role="option"
+                aria-selected={on}
+                onClick={() => { onChange(o.key); setOpen(false) }}
+                style={{
+                  display: 'block', width: '100%', textAlign: 'left',
+                  fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                  padding: '5px 8px', borderRadius: 'var(--radius-xs)', border: 'none',
+                  background: on ? 'var(--color-surface-3)' : 'transparent',
+                  color: on ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={e => { if (!on) e.currentTarget.style.background = 'var(--color-state-hover)' }}
+                onMouseLeave={e => { if (!on) e.currentTarget.style.background = 'transparent' }}
+              >
+                {o.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

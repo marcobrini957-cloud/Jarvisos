@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react'
 import { InfoTip } from './InfoTip'
-import { Label, Num, Segmented } from './vq'
+import { Label, Num, NumText, Segmented } from './vq'
 
 export type Period = 'D' | 'W' | 'M' | 'Q' | 'Y'
 
@@ -91,13 +91,13 @@ export default function PeriodMetricCard({
             : <span style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(15px, 4.1vw, 26px)', color: 'var(--color-ink-1)' }}>{value}</span>}
 
           {change && (
-            <span style={{
+            <NumText style={{
               fontFamily: 'var(--font-display)',
               fontSize:   'var(--text-xs)',
               color:      isPositive ? 'var(--color-up)' : isNegative ? 'var(--color-down)' : 'var(--color-ink-3)',
             }}>
               {change}
-            </span>
+            </NumText>
           )}
         </div>
 

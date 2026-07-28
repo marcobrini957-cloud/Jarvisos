@@ -6,6 +6,7 @@ import { statusDot, timeAgo } from './helpers'
 import { AddAccountModal } from './AddAccountModal'
 import { HostAccountModal } from './HostAccountModal'
 import { SignalLog } from './SignalLog'
+import Icon from '@/components/ui/Icon'
 
 export interface CloudInfo {
   hostedIds: string[]           // copy_accounts ids running in a cloud terminal
@@ -198,7 +199,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                   {hostButton(leader)}
                   <button
                     onClick={() => removeAccount(leader.id)}
-                    style={{ fontSize: 'var(--text-sm)', color: '#F0504B', background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ fontSize: 'var(--text-sm)', color: 'var(--color-down)', background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     Remove
                   </button>
@@ -275,9 +276,9 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                       </button>
                       <button
                         onClick={() => removeAccount(follower.id)}
-                        style={{ fontSize: 'var(--text-sm)', color: '#F0504B', background: 'none', border: 'none', cursor: 'pointer' }}
+                        style={{ fontSize: 'var(--text-sm)', color: 'var(--color-down)', background: 'none', border: 'none', cursor: 'pointer' }}
                       >
-                        ✕
+                        <Icon name="close" size={13} />
                       </button>
                     </div>
                   </div>
@@ -310,7 +311,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
               }}>▾</span>
             </button>
             {showEaConfig && <div style={{ marginTop: '8px' }}>
-            <div style={{ fontFamily: 'monospace', fontSize: 'var(--text-sm)', color: 'var(--t2)', lineHeight: '1.7' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--t2)', lineHeight: '1.7' }}>
               <div><span style={{ color: 'var(--color-ink-3)' }}>InpCopyMode</span> = <span style={{ color: '#FFFFFF' }}>COPY_LEADER</span> <span style={{ color: '#555' }}>// or COPY_FOLLOWER</span></div>
               <div><span style={{ color: 'var(--color-ink-3)' }}>InpCopyGroupId</span> = <span style={{ color: '#FFFFFF' }}>"{group.id}"</span></div>
               <div><span style={{ color: 'var(--color-ink-3)' }}>InpCopyLotMode</span> = <span style={{ color: '#FFFFFF' }}>

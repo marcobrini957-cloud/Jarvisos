@@ -140,8 +140,8 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
   const xOfMs = (ms: number) => PAD.l + Math.max(0, Math.min(1, (ms - xStart) / xSpan)) * cW
   const yOf   = (v: number) => PAD.t + (1 - (v - lo) / range) * cH
 
-  const lineColor = isUp ? '#00C46A' : '#F0504B'
-  const fillColor = isUp ? '#00C46A' : '#F0504B'
+  const lineColor = isUp ? 'var(--color-up)' : 'var(--color-down)'
+  const fillColor = isUp ? 'var(--color-up)' : 'var(--color-down)'
 
   const coords = points.map((p, i) => ({ x: xOfMs(p.ms), y: yOf(series[i]) }))
   const linePath = smoothPath(coords)
@@ -254,7 +254,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
 
         {/* Y-axis labels (absolute €) */}
         {yTicks.map((v, i) => (
-          <text key={i} x={PAD.l - 8} y={yOf(v) + 4} textAnchor="end" fontSize="10"
+          <text key={i} x={PAD.l - 8} y={yOf(v) + 4} textAnchor="end" fontSize="10.5"
             fill="rgba(255,255,255,0.44)" fontFamily="JetBrains Mono, monospace">
             €{eur0(v)}
           </text>
@@ -275,9 +275,9 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
                 stroke="rgba(255,255,255,0.1)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
               <circle cx={hover.x} cy={hover.y} r="10" fill={lineColor} opacity="0.1" />
               <circle cx={hover.x} cy={hover.y} r="5" fill={lineColor} stroke="#000" strokeWidth="2" />
-              <rect x={tx} y={ty} width={tipW} height={tipH} rx="7" fill="#0A0A0A" stroke="rgba(255,255,255,0.24)" strokeWidth="1" />
-              <text x={tx + 11} y={ty + 17} fontSize="10" fill="rgba(255,255,255,0.48)" fontFamily="JetBrains Mono, monospace">{dateStr}</text>
-              <text x={tx + 11} y={ty + 38} fontSize="15" fontWeight="500" fill="#fff" fontFamily="JetBrains Mono, monospace">€{eur2(val)}</text>
+              <rect x={tx} y={ty} width={tipW} height={tipH} rx="6" fill="#0A0A0A" stroke="rgba(255,255,255,0.24)" strokeWidth="1" />
+              <text x={tx + 11} y={ty + 17} fontSize="10.5" fill="rgba(255,255,255,0.48)" fontFamily="JetBrains Mono, monospace">{dateStr}</text>
+              <text x={tx + 11} y={ty + 38} fontSize="17" fontWeight="500" fill="#fff" fontFamily="JetBrains Mono, monospace">€{eur2(val)}</text>
             </g>
           )
         })()}

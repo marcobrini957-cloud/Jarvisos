@@ -279,15 +279,15 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
                 const barW  = Math.max(2, (Math.abs(d.value) / maxAbs) * BAR_MAX)
                 const isPos = d.value >= 0
                 const y     = i * ROW_H
-                const barColor = isPos ? '#00C46A' : '#F0504B'
+                const barColor = isPos ? 'var(--color-up)' : 'var(--color-down)'
                 const barX  = isPos ? LABEL_W + BAR_MAX : LABEL_W + BAR_MAX - barW
                 return (
                   <g key={d.label}>
                     {/* Row bg on hover handled via CSS — skip for now */}
                     <text
                       x={LABEL_W - 8} y={y + ROW_H / 2 + 4}
-                      textAnchor="end" fontSize="11" fill="rgba(255,255,255,0.65)"
-                      fontFamily="system-ui, sans-serif"
+                      textAnchor="end" fontSize="11.5" fill="rgba(255,255,255,0.65)"
+                      fontFamily="var(--font-display)"
                     >
                       {d.label}
                     </text>
@@ -296,8 +296,8 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
                       x={isPos ? barX + barW + 5 : barX - 5}
                       y={y + ROW_H / 2 + 4}
                       textAnchor={isPos ? 'start' : 'end'}
-                      fontSize="10" fill={barColor}
-                      fontFamily="monospace"
+                      fontSize="10.5" fill={barColor}
+                      fontFamily="var(--font-mono)"
                       fontWeight="600"
                     >
                       {formatVal(d.value)}

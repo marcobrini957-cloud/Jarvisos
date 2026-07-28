@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePortfolio, type HoldingWithPrice } from '@/hooks/usePortfolio'
 import { TROY_OZ_TO_GRAMS, METAL_OPTIONS } from './helpers'
 import { TickerSearch } from './TickerSearch'
+import Icon from '@/components/ui/Icon'
 
 // ── Add / Edit Holding Modal ──────────────────────────────────────────────────
 
@@ -135,7 +136,7 @@ export function HoldingModal({
               {isMetal ? 'Live spot prices via Yahoo Finance · price in EUR/gram' : 'Prices update automatically from Yahoo Finance'}
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}><Icon name="close" size={13} /></button>
         </div>
 
         {/* Asset type selector */}

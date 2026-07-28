@@ -6,6 +6,7 @@ import { tradeResult } from '@/hooks/useTrades'
 import type { JournalEntry } from '@/types'
 import { type Mood, MOOD_COLOR, MOODS } from './helpers'
 import VoiceDictationButton from '@/components/ui/VoiceDictationButton'
+import Icon from '@/components/ui/Icon'
 
 // ── Add / Edit Entry Modal ────────────────────────────────────────────────────
 
@@ -68,7 +69,7 @@ export function EntryModal({
             <h2 style={{ color: 'var(--t1)', fontSize: 'var(--text-md)', fontWeight: 500 }}>Journal Entry</h2>
             <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', marginTop: '2px' }}>{displayDate}</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}><Icon name="close" size={13} /></button>
         </div>
 
         {/* Mood selector */}
@@ -187,7 +188,7 @@ export function EntryModal({
                 border: `1.5px solid ${trading ? 'rgba(0,196,106,0.35)' : 'var(--bd2)'}`,
                 color: trading ? 'var(--gr2)' : 'var(--t3)', fontSize: 'var(--text-base)', cursor: 'pointer',
               }}>
-              {trading ? 'Yes ✓' : 'No'}
+              {trading ? 'Yes' : 'No'}
             </button>
           </div>
         </div>

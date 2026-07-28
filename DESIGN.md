@@ -448,6 +448,43 @@ Decisions made during the rollout, all following from "P&L is the only chroma":
 - Amber survives only as `--color-warn` for genuine state — a risk gauge past
   50%, a stale bridge heartbeat.
 
+### Stage 3b — the leak sweep (2026-07-28)
+
+Stage 3 put every tab on the language, but a re-audit against §2 found the
+places the mechanical passes could not see. Fixed here:
+
+- **Emoji.** The ban list already named the survivors and they were still live:
+  the weekly-review mood picker (🚀😊😐😔😤) and its panel titles, the habit
+  icon picker (16 emoji, persisted to `habits.icon`), 📂 📷 ⚡ ✦ 💡, and the
+  glyphs standing in for icons — ✓ ✕ ✎ ⚠ ↻ ↓ ▼. `Icon.tsx` gained `close`,
+  `pencil`, `repeat`, `folder`, `download`. Habits keep their stored value:
+  `discipline/habitIcon.ts` maps the legacy emoji to an `IconName` on read, so
+  no database migration and nobody loses the mark they picked.
+- **Native controls.** Nine `<select>`s were still dropping the OS popup into
+  the product — the one thing §2 Controls forbids. New `Select` primitive in
+  `components/ui/vq` (drawn trigger, hairline menu, Escape/outside-click,
+  `role="listbox"`); every one of the nine now uses it or a `Segmented`.
+- **The mono voice, precisely.** `MetricCard`/`PeriodMetricCard` tested the
+  *value* for digits but rendered the sub-line wholesale in Coolvetica, so
+  "17 trades" and "+€120/day avg" sat in the word font under a mono figure on
+  every tab. `NumText` + `lib/ui/figures.ts` split a label into word runs and
+  figure runs (`tests/figures.test.ts`). Raw `monospace` / `system-ui` stacks in
+  the SVG charts (TraderRadar, EquityCurve, TradingInsights, GroupCard,
+  SettingsTab) now use the tokens.
+- **Chroma that meant nothing.** Profit-green was carrying an ETF allocation
+  slice, a "confident" mood, "Within limits", the profit factor and the win-rate
+  bars — none of them money. All → ink, red kept only for a genuinely losing
+  edge. Four of the six donut categories had been the same white; the ramp is
+  now six steps of brightness. Weekly-review mood and self-grade went from five
+  hues to ordinal brightness, F and Terrible keeping red.
+- **Ladders.** SVG `fontSize` 8/10/11/15/16/40 → the named scale, `rx="7"` → 6,
+  three `7px` labels → `--text-2xs`, mono `fontWeight="800"` → 700 (only 400–700
+  faces ship, so 800 was being synthesised).
+
+Verified logged-in at 1512px and 390px across all nine keyboard-reachable tabs
+plus the weekly review, the habit modal and the open `Select`; tsc clean, 88
+tests, prod build green.
+
 **Stage 4 — NEXT.** Landing, pricing, auth, legal.
 **Stage 5.** Delete the legacy palette and the `.vq2` bridge once nothing reads
 the old vars; drop the glow/gradient helper classes and the remaining emoji.

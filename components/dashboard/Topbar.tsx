@@ -9,7 +9,7 @@ import { LogoMark } from '@/components/ui/LogoMark'
 import { useDisplayMode } from '@/context/DisplayModeContext'
 import { useUserProfile } from '@/context/UserProfileContext'
 import { createClient } from '@/lib/supabase/client'
-import { Label, Num, Segmented } from '@/components/ui/vq'
+import { Label, Num, Segmented, Select } from '@/components/ui/vq'
 
 interface MT5Status {
   connected:     boolean
@@ -355,15 +355,12 @@ export default function Topbar() {
               {/* Timezone */}
               <div>
                 <Label style={{ display: 'block', marginBottom: '5px' }}>Timezone</Label>
-                <select
+                <Select
+                  ariaLabel="Timezone"
                   value={editTz}
-                  onChange={e => setEditTz(e.target.value)}
-                  style={{ ...inputStyle, cursor: 'pointer' }}
-                >
-                  {TIMEZONES.map(tz => (
-                    <option key={tz} value={tz}>{tz}</option>
-                  ))}
-                </select>
+                  onChange={setEditTz}
+                  options={TIMEZONES.map(tz => ({ key: tz, label: tz }))}
+                />
               </div>
 
               {/* Currency */}

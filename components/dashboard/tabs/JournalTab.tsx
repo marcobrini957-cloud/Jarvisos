@@ -10,6 +10,7 @@ import type { JournalEntry } from '@/types'
 import { type Mood, MOOD_COLOR, MOOD_SCORE, MOODS, getDaysInMonth, toDateStr, isWeekday } from './journal/helpers'
 import { EntryModal } from './journal/EntryModal'
 import { WeeklyReviewSection } from './journal/WeeklyReviewSection'
+import Icon from '@/components/ui/Icon'
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -156,7 +157,7 @@ export default function JournalTab() {
                 border: byDate.has(today) ? '1px solid var(--color-line-1)' : 'none',
                 color: byDate.has(today) ? 'var(--color-ink-2)' : 'var(--color-void)',
               }}>
-              {byDate.has(today) ? '✓ Today logged' : '+ Log Today'}
+              {byDate.has(today) ? 'Today logged' : '+ Log today'}
             </button>
           } title="">
             {/* Month nav */}
@@ -260,7 +261,7 @@ export default function JournalTab() {
                 />
                 {search && (
                   <button onClick={() => setSearch('')}
-                    style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: 'var(--text-lg)', lineHeight: 1 }}>×</button>
+                    style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: 'var(--text-lg)', lineHeight: 1 }}><Icon name="close" size={13} /></button>
                 )}
               </div>
               {/* Mood filter chips */}

@@ -3,9 +3,23 @@
 import { useState } from 'react'
 import { useTasks } from '@/hooks/useTasks'
 import Panel from '@/components/ui/Panel'
-import { Label, Num } from '@/components/ui/vq'
+import { Label, Num, Select } from '@/components/ui/vq'
 import Badge from '@/components/ui/Badge'
 import type { Task, TaskCategory, TaskPriority } from '@/types'
+import Icon from '@/components/ui/Icon'
+
+const TASK_CATEGORIES: { key: TaskCategory; label: string }[] = [
+  { key: 'trading',   label: 'Trading'   },
+  { key: 'portfolio', label: 'Portfolio' },
+  { key: 'life',      label: 'Life'      },
+  { key: 'general',   label: 'General'   },
+]
+const TASK_PRIORITIES: { key: TaskPriority; label: string }[] = [
+  { key: 'high',   label: 'High'   },
+  { key: 'medium', label: 'Medium' },
+  { key: 'low',    label: 'Low'    },
+]
+
 
 const TODAY = new Date().toISOString().split('T')[0]
 
@@ -61,7 +75,7 @@ function AddTaskModal({ onSave, onClose }: {
         }}>
         <div className="flex items-center justify-between">
           <h2 style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-md)' }}>New task</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}><Icon name="close" size={13} /></button>
         </div>
 
         <input
@@ -78,22 +92,11 @@ function AddTaskModal({ onSave, onClose }: {
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
             <label className="vq-label" style={{ display: 'block' }}>Category</label>
-            <select value={category} onChange={e => setCategory(e.target.value as TaskCategory)}
-              style={{ ...inputStyle, cursor: 'pointer' }}>
-              <option value="trading">Trading</option>
-              <option value="portfolio">Portfolio</option>
-              <option value="life">Life</option>
-              <option value="general">General</option>
-            </select>
+            <Select ariaLabel="Category" options={TASK_CATEGORIES} value={category} onChange={setCategory} />
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="vq-label" style={{ display: 'block' }}>Priority</label>
-            <select value={priority} onChange={e => setPriority(e.target.value as TaskPriority)}
-              style={{ ...inputStyle, cursor: 'pointer' }}>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
+            <Select ariaLabel="Priority" options={TASK_PRIORITIES} value={priority} onChange={setPriority} />
           </div>
         </div>
 
@@ -165,7 +168,7 @@ function TaskRow({ task, onToggle, onDelete }: {
           <Badge variant={task.category}>{task.category}</Badge>
           {task.priority === 'high' && <Badge variant="high">high</Badge>}
           {task.is_recurring && (
-            <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }}>↻ {task.recurrence}</span>
+            <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }} className="inline-flex items-center gap-1"><Icon name="repeat" size={10} />{task.recurrence}</span>
           )}
           {isOverdue && (
             <span style={{ color: 'var(--color-down)', fontSize: 'var(--text-xs)' }}>overdue</span>
@@ -185,7 +188,7 @@ function TaskRow({ task, onToggle, onDelete }: {
         className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
         style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: 'var(--text-lg)', padding: '0 2px', lineHeight: 1 }}
         title="Delete task">
-        ×
+        <Icon name="close" size={13} />
       </button>
     </div>
   )

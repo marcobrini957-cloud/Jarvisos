@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { useHabits } from '@/hooks/useHabits'
 import { useTasks }  from '@/hooks/useTasks'
 import Panel         from '@/components/ui/Panel'
+import Icon          from '@/components/ui/Icon'
 import type { Task } from '@/types'
 import { TODAY, categoryColor, last7Days } from './discipline/helpers'
+import { habitIcon } from './discipline/habitIcon'
 import { Num } from '@/components/ui/vq'
 import { AddHabitModal } from './discipline/AddHabitModal'
 import { AddTaskModal } from './discipline/AddTaskModal'
@@ -163,14 +165,16 @@ export default function DisciplineTab() {
                         onClick={() => toggleHabit(habit.id, today)}
                         className="flex items-center justify-center flex-shrink-0 transition-all"
                         style={{
-                          width: '28px', height: '28px', fontSize: 'var(--text-md)',
+                          width: '28px', height: '28px',
                           borderRadius: 'var(--radius-sm)',
                           background: done ? 'var(--color-surface-3)' : 'transparent',
                           border: '1px solid var(--color-line-1)',
                           cursor: 'pointer',
-                          filter: done ? 'none' : 'grayscale(1) opacity(0.5)',
-                        }}>
-                        {habit.icon}
+                          color: done ? 'var(--color-ink-1)' : 'var(--color-ink-4)',
+                        }}
+                        aria-pressed={done}
+                        title={done ? 'Done today' : 'Mark done'}>
+                        <Icon name={habitIcon(habit.icon)} size={15} />
                       </button>
 
                       <div className="flex-1 min-w-0">
@@ -231,7 +235,7 @@ export default function DisciplineTab() {
                     <div key={habit.id}>
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
-                          <span>{habit.icon}</span>
+                          <span style={{ color: 'var(--color-ink-3)' }}><Icon name={habitIcon(habit.icon)} size={13} /></span>
                           <span style={{ color: 'var(--t1)', fontSize: 'var(--text-base)' }}>{habit.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -307,7 +311,9 @@ export default function DisciplineTab() {
           <div
             className="vq-r p-4"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)' }}>
-            <p style={{ color: 'var(--go2)', fontSize: 'var(--text-sm)', fontWeight: 500, marginBottom: '6px' }}>💡 VELQUOR TIP</p>
+            <p className="label-caps" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+              <Icon name="spark" size={11} />VELQUOR TIP
+            </p>
             <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', lineHeight: 1.6 }}>
               Traders who maintain consistent daily habits — especially journaling and pre-trade checklists — show 23% higher win rates on average.
               Track your habits for 30 days and VELQUOR will correlate them with your P&L.

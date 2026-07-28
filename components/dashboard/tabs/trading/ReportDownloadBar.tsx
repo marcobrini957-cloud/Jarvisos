@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Label } from '@/components/ui/vq'
+import Icon from '@/components/ui/Icon'
 
 // ── Report download bar ───────────────────────────────────────────────────────
 
@@ -91,7 +92,7 @@ export function ReportDownloadBar() {
             >
               {busy
                 ? <span style={{ width: '10px', height: '10px', borderRadius: '50%', border: '1px solid var(--color-line-2)', borderTopColor: 'var(--color-ink-1)', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
-                : <span style={{ fontSize: 'var(--text-sm)', opacity: 0.6 }}>↓</span>
+                : <span style={{ opacity: 0.6, display: 'inline-flex' }}><Icon name="download" size={12} /></span>
               }
               {r.label}
             </button>
@@ -157,7 +158,7 @@ export function ReportDownloadBar() {
           >
             {downloading === 'custom'
               ? <span style={{ width: '10px', height: '10px', borderRadius: '50%', border: '1px solid var(--color-line-2)', borderTopColor: 'var(--color-ink-1)', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
-              : <span style={{ fontSize: 'var(--text-sm)' }}>↓</span>
+              : <span style={{ display: 'inline-flex' }}><Icon name="download" size={12} /></span>
             }
             Download
           </button>

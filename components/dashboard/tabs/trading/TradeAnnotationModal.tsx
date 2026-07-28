@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { tradeResult } from '@/hooks/useTrades'
 import Badge from '@/components/ui/Badge'
 import type { Trade } from '@/types'
+import Icon from '@/components/ui/Icon'
+import { Select } from '@/components/ui/vq'
 
 // ── Trade Annotation Modal ─────────────────────────────────────────────────────
 
@@ -25,8 +27,11 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
   const [aiFetching,  setAiFetching]  = useState(false)
 
   const EMOTIONS = ['confident', 'neutral', 'anxious', 'tired', 'fomo']
+  // Ordinal, so it reads as brightness. Green here meant "confident", which on a
+  // trading screen reads as profit — the one thing colour is reserved for.
   const EMOTION_COLORS: Record<string, string> = {
-    confident: 'var(--gr2)', neutral: 'var(--t2)', anxious: 'var(--am2)', tired: 'var(--re)', fomo: '#FFFFFF',
+    confident: 'var(--color-ink-1)', neutral: 'var(--color-ink-2)', anxious: 'var(--color-ink-3)',
+    tired:     'var(--color-ink-3)', fomo:     'var(--color-down)',
   }
 
   function toggleTag(t: string) {
@@ -138,16 +143,18 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
               })()}
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}><Icon name="close" size={13} /></button>
         </div>
 
         {/* Setup type */}
         <div className="flex flex-col gap-1.5">
           <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Setup Type</label>
-          <select value={setupType} onChange={e => setSetup(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-            <option value="">— Select setup —</option>
-            {SETUP_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <Select
+            ariaLabel="Setup type"
+            value={setupType}
+            onChange={setSetup}
+            options={[{ key: '', label: '— Select setup —' }, ...SETUP_TYPES.map(t => ({ key: t, label: t }))]}
+          />
         </div>
 
         {/* Why I took this trade */}
@@ -156,7 +163,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
           <textarea value={rationale} onChange={e => setRationale(e.target.value)}
             placeholder="What was your reason for entering? What confirmed the setup?"
             style={{ ...inputStyle, resize: 'vertical', minHeight: '80px', lineHeight: '1.6' }}
-            onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+            onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
             onBlur={e => (e.target.style.borderColor = 'var(--bd2)')} />
         </div>
 
@@ -166,7 +173,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
           <textarea value={notes} onChange={e => setNotes(e.target.value)}
             placeholder="How did the trade play out? What would you do differently?"
             style={{ ...inputStyle, resize: 'vertical', minHeight: '70px', lineHeight: '1.6' }}
-            onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+            onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
             onBlur={e => (e.target.style.borderColor = 'var(--bd2)')} />
         </div>
 
@@ -270,7 +277,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
                   <span style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>Uploading…</span>
                 ) : (
                   <>
-                    <span style={{ fontSize: 'var(--text-2xl)' }}>📷</span>
+                    <span style={{ color: 'var(--color-ink-3)' }}><Icon name="camera" size={22} /></span>
                     <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Click to upload chart screenshot</span>
                     <span style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>PNG, JPG up to 10MB</span>
                   </>
@@ -288,7 +295,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
             background: saved ? 'var(--gr)' : 'var(--color-ink-1)', border: 'none',
             color: 'var(--color-void)', fontSize: 'var(--text-base)', cursor: (saving || saved) ? 'default' : 'pointer',
           }}>
-          {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save Annotation'}
+          {saved ? 'Saved' : saving ? 'Saving…' : 'Save annotation'}
         </button>
 
         {/* AI Feedback */}

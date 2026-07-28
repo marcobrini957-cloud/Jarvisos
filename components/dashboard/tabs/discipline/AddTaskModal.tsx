@@ -3,6 +3,20 @@
 import { useState } from 'react'
 import type { Task, TaskCategory, TaskPriority } from '@/types'
 import { TODAY, inputStyle } from './helpers'
+import { Select } from '@/components/ui/vq'
+
+const TASK_CATEGORIES: { key: TaskCategory; label: string }[] = [
+  { key: 'trading',   label: 'Trading'   },
+  { key: 'portfolio', label: 'Portfolio' },
+  { key: 'life',      label: 'Life'      },
+  { key: 'general',   label: 'General'   },
+]
+const TASK_PRIORITIES: { key: TaskPriority; label: string }[] = [
+  { key: 'high',   label: 'High'   },
+  { key: 'medium', label: 'Medium' },
+  { key: 'low',    label: 'Low'    },
+]
+
 
 // ── Add Task Modal ────────────────────────────────────────────────────────────
 
@@ -77,26 +91,11 @@ export function AddTaskModal({ onSave, onClose }: {
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
             <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Category</label>
-            <select
-              value={category}
-              onChange={e => setCategory(e.target.value as TaskCategory)}
-              style={{ ...inputStyle, cursor: 'pointer' }}>
-              <option value="trading">Trading</option>
-              <option value="portfolio">Portfolio</option>
-              <option value="life">Life</option>
-              <option value="general">General</option>
-            </select>
+            <Select ariaLabel="Category" options={TASK_CATEGORIES} value={category} onChange={setCategory} />
           </div>
           <div className="flex flex-col gap-1.5">
             <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Priority</label>
-            <select
-              value={priority}
-              onChange={e => setPriority(e.target.value as TaskPriority)}
-              style={{ ...inputStyle, cursor: 'pointer' }}>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
+            <Select ariaLabel="Priority" options={TASK_PRIORITIES} value={priority} onChange={setPriority} />
           </div>
         </div>
 

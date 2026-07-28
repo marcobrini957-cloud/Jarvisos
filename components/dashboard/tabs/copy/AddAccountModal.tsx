@@ -237,7 +237,7 @@ export function AddAccountModal({
           </label>
 
           {error && (
-            <div style={{ fontSize: 'var(--text-base)', color: '#F0504B', padding: '8px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--text-base)', color: 'var(--color-down)', padding: '8px 12px', background: 'rgba(240,80,75,0.08)', borderRadius: 'var(--radius-md)', lineHeight: 1.5 }}>
               {error}
             </div>
           )}

@@ -119,8 +119,8 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
   const yOf   = (v: number) => PAD.t + (1 - (v - minVal) / range) * cH
   const zeroY = yOf(0)
 
-  const lineColor = finalVal >= 0 ? '#00C46A' : '#F0504B'
-  const fillColor = finalVal >= 0 ? '#00C46A' : '#F0504B'
+  const lineColor = finalVal >= 0 ? 'var(--color-up)' : 'var(--color-down)'
+  const fillColor = finalVal >= 0 ? 'var(--color-up)' : 'var(--color-down)'
 
   const points  = equity.map((v, i) => ({ x: xOf(i), y: yOf(v) }))
   const linePath = n === 0 ? '' : n === 1
@@ -299,7 +299,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
             {/* Y-axis labels */}
             {[maxVal, 0, minVal].filter((v, i, a) => a.indexOf(v) === i).map((v, i) => (
               <text key={i} x={PAD.l - 8} y={yOf(v) + 4}
-                textAnchor="end" fontSize="10" fill="rgba(255,255,255,0.55)" fontFamily="monospace">
+                textAnchor="end" fontSize="10.5" fill="rgba(255,255,255,0.55)" fontFamily="var(--font-mono)">
                 {v >= 0 ? `+${v.toFixed(0)}` : v.toFixed(0)}
               </text>
             ))}
@@ -313,7 +313,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
                 ? `${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}`
                 : ''
               const valStr   = `${val >= 0 ? '+' : '-'}€${Math.abs(val).toFixed(2)}`
-              const hColor   = val >= 0 ? '#00C46A' : '#F0504B'
+              const hColor   = val >= 0 ? 'var(--color-up)' : 'var(--color-down)'
               const tipW     = 148
               const tipH     = 50
               const isRight  = hover.x > W - PAD.r - tipW - 20
@@ -329,7 +329,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
 
                   <rect x={2} y={hover.y - 9} width={PAD.l - 6} height={18} rx="4" fill="#FFFFFF" />
                   <text x={PAD.l - 9} y={hover.y + 4} textAnchor="end"
-                    fontSize="9" fill="white" fontWeight="700" fontFamily="monospace">
+                    fontSize="9" fill="white" fontWeight="700" fontFamily="var(--font-mono)">
                     {val >= 0 ? '+' : ''}{val.toFixed(0)}
                   </text>
 
@@ -337,13 +337,13 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
                   <circle cx={hover.x} cy={hover.y} r="5"  fill={hColor} stroke="#000000" strokeWidth="2" />
 
                   <rect x={tx} y={ty} width={tipW} height={tipH}
-                    rx="7" fill="#111111" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-                  <text x={tx + 11} y={ty + 17} fontSize="10"
-                    fill="rgba(255,255,255,0.8)" fontFamily="monospace">
+                    rx="6" fill="#111111" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                  <text x={tx + 11} y={ty + 17} fontSize="10.5"
+                    fill="rgba(255,255,255,0.8)" fontFamily="var(--font-mono)">
                     {dateStr}
                   </text>
-                  <text x={tx + 11} y={ty + 38} fontSize="16" fontWeight="700"
-                    fill={hColor} fontFamily="monospace">
+                  <text x={tx + 11} y={ty + 38} fontSize="17" fontWeight="700"
+                    fill={hColor} fontFamily="var(--font-mono)">
                     {valStr}
                   </text>
                 </g>
@@ -360,7 +360,7 @@ export function EquityCurve({ trades }: { trades: Trade[] }) {
           {[0, Math.floor((n - 1) / 2), n - 1].map(i => {
             const d = sampled[i]?.date ? new Date(sampled[i].date) : null
             return (
-              <span key={i} style={{ fontSize: 'var(--text-2xs)', color: 'var(--t3)', fontFamily: 'monospace' }}>
+              <span key={i} className="vq-num" style={{ fontSize: 'var(--text-2xs)', color: 'var(--t3)' }}>
                 {d ? `${d.getUTCDate()} ${MON[d.getUTCMonth()]}` : ''}
               </span>
             )

@@ -7,6 +7,7 @@ import { Label, Num, Segmented } from '@/components/ui/vq'
 import type { Trade } from '@/types'
 import { fmtPnl, fmtPips, fmtDate, fmtTime } from './helpers'
 import { useTradeFilters } from './useTradeFilters'
+import Icon from '@/components/ui/Icon'
 
 /** Outcome marker. W / L / BE, coloured by outcome — the row's only chroma. */
 function ResultMark({ result }: { result: 'win' | 'loss' | 'breakeven' }) {
@@ -180,7 +181,7 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
               className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
               title="Annotate trade"
               style={{ background: 'none', border: 'none', color: 'var(--color-ink-3)', cursor: 'pointer', fontSize: 'var(--text-md)', padding: '0 2px', lineHeight: 1, width: '22px' }}>
-              ✎
+              <Icon name="pencil" size={12} />
             </button>
           </div>
 

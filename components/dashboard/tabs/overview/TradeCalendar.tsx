@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { BE_THRESHOLD } from '@/hooks/useTrades'
 import { Num, Label } from '@/components/ui/vq'
 import type { Trade } from '@/types'
+import Icon from '@/components/ui/Icon'
 
 // ── Trade Calendar ────────────────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
             borderRadius: 'var(--radius-md)', width: '26px', height: '26px',
             color: 'var(--t3)', cursor: 'pointer', fontSize: 'var(--text-md)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>✕</button>
+          }}><Icon name="close" size={13} /></button>
         </div>
       </div>
 

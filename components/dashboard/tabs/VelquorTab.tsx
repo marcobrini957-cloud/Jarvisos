@@ -276,7 +276,7 @@ export default function VelquorTab() {
               disabled={streaming}
               style={{
                 flex: 1, resize: 'none', background: 'transparent', border: 'none',
-                outline: 'none', color: 'var(--t1)', fontSize: '13.5px', fontWeight: 500,
+                outline: 'none', color: 'var(--t1)', fontSize: 'var(--text-md)', fontWeight: 500,
                 lineHeight: 1.6, maxHeight: '140px', opacity: streaming ? 0.6 : 1,
               }}
             />

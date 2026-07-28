@@ -149,7 +149,7 @@ function MT5AccountsPanel() {
             borderRadius: 'var(--radius-md)', padding: '9px 12px',
           }}>
             <code style={{
-              flex: 1, fontFamily: 'monospace', fontSize: 'var(--text-base)',
+              flex: 1, fontFamily: 'var(--font-mono)', fontSize: 'var(--text-base)',
               color: 'var(--t1)', wordBreak: 'break-all',
             }}>
               {status ? status.api_key : '…'}

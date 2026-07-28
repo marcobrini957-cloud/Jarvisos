@@ -1,6 +1,16 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import Icon from '@/components/ui/Icon'
+import { Select } from '@/components/ui/vq'
+
+const ASSET_TYPES = [
+  { key: 'stock',  label: 'Stock'  },
+  { key: 'etf',    label: 'ETF'    },
+  { key: 'crypto', label: 'Crypto' },
+  { key: 'metal',  label: 'Metal'  },
+]
+
 
 // ── CSV Import ────────────────────────────────────────────────────────────────
 
@@ -220,7 +230,7 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
                 : (isUpdate ? 'Uncheck any row you don\'t want to apply' : 'Uncheck rows you don\'t want to import')}
             </p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}><Icon name="close" size={13} /></button>
         </div>
 
         {/* Body */}
@@ -235,10 +245,10 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
                   padding: '40px 24px', textAlign: 'center', cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--ac)')}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--color-line-3)')}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--bd2)')}
               >
-                <p style={{ fontSize: 'var(--text-3xl)', marginBottom: '10px' }}>📂</p>
+                <div style={{ color: 'var(--color-ink-3)', marginBottom: '10px', display: 'flex', justifyContent: 'center' }}><Icon name="folder" size={26} /></div>
                 <p style={{ color: 'var(--t1)', fontWeight: 600, marginBottom: '4px' }}>Click to select your CSV file</p>
                 <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)' }}>or drag and drop</p>
                 <input ref={fileRef} type="file" accept=".csv,.txt" style={{ display: 'none' }} onChange={handleFile} />
@@ -285,8 +295,9 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
               </div>
 
               {rows.some(r => !r.skip && ISIN_RE.test(r.ticker)) && (
-                <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.2)', fontSize: 'var(--text-base)', color: 'var(--am2)' }}>
-                  ⚠ Some tickers couldn't be resolved from their ISIN. Edit them manually in the Ticker column before importing.
+                <div style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,255,255,0.2)', fontSize: 'var(--text-base)', color: 'var(--color-warn)', display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
+                  <span style={{ flexShrink: 0, marginTop: '1px' }}><Icon name="alert" size={13} /></span>
+                  <span>Some tickers couldn&apos;t be resolved from their ISIN. Edit them manually in the Ticker column before importing.</span>
                 </div>
               )}
 
@@ -322,14 +333,12 @@ export function CsvImportModal({ onClose, onImport, mode = 'add', existingTicker
                   <input value={row.avg_buy_price} type="number"
                     onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, avg_buy_price: parseFloat(e.target.value) || 0 } : r))}
                     style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 8px', color: 'var(--t1)', fontSize: 'var(--text-base)', width: '100%' }} />
-                  <select value={row.asset_type}
-                    onChange={e => setRows(prev => prev.map((r, j) => j === i ? { ...r, asset_type: e.target.value } : r))}
-                    style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '5px 6px', color: 'var(--t2)', fontSize: 'var(--text-sm)', width: '100%' }}>
-                    <option value="stock">Stock</option>
-                    <option value="etf">ETF</option>
-                    <option value="crypto">Crypto</option>
-                    <option value="metal">Metal</option>
-                  </select>
+                  <Select
+                    ariaLabel="Asset type"
+                    value={row.asset_type}
+                    onChange={v => setRows(prev => prev.map((r, j) => j === i ? { ...r, asset_type: v } : r))}
+                    options={ASSET_TYPES}
+                  />
                 </div>
               )})}
 

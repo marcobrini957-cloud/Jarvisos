@@ -3,6 +3,7 @@
 import Badge from '@/components/ui/Badge'
 import type { Task } from '@/types'
 import { TODAY } from './helpers'
+import Icon from '@/components/ui/Icon'
 
 // ── Task Row ──────────────────────────────────────────────────────────────────
 
@@ -50,7 +51,7 @@ export function TaskRow({ task, onToggle, onDelete }: {
           <Badge variant={task.category}>{task.category}</Badge>
           {task.priority === 'high' && <Badge variant="high">high</Badge>}
           {task.is_recurring && (
-            <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }}>↻ {task.recurrence}</span>
+            <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }} className="inline-flex items-center gap-1"><Icon name="repeat" size={10} />{task.recurrence}</span>
           )}
           {isOverdue && (
             <span style={{ color: 'var(--re)', fontSize: 'var(--text-xs)', fontWeight: 500 }}>overdue</span>

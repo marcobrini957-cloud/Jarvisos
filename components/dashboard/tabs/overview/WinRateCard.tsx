@@ -66,10 +66,15 @@ function PeriodMenu({ value, onChange }: { value: PeriodKey; onChange: (k: Perio
         }}
       >
         {current}
-        <span style={{
-          fontSize: '7px', lineHeight: 1, color: 'var(--t3)',
-          transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s',
-        }}>▼</span>
+        <svg width="9" height="9" viewBox="0 0 16 16" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          aria-hidden="true"
+          style={{
+            flexShrink: 0, color: 'var(--t3)',
+            transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s',
+          }}>
+          <path d="M3 5.5 8 10.5l5-5" />
+        </svg>
       </button>
 
       {open && (

@@ -33,7 +33,7 @@ export function PnlDonut({ profit, loss }: { profit: number; loss: number }) {
         <Num size="xs" tone={pf >= 1 ? 'up' : 'down'}>{pfLabel}</Num>
         <span style={{
           fontFamily: 'var(--font-display)', color: 'var(--color-ink-3)',
-          fontSize: '7px', letterSpacing: '0.14em', textTransform: 'uppercase',
+          fontSize: 'var(--text-2xs)', letterSpacing: '0.14em', textTransform: 'uppercase',
         }}>
           PF
         </span>

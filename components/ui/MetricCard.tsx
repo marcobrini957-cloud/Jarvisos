@@ -1,4 +1,4 @@
-import { Label, Num } from './vq'
+import { Label, Num, NumText } from './vq'
 
 interface MetricCardProps {
   title: string
@@ -47,13 +47,13 @@ export default function MetricCard({
         : <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)', color: 'var(--color-ink-1)' }}>{value}</span>}
 
       {(change || subtitle) && (
-        <span style={{
+        <NumText style={{
           fontFamily: 'var(--font-display)',
           fontSize:   'var(--text-xs)',
           color:      isPositive ? 'var(--color-up)' : isNegative ? 'var(--color-down)' : 'var(--color-ink-3)',
         }}>
-          {change || subtitle}
-        </span>
+          {change || subtitle || ''}
+        </NumText>
       )}
     </div>
   )

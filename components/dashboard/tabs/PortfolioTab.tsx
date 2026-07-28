@@ -10,6 +10,7 @@ import { METAL_OPTIONS, fmtEur, fmtPct, sign, holdingColor } from './portfolio/h
 import { HoldingModal } from './portfolio/HoldingModal'
 import { DonutChart, BREAKDOWN_CATS } from './portfolio/DonutChart'
 import { NetWorthCard } from './portfolio/NetWorthCard'
+import Icon from '@/components/ui/Icon'
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -126,7 +127,7 @@ export default function PortfolioTab() {
           style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--color-up-dim)', borderLeft: '2px solid var(--color-up)' }}>
           <p style={{ color: 'var(--color-up)', fontSize: 'var(--text-base)' }}>{csvResult}</p>
           <button onClick={() => setCsvResult(null)}
-            style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-lg)', cursor: 'pointer', lineHeight: 1, flexShrink: 0 }}>×</button>
+            style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-lg)', cursor: 'pointer', lineHeight: 1, flexShrink: 0 }}><Icon name="close" size={13} /></button>
         </div>
       )}
 
@@ -170,11 +171,13 @@ export default function PortfolioTab() {
           change="Total invested"
           changePositive={null}
         />
+        {/* Concentration is not P&L. Green on "Within limits" read as profit on
+            a line that only means "this is fine", so it stays ink either way. */}
         <MetricCard
           title="Tech exposure"
           value={`${techPct.toFixed(0)}%`}
-          change={techPct > 60 ? '⚠ Overweight' : 'Within limits'}
-          changePositive={techPct <= 60}
+          change={techPct > 60 ? 'Overweight' : 'Within limits'}
+          changePositive={null}
         />
       </div>
 
@@ -218,7 +221,7 @@ export default function PortfolioTab() {
                   <button onClick={() => setCsvModal('add')}
                     className="flex items-center gap-1.5"
                     style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)', background: 'transparent', border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', cursor: 'pointer' }}>
-                    ↑ CSV
+                    <Icon name="upload" size={11} /> CSV
                   </button>
                   <button onClick={() => setCsvModal('update')}
                     className="flex items-center gap-1.5 px-3 py-1.5 vq-r"
@@ -381,10 +384,10 @@ export default function PortfolioTab() {
                       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ width: '36px', flexShrink: 0, justifyContent: 'flex-end' }}>
                         <button onClick={() => setModal({ open: true, existing: h })}
                           style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: 'var(--text-md)', padding: '2px 3px' }}
-                          title="Edit">✎</button>
+                          title="Edit"><Icon name="pencil" size={12} /></button>
                         <button onClick={() => { if (confirm(`Remove ${h.ticker}?`)) deleteHolding(h.id) }}
                           style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: 'var(--text-md)', padding: '2px 3px' }}
-                          title="Remove">×</button>
+                          title="Remove"><Icon name="close" size={13} /></button>
                       </div>
                     )}
                   </div>
@@ -424,7 +427,7 @@ export default function PortfolioTab() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: cat.color, flexShrink: 0, display: 'inline-block' }} />
                             <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>{cat.label}</span>
-                            {isOver && <span style={{ color: 'var(--color-warn)', fontSize: 'var(--text-xs)' }}>⚠</span>}
+                            {isOver && <span style={{ color: 'var(--color-warn)', display: 'inline-flex' }} title="Over target"><Icon name="alert" size={11} /></span>}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span className="vq-num" style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>{fmtEur(cat.value)}</span>

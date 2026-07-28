@@ -34,7 +34,7 @@ export function SignalLog({ groupId }: { groupId: string }) {
   )
 
   if (error) return (
-    <div style={{ padding: '16px', textAlign: 'center', color: '#F0504B', fontSize: 'var(--text-base)' }}>
+    <div style={{ padding: '16px', textAlign: 'center', color: 'var(--color-down)', fontSize: 'var(--text-base)' }}>
       {error}
     </div>
   )
@@ -50,8 +50,8 @@ export function SignalLog({ groupId }: { groupId: string }) {
       {entries.map(e => {
         const sig        = e.copy_signals
         const acc        = e.copy_accounts
-        const statusColor = e.status === 'success' ? 'var(--color-up)' : e.status === 'failed' ? '#F0504B' : '#FFFFFF'
-        const sigColor   = sig.signal_type === 'OPEN' ? 'var(--color-up)' : '#F0504B'
+        const statusColor = e.status === 'success' ? 'var(--color-up)' : e.status === 'failed' ? 'var(--color-down)' : '#FFFFFF'
+        const sigColor   = sig.signal_type === 'OPEN' ? 'var(--color-up)' : 'var(--color-down)'
 
         return (
           <div key={e.id} style={{
@@ -75,7 +75,7 @@ export function SignalLog({ groupId }: { groupId: string }) {
             <div>
               <span style={{ color: 'var(--t1)', fontWeight: 600 }}>{sig.symbol}</span>
               {' '}
-              <span style={{ color: sig.trade_type === 'BUY' ? 'var(--color-up)' : '#F0504B', fontSize: 'var(--text-xs)' }}>
+              <span style={{ color: sig.trade_type === 'BUY' ? 'var(--color-up)' : 'var(--color-down)', fontSize: 'var(--text-xs)' }}>
                 {sig.trade_type}
               </span>
               <div style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', marginTop: '1px' }}>
