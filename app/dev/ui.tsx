@@ -33,7 +33,7 @@ export function Stat({ label, value, sub, color = '#fff' }: { label: string; val
 
 export function StatusDot({ status }: { status: string }) {
   const color = status === 'online' || status === 'ok' ? G
-    : status === 'not_configured' || status === 'never_seen' || status === 'maintenance' ? GO : R
+    : status === 'not_configured' || status === 'never_seen' || status === 'maintenance' || status === 'rate_limited' ? GO : R
   const label = status.replaceAll('_', ' ')
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>

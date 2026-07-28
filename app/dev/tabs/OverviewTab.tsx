@@ -16,6 +16,7 @@ type Stats = {
   bridgeStatus: string
   bridgeConnections: number
   supabaseStatus: string
+  integrations: { name: string; role: string; status: string; note: string }[]
   serverTime: string
   env: Record<string, boolean>
 }
@@ -161,6 +162,30 @@ export function OverviewTab() {
               <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 10px', background: 'rgba(255,255,255,0.015)', borderRadius: '6px' }}>
                 <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', fontFamily: MONO }}>{key}</span>
                 <StatusDot status={ok ? 'online' : 'offline'} />
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* Row 3b — Suppliers. Moved out of user Settings, which was showing our
+          whole vendor list to every customer. Live-probed, so "prices down"
+          points at Yahoo rather than at us. */}
+      <div style={{ marginBottom: '16px' }}>
+        <Card title={`Integrations (${(stats.integrations ?? []).filter(i => i.status === 'online').length}/${(stats.integrations ?? []).length} online)`}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '6px' }}>
+            {(stats.integrations ?? []).map(i => (
+              <div key={i.name} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+                padding: '9px 12px', background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.04)', borderRadius: '8px',
+              }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: '12px', fontWeight: 700, fontFamily: MONO }}>{i.name}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', fontFamily: MONO, marginTop: '2px' }}>{i.role}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.18)', fontSize: '9px', fontFamily: MONO, marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.note}</div>
+                </div>
+                <StatusDot status={i.status} />
               </div>
             ))}
           </div>

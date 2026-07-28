@@ -129,7 +129,7 @@ function MT5AccountsPanel() {
             style={{
               padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)', fontWeight: 600,
               background: connected ? 'var(--s3)' : 'var(--color-ink-1)',
-              color: connected ? 'var(--t2)' : 'white',
+              color: connected ? 'var(--t2)' : 'var(--color-void)',
               border: connected ? '1px solid var(--bd2)' : 'none',
               textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
             }}
@@ -225,6 +225,19 @@ export default function SettingsTab() {
     if (val) localStorage.removeItem('vq_greeting_date')
   }
 
+  /** A service we have no live probe for — it either answers per request or not. */
+  function staticRow(label: string, last = false) {
+    return (
+      <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: last ? undefined : '1px solid var(--bd)' }}>
+        <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>{label}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Dot ok={true} />
+          <span style={{ color: 'var(--color-up)', fontSize: 'var(--text-base)' }}>Active</span>
+        </div>
+      </div>
+    )
+  }
+
   function healthRow(label: string, key: string) {
     const { text, ok } = health ? statusLabel(health[key]) : { text: 'Checking…', ok: false }
     return (
@@ -261,41 +274,18 @@ export default function SettingsTab() {
         </div>
       </Panel>
 
-      {/* ── Connected Services ── */}
-      <Panel title={checking ? 'System Status (checking…)' : 'System Status'}>
+      {/* ── System status ──────────────────────────────────────────────────
+          Capabilities, not suppliers. This panel used to read "Supabase",
+          "Groq AI", "Yahoo Finance", "Forex Factory" — our vendor list, shown
+          to every user. Which services we buy is not their concern, it tells
+          them nothing about whether the product is working, and it goes stale
+          the day one is swapped. The real names live in the admin console. */}
+      <Panel title={checking ? 'System status (checking…)' : 'System status'}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {healthRow('Supabase (database)', 'supabase_connection')}
-          {healthRow('Groq AI (VELQUOR brain)', 'GROQ_API_KEY')}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--bd)' }}>
-            <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Yahoo Finance (portfolio &amp; metals)</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Dot ok={true} />
-              <span style={{ color: 'var(--color-up)', fontSize: 'var(--text-base)' }}>Active</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
-            <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>Forex Factory (calendar)</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Dot ok={true} />
-              <span style={{ color: 'var(--color-up)', fontSize: 'var(--text-base)' }}>Active</span>
-            </div>
-          </div>
-        </div>
-      </Panel>
-
-      {/* ── Screenshot Storage ── */}
-      <Panel title="Screenshot Storage">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Dot ok={health ? health['supabase_connection'] === 'OK' : null} />
-            <span style={{ color: 'var(--t2)', fontSize: 'var(--text-base)' }}>
-              Supabase Storage — bucket:{' '}
-              <code style={{ color: 'var(--ac)', fontSize: 'var(--text-sm)' }}>trade-screenshots</code>
-            </span>
-          </div>
-          <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', lineHeight: '1.6', margin: 0 }}>
-            Screenshots are auto-uploaded when you annotate a trade and served via public CDN.
-          </p>
+          {healthRow('Database', 'database')}
+          {healthRow('VELQUOR AI', 'ai')}
+          {staticRow('Portfolio & metals prices')}
+          {staticRow('Economic calendar', true)}
         </div>
       </Panel>
     </div>

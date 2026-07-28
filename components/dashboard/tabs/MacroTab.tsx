@@ -170,7 +170,7 @@ export default function MacroTab() {
               Market news
             </h2>
             <div style={{ marginTop: '2px' }}>
-              <Label>USD · red folders · ForexFactory feed</Label>
+              <Label>USD · high impact releases</Label>
             </div>
           </div>
         </div>

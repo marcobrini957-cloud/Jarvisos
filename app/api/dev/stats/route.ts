@@ -105,6 +105,55 @@ export async function GET(req: NextRequest) {
   const withMt5 = usersWithMt5 ?? 0
   const withTrades = usersWithTrades ?? 0
 
+  // ── Suppliers ───────────────────────────────────────────────────────────────
+  // The Settings panel used to name these to every user. Which services we buy
+  // is our supply chain, not the customer's business, and it tells them nothing
+  // about whether their app is working — so the vendor names live here instead,
+  // where knowing that "prices are down" means "Yahoo is down" is actionable.
+  // The console auto-refreshes every 30s. An uncached probe would therefore hit
+  // each supplier 120 times an hour from one open tab — the calendar feed
+  // already answers 429 to us, and hammering it would degrade the News tab for
+  // real users. So the probe is cached for five minutes and sends the same
+  // User-Agent the app does; a rate-limit answer is reported as its own state
+  // rather than as an outage, because they mean different things.
+  async function probe(url: string): Promise<'online' | 'rate_limited' | 'offline'> {
+    try {
+      const ctrl = new AbortController()
+      const t = setTimeout(() => ctrl.abort(), 4000)
+      const res = await fetch(url, {
+        signal: ctrl.signal,
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        next: { revalidate: 300 },
+      })
+      clearTimeout(t)
+      if (res.ok) return 'online'
+      return res.status === 429 ? 'rate_limited' : 'offline'
+    } catch {
+      return 'offline'
+    }
+  }
+
+  const [pricesStatus, calendarStatus] = await Promise.all([
+    probe('https://query2.finance.yahoo.com/v8/finance/chart/AAPL?range=1d&interval=1d'),
+    probe('https://nfs.faireconomy.media/ff_calendar_thisweek.json'),
+  ])
+
+  const integrations = [
+    { name: 'Supabase',       role: 'Database · auth · screenshot storage',  status: 'online',
+      note: 'bucket: trade-screenshots' },
+    { name: 'Hetzner bridge', role: 'MT5 sync · copy trading · cloud terminals', status: bridgeStatus,
+      note: process.env.BRIDGE_URL ?? 'BRIDGE_URL not set' },
+    { name: 'Groq',           role: 'Analyst chat · Whisper dictation',
+      status: process.env.GROQ_API_KEY?.startsWith('gsk_') ? 'online' : 'not_configured', note: 'llama-3.3-70b' },
+    { name: 'Anthropic',      role: 'Coach notes · Trader DNA focus (paid tiers)',
+      status: process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant') ? 'online' : 'not_configured',
+      note: 'claude-haiku-4-5 / claude-sonnet-4-6' },
+    { name: 'Yahoo Finance',  role: 'Portfolio & metals prices · EUR/USD FX', status: pricesStatus,
+      note: 'query2.finance.yahoo.com' },
+    { name: 'Forex Factory',  role: 'Economic calendar (red folders)',        status: calendarStatus,
+      note: 'nfs.faireconomy.media' },
+  ]
+
   return NextResponse.json({
     totalUsers: total,
     onlineNow: onlineNow ?? 0,
@@ -129,6 +178,7 @@ export async function GET(req: NextRequest) {
     bridgeStatus,
     bridgeConnections,
     supabaseStatus: 'online',
+    integrations,
     serverTime: now.toISOString(),
     env: {
       supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,

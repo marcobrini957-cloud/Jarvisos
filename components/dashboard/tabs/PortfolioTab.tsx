@@ -468,7 +468,7 @@ export default function PortfolioTab() {
           {/* Price source note */}
           <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)' }}>
             <p style={{ color: 'var(--color-ink-3)', fontSize: 'var(--text-xs)', lineHeight: '1.6' }}>
-              Prices from <strong style={{ color: 'var(--color-ink-2)' }}>Yahoo Finance</strong> · updated every 5 min · EUR/USD live FX · metals via futures (GC=F, SI=F) in USD/troy oz converted to EUR/gram
+              Live market prices · updated every 5 min · EUR/USD live FX · metals priced from futures in USD/troy oz, converted to EUR/gram
             </p>
           </div>
         </div>

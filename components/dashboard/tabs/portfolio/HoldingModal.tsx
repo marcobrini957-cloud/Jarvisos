@@ -133,7 +133,7 @@ export function HoldingModal({
               {existing ? 'Edit Holding' : 'Add Holding'}
             </h2>
             <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', marginTop: '2px' }}>
-              {isMetal ? 'Live spot prices via Yahoo Finance · price in EUR/gram' : 'Prices update automatically from Yahoo Finance'}
+              {isMetal ? 'Live spot prices · quoted in EUR/gram' : 'Prices update automatically'}
             </p>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}><Icon name="close" size={13} /></button>

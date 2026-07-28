@@ -232,7 +232,7 @@ export function EntryModal({
               </button>
               <button onClick={handleSave} disabled={saving}
                 className="flex-1 py-2.5 vq-r font-medium"
-                style={{ background: saving ? 'rgba(0,196,106,0.3)' : 'var(--gr)', border: 'none', color: 'white', fontSize: 'var(--text-base)', cursor: saving ? 'not-allowed' : 'pointer' }}>
+                style={{ background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)', fontSize: 'var(--text-base)', opacity: saving ? 0.5 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>
                 {saving ? 'Saving…' : existing ? 'Update Entry' : '+ Save Entry'}
               </button>
             </>
