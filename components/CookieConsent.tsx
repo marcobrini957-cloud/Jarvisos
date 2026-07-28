@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 const KEY = 'vq-cookie-consent' // 'all' | 'essential'
@@ -34,6 +35,7 @@ export function onConsentChange(cb: (v: CookieConsentValue) => void): () => void
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     if (!getCookieConsent()) setVisible(true)
@@ -43,6 +45,11 @@ export function CookieConsent() {
     return () => { window.removeEventListener(OPEN_EVENT, open); unsub() }
   }, [])
 
+  // Not on the lockdown curtain. The banner describes partner offers, ad
+  // behaviour and third-party widgets — a summary of the product, on the one
+  // page whose whole job is to reveal nothing. The gate sets a single essential
+  // cookie, which needs no consent anyway.
+  if (pathname === '/gate') return null
   if (!visible) return null
 
   const choose = (v: CookieConsentValue) => {
