@@ -114,3 +114,95 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // user — afterwards only the prefix is ever exposed.
   return NextResponse.json({ ok: true, ...(newApiKey ? { newApiKey } : {}) })
 }
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+
+/**
+ * Every table that stores rows against a user. There are **no foreign keys from
+ * public.* to auth.users**, so nothing cascades: removing the auth record alone
+ * would leave this user's trades, journal and holdings orphaned in the database
+ * forever. Each table is purged explicitly, and this list must be extended
+ * whenever a new user-scoped table is added.
+ */
+const USER_TABLES = [
+  'account_snapshots', 'ai_usage', 'calendar_events', 'copy_accounts', 'copy_groups',
+  'habit_completions', 'habits', 'journal_entries', 'macro_briefings', 'mt5_candles',
+  'partner_clicks', 'portfolio_holdings', 'portfolio_snapshots', 'tasks',
+  'telegram_messages', 'trades', 'weekly_reviews',
+] as const
+
+/**
+ * DELETE /api/dev/users/:id — remove a user and everything they own.
+ *
+ * Irreversible, so it demands the account's own email back in the body as
+ * confirmation: an admin who mistypes an id cannot delete a stranger by
+ * accident. The audit row is written *before* the purge, because afterwards
+ * there is nothing left to describe.
+ */
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!isDevAuthed(req)) return devUnauthorized()
+  const { id } = await params
+  const sb = serviceClient()
+
+  let confirmEmail = ''
+  try {
+    const body = await req.json()
+    confirmEmail = String(body?.confirmEmail ?? '').trim().toLowerCase()
+  } catch { /* handled below */ }
+
+  const { data: target } = await sb
+    .from('user_profiles')
+    .select('id, email')
+    .eq('id', id)
+    .maybeSingle()
+
+  const { data: authUser } = await sb.auth.admin.getUserById(id)
+  const email = (target?.email ?? authUser?.user?.email ?? '').toLowerCase()
+
+  if (!email) return NextResponse.json({ error: 'not_found' }, { status: 404 })
+  if (!confirmEmail || confirmEmail !== email) {
+    return NextResponse.json({ error: 'confirm_email_mismatch' }, { status: 400 })
+  }
+
+  await audit(sb, 'delete_user', { userId: id, email }, { tables: USER_TABLES.length })
+
+  // Best-effort: hand the cloud terminal back before the account goes, or the
+  // container keeps running against credentials nobody owns any more.
+  const bridgeUrl = process.env.BRIDGE_URL
+  const adminToken = process.env.BRIDGE_ADMIN_TOKEN
+  let terminalReleased: boolean | null = null
+  if (bridgeUrl && adminToken) {
+    try {
+      const res = await fetch(`${bridgeUrl}/provision/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${adminToken}` },
+        signal: AbortSignal.timeout(8000),
+      })
+      terminalReleased = res.ok
+    } catch {
+      terminalReleased = false
+    }
+  }
+
+  const failed: string[] = []
+  for (const table of USER_TABLES) {
+    const { error } = await sb.from(table).delete().eq('user_id', id)
+    // A table that does not exist in this environment is not a failure.
+    if (error && !isMissingSchemaError(error.message)) failed.push(`${table}: ${error.message}`)
+  }
+
+  const { error: profileErr } = await sb.from('user_profiles').delete().eq('id', id)
+  if (profileErr && !isMissingSchemaError(profileErr.message)) failed.push(`user_profiles: ${profileErr.message}`)
+
+  // The auth record goes last: while it exists the user can still sign in, so
+  // failing here must not leave a logged-in account with no data behind it.
+  const { error: authErr } = await sb.auth.admin.deleteUser(id)
+  if (authErr) {
+    return NextResponse.json(
+      { error: `Data purged but the login could not be removed: ${authErr.message}`, failed },
+      { status: 500 },
+    )
+  }
+
+  return NextResponse.json({ ok: true, email, terminalReleased, failed })
+}

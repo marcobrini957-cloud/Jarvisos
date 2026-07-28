@@ -51,6 +51,8 @@ export function UsersTab() {
   const [rewardDays, setRewardDays] = useState('30')
   const [note, setNote] = useState('')
   const [freshKey, setFreshKey] = useState<string | null>(null)
+  const [delConfirm, setDelConfirm] = useState(false)
+  const [delEmail, setDelEmail] = useState('')
 
   const load = useCallback(async () => {
     const params = new URLSearchParams()
@@ -69,8 +71,37 @@ export function UsersTab() {
     return () => clearTimeout(t)
   }, [load, q])
 
+  /**
+   * Irreversible, so the API demands the account's own email back. Typing it is
+   * the confirmation — a misclick in a list cannot destroy the wrong person.
+   */
+  async function deleteUser(id: string, email: string) {
+    setBusy(true)
+    const res = await fetch(`/api/dev/users/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmEmail: delEmail.trim() }),
+    })
+    const d = await res.json().catch(() => ({}))
+    setBusy(false)
+    if (res.ok) {
+      const bits = [`Deleted ${email}`]
+      if (d.terminalReleased === true)  bits.push('cloud terminal released')
+      if (d.terminalReleased === false) bits.push('⚠ terminal teardown failed — check the bridge')
+      if (d.failed?.length)             bits.push(`⚠ ${d.failed.length} table(s) errored`)
+      setFlash(bits.join(' · '))
+      setSelected(null); setDelConfirm(false); setDelEmail('')
+      await load()
+    } else {
+      setFlash(d.error === 'confirm_email_mismatch'
+        ? 'Email did not match — nothing was deleted'
+        : `Failed: ${d.error ?? res.status}`)
+    }
+  }
+
   async function openDetail(id: string) {
     setBanConfirm(false); setFreshKey(null); setFlash(null)
+    setDelConfirm(false); setDelEmail('')
     const res = await fetch(`/api/dev/users/${id}`, { cache: 'no-store' })
     if (res.ok) {
       const d: Detail = await res.json()
@@ -254,6 +285,47 @@ export function UsersTab() {
                   </div>
                   <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontFamily: MONO }}>
                     Blocks every API route and the bridge (EA sync + copy) within 60 s.
+                  </div>
+                </div>
+              )}
+
+              {/* Delete — separated from ban by a rule, because one is
+                  reversible and the other is not. */}
+              <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '16px 0' }} />
+
+              {!delConfirm ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <Btn color={R} onClick={() => setDelConfirm(true)}>Delete user permanently…</Btn>
+                  <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontFamily: MONO }}>
+                    Ban first if you only want to stop them — this cannot be undone.
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ color: R, fontSize: '11px', fontFamily: MONO, lineHeight: 1.6 }}>
+                    Erases the login and every row they own — trades, journal, habits,
+                    tasks, holdings, snapshots, copy groups. Their cloud terminal is
+                    released. There is no undo and no backup.
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', fontFamily: MONO }}>
+                    Type <b style={{ color: '#fff' }}>{sel.email ?? '(no email on file)'}</b> to confirm:
+                  </div>
+                  <input
+                    value={delEmail}
+                    onChange={e => setDelEmail(e.target.value)}
+                    placeholder="Confirm the email address"
+                    autoComplete="off"
+                    style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <Btn
+                      color={R}
+                      disabled={busy || delEmail.trim().toLowerCase() !== (sel.email ?? '').toLowerCase()}
+                      onClick={() => deleteUser(sel.id, sel.email ?? '')}
+                    >
+                      Delete permanently
+                    </Btn>
+                    <Btn small onClick={() => { setDelConfirm(false); setDelEmail('') }}>Cancel</Btn>
                   </div>
                 </div>
               )}

@@ -1,14 +1,34 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { SITE_LOCK_COOKIE, isSiteLocked, isSiteLockExempt, isValidSiteToken } from '@/lib/api/site-lock'
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // ── Site lockdown ───────────────────────────────────────────────────────────
+  // Sits in front of everything, including the marketing site and user login,
+  // so the product is not visible to anyone who finds the domain while it is
+  // still being built. Off entirely unless SITE_PASSWORD is set.
+  if (isSiteLocked() && !isSiteLockExempt(pathname)) {
+    if (!isValidSiteToken(request.cookies.get(SITE_LOCK_COOKIE)?.value)) {
+      // An API caller gets JSON; only a browser gets sent to the gate, and it
+      // remembers where it was going.
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Site is locked' }, { status: 401 })
+      }
+      const url = request.nextUrl.clone()
+      url.pathname = '/gate'
+      url.search = pathname === '/' ? '' : `?next=${encodeURIComponent(pathname)}`
+      return NextResponse.redirect(url)
+    }
+  }
 
   const isRoot = pathname === '/'
 
   const isPublic =
     isRoot ||
     pathname.startsWith('/login') ||
+    pathname === '/gate' ||
     pathname.startsWith('/auth/') ||
     pathname.startsWith('/onboarding') ||
     pathname.startsWith('/_next') ||
@@ -93,6 +113,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|login).*)',
+    // `login` used to be excluded here, which meant the proxy never ran for it
+    // — so the site lock did not cover the one page an outsider would try.
+    // It is safe to include: /login is in `isPublic`, so it short-circuits
+    // before the auth redirect and cannot loop.
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }
