@@ -61,7 +61,7 @@ export function AddTaskModal({ onSave, onClose }: {
         onClick={onClose}
       />
       <div
-        className="fixed z-50 vq-r flex flex-col gap-4"
+        className="vq-modal fixed z-50 vq-r flex flex-col gap-4"
         style={{
           top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
           width: '420px', maxWidth: 'calc(100vw - 32px)',

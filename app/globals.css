@@ -329,11 +329,36 @@ h1, h2, h3 { text-wrap: balance; }
   box-shadow: 0 0 0 2px rgba(255,61,80,0.2), 0 0 8px rgba(255,61,80,0.5);
 }
 
+/* Centred modals had no height ceiling, so anything taller than the viewport —
+   which on a phone with the keyboard up is most of them — was clipped with no
+   way to reach the buttons at the bottom. */
+.vq-modal {
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 /* ── Mobile responsiveness ─────────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  /* Main content: room for fixed bottom nav + safe area */
+  .vq-modal {
+    max-height: calc(100dvh - 16px);
+    width: calc(100vw - 20px) !important;
+    max-width: calc(100vw - 20px) !important;
+  }
+
+  /* Touch targets in the chrome. 24px controls are fine for a cursor and mean
+     repeated misses with a thumb; the visual box stays small while the tappable
+     area grows around it. */
+  .topbar-root button,
+  .topbar-root a[role="button"] {
+    min-height: 34px;
+  }
+
+  /* The bottom nav is gone, so this no longer reserves 80px for it — only the
+     home-indicator inset is kept. That is a full extra card of content on an
+     844px screen. */
   .dashboard-main {
-    padding: 10px 10px calc(80px + env(safe-area-inset-bottom)) !important;
+    padding: 10px 10px calc(14px + env(safe-area-inset-bottom)) !important;
     gap: 10px !important;
   }
 
@@ -390,13 +415,11 @@ h1, h2, h3 { text-wrap: balance; }
   .modal-sheet {
     width: calc(100vw - 24px) !important;
     max-height: calc(100dvh - 40px) !important;
+    overflow-y: auto;
     top: 50% !important;
   }
 
   /* Mobile drawer: sit above the nav bar including safe area */
-  .mobile-drawer {
-    bottom: calc(65px + env(safe-area-inset-bottom)) !important;
-  }
 
   /* ── Topbar ───────────────────────────────────────────────────────── */
   /* Safe area for notched phones */

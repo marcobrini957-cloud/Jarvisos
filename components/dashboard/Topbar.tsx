@@ -6,6 +6,7 @@ import Link from 'next/link'
 import MT5ConnectModal from './MT5ConnectModal'
 import AccountMenu from './AccountMenu'
 import { LogoMark } from '@/components/ui/LogoMark'
+import { MobileMenuButton } from './MobileNav'
 import { useDisplayMode } from '@/context/DisplayModeContext'
 import { useUserProfile } from '@/context/UserProfileContext'
 import { createClient } from '@/lib/supabase/client'
@@ -29,7 +30,15 @@ const TIMEZONES = [
 
 const CURRENCIES = ['EUR', 'USD', 'GBP'] as const
 
-export default function Topbar() {
+interface TopbarProps {
+  /** Mobile menu wiring — absent on screens that use the desktop tab bar. */
+  menuOpen?:     boolean
+  onMenuToggle?: () => void
+  /** Name of the section currently on screen, shown on mobile in place of the wordmark. */
+  sectionLabel?: string
+}
+
+export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }: TopbarProps = {}) {
   const router = useRouter()
   const { displayMode, toggleDisplayMode } = useDisplayMode()
   const { profile, updateProfile } = useUserProfile()
@@ -205,16 +214,38 @@ export default function Topbar() {
           borderBottom: '1px solid var(--color-line-1)',
         }}
       >
-        {/* Wordmark — Coolvetica Heavy Compressed, the one place it appears */}
-        <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none' }}>
-          <LogoMark size={20} />
-          <span className="topbar-brand-text" style={{
-            fontFamily: 'var(--font-mark)', fontSize: 'var(--text-lg)', lineHeight: 1,
-            letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--color-ink-1)',
-          }}>
-            Velquor
-          </span>
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0 }}>
+          {/* Mobile navigation lives here now — the bottom bar is gone. */}
+          {onMenuToggle && (
+            <div className="sm:hidden">
+              <MobileMenuButton open={menuOpen} onToggle={onMenuToggle} />
+            </div>
+          )}
+
+          {/* Wordmark — Coolvetica Heavy Compressed, the one place it appears */}
+          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none', minWidth: 0 }}>
+            <LogoMark size={20} />
+            <span className="topbar-brand-text" style={{
+              fontFamily: 'var(--font-mark)', fontSize: 'var(--text-lg)', lineHeight: 1,
+              letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--color-ink-1)',
+            }}>
+              Velquor
+            </span>
+          </Link>
+
+          {/* Where you are. Without the tab bar, mobile had no answer to that
+              question — the screen just changed under you. */}
+          {sectionLabel && (
+            <span className="topbar-section sm:hidden" style={{
+              fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              color: 'var(--color-ink-3)', whiteSpace: 'nowrap',
+              overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>
+              {sectionLabel}
+            </span>
+          )}
+        </div>
 
         {/* MT5 status pill + account switcher */}
         <AccountMenu

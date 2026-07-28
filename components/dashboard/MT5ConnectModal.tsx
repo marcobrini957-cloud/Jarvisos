@@ -64,7 +64,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
 
       {/* Modal */}
       <div
-        className="fixed z-50 vq-r p-6 flex flex-col gap-4"
+        className="vq-modal fixed z-50 vq-r p-6 flex flex-col gap-4"
         style={{
           top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
           width: '420px', maxWidth: 'calc(100vw - 32px)',
@@ -81,9 +81,10 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
           </div>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-lg)', cursor: 'pointer', lineHeight: 1 }}
+            aria-label="Close"
+            style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', lineHeight: 1 }}
           >
-            ×
+            <Icon name="close" size={13} />
           </button>
         </div>
 
@@ -118,7 +119,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
                 background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
                 padding: '10px 12px', color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none',
               }}
-              onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+              onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
               onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
             />
             <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>Your numeric account number from your broker</p>
@@ -135,7 +136,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
                 background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
                 padding: '10px 12px', color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none',
               }}
-              onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+              onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
               onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
             />
             <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>
@@ -176,7 +177,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
                         fontSize: 'var(--text-base)', fontWeight: 500,
                         background: active ? 'var(--color-surface-3)' : 'var(--s2)',
                         color: active ? 'white' : 'var(--t2)',
-                        border: `1px solid ${active ? 'var(--ac)' : 'var(--bd2)'}`,
+                        border: `1px solid ${active ? 'var(--color-line-3)' : 'var(--bd2)'}`,
                       }}
                     >
                       {srv.label}
@@ -201,7 +202,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
                   background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
                   padding: '10px 12px', color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none',
                 }}
-                onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+                onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
                 onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
               />
               <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>

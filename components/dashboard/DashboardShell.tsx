@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Topbar from './Topbar'
 import { UserProfileProvider } from '@/context/UserProfileContext'
 import TabBar from './TabBar'
@@ -18,6 +18,7 @@ import PartnersTab     from './tabs/PartnersTab'
 import SettingsTab     from './tabs/SettingsTab'
 import WelcomeGreeting from './WelcomeGreeting'
 import PartnerRail     from './PartnerRail'
+import { tabLabel }    from './tabs'
 
 const TAB_COMPONENTS: Record<number, React.ComponentType> = {
   0: OverviewTab,
@@ -35,6 +36,8 @@ const TAB_COMPONENTS: Record<number, React.ComponentType> = {
 export default function DashboardShell() {
   const [activeTab,    setActiveTab]    = useState(0)
   const [showSettings, setShowSettings] = useState(false)
+  const [menuOpen,     setMenuOpen]     = useState(false)
+  const mainRef = useRef<HTMLElement>(null)
 
   // The 2.0 language is scoped to `.vq2` (see globals.css). It sits on the
   // shell below, and on <body> as well so InfoTip's portal — which renders
@@ -83,10 +86,19 @@ export default function DashboardShell() {
 
   const ActiveTab = TAB_COMPONENTS[activeTab] ?? TAB_COMPONENTS[0]
 
-  function handleTabChange(id: number) {
+  // Landing mid-page in a section you just navigated to reads as a glitch, so
+  // each change starts at the top of the new section. The dashboard scrolls in
+  // this inner <main>, not the window.
+  const handleTabChange = useCallback((id: number) => {
     setActiveTab(id)
     setShowSettings(false)
-  }
+    mainRef.current?.scrollTo({ top: 0 })
+  }, [])
+
+  const handleSettingsToggle = useCallback(() => {
+    setShowSettings(v => !v)
+    mainRef.current?.scrollTo({ top: 0 })
+  }, [])
 
   return (
     <UserProfileProvider>
@@ -94,7 +106,11 @@ export default function DashboardShell() {
       {/* Exactly one viewport tall, and it owns its own scrolling — the page
           behind it no longer needs to be locked. */}
       <div className="vq2" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
-        <Topbar />
+        <Topbar
+          menuOpen={menuOpen}
+          onMenuToggle={() => setMenuOpen(v => !v)}
+          sectionLabel={tabLabel(activeTab, showSettings)}
+        />
 
         {/* Desktop tab bar — hidden on mobile */}
         <div className="hidden sm:block">
@@ -102,7 +118,7 @@ export default function DashboardShell() {
             activeTab={activeTab}
             onTabChange={handleTabChange}
             showSettings={showSettings}
-            onSettingsToggle={() => setShowSettings(v => !v)}
+            onSettingsToggle={handleSettingsToggle}
           />
         </div>
 
@@ -110,7 +126,8 @@ export default function DashboardShell() {
         <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           {/* Main content — padded bottom on mobile for the nav bar */}
           <main
-            className="flex-1 overflow-y-auto overflow-x-hidden dashboard-main sm:pb-0 pb-24"
+            ref={mainRef}
+            className="flex-1 overflow-y-auto overflow-x-hidden dashboard-main"
             style={{ padding: 'clamp(12px, 1.1vw, 18px)' }}
           >
             {/* keyed wrapper re-mounts on tab change → vq-tab-in entrance plays */}
@@ -125,13 +142,15 @@ export default function DashboardShell() {
           )}
         </div>
 
-        {/* Mobile bottom nav — hidden on desktop */}
+        {/* Mobile navigation — a sheet from the top bar, not a bottom bar */}
         <div className="block sm:hidden">
           <MobileNav
+            open={menuOpen}
+            onClose={() => setMenuOpen(false)}
             activeTab={activeTab}
             onTabChange={handleTabChange}
             showSettings={showSettings}
-            onSettingsToggle={() => setShowSettings(v => !v)}
+            onSettingsToggle={handleSettingsToggle}
           />
         </div>
       </div>

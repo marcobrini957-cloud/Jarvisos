@@ -55,7 +55,7 @@ export function EntryModal({
   return (
     <>
       <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
-      <div className="modal-sheet fixed z-50 vq-r flex flex-col gap-4"
+      <div className="vq-modal modal-sheet fixed z-50 vq-r flex flex-col gap-4"
         style={{
           top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
           width: '520px', maxWidth: 'calc(100vw - 24px)', maxHeight: '90dvh',
