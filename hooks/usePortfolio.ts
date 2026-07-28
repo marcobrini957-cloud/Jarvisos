@@ -8,6 +8,9 @@ import { valueHolding, portfolioTotals } from '@/lib/portfolio/valuation'
 const TROY_OZ_TO_GRAMS = 31.1034768
 
 export interface HoldingWithPrice extends PortfolioHolding {
+  /** Instrument name from the price feed — used when the row was saved
+      without one, so the table can still show something better than a ticker. */
+  marketName:      string | null
   currentPrice:    number | null
   currentPriceEur: number | null   // EUR/share for stocks, EUR/gram for metals
   prevCloseEur:    number | null
@@ -47,6 +50,7 @@ export function usePortfolio() {
     const rows = (data ?? []) as PortfolioHolding[]
     const enriched: HoldingWithPrice[] = rows.map(h => ({
       ...h,
+      marketName: null,
       currentPrice: null, currentPriceEur: null, prevCloseEur: null,
       change1d: null, marketState: null,
       currentValueEur: null, pnlEur: null, pnlPct: null,
@@ -82,6 +86,8 @@ export function usePortfolio() {
             // Only the live market price from Yahoo needs FX conversion (handled by the API)
             return {
               ...h,
+              // Only fills a gap; a name the user typed is never overwritten.
+              marketName:      (h.name?.trim() ? null : (q.name ?? null)),
               currentPrice:    q.price,
               currentPriceEur: q.priceEur,
               prevCloseEur:    q.prevCloseEur,

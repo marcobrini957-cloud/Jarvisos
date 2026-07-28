@@ -144,6 +144,7 @@ export default function PortfolioTab() {
     key: string
     ticker: string
     name: string | null
+    marketName: string | null
     asset_type: string
     quantity: number
     avg_buy_price: number | null
@@ -162,7 +163,7 @@ export default function PortfolioTab() {
   }
 
   const fromHolding = (h: HoldingWithPrice, isLot = false): Row => ({
-    key: h.id, ticker: h.ticker, name: h.name ?? null, asset_type: h.asset_type,
+    key: h.id, ticker: h.ticker, name: h.name ?? null, marketName: h.marketName, asset_type: h.asset_type,
     quantity: h.quantity, avg_buy_price: h.avg_buy_price,
     currentValueEur: h.currentValueEur, currentPriceEur: h.currentPriceEur,
     costBasisEur: h.costBasisEur, pnlEur: h.pnlEur, pnlPct: h.pnlPct,
@@ -175,7 +176,7 @@ export default function PortfolioTab() {
         const single = g.lots.length === 1
         if (single) return [fromHolding(g.lots[0])]
         const head: Row = {
-          key: `g:${g.ticker}`, ticker: g.ticker, name: g.name, asset_type: g.assetType,
+          key: `g:${g.ticker}`, ticker: g.ticker, name: g.name, marketName: g.marketName, asset_type: g.assetType,
           quantity: g.quantity, avg_buy_price: g.avgBuyPrice,
           currentValueEur: g.currentValueEur, currentPriceEur: g.currentPriceEur,
           costBasisEur: g.costBasisEur, pnlEur: g.pnlEur, pnlPct: g.pnlPct,
@@ -395,7 +396,7 @@ export default function PortfolioTab() {
             {/* Header — fixed widths match row cells exactly */}
             <div className="flex items-center"
               style={{ padding: '6px 14px', borderBottom: '1px solid var(--color-line-1)' }}>
-              <span style={{ width: '110px', flexShrink: 0 }}><Label>Asset</Label></span>
+              <span style={{ width: '164px', flexShrink: 0 }}><Label>Asset</Label></span>
               <span style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}><Label>Allocation</Label></span>
               <span style={{ width: '82px', flexShrink: 0, textAlign: 'right' }}><Label>Current</Label></span>
               <span style={{ width: '76px', flexShrink: 0, textAlign: 'right' }}><Label>Cost</Label></span>
@@ -434,12 +435,27 @@ export default function PortfolioTab() {
                 const color    = holdingColor(h.ticker)
                 const isProfit = (h.pnlEur ?? 0) >= 0
 
-                // Short display name — ticker for stocks, metal label for metals
-                const tickerLabel = isMetal ? (meta?.label ?? h.name) : h.ticker
-                // Truncate long names to 18 chars
-                const nameLabel = isMetal
-                  ? `${h.quantity.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}g`
-                  : ((h.name ?? '').length > 20 ? (h.name ?? '').slice(0, 18) + '…' : (h.name ?? ''))
+                // The instrument leads, the symbol follows. "CSSPX.MI" tells
+                // you nothing on its own — "Core S&P 500 USD (Acc)" does. The
+                // ticker still matters for looking a position up, so it stays
+                // as the second line rather than disappearing.
+                const primaryLabel = isMetal
+                  ? (meta?.label ?? h.name ?? h.ticker)
+                  : (h.name?.trim() || h.marketName?.trim() || h.ticker)
+
+                // Second line: the symbol, plus what kind of line this is.
+                const detail = h.lots
+                  ? `${h.lots.length} purchases`
+                  : h.isLot
+                    ? `${h.quantity.toLocaleString('de-AT', { maximumFractionDigits: 4 })} @ €${(h.avg_buy_price ?? 0).toFixed(2)}`
+                    : isMetal
+                      ? `${h.quantity.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}g`
+                      : null
+                // If we had no name to show, the ticker is already the headline —
+                // repeating it underneath would just be the same word twice.
+                const secondaryLabel = isMetal
+                  ? (detail ?? h.ticker)
+                  : [primaryLabel === h.ticker ? null : h.ticker, detail].filter(Boolean).join(' · ')
 
                 // A group line stands for its lots: selecting or deleting it
                 // acts on every purchase behind it, never on a phantom row.
@@ -460,20 +476,19 @@ export default function PortfolioTab() {
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-state-hover)')}
                     onMouseLeave={e => (e.currentTarget.style.background = isPicked && selectMode ? 'rgba(240,80,75,0.06)' : h.isLot ? 'rgba(255,255,255,0.015)' : 'transparent')}>
 
-                    {/* Asset — fixed width, no overflow */}
-                    <div style={{ width: '110px', flexShrink: 0, minWidth: 0 }}>
+                    {/* Asset — the name reads first; the ticker is the subtitle.
+                        Truncation is CSS, not a slice at 18 characters, so the
+                        full name is still there on hover and grows with the
+                        column instead of being destroyed on the way in. */}
+                    <div style={{ width: '164px', flexShrink: 0, minWidth: 0 }} title={h.name ?? h.ticker}>
                       <div className="flex items-center gap-1.5">
                         {isMetal && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />}
-                        <p className="vq-num" style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {tickerLabel}
+                        <p style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-sm)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {primaryLabel}
                         </p>
                       </div>
-                      <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>
-                        {h.lots
-                          ? `${h.lots.length} purchases`
-                          : h.isLot
-                            ? `${h.quantity.toLocaleString('de-AT', { maximumFractionDigits: 4 })} @ €${(h.avg_buy_price ?? 0).toFixed(2)}`
-                            : nameLabel}
+                      <p className="vq-num" style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>
+                        {secondaryLabel}
                       </p>
                     </div>
 

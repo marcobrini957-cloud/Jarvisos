@@ -18,6 +18,8 @@ export interface HoldingGroup {
   /** Instrument key — the ticker. */
   ticker:   string
   name:     string | null
+  /** Name from the price feed, when the rows were saved without one. */
+  marketName: string | null
   assetType: string
   /** The lots behind this line, in the order they came back. */
   lots:     HoldingWithPrice[]
@@ -57,6 +59,7 @@ export function groupHoldings(holdings: HoldingWithPrice[]): HoldingGroup[] {
     return {
       ticker:    first.ticker,
       name:      first.name ?? null,
+      marketName: lots.find(l => l.marketName)?.marketName ?? null,
       assetType: first.asset_type,
       lots,
       quantity,

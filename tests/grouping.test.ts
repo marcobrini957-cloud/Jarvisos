@@ -8,6 +8,7 @@ function lot(over: Partial<HoldingWithPrice> & { ticker: string }): HoldingWithP
     id: Math.random().toString(36).slice(2),
     name: 'Test', asset_type: 'stock', quantity: 1, avg_buy_price: 100,
     currency: 'EUR', is_active: true,
+    marketName: null,
     currentPrice: null, currentPriceEur: null, prevCloseEur: null,
     change1d: null, marketState: null,
     currentValueEur: null, pnlEur: null, pnlPct: null, costBasisEur: null,
@@ -105,6 +106,15 @@ describe('groupHoldings', () => {
     expect(g[0].lots).toHaveLength(1)
     expect(g[0].quantity).toBe(7)
     expect(g[0].pnlEur).toBe(10)
+  })
+
+  it('carries a price-feed name through when the rows were saved without one', () => {
+    const g = groupHoldings([
+      lot({ ticker: 'CSSPX.MI', name: null }),
+      lot({ ticker: 'CSSPX.MI', name: null, marketName: 'Core S&P 500 USD (Acc)' }),
+    ])
+    expect(g[0].name).toBeNull()
+    expect(g[0].marketName).toBe('Core S&P 500 USD (Acc)')
   })
 
   it('does not divide by zero on a zero-cost group', () => {
