@@ -11,6 +11,7 @@ import { HoldingModal } from './portfolio/HoldingModal'
 import { DonutChart, BREAKDOWN_CATS } from './portfolio/DonutChart'
 import { NetWorthCard } from './portfolio/NetWorthCard'
 import Icon from '@/components/ui/Icon'
+import { groupHoldings, hasMultipleLots } from '@/lib/portfolio/grouping'
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -30,6 +31,16 @@ export default function PortfolioTab() {
   const [deleting,   setDeleting]   = useState(false)
   const [search,     setSearch]     = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
+  const [grouped,    setGrouped]    = useState(true)
+  const [expanded,   setExpanded]   = useState<Set<string>>(new Set())
+
+  function toggleExpanded(ticker: string) {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      next.has(ticker) ? next.delete(ticker) : next.add(ticker)
+      return next
+    })
+  }
 
   function toggleSelect(id: string) {
     setSelected(prev => {
@@ -89,6 +100,13 @@ export default function PortfolioTab() {
         (h.name ?? '').toLowerCase().includes(query))
     : holdings
 
+  // Repeated buys of the same instrument leave one row per purchase. Grouping
+  // is display-only — the lots stay in the database, because they record what
+  // was paid and when, which averaging away would lose. Expand a line to see
+  // them. Totals are unaffected either way: they sum the lots in both modes.
+  const canGroup = hasMultipleLots(visibleHoldings)
+  const groups   = groupHoldings(visibleHoldings)
+
   const sortedHoldings = [...visibleHoldings].sort((a, b) => {
     if (sortBy === 'pnl') {
       // Holdings with prices first, sorted by pnlPct desc
@@ -104,6 +122,71 @@ export default function PortfolioTab() {
     }
     return 0 // default: DB insertion order
   })
+
+  const sortedGroups = [...groups].sort((a, b) => {
+    if (sortBy === 'pnl') {
+      if (a.pnlPct === null && b.pnlPct === null) return 0
+      if (a.pnlPct === null) return 1
+      if (b.pnlPct === null) return -1
+      return (b.pnlPct ?? 0) - (a.pnlPct ?? 0)
+    }
+    if (sortBy === 'alloc') {
+      return (b.currentValueEur ?? b.costBasisEur ?? 0) - (a.currentValueEur ?? a.costBasisEur ?? 0)
+    }
+    return 0
+  })
+
+  const showGrouped = grouped && canGroup
+
+  // One shape for both kinds of line, so the row markup below does not have to
+  // branch on whether it is drawing an instrument or a single purchase.
+  type Row = {
+    key: string
+    ticker: string
+    name: string | null
+    asset_type: string
+    quantity: number
+    avg_buy_price: number | null
+    currentValueEur: number | null
+    currentPriceEur: number | null
+    costBasisEur: number | null
+    pnlEur: number | null
+    pnlPct: number | null
+    change1d: number | null
+    marketState: string | null
+    /** Set when the line summarises several purchases. */
+    lots: HoldingWithPrice[] | null
+    /** Set when the line is one real database row. */
+    holding: HoldingWithPrice | null
+    isLot: boolean
+  }
+
+  const fromHolding = (h: HoldingWithPrice, isLot = false): Row => ({
+    key: h.id, ticker: h.ticker, name: h.name ?? null, asset_type: h.asset_type,
+    quantity: h.quantity, avg_buy_price: h.avg_buy_price,
+    currentValueEur: h.currentValueEur, currentPriceEur: h.currentPriceEur,
+    costBasisEur: h.costBasisEur, pnlEur: h.pnlEur, pnlPct: h.pnlPct,
+    change1d: h.change1d, marketState: h.marketState,
+    lots: null, holding: h, isLot,
+  })
+
+  const displayRows: Row[] = showGrouped
+    ? sortedGroups.flatMap(g => {
+        const single = g.lots.length === 1
+        if (single) return [fromHolding(g.lots[0])]
+        const head: Row = {
+          key: `g:${g.ticker}`, ticker: g.ticker, name: g.name, asset_type: g.assetType,
+          quantity: g.quantity, avg_buy_price: g.avgBuyPrice,
+          currentValueEur: g.currentValueEur, currentPriceEur: g.currentPriceEur,
+          costBasisEur: g.costBasisEur, pnlEur: g.pnlEur, pnlPct: g.pnlPct,
+          change1d: g.change1d, marketState: g.marketState,
+          lots: g.lots, holding: null, isLot: false,
+        }
+        return expanded.has(g.ticker)
+          ? [head, ...g.lots.map(l => fromHolding(l, true))]
+          : [head]
+      })
+    : sortedHoldings.map(h => fromHolding(h))
 
   // Asset-type breakdown (auto-categorised)
   const breakdownMap = new Map<string, number>()
@@ -237,6 +320,25 @@ export default function PortfolioTab() {
                 </button>
               )}
 
+              {/* Only offered when the portfolio actually repeats an
+                  instrument; on a clean list the control would do nothing. */}
+              {canGroup && (
+                <button
+                  onClick={() => setGrouped(g => !g)}
+                  aria-pressed={grouped}
+                  title={grouped ? 'Showing one line per instrument — click for every purchase' : 'Showing every purchase — click to group by instrument'}
+                  style={{
+                    padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)',
+                    background: grouped ? 'var(--color-surface-3)' : 'transparent',
+                    border: '1px solid var(--color-line-1)',
+                    color: grouped ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}
+                >
+                  {grouped ? 'Grouped' : 'All lots'}
+                </button>
+              )}
+
               {/* Sort toggle */}
               <Segmented
                 options={[{ key: 'default', label: 'Default' }, { key: 'pnl', label: 'P&L %' }, { key: 'alloc', label: 'Size' }]}
@@ -325,7 +427,7 @@ export default function PortfolioTab() {
                 </button>
               </div>
             ) : (
-              sortedHoldings.map(h => {
+              displayRows.map(h => {
                 const isMetal  = h.asset_type === 'metal'
                 const meta     = isMetal ? METAL_OPTIONS[h.ticker] : null
                 const alloc    = totalValueEur > 0 ? ((h.currentValueEur ?? h.costBasisEur ?? 0) / totalValueEur) * 100 : 0
@@ -339,13 +441,24 @@ export default function PortfolioTab() {
                   ? `${h.quantity.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}g`
                   : ((h.name ?? '').length > 20 ? (h.name ?? '').slice(0, 18) + '…' : (h.name ?? ''))
 
+                // A group line stands for its lots: selecting or deleting it
+                // acts on every purchase behind it, never on a phantom row.
+                const rowIds  = h.lots ? h.lots.map(l => l.id) : h.holding ? [h.holding.id] : []
+                const isPicked = rowIds.length > 0 && rowIds.every(id => selected.has(id))
+                const pickRow = () => setSelected(prev => {
+                  const next = new Set(prev)
+                  if (isPicked) rowIds.forEach(id => next.delete(id))
+                  else          rowIds.forEach(id => next.add(id))
+                  return next
+                })
+
                 return (
-                  <div key={h.id}
+                  <div key={h.key}
                     className="flex items-center transition-colors group"
-                    onClick={selectMode ? () => toggleSelect(h.id) : undefined}
-                    style={{ padding: '7px 14px', borderBottom: '1px solid var(--color-line-1)', cursor: selectMode ? 'pointer' : 'default', background: selectMode && selected.has(h.id) ? 'rgba(240,80,75,0.06)' : undefined }}
+                    onClick={selectMode ? pickRow : undefined}
+                    style={{ padding: '7px 14px', paddingLeft: h.isLot ? '30px' : '14px', borderBottom: '1px solid var(--color-line-1)', cursor: selectMode ? 'pointer' : 'default', background: isPicked && selectMode ? 'rgba(240,80,75,0.06)' : h.isLot ? 'rgba(255,255,255,0.015)' : undefined }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-state-hover)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = selectMode && selected.has(h.id) ? 'rgba(240,80,75,0.06)' : 'transparent')}>
+                    onMouseLeave={e => (e.currentTarget.style.background = isPicked && selectMode ? 'rgba(240,80,75,0.06)' : h.isLot ? 'rgba(255,255,255,0.015)' : 'transparent')}>
 
                     {/* Asset — fixed width, no overflow */}
                     <div style={{ width: '110px', flexShrink: 0, minWidth: 0 }}>
@@ -356,7 +469,11 @@ export default function PortfolioTab() {
                         </p>
                       </div>
                       <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>
-                        {nameLabel}
+                        {h.lots
+                          ? `${h.lots.length} purchases`
+                          : h.isLot
+                            ? `${h.quantity.toLocaleString('de-AT', { maximumFractionDigits: 4 })} @ €${(h.avg_buy_price ?? 0).toFixed(2)}`
+                            : nameLabel}
                       </p>
                     </div>
 
@@ -444,17 +561,30 @@ export default function PortfolioTab() {
                     {/* Actions */}
                     {selectMode ? (
                       <div style={{ width: '32px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <input type="checkbox" checked={selected.has(h.id)}
-                          onChange={() => toggleSelect(h.id)}
+                        <input type="checkbox" checked={isPicked}
+                          onChange={pickRow}
                           onClick={e => e.stopPropagation()}
                           style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--re)' }} />
                       </div>
+                    ) : h.lots ? (
+                      <div className="flex gap-0.5" style={{ width: '36px', flexShrink: 0, justifyContent: 'flex-end' }}>
+                        <button onClick={() => toggleExpanded(h.ticker)}
+                          aria-expanded={expanded.has(h.ticker)}
+                          style={{ background: 'none', border: 'none', color: 'var(--color-ink-3)', cursor: 'pointer', padding: '2px 3px', display: 'flex' }}
+                          title={expanded.has(h.ticker) ? 'Hide purchases' : `Show ${h.lots.length} purchases`}>
+                          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+                            style={{ transform: expanded.has(h.ticker) ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                            <path d="M3 5.5 8 10.5l5-5" />
+                          </svg>
+                        </button>
+                      </div>
                     ) : (
                       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ width: '36px', flexShrink: 0, justifyContent: 'flex-end' }}>
-                        <button onClick={() => setModal({ open: true, existing: h })}
+                        <button onClick={() => h.holding && setModal({ open: true, existing: h.holding })}
                           style={{ background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: 'var(--text-md)', padding: '2px 3px' }}
                           title="Edit"><Icon name="pencil" size={12} /></button>
-                        <button onClick={() => { if (confirm(`Remove ${h.ticker}?`)) deleteHolding(h.id) }}
+                        <button onClick={() => { if (h.holding && confirm(`Remove ${h.ticker}?`)) deleteHolding(h.holding.id) }}
                           style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: 'var(--text-md)', padding: '2px 3px' }}
                           title="Remove"><Icon name="close" size={13} /></button>
                       </div>
