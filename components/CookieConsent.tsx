@@ -45,11 +45,12 @@ export function CookieConsent() {
     return () => { window.removeEventListener(OPEN_EVENT, open); unsub() }
   }, [])
 
-  // Not on the lockdown curtain. The banner describes partner offers, ad
-  // behaviour and third-party widgets — a summary of the product, on the one
-  // page whose whole job is to reveal nothing. The gate sets a single essential
-  // cookie, which needs no consent anyway.
-  if (pathname === '/gate') return null
+  // Not on the lockdown curtain, and not in the admin console. The curtain's
+  // whole job is to reveal nothing, and the banner's text is a summary of the
+  // product; the console is a private back office for one person, where a
+  // consent prompt about partner offers is noise over the data. Both set only
+  // essential cookies, which need no consent.
+  if (pathname === '/gate' || pathname.startsWith('/dev')) return null
   if (!visible) return null
 
   const choose = (v: CookieConsentValue) => {

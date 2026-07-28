@@ -5,6 +5,7 @@ import { LogoMark } from '@/components/ui/LogoMark'
 import { MONO, G, R } from './ui'
 import { OverviewTab } from './tabs/OverviewTab'
 import { UsersTab } from './tabs/UsersTab'
+import { CostsTab } from './tabs/CostsTab'
 import { BridgeTab } from './tabs/BridgeTab'
 import { AuditTab } from './tabs/AuditTab'
 import { TodoTab } from './tabs/TodoTab'
@@ -12,6 +13,7 @@ import { TodoTab } from './tabs/TodoTab'
 const TABS = [
   { id: 'overview', label: 'Overview' },
   { id: 'users', label: 'Users' },
+  { id: 'costs', label: 'Costs' },
   { id: 'bridge', label: 'Bridge' },
   { id: 'audit', label: 'Audit' },
   { id: 'todo', label: 'To-Do' },
@@ -77,6 +79,7 @@ export default function DevDashboard() {
       <div style={{ padding: '24px 28px', maxWidth: '1400px', margin: '0 auto' }}>
         {tab === 'overview' && <OverviewTab />}
         {tab === 'users' && <UsersTab />}
+        {tab === 'costs' && <CostsTab />}
         {tab === 'bridge' && <BridgeTab />}
         {tab === 'audit' && <AuditTab />}
         {tab === 'todo' && <TodoTab />}
