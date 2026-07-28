@@ -15,6 +15,7 @@ import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
 import Icon                   from '@/components/ui/Icon'
 import { Surface, MetricStrip, Label, Num } from '@/components/ui/vq'
 import SessionClock           from '@/components/ui/SessionClock'
+import DailyMaxLoss           from '@/components/ui/DailyMaxLoss'
 import { NetWorthCurve }      from './trading/NetWorthCurve'
 import { useUserProfile }     from '@/context/UserProfileContext'
 import { useIsMobile, greeting, fmtEur, fmtPnl, fullDate } from './overview/helpers'
@@ -255,6 +256,13 @@ export default function OverviewTab() {
             journalDays={journalDays}
             habitDays={habitDays}
           />
+          {/* The risk gauge was mobile-only, so the limit could not be set from
+              a desktop at all. It is the same control on both. */}
+          <Surface title="Daily risk">
+            <div style={{ padding: '12px 14px' }}>
+              <DailyMaxLoss allRows={allRows} balance={balance} />
+            </div>
+          </Surface>
           <Surface title="Today's focus">
             <div style={{ padding: '12px 14px' }}>
               <TodaysFocus allRows={allRows} />

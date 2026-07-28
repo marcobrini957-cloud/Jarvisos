@@ -197,7 +197,7 @@ export const PARTNER_BRIEFS: PartnerBrief[] = [
     whatItIs:
       'The charting platform most retail traders actually use, and the one this dashboard embeds. Free to use with limits; the paid tiers mainly buy you more indicators per chart, more alerts and more charts per layout.',
     inVelquor:
-      'Three TradingView widgets ship in this product: the live chart on the Trading tab, the ticker tape across the top bar, and the market overview on Overview. When you look at price inside Velquor, you are looking at their chart.',
+      'Three TradingView widgets ship in this product: the live chart on the Trading tab, the ticker tape across the top bar, and the market overview on Home. When you look at price inside Velquor, you are looking at their chart.',
     sections: [
       {
         heading: 'What the tiers cost',

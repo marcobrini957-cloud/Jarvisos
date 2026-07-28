@@ -21,6 +21,7 @@ import DailyMaxLoss           from '@/components/ui/DailyMaxLoss'
 import AdSlot                 from '@/components/dashboard/AdSlot'
 import type { Trade }         from '@/types'
 import Icon from '@/components/ui/Icon'
+import { habitIcon } from './discipline/habitIcon'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -186,7 +187,7 @@ export default function MobileOverviewTab() {
       {/* ── Daily Max Loss ─────────────────────────────────────── */}
       <div style={{ padding: '14px 16px', background: 'var(--s1)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(240,80,75,0.15)' }}>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600, display: 'block', marginBottom: '10px' }}>Daily Risk</span>
-        <DailyMaxLoss allRows={allRows} />
+        <DailyMaxLoss allRows={allRows} balance={balance} />
       </div>
 
       {/* ── Today's Focus ──────────────────────────────────────── */}
@@ -210,10 +211,11 @@ export default function MobileOverviewTab() {
                         border: `2px solid ${done ? 'var(--gr2)' : 'var(--bd2)'}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        {done && <span style={{ fontSize: 'var(--text-2xs)', color: 'white', fontWeight: 700 }}>✓</span>}
+                        {done && <Icon name="check" size={10} style={{ color: 'var(--color-void)' }} strokeWidth={2.5} />}
                       </div>
-                      <span style={{ fontSize: 'var(--text-base)', color: done ? 'var(--t3)' : 'var(--t2)', textDecoration: done ? 'line-through' : 'none' }}>
-                        {h.icon} {h.name}
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: 'var(--text-base)', color: done ? 'var(--t3)' : 'var(--t2)', textDecoration: done ? 'line-through' : 'none' }}>
+                        <Icon name={habitIcon(h.icon)} size={12} />
+                        {h.name}
                       </span>
                     </div>
                   )

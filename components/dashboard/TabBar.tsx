@@ -10,7 +10,7 @@ import {
 // Analyst used to be gold in both states — the one tab that shouted. In 2.0 it
 // is a tab like any other; what it does is interesting, its colour is not.
 const TABS: { id: number; label: string; icon: React.ComponentType<{ size?: number; stroke?: number }> }[] = [
-  { id: 0, label: 'Overview',   icon: IconLayoutDashboard },
+  { id: 0, label: 'Home',       icon: IconLayoutDashboard },
   { id: 1, label: 'Trading',    icon: IconChartCandle     },
   { id: 2, label: 'Portfolio',  icon: IconBriefcase       },
   { id: 3, label: 'Journal',    icon: IconNotebook        },

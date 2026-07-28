@@ -121,7 +121,7 @@ export const PARTNERS: Partner[] = [
     blurb:     'The live chart on your Trading tab is TradingView. A paid plan adds indicators per chart, more alerts and no ads on their platform — our embeds are anonymous widgets, so a subscription improves TradingView, not this dashboard.',
     ctaLabel:  'Try TradingView',
     url:       'https://www.tradingview.com/?aff_id=TODO_REAL_AFFILIATE_CODE',
-    integration: 'Velquor embeds their widgets: the Trading tab chart, the ticker tape in the top bar and the market overview on Overview.',
+    integration: 'Velquor embeds their widgets: the Trading tab chart, the ticker tape in the top bar and the market overview on Home.',
     accent:    '#2962FF',
     logo:      '/partners/tradingview.svg',
     featured:  true,

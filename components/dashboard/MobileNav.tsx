@@ -15,7 +15,7 @@ const PRIMARY_TABS: { id: number; label: string; icon: IconName }[] = [
 
 // All tabs for the "More" drawer
 const ALL_TABS: { id: number; label: string; icon: IconName }[] = [
-  { id: 0, label: 'Overview',   icon: 'home'        },
+  { id: 0, label: 'Home',       icon: 'home'        },
   { id: 1, label: 'Trading',    icon: 'chart'       },
   { id: 2, label: 'Portfolio',  icon: 'briefcase'   },
   { id: 3, label: 'Journal',    icon: 'journal'     },
