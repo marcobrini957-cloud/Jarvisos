@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { LogoMark } from '@/components/ui/LogoMark'
+import Icon from '@/components/ui/Icon'
 
 type Mode = 'signin' | 'signup' | 'reset'
 
 
 import dynamic from 'next/dynamic'
-import { Aurora } from '@/components/login/Aurora'
 
 const LoginDashboardPreview = dynamic(
   () => import('@/components/login/LoginDashboardPreview').then(m => m.LoginDashboardPreview)
@@ -286,11 +286,12 @@ export default function LoginPage() {
   const inputStyle: React.CSSProperties = {
     width: '100%',
     background: 'var(--s2)',
-    border: '1px solid var(--bd2)',
-    borderRadius: '10px',
-    padding: '12px 14px',
-    color: 'var(--t1)',
-    fontSize: '14px',
+    border: '1px solid var(--color-line-1)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '11px 12px',
+    color: 'var(--color-ink-1)',
+    fontFamily: 'var(--font-display)',
+    fontSize: 'var(--text-md)',
     outline: 'none',
     transition: 'border-color 0.15s',
     boxSizing: 'border-box',
@@ -298,10 +299,12 @@ export default function LoginPage() {
 
   const labelStyle: React.CSSProperties = {
     display: 'block',
-    color: 'var(--t2)',
-    fontSize: '12px',
-    marginBottom: '6px',
-    fontWeight: 500,
+    fontFamily: 'var(--font-display)',
+    fontSize: 'var(--text-2xs)',
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase',
+    color: 'var(--color-ink-3)',
+    marginBottom: '7px',
   }
 
   const isDisabled = loading || !email || !password
@@ -313,77 +316,68 @@ export default function LoginPage() {
       display: 'flex',
       fontFamily: 'inherit',
     }}>
-      {/* ── Left panel — matches landing page hero ────────────────────── */}
+      {/* ── Left panel ────────────────────────────────────────────────────
+          Was the hero's decoration set again at half scale: Aurora bars, three
+          radial glows, a blue badge pill, a blue→magenta gradient border with
+          three coloured shadows around the preview, and green ticks against
+          "Any MT5 Broker". The panel's job is to show the product, so it shows
+          the product on a hairline. */}
       <div style={{
         display: 'none',
         width: '52%',
         flexShrink: 0,
-        background: '#000',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
+        background: 'var(--color-void)',
+        borderRight: '1px solid var(--color-line-1)',
         flexDirection: 'column',
-        position: 'relative',
-        overflow: 'hidden',
       }} className="login-left-panel">
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '28px 32px 24px' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none' }}>
+            <LogoMark size={22} />
+            <span style={{
+              fontFamily: 'var(--font-mark)', fontSize: 'var(--text-xl)', lineHeight: 1,
+              letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--color-ink-1)',
+            }}>Velquor</span>
+          </Link>
 
-        {/* Aurora bars */}
-        <Aurora />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '22px', paddingTop: '12px' }}>
+            <p style={{
+              fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+              letterSpacing: '0.16em', textTransform: 'uppercase',
+              color: 'var(--color-ink-3)', margin: 0,
+            }}>
+              Built for serious MT5 traders
+            </p>
 
-        {/* Deep space glows */}
-        <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
-          <div style={{ position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)', width: '100%', height: '60%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(55,90,180,0.20) 0%, rgba(30,50,120,0.07) 45%, transparent 70%)' }} />
-          <div style={{ position: 'absolute', top: '25%', left: '-10%', width: '60%', height: '60%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(33,110,210,0.09) 0%, transparent 65%)' }} />
-          <div style={{ position: 'absolute', top: '20%', right: '-10%', width: '55%', height: '55%', borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(140,60,220,0.09) 0%, transparent 65%)' }} />
-        </div>
-
-        {/* Content */}
-        <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', height: '100%', padding: '32px 36px 28px' }}>
-          {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '7px', padding: '4px 10px 4px 6px' }}>
-              <LogoMark size={20} />
-              <span style={{ color: '#F2F2F2', fontWeight: 700, fontSize: '12.5px', letterSpacing: '0.02em' }}>VELQUOR</span>
-            </div>
-          </div>
-
-          {/* Main content */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '20px', paddingTop: '8px' }}>
-            {/* Badge */}
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', width: 'fit-content', background: 'rgba(77,143,255,0.1)', border: '1px solid rgba(77,143,255,0.22)' }}>
-              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#4B8FFF', display: 'block', boxShadow: '0 0 6px #4B8FFF' }} />
-              <span style={{ color: '#4B8FFF', fontSize: '11px', fontWeight: 500 }}>Built for serious MT5 traders</span>
-            </div>
-
-            {/* Headline */}
             <div>
-              <h2 style={{ fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 900, lineHeight: 0.97, letterSpacing: '-0.04em', margin: '0 0 14px', color: '#fff' }}>
-                See the truth.<br />
-                <span style={{ color: 'rgba(255,255,255,0.28)' }}>Trade the edge.</span>
+              <h2 style={{
+                fontFamily: 'var(--font-display)', fontSize: 'clamp(28px,3.4vw,44px)',
+                lineHeight: 0.99, letterSpacing: '-0.035em', margin: '0 0 14px',
+              }}>
+                <span style={{ color: 'var(--color-ink-1)' }}>See the truth.</span><br />
+                <span style={{ color: 'var(--color-ink-3)' }}>Trade the edge.</span>
               </h2>
-              <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.65, maxWidth: '340px' }}>
+              <p style={{
+                margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                color: 'var(--color-ink-3)', lineHeight: 1.65, maxWidth: '46ch',
+              }}>
                 Connect your MT5 account and instantly see what&apos;s working, what&apos;s not, and exactly where you&apos;re leaking money.
               </p>
             </div>
 
-            {/* Dashboard preview */}
-            <div style={{ position: 'relative' }}>
-              {/* Glow behind preview */}
-              <div aria-hidden style={{ position: 'absolute', inset: '-20px -30px', background: ['radial-gradient(ellipse at 20% 60%, rgba(33,110,243,0.22) 0%, transparent 55%)', 'radial-gradient(ellipse at 80% 60%, rgba(196,50,220,0.18) 0%, transparent 55%)'].join(', '), filter: 'blur(30px)', pointerEvents: 'none', zIndex: 0 }} />
-              {/* Gradient border */}
-              <div style={{ position: 'relative', zIndex: 1, background: 'linear-gradient(90deg, #2196F3 0%, #7B2FBF 50%, #E040FB 100%)', padding: '1.5px', borderRadius: '12px', boxShadow: ['0 0 40px rgba(33,150,243,0.20)', '0 0 80px rgba(224,64,251,0.12)', '0 4px 30px rgba(33,100,200,0.16)'].join(', ') }}>
-                <div style={{ background: '#090D13', borderRadius: '10px', overflow: 'hidden' }}>
-                  <LoginDashboardPreview />
-                </div>
-              </div>
+            <div style={{
+              border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-md)',
+              overflow: 'hidden', background: 'var(--s1)',
+            }}>
+              <LoginDashboardPreview />
             </div>
           </div>
 
-          {/* Trust bullets */}
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            {['Any MT5 Broker', 'Live & Demo Accounts', 'AI-Powered', 'Free to start'].map(b => (
-              <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ color: '#00FF85', fontSize: '10px' }}>✓</span>
-                <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px' }}>{b}</span>
-              </div>
+          <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap', paddingTop: '16px', borderTop: '1px solid var(--color-line-1)' }}>
+            {['Any MT5 broker', 'Live & demo accounts', 'AI-powered', 'Free to start'].map(b => (
+              <span key={b} style={{
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
+                letterSpacing: '0.04em', color: 'var(--color-ink-3)',
+              }}>{b}</span>
             ))}
           </div>
         </div>
@@ -443,8 +437,8 @@ export default function LoginPage() {
                   disabled={loading}
                   style={{
                     width: '100%', padding: '12px 16px',
-                    background: 'var(--s2)', border: '1px solid var(--bd2)',
-                    borderRadius: '10px', cursor: loading ? 'default' : 'pointer',
+                    background: 'var(--s2)', border: '1px solid var(--color-line-1)',
+                    borderRadius: 'var(--radius-sm)', cursor: loading ? 'default' : 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
                     color: 'var(--t1)', fontSize: '14px', fontWeight: 500,
                     transition: 'border-color 0.15s',
@@ -475,14 +469,14 @@ export default function LoginPage() {
           {signedUp ? (
             <div style={{
               padding: '20px',
-              background: 'rgba(0,217,110,0.08)',
-              border: '1px solid rgba(0,217,110,0.2)',
-              borderRadius: '12px',
+              background: 'var(--s1)',
+              border: '1px solid var(--color-line-1)',
+              borderRadius: 'var(--radius-md)',
               textAlign: 'center',
-              display: 'flex', flexDirection: 'column', gap: '8px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
             }}>
-              <span style={{ fontSize: '24px' }}>✉️</span>
-              <p style={{ color: 'var(--gr2)', fontSize: '14px', fontWeight: 600, margin: 0 }}>
+              <span style={{ color: 'var(--color-ink-2)' }}><Icon name="mail" size={20} /></span>
+              <p style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', color: 'var(--color-ink-1)', margin: 0 }}>
                 Check your email
               </p>
               <p style={{ color: 'var(--t2)', fontSize: '13px', margin: 0, lineHeight: 1.6 }}>
@@ -513,8 +507,8 @@ export default function LoginPage() {
                       required
                       autoComplete="email"
                       style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-                      onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
+                      onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
+                      onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
                     />
                   </div>
                   <div>
@@ -536,17 +530,17 @@ export default function LoginPage() {
                       required
                       autoComplete="current-password"
                       style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-                      onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
+                      onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
+                      onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
                     />
                   </div>
 
                   {error && (
                     <p style={{
-                      color: 'var(--re)', fontSize: '13px',
-                      background: 'rgba(255,51,71,0.08)',
-                      border: '1px solid rgba(255,51,71,0.2)',
-                      borderRadius: '8px', padding: '10px 12px', margin: 0,
+                      color: 'var(--color-down)', fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                      background: 'var(--color-down-dim)',
+                      border: '1px solid var(--color-down-dim)',
+                      borderRadius: 'var(--radius-sm)', padding: '10px 12px', margin: 0,
                     }}>
                       {error}
                     </p>
@@ -557,10 +551,10 @@ export default function LoginPage() {
                     disabled={isDisabled}
                     style={{
                       width: '100%', padding: '13px',
-                      background: isDisabled ? 'var(--s2)' : 'var(--ac)',
-                      border: 'none', borderRadius: '10px',
-                      color: isDisabled ? 'var(--t3)' : 'white',
-                      fontSize: '14px', fontWeight: 600,
+                      background: isDisabled ? 'var(--s2)' : 'var(--color-ink-1)',
+                      border: 'none', borderRadius: 'var(--radius-sm)',
+                      color: isDisabled ? 'var(--color-ink-4)' : 'var(--color-void)',
+                      fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
                       cursor: isDisabled ? 'default' : 'pointer',
                       transition: 'all 0.15s',
                       marginTop: '4px',
@@ -583,8 +577,8 @@ export default function LoginPage() {
                       placeholder="Trader"
                       autoComplete="name"
                       style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-                      onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
+                      onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
+                      onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
                     />
                   </div>
                   <div>
@@ -597,8 +591,8 @@ export default function LoginPage() {
                       required
                       autoComplete="email"
                       style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-                      onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
+                      onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
+                      onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
                     />
                   </div>
                   <div>
@@ -611,17 +605,17 @@ export default function LoginPage() {
                       required
                       autoComplete="new-password"
                       style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-                      onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
+                      onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
+                      onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
                     />
                   </div>
 
                   {error && (
                     <p style={{
-                      color: 'var(--re)', fontSize: '13px',
-                      background: 'rgba(255,51,71,0.08)',
-                      border: '1px solid rgba(255,51,71,0.2)',
-                      borderRadius: '8px', padding: '10px 12px', margin: 0,
+                      color: 'var(--color-down)', fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                      background: 'var(--color-down-dim)',
+                      border: '1px solid var(--color-down-dim)',
+                      borderRadius: 'var(--radius-sm)', padding: '10px 12px', margin: 0,
                     }}>
                       {error}
                     </p>
@@ -632,10 +626,10 @@ export default function LoginPage() {
                     disabled={isDisabled}
                     style={{
                       width: '100%', padding: '13px',
-                      background: isDisabled ? 'var(--s2)' : 'var(--ac)',
-                      border: 'none', borderRadius: '10px',
-                      color: isDisabled ? 'var(--t3)' : 'white',
-                      fontSize: '14px', fontWeight: 600,
+                      background: isDisabled ? 'var(--s2)' : 'var(--color-ink-1)',
+                      border: 'none', borderRadius: 'var(--radius-sm)',
+                      color: isDisabled ? 'var(--color-ink-4)' : 'var(--color-void)',
+                      fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
                       cursor: isDisabled ? 'default' : 'pointer',
                       transition: 'all 0.15s',
                       marginTop: '4px',
@@ -651,14 +645,14 @@ export default function LoginPage() {
                 resetSent ? (
                   <div style={{
                     padding: '20px',
-                    background: 'rgba(0,217,110,0.08)',
-                    border: '1px solid rgba(0,217,110,0.2)',
-                    borderRadius: '12px',
+                    background: 'var(--s1)',
+                    border: '1px solid var(--color-line-1)',
+                    borderRadius: 'var(--radius-md)',
                     textAlign: 'center',
-                    display: 'flex', flexDirection: 'column', gap: '8px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
                   }}>
-                    <span style={{ fontSize: '24px' }}>✉️</span>
-                    <p style={{ color: 'var(--gr2)', fontSize: '14px', fontWeight: 600, margin: 0 }}>Check your email</p>
+                    <span style={{ color: 'var(--color-ink-2)' }}><Icon name="mail" size={20} /></span>
+                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', color: 'var(--color-ink-1)', margin: 0 }}>Check your email</p>
                     <p style={{ color: 'var(--t2)', fontSize: '13px', margin: 0, lineHeight: 1.6 }}>
                       Password reset link sent to <strong style={{ color: 'var(--t1)' }}>{email}</strong>.
                     </p>
@@ -681,12 +675,12 @@ export default function LoginPage() {
                         required
                         autoComplete="email"
                         style={inputStyle}
-                        onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
-                        onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
+                        onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
+                        onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
                       />
                     </div>
                     {error && (
-                      <p style={{ color: 'var(--re)', fontSize: '13px', background: 'rgba(255,51,71,0.08)', border: '1px solid rgba(255,51,71,0.2)', borderRadius: '8px', padding: '10px 12px', margin: 0 }}>
+                      <p style={{ color: 'var(--color-down)', fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', background: 'var(--color-down-dim)', border: '1px solid var(--color-down-dim)', borderRadius: 'var(--radius-sm)', padding: '10px 12px', margin: 0 }}>
                         {error}
                       </p>
                     )}
@@ -695,10 +689,10 @@ export default function LoginPage() {
                       disabled={loading || !email}
                       style={{
                         width: '100%', padding: '13px',
-                        background: loading || !email ? 'var(--s2)' : 'var(--ac)',
-                        border: 'none', borderRadius: '10px',
-                        color: loading || !email ? 'var(--t3)' : 'white',
-                        fontSize: '14px', fontWeight: 600,
+                        background: loading || !email ? 'var(--s2)' : 'var(--color-ink-1)',
+                        border: 'none', borderRadius: 'var(--radius-sm)',
+                        color: loading || !email ? 'var(--color-ink-4)' : 'var(--color-void)',
+                        fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
                         cursor: loading || !email ? 'default' : 'pointer',
                         transition: 'all 0.15s',
                       }}

@@ -4,22 +4,25 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { LogoMark } from '@/components/ui/LogoMark'
+import Icon, { type IconName } from '@/components/ui/Icon'
 import EAConnectWizard from '@/components/ea/EAConnectWizard'
 
 const STEPS = [
-  { n: 1, title: 'Welcome to Velquor',        icon: '◆' },
-  { n: 2, title: 'Connect your MT5 account', icon: '⚡' },
-  { n: 3, title: 'Set your trading limits',  icon: '🛡' },
-  { n: 4, title: 'Meet VELQUOR AI',           icon: '🧠' },
+  { n: 1, title: 'Welcome to Velquor' },
+  { n: 2, title: 'Connect your MT5 account' },
+  { n: 3, title: 'Set your trading limits' },
+  { n: 4, title: 'Meet VELQUOR AI' },
 ]
 
 // ── Step 1 ────────────────────────────────────────────────────────────────────
 function Step1({ userName, onNext }: { userName: string; onNext: () => void }) {
-  const features = [
-    { icon: '⚡', label: 'MT5 auto-sync', desc: 'Every trade pulled from MetaTrader 5 automatically' },
-    { icon: '◆', label: 'VELQUOR AI',     desc: 'AI that analyses your specific trading patterns'      },
-    { icon: '📊', label: 'Full analytics', desc: 'Win rate, P&L, and performance by setup and session' },
-    { icon: '🏆', label: 'Prop Firm mode', desc: 'Real-time tracking for any funded challenge'         },
+  // Icon.tsx is the only icon source in the product (DESIGN.md §2); these were
+  // four emoji, which render differently on every OS and carry their own colour.
+  const features: Array<{ icon: IconName; label: string; desc: string }> = [
+    { icon: 'bolt',   label: 'MT5 auto-sync',  desc: 'Every trade pulled from MetaTrader 5 automatically' },
+    { icon: 'spark',  label: 'VELQUOR AI',     desc: 'AI that analyses your specific trading patterns'    },
+    { icon: 'chart',  label: 'Full analytics', desc: 'Win rate, P&L, and performance by setup and session' },
+    { icon: 'trophy', label: 'Prop Firm mode', desc: 'Real-time tracking for any funded challenge'         },
   ]
 
   return (
@@ -43,7 +46,7 @@ function Step1({ userName, onNext }: { userName: string; onNext: () => void }) {
             background: 'var(--s2)', border: '1px solid var(--bd)',
             borderRadius: '12px', padding: '16px',
           }}>
-            <div style={{ fontSize: '20px', marginBottom: '8px' }}>{f.icon}</div>
+            <div style={{ color: 'var(--color-ink-3)', marginBottom: '10px' }}><Icon name={f.icon} size={17} /></div>
             <p style={{ margin: '0 0 4px', color: 'var(--t1)', fontSize: '13px', fontWeight: 600 }}>{f.label}</p>
             <p style={{ margin: 0, color: 'var(--t2)', fontSize: '12px', lineHeight: 1.5 }}>{f.desc}</p>
           </div>
@@ -52,11 +55,10 @@ function Step1({ userName, onNext }: { userName: string; onNext: () => void }) {
 
       <button onClick={onNext} style={{
         width: '100%', padding: '14px', borderRadius: '10px',
-        background: 'var(--ac)', border: 'none', color: 'white',
-        fontSize: '14px', fontWeight: 600, cursor: 'pointer',
-        boxShadow: '0 8px 24px rgba(77,143,255,0.3)',
+        background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)',
+        fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', cursor: 'pointer',
       }}>
-        Let&apos;s get started →
+        Let&apos;s get started
       </button>
     </div>
   )
@@ -69,7 +71,7 @@ function Step2({ onNext }: { onNext: () => void }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <div style={{ fontSize: '32px', marginBottom: '14px' }}>⚡</div>
+        <div style={{ color: 'var(--color-ink-3)', marginBottom: '14px' }}><Icon name="bolt" size={22} /></div>
         <h2 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.02em', margin: '0 0 8px', color: 'var(--t1)' }}>
           Install the VELQUOR EA
         </h2>
@@ -82,12 +84,12 @@ function Step2({ onNext }: { onNext: () => void }) {
 
       <button onClick={onNext} style={{
         width: '100%', padding: '12px', borderRadius: '9px',
-        background: eaConnected ? 'var(--ac)' : 'transparent',
+        background: eaConnected ? 'var(--color-ink-1)' : 'transparent',
         border: eaConnected ? 'none' : '1px solid var(--bd2)',
-        color: eaConnected ? 'white' : 'var(--t2)',
-        fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+        color: eaConnected ? 'var(--color-void)' : 'var(--color-ink-2)',
+        fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', cursor: 'pointer',
       }}>
-        {eaConnected ? 'Continue →' : 'Skip for now'}
+        {eaConnected ? 'Continue' : 'Skip for now'}
       </button>
     </div>
   )
@@ -128,7 +130,7 @@ function Step3({ onNext }: { onNext: () => void }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
-        <div style={{ fontSize: '32px', marginBottom: '14px' }}>🛡</div>
+        <div style={{ color: 'var(--color-ink-3)', marginBottom: '14px' }}><Icon name="shield" size={22} /></div>
         <h2 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.02em', margin: '0 0 8px', color: 'var(--t1)' }}>
           Set your trading limits
         </h2>
@@ -144,7 +146,7 @@ function Step3({ onNext }: { onNext: () => void }) {
         <input
           type="number" value={dailyLimit} onChange={e => setDailyLimit(e.target.value)}
           style={inputStyle}
-          onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+          onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
           onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
         />
         <p style={{ margin: '6px 0 0', color: 'var(--t3)', fontSize: '11px' }}>
@@ -163,13 +165,14 @@ function Step3({ onNext }: { onNext: () => void }) {
             onClick={() => setPropEnabled(!propEnabled)}
             style={{
               width: '40px', height: '22px', borderRadius: '11px', border: 'none', cursor: 'pointer',
-              background: propEnabled ? 'var(--ac)' : 'var(--s3)',
+              background: propEnabled ? 'var(--color-ink-1)' : 'var(--s3)',
               position: 'relative', transition: 'background 0.2s',
             }}
           >
             <span style={{
               position: 'absolute', top: '3px', left: propEnabled ? '20px' : '3px',
-              width: '16px', height: '16px', borderRadius: '50%', background: 'white',
+              width: '16px', height: '16px', borderRadius: '50%',
+              background: propEnabled ? 'var(--color-void)' : 'var(--color-ink-2)',
               transition: 'left 0.2s',
             }} />
           </button>
@@ -182,7 +185,7 @@ function Step3({ onNext }: { onNext: () => void }) {
             <input
               type="number" value={accountSize} onChange={e => setAccountSize(e.target.value)}
               style={inputStyle}
-              onFocus={e => (e.target.style.borderColor = 'var(--ac)')}
+              onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
               onBlur={e  => (e.target.style.borderColor = 'var(--bd2)')}
             />
             <p style={{ margin: '6px 0 0', color: 'var(--t3)', fontSize: '11px' }}>
@@ -193,7 +196,7 @@ function Step3({ onNext }: { onNext: () => void }) {
       </div>
 
       {saved ? (
-        <div style={{ textAlign: 'center', color: 'var(--gr2)', fontSize: '14px', fontWeight: 500, padding: '12px' }}>✓ Saved</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', color: 'var(--color-ink-2)', fontSize: 'var(--text-md)', padding: '12px' }}><Icon name="check" size={13} />Saved</div>
       ) : (
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={onNext} style={{
@@ -201,9 +204,10 @@ function Step3({ onNext }: { onNext: () => void }) {
             border: '1px solid var(--bd2)', color: 'var(--t2)', fontSize: '13px', cursor: 'pointer',
           }}>Skip</button>
           <button onClick={handleSave} style={{
-            flex: 2, padding: '12px', borderRadius: '9px', background: 'var(--ac)',
-            border: 'none', color: 'white', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-          }}>Save & continue →</button>
+            flex: 2, padding: '12px', borderRadius: 'var(--radius-sm)', background: 'var(--color-ink-1)',
+            border: 'none', color: 'var(--color-void)', fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-base)', cursor: 'pointer',
+          }}>Save & continue</button>
         </div>
       )}
     </div>

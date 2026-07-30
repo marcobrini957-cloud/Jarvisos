@@ -570,13 +570,13 @@ export function AnimatedDashboard() {
                       <span style={{ color: 'var(--t3)', fontSize: '7px' }}>2/3</span>
                       {[1, 1, 0].map((on, i) => <span key={i} style={{ width: '5px', height: '5px', borderRadius: '50%', background: on ? 'var(--gr2)' : 'rgba(255,255,255,0.1)', boxShadow: on ? '0 0 4px rgba(0,232,122,0.5)' : 'none' }} />)}
                     </span>
-                    <span style={{ color: 'var(--go2)', fontSize: '8px', fontWeight: 700 }}>🔥 9d habit streak</span>
-                    <span style={{ color: 'var(--go2)', fontSize: '8px', fontWeight: 700 }}>🔥 12d journal</span>
+                    <span style={{ color: 'var(--color-ink-3)', fontSize: '8px' }}>9d habit streak</span>
+                    <span style={{ color: 'var(--color-ink-3)', fontSize: '8px' }}>12d journal</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '8px' }}>
                   <p style={{ margin: 0, color: 'var(--t1)', fontSize: '17px', fontWeight: 700, letterSpacing: '-0.03em' }}>Good afternoon, Trader</p>
-                  <span style={{ background: 'rgba(0,232,122,0.1)', border: '1px solid rgba(0,232,122,0.25)', color: 'var(--gr2)', fontSize: '7.5px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', ...stag(2) }}>🔥 2-trade win streak</span>
+                  <span style={{ border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', fontSize: '7.5px', padding: '2px 8px', borderRadius: 'var(--radius-xs)', ...stag(2) }}>2-trade win streak</span>
                 </div>
                 {/* Session clock bar */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '7px', padding: '5px 10px', marginBottom: '9px', ...stag(3) }}>
@@ -683,7 +683,7 @@ export function AnimatedDashboard() {
                     color: i === 1 ? 'var(--t1)' : 'var(--t3)',
                   }}>{p}</span>
                 ))}
-                <span style={{ marginLeft: 'auto', color: 'var(--t3)', fontSize: '7.5px', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '3px 9px' }}>⛭ Custom range</span>
+                <span style={{ marginLeft: 'auto', color: 'var(--t3)', fontSize: '7.5px', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '20px', padding: '3px 9px' }}>Custom range</span>
               </div>
               {/* Live Chart panel — TradingView replica */}
               <div data-hot style={{ ...card, overflow: 'hidden', ...stag(1) }}>
@@ -803,8 +803,8 @@ export function AnimatedDashboard() {
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
               <div style={{ display: 'flex', gap: '5px', ...stag(0) }}>
-                <span style={{ background: 'var(--ac)', color: '#fff', fontSize: '7.5px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px' }}>✎ Daily Journal</span>
-                <span style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: 'var(--t3)', fontSize: '7.5px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px' }}>▦ Weekly Review</span>
+                <span style={{ background: 'var(--color-ink-1)', color: 'var(--color-void)', fontSize: '7.5px', padding: '3px 10px', borderRadius: 'var(--radius-xs)' }}>Daily Journal</span>
+                <span style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: 'var(--t3)', fontSize: '7.5px', fontWeight: 600, padding: '3px 10px', borderRadius: '20px' }}>Weekly Review</span>
               </div>
               {/* Stat cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '8px' }}>
@@ -1054,10 +1054,10 @@ export function AnimatedDashboard() {
                   <div data-hot style={{ ...card, padding: '9px 12px', ...stag(3) }}>
                     <p style={{ margin: '0 0 6px', color: 'var(--t1)', fontSize: '8.5px', fontWeight: 700 }}>What VELQUOR Knows</p>
                     {[
-                      { icon: '▥', c: '#4D8FFF', t: 'All your MT5 trades',  s: 'P&L, win rate, sessions, setups' },
-                      { icon: '✎', c: '#00E87A', t: 'Journal entries',      s: 'Mood, energy, daily notes' },
-                      { icon: '✓', c: '#00E87A', t: 'Habits tracker',       s: 'Daily streaks, consistency' },
-                      { icon: '◧', c: '#B98CFF', t: 'Portfolio',            s: 'Trade Republic holdings' },
+                      { icon: '', c: 'var(--color-ink-3)', t: 'All your MT5 trades',  s: 'P&L, win rate, sessions, setups' },
+                      { icon: '', c: 'var(--color-ink-3)', t: 'Journal entries',      s: 'Mood, energy, daily notes' },
+                      { icon: '', c: 'var(--color-ink-3)', t: 'Habits tracker',       s: 'Daily streaks, consistency' },
+                      { icon: '', c: 'var(--color-ink-3)', t: 'Portfolio',            s: 'Trade Republic holdings' },
                       { icon: '◍', c: '#4D8FFF', t: 'Macro context',        s: 'News, events, bias' },
                     ].map((r, i) => (
                       <div key={r.t} style={{ display: 'flex', gap: '7px', alignItems: 'center', marginBottom: '5px', ...stag(4 + i) }}>

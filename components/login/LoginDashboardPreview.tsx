@@ -288,14 +288,13 @@ export function LoginDashboardPreview() {
                   <p style={{ margin: '0 0 8px', color: 'var(--t2)', fontSize: '9px', lineHeight: 1.6 }}>Took 2 XAUUSD trades London. Both hit target. Waited for OB before entering.</p>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                     <span style={{ color: 'var(--t3)', fontSize: '7px' }}>Mood</span>
-                    <span style={{ background: 'rgba(0,255,133,0.12)', color: 'var(--gr2)', fontSize: '8px', padding: '1px 6px', borderRadius: '20px' }}>😌 Confident</span>
+                    <span style={{ border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', fontSize: '8px', padding: '1px 6px', borderRadius: 'var(--radius-xs)' }}>Confident</span>
                   </div>
                 </div>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '6px', padding: '10px 14px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '20px' }}>
-                {[{label:'Streak',value:'12 days',icon:'🔥'},{label:'Discipline',value:'87/100',icon:'✅'},{label:'Best',value:'19 days',icon:'🏆'}].map(s => (
+                {[{label:'Streak',value:'12 days'},{label:'Discipline',value:'87/100'},{label:'Best',value:'19 days'}].map(s => (
                   <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '13px' }}>{s.icon}</span>
                     <div>
                       <p style={{ margin: 0, color: 'var(--t3)', fontSize: '7px' }}>{s.label}</p>
                       <p style={{ margin: 0, color: 'var(--t1)', fontSize: '10px', fontWeight: 700 }}>{s.value}</p>
