@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { BE_THRESHOLD } from '@/hooks/useTrades'
-import { Num, Label } from '@/components/ui/vq'
+import { Num, Label, NumText, Segmented } from '@/components/ui/vq'
 import type { Trade } from '@/types'
 import Icon from '@/components/ui/Icon'
 
@@ -91,14 +91,16 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
   )
 }
 
-// €-money helpers — full number with thousands separators, matching the mock.
-const fmtMoney  = (v: number) => `€${Math.round(Math.abs(v)).toLocaleString('en-US')}`
+// €-money helper — full number with thousands separators, matching the mock.
 const fmtSigned = (v: number) => `${v >= 0 ? '+' : '−'}€${Math.round(Math.abs(v)).toLocaleString('en-US')}`
 
 export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
-  const now   = new Date()
-  const today = now.toISOString().split('T')[0]
+  const now       = new Date()
+  const today     = now.toISOString().split('T')[0]
+  const thisYear  = now.getFullYear()
+  const thisMonth = now.getMonth()
 
+  const [view,      setView]      = useState<'month' | 'year'>('month')
   const [viewYear,  setViewYear]  = useState(now.getFullYear())
   const [viewMonth, setViewMonth] = useState(now.getMonth())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
@@ -117,6 +119,7 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
   }
 
   const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth()
+  const isCurrentYear  = viewYear === now.getFullYear()
 
   const daysInMonth    = new Date(viewYear, viewMonth + 1, 0).getDate()
   // Sunday-first layout (matches the mock: Sun … Sat).
@@ -139,10 +142,44 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
     return { dailyPnl: pnlMap, dailyTrades: tradesMap }
   }, [allRows, viewYear, viewMonth])
 
+  // The same rows folded by month, for the twelve-box year view.
+  const monthly = useMemo(() => {
+    const rows = Array.from({ length: 12 }, () => ({ pnl: 0, trades: 0, wins: 0, losses: 0 }))
+    let traded = false
+    let earliest = thisYear
+    for (const t of allRows) {
+      if (!t.close_time || t.symbol === 'BALANCE') continue
+      const d = new Date(t.close_time)
+      if (d.getFullYear() < earliest) earliest = d.getFullYear()
+      if (d.getFullYear() !== viewYear) continue
+      const m   = rows[d.getMonth()]
+      const pnl = t.net_profit ?? 0
+      m.pnl += pnl
+      m.trades++
+      if (pnl >  BE_THRESHOLD) m.wins++
+      if (pnl < -BE_THRESHOLD) m.losses++
+      traded = true
+    }
+    return { rows, traded, earliest }
+  }, [allRows, viewYear, thisYear])
+
   const selectedTrades = selectedDate ? (dailyTrades.get(selectedDate) ?? []) : []
 
   const monthTotal = Array.from(dailyPnl.values()).reduce((s, v) => s + v, 0)
+  const yearTotal  = monthly.rows.reduce((s, m) => s + m.pnl, 0)
   const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+
+  function prevYear() {
+    if (viewYear <= monthly.earliest) return
+    setViewYear(y => y - 1)
+    setSelectedDate(null)
+  }
+  function nextYear() {
+    if (isCurrentYear) return
+    setViewYear(y => y + 1)
+    setSelectedDate(null)
+  }
+  const atEarliestYear = viewYear <= monthly.earliest
 
   // Chunk the month into calendar weeks (each a 7-slot row, null = padding day).
   const cells: (number | null)[] = []
@@ -154,33 +191,75 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
 
   const dateOf = (dayNum: number) => `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+  const isYear   = view === 'year'
+  const atStart  = isYear ? atEarliestYear : false
+  const atEnd    = isYear ? isCurrentYear  : isCurrentMonth
+  const periodHasData = isYear ? monthly.traded : dailyPnl.size > 0
+  const periodTotal   = isYear ? yearTotal : monthTotal
 
-      {/* Month navigation + monthly total */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '0 0 2px' }}>
-        <button onClick={prevMonth} aria-label="Previous month" style={{
-          background: 'transparent', border: 'none', color: 'var(--t1)', cursor: 'pointer',
-          fontSize: 'var(--text-lg)', lineHeight: 1, padding: '4px 6px',
-        }}>←</button>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '128px' }}>
-          <span style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em' }}>
-            {monthLabel}
-          </span>
-          {dailyPnl.size > 0 && (
-            <span style={{ fontSize: 'var(--text-base)', fontWeight: 700, letterSpacing: '-0.01em', marginTop: '1px', color: monthTotal >= 0 ? 'var(--color-up)' : 'var(--color-down)' }}>
-              {fmtSigned(monthTotal)}
-            </span>
-          )}
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', containerType: 'inline-size' }}>
+
+      {/* Period navigation + total, with the month/year switch on the right.
+          Three tracks so the label stays optically centred whatever the
+          switch is doing. */}
+      <div style={{
+        display: 'grid', gridTemplateColumns: '1fr auto 1fr',
+        alignItems: 'center', gap: '8px', padding: '0 0 2px',
+      }}>
+        <span />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
+          <button
+            onClick={isYear ? prevYear : prevMonth}
+            aria-label={isYear ? 'Previous year' : 'Previous month'}
+            disabled={atStart}
+            style={{
+              background: 'transparent', border: 'none',
+              color: atStart ? 'var(--bd3)' : 'var(--t1)',
+              cursor: atStart ? 'default' : 'pointer',
+              fontSize: 'var(--text-lg)', lineHeight: 1, padding: '4px 6px',
+            }}>←</button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '128px' }}>
+            {isYear
+              ? <Num size="base" tone="neutral" style={{ fontWeight: 700 }}>{viewYear}</Num>
+              : <span style={{ fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em' }}>{monthLabel}</span>}
+            {periodHasData && (
+              <span style={{ fontSize: 'var(--text-base)', fontWeight: 700, letterSpacing: '-0.01em', marginTop: '1px', color: periodTotal >= 0 ? 'var(--color-up)' : 'var(--color-down)' }}>
+                {fmtSigned(periodTotal)}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={isYear ? nextYear : nextMonth}
+            aria-label={isYear ? 'Next year' : 'Next month'}
+            disabled={atEnd}
+            style={{
+              background: 'transparent', border: 'none',
+              color: atEnd ? 'var(--bd3)' : 'var(--t1)',
+              cursor: atEnd ? 'default' : 'pointer',
+              fontSize: 'var(--text-lg)', lineHeight: 1, padding: '4px 6px',
+            }}>→</button>
         </div>
-        <button onClick={nextMonth} aria-label="Next month" disabled={isCurrentMonth} style={{
-          background: 'transparent', border: 'none',
-          color: isCurrentMonth ? 'var(--bd3)' : 'var(--t1)',
-          cursor: isCurrentMonth ? 'default' : 'pointer',
-          fontSize: 'var(--text-lg)', lineHeight: 1, padding: '4px 6px',
-        }}>→</button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Segmented
+            options={[{ key: 'month', label: 'Month' }, { key: 'year', label: 'Year' }]}
+            value={view}
+            onChange={k => { setView(k); setSelectedDate(null) }}
+            titles={{ month: 'Day by day', year: 'Every month of the year' }}
+          />
+        </div>
       </div>
 
+      {isYear ? (
+        <YearGrid
+          year={viewYear}
+          months={monthly.rows}
+          todayMonth={isCurrentYear ? thisMonth : null}
+          maxMonth={isCurrentYear ? thisMonth : 11}
+          onPick={m => { setViewMonth(m); setView('month'); setSelectedDate(null) }}
+        />
+      ) : (
+      <>
       {/* Day headers — Sunday first */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
         {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
@@ -283,6 +362,101 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
           onClose={() => setSelectedDate(null)}
         />
       )}
+      </>
+      )}
+    </div>
+  )
+}
+
+// ── Year view ─────────────────────────────────────────────────────────────────
+
+/**
+ * Twelve boxes, one per month. Same reading as a day cell — signed money, then
+ * how it was earned — so the eye doesn't have to relearn the grid when the
+ * switch is flipped. The column count comes from a container query, not the
+ * viewport: this calendar is two thirds of a page on Overview and half of one
+ * on Trading, and the boxes have to hold "−€12,345" in both.
+ */
+function YearGrid({ year, months, todayMonth, maxMonth, onPick }: {
+  year:   number
+  months: { pnl: number; trades: number; wins: number; losses: number }[]
+  /** Index of the live month, or null when looking at a year that has ended. */
+  todayMonth: number | null
+  /** Last month that can be opened — no point walking into an empty future. */
+  maxMonth: number
+  onPick: (month: number) => void
+}) {
+  // The bars are read against each other, so the scale is the biggest month of
+  // this year in either direction.
+  const peak = Math.max(...months.map(m => Math.abs(m.pnl)), 1)
+
+  return (
+    <div className="vq-year-grid">
+      {months.map((m, i) => {
+        const name     = new Date(year, i, 1).toLocaleDateString('en-GB', { month: 'short' })
+        const has      = m.trades > 0
+        const isWin    = has && m.pnl >  BE_THRESHOLD
+        const isLoss   = has && m.pnl < -BE_THRESHOLD
+        const decisive = m.wins + m.losses
+        const winPct   = decisive > 0 ? Math.round((m.wins / decisive) * 100) : null
+        const isNow    = i === todayMonth
+        const future   = i > maxMonth
+        const openable = !future
+
+        const bg = isWin  ? 'rgba(0,196,106,0.09)'
+                 : isLoss ? 'rgba(240,80,75,0.10)'
+                 : has    ? 'rgba(255,255,255,0.08)'   // break-even month
+                 : 'transparent'
+
+        return (
+          <button
+            key={i}
+            type="button"
+            onClick={() => { if (openable) onPick(i) }}
+            disabled={!openable}
+            aria-label={`${name} ${year}`}
+            style={{
+              minHeight: '78px', padding: '7px 9px 8px', background: bg,
+              border: isNow ? '1.5px solid rgba(255,255,255,0.28)' : '1px solid var(--color-line-1)',
+              borderRadius: 'var(--radius-sm)',
+              display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+              justifyContent: 'flex-start', gap: '3px',
+              minWidth: 0, overflow: 'hidden', textAlign: 'left',
+              opacity: future ? 0.4 : 1,
+              cursor: openable ? 'pointer' : 'default', transition: 'background 0.12s',
+            }}
+          >
+            <Label style={{ color: has ? 'var(--color-ink-2)' : 'var(--color-ink-3)' }}>{name}</Label>
+            <Num size="md" tone={has ? (m.pnl >= 0 ? 'up' : 'down') : 'muted'} style={{ fontWeight: 700 }}>
+              {has ? fmtSigned(m.pnl) : '—'}
+            </Num>
+            <div style={{
+              fontSize: 'var(--text-2xs)', color: 'var(--color-ink-3)',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              maxWidth: '100%',
+            }}>
+              {has
+                ? <NumText>{`${m.trades} trade${m.trades !== 1 ? 's' : ''}${winPct != null ? ` · ${winPct}%` : ''}`}</NumText>
+                : <span style={{ fontFamily: 'var(--font-display)' }}>No trades</span>}
+            </div>
+            {/* Month against the year's biggest month — the figures alone don't
+                say whether €797 was a good month here or a rounding error. */}
+            {has && (
+              <div style={{
+                marginTop: 'auto', width: '100%', height: '3px',
+                background: 'var(--color-line-1)', borderRadius: 'var(--radius-xs)',
+              }}>
+                <div style={{
+                  width: `${Math.max(4, Math.round((Math.abs(m.pnl) / peak) * 100))}%`,
+                  height: '100%', borderRadius: 'var(--radius-xs)',
+                  background: m.pnl >= 0 ? 'var(--color-up)' : 'var(--color-down)',
+                  opacity: 0.7,
+                }} />
+              </div>
+            )}
+          </button>
+        )
+      })}
     </div>
   )
 }

@@ -874,3 +874,20 @@ html { scroll-behavior: smooth; }
 /* Tailwind's radius utilities are replaced by one token inside the dashboard —
    the old markup mixed rounded-md/lg/xl/2xl on adjacent boxes. */
 .vq2 .vq-r { border-radius: var(--radius-md); }
+
+/* ── Trade calendar, year view ─────────────────────────────────────────────────
+   Twelve month boxes. The column count follows the calendar's own width — it is
+   two thirds of the page on Overview and half of one on Trading — rather than
+   the viewport, so a box always has room for "−€12,345" on one line. Every step
+   divides twelve exactly, so the last row is never a pair of orphans. */
+.vq-year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+@container (max-width: 600px) {
+  .vq-year-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container (max-width: 360px) {
+  .vq-year-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
