@@ -86,7 +86,7 @@ export function Pricing() {
 
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', marginBottom: '6px' }}>
                 <span className="vq-num" style={{
-                  fontSize: 'clamp(32px, 3.4vw, 42px)', lineHeight: 1,
+                  fontSize: 'clamp(var(--text-3xl), 3.4vw, var(--text-d1))', lineHeight: 1,
                   letterSpacing: '-0.04em', color: 'var(--color-ink-1)',
                 }}>{price}</span>
                 <span style={{

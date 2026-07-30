@@ -350,7 +350,7 @@ export default function LoginPage() {
 
             <div>
               <h2 style={{
-                fontFamily: 'var(--font-display)', fontSize: 'clamp(28px,3.4vw,44px)',
+                fontFamily: 'var(--font-display)', fontSize: 'clamp(var(--text-3xl),3.4vw,var(--text-d2))',
                 lineHeight: 0.99, letterSpacing: '-0.035em', margin: '0 0 14px',
               }}>
                 <span style={{ color: 'var(--color-ink-1)' }}>See the truth.</span><br />

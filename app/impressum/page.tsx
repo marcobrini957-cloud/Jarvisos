@@ -11,7 +11,7 @@ export default function ImpressumPage() {
     <LegalPage title="Impressum" subtitle="Angaben gemäß § 25 MedienG und § 5 ECG (Österreich)">
 
       <LegalSection heading="Medieninhaber & Herausgeber">
-        <div style={{ color: 'var(--t1)', fontSize: '15px', lineHeight: 2 }}>
+        <div style={{ color: 'var(--t1)', fontSize: 'var(--text-md)', lineHeight: 2 }}>
           <p style={{ margin: 0 }}>Marco Brini</p>
           <p style={{ margin: 0 }}>Ägydygasse 14</p>
           <p style={{ margin: 0 }}>8020 Graz</p>
@@ -20,7 +20,7 @@ export default function ImpressumPage() {
       </LegalSection>
 
       <LegalSection heading="Kontakt">
-        <p style={{ margin: 0, color: 'var(--t1)', fontSize: '15px' }}>
+        <p style={{ margin: 0, color: 'var(--t1)', fontSize: 'var(--text-md)' }}>
           E-Mail:{' '}
           <a href="mailto:support@velquor.app" style={{ color: 'var(--ac)', textDecoration: 'none' }}>
             support@velquor.app

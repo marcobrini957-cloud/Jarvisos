@@ -68,13 +68,13 @@ export function ThreePillars() {
       <div style={{ marginBottom: 'clamp(36px, 5vw, 64px)' }}>
         <h2 style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(30px, 4.6vw, 60px)', lineHeight: 0.99,
+          fontSize: 'clamp(var(--text-3xl), 4.6vw, var(--text-d3))', lineHeight: 0.99,
           letterSpacing: '-0.035em', color: 'var(--color-ink-1)', margin: '0 0 16px',
         }}>
           Three tools.<br />One trading edge.
         </h2>
         <p style={{
-          fontFamily: 'var(--font-display)', fontSize: 'clamp(14px, 1.5vw, 17px)',
+          fontFamily: 'var(--font-display)', fontSize: 'clamp(var(--text-md), 1.5vw, var(--text-lg))',
           lineHeight: 1.6, color: 'var(--color-ink-3)', margin: 0, maxWidth: '52ch',
         }}>
           Most traders are missing all three. VELQUOR gives you all of them — built to work together.
@@ -96,7 +96,7 @@ export function ThreePillars() {
 
               <h3 style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: 'clamp(21px, 2.7vw, 32px)', lineHeight: 1.1,
+                fontSize: 'clamp(var(--text-xl), 2.7vw, var(--text-3xl))', lineHeight: 1.1,
                 letterSpacing: '-0.03em', color: 'var(--color-ink-1)',
                 margin: '0 0 16px', whiteSpace: 'pre-line',
               }}>
@@ -104,7 +104,7 @@ export function ThreePillars() {
               </h3>
 
               <p style={{
-                fontFamily: 'var(--font-display)', fontSize: 'clamp(13px, 1.3vw, 15px)',
+                fontFamily: 'var(--font-display)', fontSize: 'clamp(var(--text-base), 1.3vw, var(--text-md))',
                 lineHeight: 1.7, color: 'var(--color-ink-3)', margin: '0 0 22px',
               }}>
                 {p.sub}

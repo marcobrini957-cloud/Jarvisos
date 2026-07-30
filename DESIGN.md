@@ -525,6 +525,56 @@ Caught while verifying: News event rows carried ~480px of fixed grid columns in
 a 390px viewport, so the last reading was sliced off the right edge on every
 phone. The three readings now drop to their own line.
 
-**Stage 4 — NEXT.** Landing, pricing, auth, legal.
+### Stage 4 — landing, pricing, auth, legal (2026-07-30)
+
+§0 opened this document with the tells that make the site read as template-
+built. Every one of them was still live on the marketing pages after the
+dashboard had moved; the rebuild is measured the same way it was diagnosed.
+
+| Tell (§0 / §2) | Before | After |
+|---|---|---|
+| Inter, via `next/font/google` | served to every visitor | **0 elements** |
+| Gradient-clipped text | headline, stats band, final CTA | **0** |
+| Decorative gradients ≥40×40px | 26 in source | **1**, inside the product mock |
+| Coloured glow shadows | 16 | **2**, inside the product mock |
+| Emoji | 10 files | **0** |
+| `SectionEyebrow` opener | 13 uses | component deleted |
+| Horizontal overflow at 390px | — | **0px on every page** |
+| Rendered sizes off the scale | 15 distinct | **0** (excluding the mocks) |
+
+Measured in the browser at 1512px and 390px across `/`, `/pricing`, `/login`,
+`/terms` and `/impressum`, walking each page to the bottom so the scroll-
+revealed sections mount. The two exceptions are both inside `AnimatedDashboard`
+and `LoginDashboardPreview` — pixel replicas of the *pre-redesign* dashboard,
+built from screenshots taken 2026-07-17. Their chrome is de-coloured and their
+emoji are gone, but a true 1:1 refresh against the current dashboard is its own
+job and is listed below.
+
+**The bridge moved.** Landing, pricing, auth, gate, onboarding and the legal
+pages carry `vq2` on their roots, so `--bg`, `--ac`, `--go` resolve to 2.0
+values everywhere. /dev keeps Void Black on purpose: it is the admin console.
+
+**Two bugs the bridge exposed.** Inside `.vq2` the accent *is* white, and six
+buttons were `background: var(--ac)` with `color: 'white'` — Sign in, Create
+account, Send reset link, and three in onboarding were all white-on-white. A
+focused input drew a full-white border for the same reason.
+
+**Display type.** The dashboard scale stops at 3xl because a terminal has
+nothing to say at 88px; a landing headline does. Marketing type is fluid
+*between two named steps* — `clamp(var(--text-3xl), 3.6vw, var(--text-d2))` —
+never between two numbers. The steps are `--text-d1..d4` = 38 / 48 / 64 / 88.
+
+⚠️ **They live in `:root`, not `@theme`.** Tailwind v4 emits only the theme
+variables some generated utility references, and every use here is an inline
+style the compiler cannot see. Declared in `@theme` they resolved to *nothing*
+and a 38px headline fell back to 13px inherited. Worse, `--text-4xl` through
+`--text-7xl` are Tailwind's own keys, so the first attempt silently rendered
+Tailwind's 36px instead of our 38px. Own the namespace; verify in the browser.
+
+**Follow-up.** `AnimatedDashboard.tsx` (1,095 lines) and
+`LoginDashboardPreview.tsx` still replicate the July-17 dashboard. Rebuilding
+them 1:1 against the current one is the last piece of the marketing site — and
+per the house rule, it is done from screenshots, never from memory.
+
 **Stage 5.** Delete the legacy palette and the `.vq2` bridge once nothing reads
-the old vars; drop the glow/gradient helper classes and the remaining emoji.
+the old vars; drop the glow/gradient helper classes.

@@ -47,7 +47,7 @@ export function Hero() {
             claim lands, which is the sentence's actual emphasis. */}
         <h1 style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(40px, 7.4vw, 92px)', lineHeight: 0.98,
+          fontSize: 'clamp(var(--text-d1), 7.4vw, var(--text-d4))', lineHeight: 0.98,
           letterSpacing: '-0.035em', margin: '0 0 clamp(20px, 3vw, 28px)',
           maxWidth: '15ch', textWrap: 'balance',
         }}>
@@ -57,7 +57,7 @@ export function Hero() {
 
         <p style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(14px, 1.5vw, 17px)', lineHeight: 1.6,
+          fontSize: 'clamp(var(--text-md), 1.5vw, var(--text-lg))', lineHeight: 1.6,
           color: 'var(--color-ink-3)', margin: '0 0 clamp(28px, 4vw, 40px)',
           maxWidth: '52ch',
         }}>

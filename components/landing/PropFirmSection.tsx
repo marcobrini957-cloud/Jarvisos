@@ -34,7 +34,7 @@ export function PropFirmSection() {
             {pf.badge}
           </p>
           <h2 style={{
-            fontFamily: 'var(--font-display)', fontSize: 'clamp(23px, 3vw, 34px)',
+            fontFamily: 'var(--font-display)', fontSize: 'clamp(var(--text-2xl), 3vw, var(--text-d1))',
             lineHeight: 1.1, letterSpacing: '-0.03em',
             color: 'var(--color-ink-1)', margin: '0 0 14px',
           }}>

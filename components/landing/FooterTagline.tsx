@@ -14,7 +14,7 @@ export function FooterTagline() {
     }}>
       <p style={{
         fontFamily: 'var(--font-mark)',
-        fontSize: 'clamp(34px, 7.4vw, 96px)',
+        fontSize: 'clamp(var(--text-d1), 7.4vw, var(--text-d4))',
         letterSpacing: '0.01em',
         lineHeight: 0.94,
         color: 'var(--color-ink-1)',

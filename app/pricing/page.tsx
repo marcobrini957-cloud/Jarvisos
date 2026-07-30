@@ -172,7 +172,7 @@ export default function PricingPage() {
 
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', marginBottom: '6px' }}>
                   <span className="vq-num" style={{
-                    fontSize: 'clamp(32px, 3.6vw, 44px)', lineHeight: 1,
+                    fontSize: 'clamp(var(--text-3xl), 3.6vw, var(--text-d1))', lineHeight: 1,
                     letterSpacing: '-0.04em', color: 'var(--color-ink-1)',
                   }}>{price}</span>
                   <span style={{
@@ -263,7 +263,7 @@ export default function PricingPage() {
 
       <Section band>
         <h2 style={{
-          fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 3.8vw, 44px)',
+          fontFamily: 'var(--font-display)', fontSize: 'clamp(var(--text-2xl), 3.8vw, var(--text-d2))',
           lineHeight: 1.02, letterSpacing: '-0.035em', color: 'var(--color-ink-1)', margin: '0 0 14px',
         }}>
           Know your edge today.

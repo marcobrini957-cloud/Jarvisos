@@ -23,7 +23,7 @@ export function FinalCTA() {
       <div style={{ maxWidth: '820px' }}>
         <h2 style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(30px, 4.8vw, 56px)', lineHeight: 1.02,
+          fontSize: 'clamp(var(--text-3xl), 4.8vw, var(--text-d3))', lineHeight: 1.02,
           letterSpacing: '-0.035em', color: 'var(--color-ink-1)', margin: '0 0 16px',
         }}>
           {c.h2}

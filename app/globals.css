@@ -74,6 +74,22 @@
   --shadow-lg: 0 16px 48px rgba(0,0,0,0.65), 0 4px 16px rgba(0,0,0,0.45);
   --shadow-xl: 0 32px 80px rgba(0,0,0,0.75), 0 8px 24px rgba(0,0,0,0.5);
 
+  /* ── Marketing display steps ──
+     These live here rather than in `@theme` on purpose: Tailwind v4 emits only
+     the theme variables some generated utility references, and nothing in the
+     product writes `text-d1` as a class — every use is an inline style, which
+     the compiler cannot see. Declared in @theme they resolved to nothing and a
+     36px headline fell back to 13px inherited. See DESIGN.md §5.
+
+     The dashboard's scale stops at 3xl because a terminal has nothing to say at
+     88px; a landing headline does. Marketing type is fluid *between two named
+     steps* — clamp(var(--text-3xl), 3.4vw, var(--text-d2)) — never between two
+     numbers someone typed. */
+  --text-d1: 38px;
+  --text-d2: 48px;
+  --text-d3: 64px;
+  --text-d4: 88px;
+
   /* ── Radius ── */
   --r-sm: 6px;
   --r-md: 10px;
@@ -652,6 +668,7 @@ html { scroll-behavior: smooth; }
   --text-xl:   21px;     /* metric values */
   --text-2xl:  24px;
   --text-3xl:  30px;     /* page display */
+
 
   /* ── Surfaces ──
      One hue at graded alpha rather than solid greys: composites over any

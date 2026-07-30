@@ -59,7 +59,7 @@ export function SectionHead({ label, title, lead, action }: {
         </p>
         <h2 style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(27px, 3.6vw, 44px)', lineHeight: 1.02,
+          fontSize: 'clamp(var(--text-3xl), 3.6vw, var(--text-d2))', lineHeight: 1.02,
           letterSpacing: '-0.03em', color: 'var(--color-ink-1)',
           margin: 0, maxWidth: '22ch',
         }}>

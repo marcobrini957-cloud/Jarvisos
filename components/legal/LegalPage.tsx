@@ -58,7 +58,7 @@ export function LegalPage({ title, subtitle, altLang, children }: {
         </Link>
 
         <h1 style={{
-          fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 3.2vw, 36px)',
+          fontFamily: 'var(--font-display)', fontSize: 'clamp(var(--text-2xl), 3.2vw, var(--text-d1))',
           lineHeight: 1.05, letterSpacing: '-0.03em',
           margin: '0 0 10px', color: 'var(--color-ink-1)',
         }}>
