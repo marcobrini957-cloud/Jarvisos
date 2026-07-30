@@ -1,8 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { LogoMark } from '@/components/ui/LogoMark'
+import Icon from '@/components/ui/Icon'
+import { Nav } from '@/components/landing/Nav'
+import { Footer } from '@/components/landing/Footer'
+import { Section, SectionHead, inkButton } from '@/components/landing/Section'
+
+/**
+ * The standalone price list, on the 2.0 language.
+ *
+ * It had its own nav, its own toggle, its own button styles and its own idea of
+ * a heading — a second design system for one page. It now wears the site's:
+ * the landing nav and footer, the `Section` rhythm, the tier grid the landing
+ * pricing block uses, ink buttons. The green ✓ / red ✕ column is gone; whether
+ * a plan includes a feature is not a claim about money, so it is drawn in ink,
+ * and the check mark comes from Icon.tsx rather than from a font's glyph table.
+ */
 
 type Feature = { text: string; included: boolean }
 
@@ -92,236 +106,178 @@ const FAQ = [
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(true)
-  const [loggedIn, setLoggedIn] = useState(false)
-
-  // Logo rule: logged out → landing, logged in → dashboard (same as landing Nav)
-  useEffect(() => {
-    import('@/lib/supabase/client').then(({ createClient }) => {
-      createClient().auth.getUser().then(({ data }) => {
-        if (data.user) setLoggedIn(true)
-      })
-    })
-  }, [])
 
   return (
     <div className="vq2" style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--t1)' }}>
+      <Nav />
 
-      {/* Nav */}
-      <nav style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 clamp(16px, 4vw, 48px)', height: '60px',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        position: 'sticky', top: 0, zIndex: 50,
-        background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(12px)',
-      }}>
-        <Link href={loggedIn ? '/dashboard' : '/'} style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none' }}>
-          <LogoMark size={24} />
-          <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px', letterSpacing: '-0.01em' }}>VELQUOR</span>
-        </Link>
-        <Link href="/login?mode=signup" style={{
-          padding: '7px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 600,
-          background: '#fff', color: '#000', textDecoration: 'none',
-        }}>Get started</Link>
-      </nav>
-
-      {/* Hero */}
-      <div style={{ textAlign: 'center', padding: 'clamp(56px, 9vw, 90px) clamp(16px, 5vw, 48px) 48px', maxWidth: '520px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: 'clamp(32px, 7vw, 52px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 14px', lineHeight: 1.04 }}>
-          Start free.<br />
-          <span style={{ color: 'rgba(255,255,255,0.32)' }}>Scale when ready.</span>
-        </h1>
-        <p style={{ color: 'rgba(255,255,255,0.48)', fontSize: '16px', lineHeight: 1.65, margin: '0 0 28px' }}>
-          No card needed to start. Cancel any time.
-        </p>
-
-        {/* Toggle */}
-        <div style={{
-          display: 'inline-flex',
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: '8px', padding: '3px', gap: '2px',
-        }}>
-          {([false, true] as const).map(isAnnual => (
-            <button key={String(isAnnual)} onClick={() => setAnnual(isAnnual)} style={{
-              display: 'flex', alignItems: 'center', gap: '7px',
-              padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: 500,
-              background: annual === isAnnual ? 'rgba(255,255,255,0.1)' : 'transparent',
-              border: annual === isAnnual ? '1px solid rgba(255,255,255,0.12)' : '1px solid transparent',
-              color: annual === isAnnual ? '#fff' : 'rgba(255,255,255,0.42)',
-              cursor: 'pointer', transition: 'all 0.15s',
-            }}>
-              {isAnnual ? 'Annual' : 'Monthly'}
-              {isAnnual && (
-                <span style={{
-                  background: 'rgba(0,255,133,0.12)', border: '1px solid rgba(0,255,133,0.22)',
-                  color: '#00FF85', fontSize: '10px', fontWeight: 700, padding: '1px 7px', borderRadius: '4px',
-                }}>Save 20%</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── TIER CARDS — matching screenshot layout exactly ── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '0',
-        maxWidth: '1020px', margin: '0 auto',
-        padding: '0 clamp(16px, 5vw, 48px) 80px',
-        border: '1px solid rgba(255,255,255,0.09)',
-        borderRadius: '14px',
-        overflow: 'hidden',
-        background: 'rgba(255,255,255,0.025)',
-      }}>
-        {TIERS.map((tier, idx) => {
-          const price = annual ? tier.annual : tier.monthly
-          const isLast = idx === TIERS.length - 1
-
-          return (
-            <div key={tier.name} style={{
-              padding: '28px 24px',
-              borderRight: isLast ? 'none' : '1px solid rgba(255,255,255,0.09)',
-            }}>
-
-              {/* Tier name — large white, like "Essential" in screenshot */}
-              <p style={{ margin: '0 0 18px', color: '#fff', fontSize: '20px', fontWeight: 700, letterSpacing: '-0.02em' }}>
-                {tier.name}
-              </p>
-
-              {/* Price + period on same row, period at baseline */}
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', marginBottom: '6px' }}>
-                <span style={{ fontSize: 'clamp(44px, 5.5vw, 58px)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1 }}>
-                  {price}
-                </span>
-                <span style={{ color: 'rgba(255,255,255,0.38)', fontSize: '15px', paddingBottom: '8px' }}>
-                  {tier.period}
-                </span>
-              </div>
-
-              {/* "jährliche Abrechnung" equivalent */}
-              <p style={{ margin: '0 0 3px', color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>
-                {annual ? 'Annual billing' : 'Monthly billing'}
-              </p>
-
-              {/* "Sparen Sie €X pro Jahr" equivalent */}
-              {annual && tier.annualNote
-                ? <p style={{ margin: '0 0 22px', color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>{tier.annualNote} ℹ</p>
-                : <p style={{ margin: '0 0 22px', color: 'transparent', fontSize: '13px', userSelect: 'none' }}>—</p>
-              }
-
-              {/* CTA button — white bg, black text, full width, exactly like screenshot */}
-              <Link href={tier.href} style={{
-                display: 'block', textAlign: 'center',
-                padding: '14px 16px', borderRadius: '8px',
-                fontSize: '15px', fontWeight: 700, textDecoration: 'none',
-                marginBottom: '10px',
-                background: '#fff', color: '#000',
-                boxShadow: '0 2px 16px rgba(255,255,255,0.07)',
-                letterSpacing: '0.01em',
-              }}>{tier.cta}</Link>
-
-              {/* Secondary 2-line text like "oder überspringen... / bezahlen Sie jetzt" */}
-              {!tier.isFree ? (
-                <p style={{ textAlign: 'center', margin: '0 0 22px', fontSize: '12px', color: 'rgba(255,255,255,0.35)', lineHeight: 1.55 }}>
-                  or skip and pay immediately{' '}
-                  <button onClick={() => setAnnual(a => !a)} style={{
-                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                    display: 'block', margin: '2px auto 0',
-                    color: '#4B8FFF', fontSize: '12px',
-                  }}>
-                    {annual ? `pay ${tier.monthly}/mo monthly instead` : `save with annual (${tier.annual}/mo)`}
+      <Section>
+        <SectionHead
+          label="Pricing"
+          title={<>Start free.<br /><span style={{ color: 'var(--color-ink-3)' }}>Scale when ready.</span></>}
+          lead="No card needed to start. Cancel any time."
+          action={
+            <div style={{ display: 'flex', gap: '1px', padding: '1px', background: 'var(--color-surface-2)', borderRadius: 'var(--radius-sm)' }}>
+              {([false, true] as const).map(isAnnual => {
+                const on = annual === isAnnual
+                return (
+                  <button
+                    key={String(isAnnual)}
+                    onClick={() => setAnnual(isAnnual)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px',
+                      fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+                      letterSpacing: '0.1em', textTransform: 'uppercase',
+                      padding: '6px 14px', borderRadius: 'var(--radius-xs)', border: 'none',
+                      background: on ? 'var(--color-surface-3)' : 'transparent',
+                      color: on ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
+                      cursor: 'pointer', transition: 'background 0.12s, color 0.12s',
+                    }}
+                  >
+                    {isAnnual ? 'Annual' : 'Monthly'}
+                    {isAnnual && (
+                      <span className="vq-num" style={{ fontSize: 'var(--text-2xs)', color: on ? 'var(--color-up)' : 'var(--color-ink-4)' }}>
+                        −20%
+                      </span>
+                    )}
                   </button>
-                </p>
-              ) : (
-                <div style={{ marginBottom: '22px' }} />
-              )}
-
-              {/* Feature list — every row separated by a thin horizontal line, exactly like screenshot */}
-              <div>
-                {tier.features.map((f, fi) => (
-                  <div key={fi} style={{
-                    display: 'flex', gap: '10px', alignItems: 'flex-start',
-                    padding: '11px 0',
-                    borderBottom: '1px solid rgba(255,255,255,0.07)',
-                  }}>
-                    <span style={{
-                      flexShrink: 0, marginTop: '2px',
-                      fontSize: '13px', lineHeight: 1,
-                      color: f.included ? '#00d46a' : 'rgba(255,80,80,0.45)',
-                    }}>
-                      {f.included ? '✓' : '✕'}
-                    </span>
-                    <span style={{
-                      fontSize: '13px', lineHeight: 1.5,
-                      color: f.included ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.28)',
-                    }}>
-                      {f.text}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
+                )
+              })}
             </div>
-          )
-        })}
-      </div>
+          }
+        />
 
-      {/* Trust bar */}
-      <div style={{
-        display: 'flex', flexWrap: 'wrap', gap: '40px', justifyContent: 'center',
-        padding: 'clamp(36px,6vw,56px) clamp(16px, 5vw, 48px)',
-        borderTop: '1px solid rgba(255,255,255,0.07)',
-      }}>
+        <div className="vq-tier-grid">
+          {TIERS.map(tier => {
+            const price = annual ? tier.annual : tier.monthly
+            const isPro = tier.name === 'Pro'
+
+            return (
+              <div key={tier.name} style={{
+                background: isPro ? 'var(--color-surface-1)' : 'transparent',
+                padding: 'clamp(18px, 2vw, 26px)', minWidth: 0,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', marginBottom: '16px' }}>
+                  <span style={{
+                    fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+                    letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-ink-3)',
+                  }}>{tier.name}</span>
+                  {isPro && (
+                    <span style={{
+                      fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+                      letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-ink-1)',
+                    }}>Most popular</span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', marginBottom: '6px' }}>
+                  <span className="vq-num" style={{
+                    fontSize: 'clamp(32px, 3.6vw, 44px)', lineHeight: 1,
+                    letterSpacing: '-0.04em', color: 'var(--color-ink-1)',
+                  }}>{price}</span>
+                  <span style={{
+                    fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                    color: 'var(--color-ink-4)', paddingBottom: '5px',
+                  }}>{tier.period}</span>
+                </div>
+
+                <p style={{ margin: '0 0 4px', fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)' }}>
+                  {annual ? 'Annual billing' : 'Monthly billing'}
+                </p>
+                <p style={{ margin: '0 0 18px', minHeight: '17px', fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)' }}>
+                  {annual && tier.annualNote ? tier.annualNote : ''}
+                </p>
+
+                <Link href={tier.href} style={{
+                  display: 'block', textAlign: 'center', padding: '11px',
+                  borderRadius: 'var(--radius-sm)', marginBottom: '6px',
+                  fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', textDecoration: 'none',
+                  background: isPro ? 'var(--color-ink-1)' : 'transparent',
+                  color: isPro ? 'var(--color-void)' : 'var(--color-ink-1)',
+                  border: isPro ? '1px solid var(--color-ink-1)' : '1px solid var(--color-line-2)',
+                }}>{tier.cta}</Link>
+
+                {!tier.isFree ? (
+                  <button onClick={() => setAnnual(a => !a)} style={{
+                    display: 'block', width: '100%', margin: '0 0 18px', padding: '6px 0',
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
+                    color: 'var(--color-ink-4)', textAlign: 'center',
+                  }}>
+                    {annual ? `or pay ${tier.monthly}/mo monthly` : `or save with annual — ${tier.annual}/mo`}
+                  </button>
+                ) : <div style={{ height: '18px' }} />}
+
+                <div>
+                  {tier.features.map((f, fi) => (
+                    <div key={fi} style={{
+                      display: 'flex', gap: '9px', alignItems: 'flex-start',
+                      padding: '9px 0', borderTop: '1px solid var(--color-line-1)',
+                    }}>
+                      <span style={{
+                        flexShrink: 0, marginTop: '2px', lineHeight: 1,
+                        color: f.included ? 'var(--color-ink-1)' : 'var(--color-ink-4)',
+                      }}>
+                        {f.included
+                          ? <Icon name="check" size={12} />
+                          : <span aria-hidden style={{ display: 'block', width: '12px', height: '12px', textAlign: 'center' }}>–</span>}
+                      </span>
+                      <span style={{
+                        fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', lineHeight: 1.5,
+                        color: f.included ? 'var(--color-ink-2)' : 'var(--color-ink-4)',
+                      }}>{f.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </Section>
+
+      <div className="vq-statband" style={{ borderTop: '1px solid var(--color-line-1)', borderBottom: '1px solid var(--color-line-1)' }}>
         {[
           ['Any MT5 broker', 'Demo or live, worldwide'],
           ['No manual entry', 'Syncs every 10 seconds'],
           ['Cancel any time', 'No lock-in, no questions'],
           ['Bank-level encryption', 'Your data stays private'],
         ].map(([label, sub]) => (
-          <div key={label} style={{ textAlign: 'center' }}>
-            <p style={{ margin: '0 0 3px', color: '#fff', fontSize: '13px', fontWeight: 600 }}>{label}</p>
-            <p style={{ margin: 0, color: 'rgba(255,255,255,0.35)', fontSize: '11px' }}>{sub}</p>
+          <div key={label} style={{ padding: 'clamp(18px, 2.6vw, 26px) clamp(14px, 4vw, 32px)', minWidth: 0 }}>
+            <p style={{ margin: '0 0 5px', fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', color: 'var(--color-ink-1)' }}>{label}</p>
+            <p style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)' }}>{sub}</p>
           </div>
         ))}
       </div>
 
-      {/* FAQ */}
-      <div style={{ maxWidth: '640px', margin: '0 auto', padding: '0 clamp(16px, 5vw, 48px) 100px' }}>
-        <h2 style={{ fontSize: 'clamp(22px, 4vw, 28px)', fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 32px', textAlign: 'center' }}>
-          Common questions
-        </h2>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <Section>
+        <SectionHead label="Questions" title="Common questions" />
+        <div style={{ maxWidth: '860px' }}>
           {FAQ.map((f, i) => (
-            <div key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '20px 0' }}>
-              <p style={{ margin: '0 0 8px', fontSize: '14px', fontWeight: 600, color: '#fff' }}>{f.q}</p>
-              <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.48)', lineHeight: 1.65 }}>{f.a}</p>
+            <div key={i} style={{ borderTop: '1px solid var(--color-line-1)', padding: '18px 0' }}>
+              <p style={{ margin: '0 0 7px', fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', color: 'var(--color-ink-1)' }}>{f.q}</p>
+              <p style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', color: 'var(--color-ink-3)', lineHeight: 1.7, maxWidth: '68ch' }}>{f.a}</p>
             </div>
           ))}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }} />
         </div>
-      </div>
+      </Section>
 
-      {/* Footer CTA */}
-      <div style={{
-        textAlign: 'center',
-        padding: 'clamp(48px, 8vw, 80px) clamp(16px, 5vw, 48px)',
-        borderTop: '1px solid rgba(255,255,255,0.07)',
-      }}>
-        <h2 style={{ fontSize: 'clamp(24px, 5vw, 38px)', fontWeight: 900, letterSpacing: '-0.04em', margin: '0 0 12px', lineHeight: 1.04 }}>
+      <Section band>
+        <h2 style={{
+          fontFamily: 'var(--font-display)', fontSize: 'clamp(26px, 3.8vw, 44px)',
+          lineHeight: 1.02, letterSpacing: '-0.035em', color: 'var(--color-ink-1)', margin: '0 0 14px',
+        }}>
           Know your edge today.
         </h2>
-        <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: '14px', margin: '0 0 28px', lineHeight: 1.6 }}>
+        <p style={{
+          fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
+          color: 'var(--color-ink-3)', margin: '0 0 26px',
+        }}>
           Free forever. No card needed.
         </p>
-        <Link href="/login?mode=signup" style={{
-          display: 'inline-block', padding: '14px 36px', borderRadius: '8px',
-          background: '#fff', color: '#000', fontSize: '15px', fontWeight: 700,
-          textDecoration: 'none', boxShadow: '0 8px 32px rgba(255,255,255,0.1)',
-          letterSpacing: '0.01em',
-        }}>Get started free →</Link>
-      </div>
+        <Link href="/login?mode=signup" style={inkButton}>Get started free</Link>
+      </Section>
 
+      <Footer />
     </div>
   )
 }
