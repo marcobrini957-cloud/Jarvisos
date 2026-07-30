@@ -104,7 +104,7 @@ export default function PricingPage() {
   }, [])
 
   return (
-    <div style={{ background: '#0a0a0a', minHeight: '100vh', color: '#fff' }}>
+    <div className="vq2" style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--t1)' }}>
 
       {/* Nav */}
       <nav style={{

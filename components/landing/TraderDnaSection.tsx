@@ -1,4 +1,5 @@
 import { TraderDnaVisual, type DnaShape } from '@/components/TraderDnaVisual'
+import { Section, SectionHead } from './Section'
 
 // Representative Trader DNA for the landing showcase. Real profiles are computed
 // from each user's own trade history.
@@ -20,43 +21,35 @@ const DEMO: DnaShape = {
 const DEMO_FOCUS =
   'Your biggest opportunity isn’t finding a new strategy — your decision quality (89) and risk consistency (92) are already elite. It’s the impulsive trades after losses. Across your last 500 trades, that single behavior accounts for the largest share of your drawdown. Fix the two-loss spiral and everything else compounds.'
 
+/**
+ * The DNA profile, shown with the real component the dashboard renders.
+ *
+ * The blue ambient glow behind it, the blue pill above it, the centred column
+ * and the 80px drop shadow under the card are gone; what is left is the visual
+ * itself on a hairline surface, which is what a reader came to see.
+ */
 export function TraderDnaSection() {
   return (
-    <section id="trader-dna" style={{ padding: '96px 24px', position: 'relative', overflow: 'hidden' }}>
-      {/* ambient glow */}
-      <div aria-hidden style={{
-        position: 'absolute', top: '20%', left: '50%', transform: 'translateX(-50%)',
-        width: 600, height: 400, background: 'radial-gradient(ellipse, rgba(77,143,255,0.10), transparent 70%)',
-        pointerEvents: 'none',
-      }} />
-      <div style={{ maxWidth: 1040, margin: '0 auto', position: 'relative' }}>
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 12px', borderRadius: 999,
-            background: 'rgba(77,143,255,0.08)', border: '1px solid rgba(77,143,255,0.18)', marginBottom: 18 }}>
-            <span style={{ width: 6, height: 6, borderRadius: 3, background: 'var(--ac, #4D8FFF)' }} />
-            <span style={{ fontSize: 11, letterSpacing: 1.5, color: 'var(--ac, #4D8FFF)', fontWeight: 700 }}>TRADER DNA</span>
-          </div>
-          <h2 style={{ fontSize: 'clamp(28px, 5vw, 46px)', fontWeight: 900, letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--t1, #fff)', margin: 0, textWrap: 'balance' }}>
-            The market has your number.<br />Now you have theirs.
-          </h2>
-          <p style={{ fontSize: 16, lineHeight: 1.6, color: 'var(--t2, #9090A8)', maxWidth: 560, margin: '18px auto 0', textWrap: 'balance' }}>
-            Every trade you take feeds a living profile of how you actually trade — your discipline, your patience,
-            your emotional stability, the exact conditions that break you. Not another dashboard of numbers.
-            A mirror.
-          </p>
-        </div>
+    <Section id="trader-dna">
+      <SectionHead
+        label="Trader DNA"
+        title={<>The market has your number.<br />Now you have theirs.</>}
+        lead="Every trade you take feeds a living profile of how you actually trade — your discipline, your patience, your emotional stability, the exact conditions that break you. Not another dashboard of numbers. A mirror."
+      />
 
-        <div style={{
-          padding: '28px 24px', borderRadius: 20, background: 'var(--s1, #12121A)',
-          border: '1px solid var(--bd2, #1E1E30)', boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
-        }}>
-          <TraderDnaVisual dna={DEMO} focus={DEMO_FOCUS} />
-        </div>
-
-        <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--t3, #48485E)', marginTop: 20 }}>
-          Your DNA sharpens with every trade. The more you trade, the more precisely it knows you.
-        </p>
+      <div style={{
+        background: 'var(--s1)', border: '1px solid var(--color-line-1)',
+        borderRadius: 'var(--radius-md)', padding: 'clamp(16px, 2.4vw, 26px)',
+      }}>
+        <TraderDnaVisual dna={DEMO} focus={DEMO_FOCUS} />
       </div>
-    </section>
+
+      <p style={{
+        fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
+        color: 'var(--color-ink-4)', margin: '14px 0 0',
+      }}>
+        Your DNA sharpens with every trade. The more you trade, the more precisely it knows you.
+      </p>
+    </Section>
   )
 }

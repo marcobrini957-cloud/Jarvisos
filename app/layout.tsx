@@ -1,16 +1,7 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
 import { DisplayModeProvider } from '@/context/DisplayModeContext'
 import { CookieConsent } from '@/components/CookieConsent'
 import './globals.css'
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-  // Load the weights we actually use
-  weight: ['400', '500', '600', '700', '800'],
-})
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://velquor.app'),
@@ -55,7 +46,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`h-full ${inter.variable}`}>
+    <html lang="en" className="h-full">
       {/* Body is NOT scroll-locked. It used to be `overflow: hidden` so the
           dashboard's inner-scrolling layout could not double-scroll — but that
           silently clipped every ordinary page taller than the viewport, which is

@@ -3,81 +3,109 @@
 import { useState } from 'react'
 import { LogoMark } from '@/components/ui/LogoMark'
 import { useLocale } from '@/hooks/useLocale'
-import { SectionEyebrow } from './SectionEyebrow'
+import { Section, SectionHead } from './Section'
 
+/**
+ * Ask VELQUOR, demonstrated.
+ *
+ * The chat mock used to sit inside a blue→magenta gradient border over two
+ * blurred radial washes, with a blue user bubble and a green "online" dot. It
+ * is the product's own surface language now: hairline, surface-1, ink. The
+ * questions on the left are a list of rules rather than blue-tinted pills.
+ */
 export function VelquorSection() {
   const { t } = useLocale()
   const ai = t.velquorAI
   const [active, setActive] = useState(0)
 
   return (
-    <section style={{ padding: 'clamp(60px, 10vw, 100px) clamp(16px, 5vw, 48px)', maxWidth: '1200px', margin: '0 auto' }}>
-      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'clamp(32px, 6vw, 72px)', alignItems: 'center' }}>
+    <Section>
+      <SectionHead label={ai.eyebrow} title={ai.h2} lead={ai.subtitle} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'clamp(24px, 4vw, 56px)', alignItems: 'start' }}>
         <div>
-          <SectionEyebrow>{ai.eyebrow}</SectionEyebrow>
-          <h2 style={{ fontSize: 'clamp(26px, 5vw, 38px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 16px', color: 'var(--t1)', lineHeight: 1.15 }}>{ai.h2}</h2>
-          <p style={{ color: 'var(--t2)', fontSize: '15px', lineHeight: 1.7, margin: '0 0 28px' }}>{ai.subtitle}</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {ai.qa.map((item, i) => (
-              <button key={i} onClick={() => setActive(i)} style={{
-                textAlign: 'left', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer',
-                background: active === i ? 'rgba(77,143,255,0.1)' : 'transparent',
-                border: active === i ? '1px solid rgba(77,143,255,0.3)' : '1px solid transparent',
-                color: active === i ? 'var(--t1)' : 'var(--t2)',
-                fontSize: '13px', transition: 'all 0.15s',
-              }}>
-                {active === i ? '→ ' : ''}{item.q}
-              </button>
-            ))}
-          </div>
+          {ai.qa.map((item, i) => (
+            <button
+              key={i}
+              onClick={() => setActive(i)}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left',
+                padding: '13px 12px', border: 'none',
+                borderTop: '1px solid var(--color-line-1)',
+                borderLeft: `1px solid ${active === i ? 'var(--color-ink-1)' : 'transparent'}`,
+                background: active === i ? 'var(--color-surface-1)' : 'transparent',
+                color: active === i ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                cursor: 'pointer', transition: 'background 0.12s, color 0.12s, border-color 0.12s',
+              }}
+            >
+              {item.q}
+            </button>
+          ))}
         </div>
 
-        <div style={{ position: 'relative' }}>
-        {/* hero-language glow + gradient border around the chat mock */}
-        <div aria-hidden style={{
-          position: 'absolute', inset: '-24px -32px',
-          background: 'radial-gradient(ellipse at 25% 65%, rgba(33,110,243,0.16) 0%, transparent 55%), radial-gradient(ellipse at 80% 40%, rgba(196,50,220,0.13) 0%, transparent 55%)',
-          filter: 'blur(28px)', pointerEvents: 'none', zIndex: 0,
-        }} />
         <div style={{
-          position: 'relative', zIndex: 1, padding: '1.5px', borderRadius: '17px',
-          background: 'linear-gradient(135deg, rgba(33,150,243,0.55) 0%, rgba(123,47,191,0.45) 50%, rgba(224,64,251,0.5) 100%)',
-          boxShadow: '0 0 40px rgba(33,150,243,0.14), 0 24px 64px rgba(0,0,0,0.6)',
+          background: 'var(--s1)', border: '1px solid var(--color-line-1)',
+          borderRadius: 'var(--radius-md)', overflow: 'hidden',
         }}>
-        <div style={{ background: 'var(--s1)', borderRadius: '16px', overflow: 'hidden' }}>
-          <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--bd)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <LogoMark size={26} />
-            <div>
-              <p style={{ margin: 0, color: 'var(--t1)', fontSize: '12px', fontWeight: 600 }}>VELQUOR</p>
-              <p style={{ margin: 0, color: 'var(--gr2)', fontSize: '10px' }}>● {ai.online}</p>
-            </div>
+          <div style={{
+            padding: '10px 14px', borderBottom: '1px solid var(--color-line-1)',
+            display: 'flex', alignItems: 'center', gap: '9px',
+          }}>
+            <LogoMark size={22} />
+            <span style={{
+              fontFamily: 'var(--font-mark)', fontSize: 'var(--text-md)',
+              textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--color-ink-1)',
+            }}>Velquor</span>
+            <span style={{
+              marginLeft: 'auto',
+              fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+              letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-ink-3)',
+            }}>{ai.online}</span>
           </div>
 
-          <div style={{ padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: '220px' }}>
+          <div style={{ padding: '16px 14px', display: 'flex', flexDirection: 'column', gap: '12px', minHeight: '220px' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <div style={{ background: 'var(--ac)', color: 'white', padding: '9px 13px', borderRadius: '11px 11px 2px 11px', fontSize: '13px', maxWidth: '80%' }}>
+              <div style={{
+                background: 'var(--color-surface-2)', color: 'var(--color-ink-1)',
+                padding: '9px 12px', borderRadius: 'var(--radius-md)',
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', maxWidth: '82%',
+              }}>
                 {ai.qa[active].q}
               </div>
             </div>
             <div style={{ display: 'flex', gap: '9px', alignItems: 'flex-start' }}>
-              <LogoMark size={26} />
-              <div style={{ background: 'var(--s2)', border: '1px solid var(--bd)', padding: '11px 13px', borderRadius: '2px 11px 11px 11px', fontSize: '12px', color: 'var(--t2)', lineHeight: 1.65, maxWidth: '85%' }}>
+              <LogoMark size={22} />
+              <div style={{
+                border: '1px solid var(--color-line-1)', padding: '10px 12px',
+                borderRadius: 'var(--radius-md)',
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                color: 'var(--color-ink-2)', lineHeight: 1.65, maxWidth: '88%',
+              }}>
                 {ai.qa[active].a}
               </div>
             </div>
           </div>
 
-          <div style={{ padding: '11px 14px', borderTop: '1px solid var(--bd)' }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: '9px', padding: '9px 13px' }}>
-              <span style={{ color: 'var(--t3)', fontSize: '12px', flex: 1 }}>{ai.placeholder}</span>
-              <span style={{ background: 'var(--ac)', color: 'white', fontSize: '10px', padding: '3px 9px', borderRadius: '5px', fontWeight: 500 }}>Send</span>
+          <div style={{ padding: '10px 12px', borderTop: '1px solid var(--color-line-1)' }}>
+            <div style={{
+              display: 'flex', gap: '8px', alignItems: 'center',
+              background: 'var(--s2)', border: '1px solid var(--color-line-1)',
+              borderRadius: 'var(--radius-sm)', padding: '8px 11px',
+            }}>
+              <span style={{
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                color: 'var(--color-ink-4)', flex: 1,
+              }}>{ai.placeholder}</span>
+              <span style={{
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+                letterSpacing: '0.14em', textTransform: 'uppercase',
+                color: 'var(--color-ink-3)',
+              }}>Send</span>
             </div>
           </div>
         </div>
-        </div>
-        </div>
       </div>
-    </section>
+    </Section>
   )
 }
-

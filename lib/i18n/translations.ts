@@ -27,7 +27,7 @@ export interface LandingT {
     beforeSub: string
     afterLabel: string
     afterSub: string
-    cards: Array<{ icon: string; title: string; desc: string }>
+    cards: Array<{ title: string; desc: string }>
   }
   features: {
     eyebrow: string
@@ -84,7 +84,7 @@ export interface LandingT {
   trust: {
     eyebrow: string
     h2: string
-    items: Array<{ icon: string; title: string; desc: string }>
+    items: Array<{ title: string; desc: string }>
   }
   faq: {
     eyebrow: string
@@ -185,9 +185,9 @@ const en: LandingT = {
     afterLabel: 'WITH VELQUOR',
     afterSub: 'Every trade auto-logged',
     cards: [
-      { icon: '⚡', title: 'Zero manual entry', desc: 'Connect your MT5 once. Every trade — entry price, SL, TP, open/close time, P&L — syncs automatically. Nothing to copy, nothing to type in.' },
-      { icon: '✏️', title: 'You only add context', desc: 'After each trade, just pick your setup type and how you felt. 10 seconds. That\'s the only thing you do — VELQUOR handles everything else.' },
-      { icon: '◆', title: 'Patterns emerge automatically', desc: 'After 30 trades, VELQUOR shows your real win rate by session, setup, and mood — and tells you exactly what to change to earn more.' },
+      { title: 'Zero manual entry', desc: 'Connect your MT5 once. Every trade — entry price, SL, TP, open/close time, P&L — syncs automatically. Nothing to copy, nothing to type in.' },
+      { title: 'You only add context', desc: 'After each trade, just pick your setup type and how you felt. 10 seconds. That\'s the only thing you do — VELQUOR handles everything else.' },
+      { title: 'Patterns emerge automatically', desc: 'After 30 trades, VELQUOR shows your real win rate by session, setup, and mood — and tells you exactly what to change to earn more.' },
     ],
   },
   features: {
@@ -232,7 +232,7 @@ const en: LandingT = {
     ],
   },
   propFirm: {
-    badge: '🏆 Prop Firm Mode',
+    badge: 'Prop Firm Mode',
     h2: 'Also running a prop firm challenge?',
     subtitle: 'Activate Prop Firm Mode and VELQUOR monitors every rule of your challenge in real time — max daily loss, total drawdown, profit target, minimum trading days. One wrong day won\'t catch you off guard again.',
     firms: ['FTMO', 'The Funded Trader', 'MyFundedFX', 'E8 Funding', 'Any custom rules'],
@@ -285,10 +285,10 @@ const en: LandingT = {
     eyebrow: 'Built for trust',
     h2: 'Your account stays yours.',
     items: [
-      { icon: '🔑', title: 'No passwords shared', desc: 'The VELQUOR EA runs inside your own MT5 terminal. Your broker credentials never leave your machine — only trade data syncs, over a personal API key you can revoke anytime.' },
-      { icon: '🇪🇺', title: 'EU infrastructure', desc: 'Database and bridge both run on European servers. Your trading data never leaves the EU — GDPR-compliant by design.' },
-      { icon: '📤', title: 'You own your data', desc: 'Export every trade as PDF whenever you want. Delete your account and everything goes with it — no lock-in, no questions.' },
-      { icon: '⏻', title: 'Kill switch built in', desc: 'Disconnect the EA or pause the trade copier with one click from your dashboard. You are always in control of what executes.' },
+      { title: 'No passwords shared', desc: 'The VELQUOR EA runs inside your own MT5 terminal. Your broker credentials never leave your machine — only trade data syncs, over a personal API key you can revoke anytime.' },
+      { title: 'EU infrastructure', desc: 'Database and bridge both run on European servers. Your trading data never leaves the EU — GDPR-compliant by design.' },
+      { title: 'You own your data', desc: 'Export every trade as PDF whenever you want. Delete your account and everything goes with it — no lock-in, no questions.' },
+      { title: 'Kill switch built in', desc: 'Disconnect the EA or pause the trade copier with one click from your dashboard. You are always in control of what executes.' },
     ],
   },
   faq: {
@@ -345,9 +345,9 @@ const de: LandingT = {
     afterLabel: 'MIT VELQUOR',
     afterSub: 'Jeder Trade automatisch geloggt',
     cards: [
-      { icon: '⚡', title: 'Null manuelle Eingabe', desc: 'Verbinde dein MT5 einmal. Jeder Trade — Einstieg, SL, TP, Zeit, GuV — synchronisiert automatisch. Nichts zu kopieren, nichts einzutippen.' },
-      { icon: '✏️', title: 'Du gibst nur Kontext hinzu', desc: 'Nach jedem Trade wählst du Setup-Typ und Gemütszustand. 10 Sekunden. Das ist alles — VELQUOR erledigt den Rest.' },
-      { icon: '◆', title: 'Muster entstehen automatisch', desc: 'Nach 30 Trades zeigt VELQUOR deine echte Gewinnrate nach Session, Setup und Stimmung — und sagt dir, was du ändern musst.' },
+      { title: 'Null manuelle Eingabe', desc: 'Verbinde dein MT5 einmal. Jeder Trade — Einstieg, SL, TP, Zeit, GuV — synchronisiert automatisch. Nichts zu kopieren, nichts einzutippen.' },
+      { title: 'Du gibst nur Kontext hinzu', desc: 'Nach jedem Trade wählst du Setup-Typ und Gemütszustand. 10 Sekunden. Das ist alles — VELQUOR erledigt den Rest.' },
+      { title: 'Muster entstehen automatisch', desc: 'Nach 30 Trades zeigt VELQUOR deine echte Gewinnrate nach Session, Setup und Stimmung — und sagt dir, was du ändern musst.' },
     ],
   },
   features: {
@@ -392,7 +392,7 @@ const de: LandingT = {
     ],
   },
   propFirm: {
-    badge: '🏆 Prop-Firm-Modus',
+    badge: 'Prop-Firm-Modus',
     h2: 'Läuft auch eine Prop-Firm-Challenge?',
     subtitle: 'Aktiviere den Prop-Firm-Modus und VELQUOR überwacht jede Regel deiner Challenge in Echtzeit — Max Daily Loss, Gesamtdrawdown, Profitziel, Mindesthandelstage. Ein falscher Tag überrascht dich nicht mehr.',
     firms: ['FTMO', 'The Funded Trader', 'MyFundedFX', 'E8 Funding', 'Beliebige eigene Regeln'],
@@ -445,10 +445,10 @@ const de: LandingT = {
     eyebrow: 'Auf Vertrauen gebaut',
     h2: 'Dein Konto bleibt deins.',
     items: [
-      { icon: '🔑', title: 'Keine Passwörter geteilt', desc: 'Der VELQUOR EA läuft in deinem eigenen MT5-Terminal. Deine Broker-Zugangsdaten verlassen nie deinen Rechner — nur Handelsdaten werden über einen persönlichen API-Key synchronisiert, den du jederzeit widerrufen kannst.' },
-      { icon: '🇪🇺', title: 'EU-Infrastruktur', desc: 'Datenbank und Bridge laufen auf europäischen Servern. Deine Trading-Daten verlassen die EU nicht — DSGVO-konform by design.' },
-      { icon: '📤', title: 'Deine Daten gehören dir', desc: 'Exportiere jeden Trade als PDF, wann immer du willst. Lösche dein Konto und alles verschwindet mit — kein Lock-in, keine Fragen.' },
-      { icon: '⏻', title: 'Kill-Switch eingebaut', desc: 'Trenne den EA oder pausiere den Trade-Copier mit einem Klick direkt vom Dashboard. Du behältst immer die Kontrolle darüber, was ausgeführt wird.' },
+      { title: 'Keine Passwörter geteilt', desc: 'Der VELQUOR EA läuft in deinem eigenen MT5-Terminal. Deine Broker-Zugangsdaten verlassen nie deinen Rechner — nur Handelsdaten werden über einen persönlichen API-Key synchronisiert, den du jederzeit widerrufen kannst.' },
+      { title: 'EU-Infrastruktur', desc: 'Datenbank und Bridge laufen auf europäischen Servern. Deine Trading-Daten verlassen die EU nicht — DSGVO-konform by design.' },
+      { title: 'Deine Daten gehören dir', desc: 'Exportiere jeden Trade als PDF, wann immer du willst. Lösche dein Konto und alles verschwindet mit — kein Lock-in, keine Fragen.' },
+      { title: 'Kill-Switch eingebaut', desc: 'Trenne den EA oder pausiere den Trade-Copier mit einem Klick direkt vom Dashboard. Du behältst immer die Kontrolle darüber, was ausgeführt wird.' },
     ],
   },
   faq: {
@@ -505,9 +505,9 @@ const zh: LandingT = {
     afterLabel: '使用VELQUOR后',
     afterSub: '每笔交易自动记录',
     cards: [
-      { icon: '⚡', title: '零手动输入', desc: '一次连接MT5，每笔交易——入场价、止损、止盈、时间、盈亏——自动同步。无需复制，无需输入。' },
-      { icon: '✏️', title: '你只需补充背景', desc: '每笔交易后，只需选择策略类型和情绪状态。10秒钟，仅此而已——VELQUOR处理其余所有事情。' },
-      { icon: '◆', title: '规律自动浮现', desc: '30笔交易后，VELQUOR按时段、策略和情绪显示你的真实胜率——并告诉你应该改变什么来赚更多钱。' },
+      { title: '零手动输入', desc: '一次连接MT5，每笔交易——入场价、止损、止盈、时间、盈亏——自动同步。无需复制，无需输入。' },
+      { title: '你只需补充背景', desc: '每笔交易后，只需选择策略类型和情绪状态。10秒钟，仅此而已——VELQUOR处理其余所有事情。' },
+      { title: '规律自动浮现', desc: '30笔交易后，VELQUOR按时段、策略和情绪显示你的真实胜率——并告诉你应该改变什么来赚更多钱。' },
     ],
   },
   features: {
@@ -552,7 +552,7 @@ const zh: LandingT = {
     ],
   },
   propFirm: {
-    badge: '🏆 自营公司模式',
+    badge: '自营公司模式',
     h2: '同时在参加自营公司挑战赛？',
     subtitle: '激活自营公司模式，VELQUOR实时监控你挑战赛的每条规则——最大每日亏损、总体回撤、盈利目标、最少交易天数。一个错误的交易日再也不会让你猝不及防。',
     firms: ['FTMO', 'The Funded Trader', 'MyFundedFX', 'E8 Funding', '任何自定义规则'],
@@ -605,10 +605,10 @@ const zh: LandingT = {
     eyebrow: '为信任而建',
     h2: '你的账户始终属于你。',
     items: [
-      { icon: '🔑', title: '不共享任何密码', desc: 'VELQUOR EA在你自己的MT5终端内运行。经纪商登录凭证永远不会离开你的电脑——仅通过可随时撤销的个人API密钥同步交易数据。' },
-      { icon: '🇪🇺', title: '欧盟基础设施', desc: '数据库和桥接服务均运行在欧洲服务器上。你的交易数据不会离开欧盟——设计即符合GDPR。' },
-      { icon: '📤', title: '数据归你所有', desc: '随时将每笔交易导出为PDF。删除账户后所有数据一并清除——无锁定，无追问。' },
-      { icon: '⏻', title: '内置紧急开关', desc: '在仪表盘上一键断开EA或暂停跟单。执行什么，始终由你掌控。' },
+      { title: '不共享任何密码', desc: 'VELQUOR EA在你自己的MT5终端内运行。经纪商登录凭证永远不会离开你的电脑——仅通过可随时撤销的个人API密钥同步交易数据。' },
+      { title: '欧盟基础设施', desc: '数据库和桥接服务均运行在欧洲服务器上。你的交易数据不会离开欧盟——设计即符合GDPR。' },
+      { title: '数据归你所有', desc: '随时将每笔交易导出为PDF。删除账户后所有数据一并清除——无锁定，无追问。' },
+      { title: '内置紧急开关', desc: '在仪表盘上一键断开EA或暂停跟单。执行什么，始终由你掌控。' },
     ],
   },
   faq: {
@@ -665,9 +665,9 @@ const es: LandingT = {
     afterLabel: 'CON VELQUOR',
     afterSub: 'Cada operación registrada automáticamente',
     cards: [
-      { icon: '⚡', title: 'Cero entrada manual', desc: 'Conecta tu MT5 una vez. Cada operación — precio de entrada, SL, TP, tiempo, P&L — se sincroniza automáticamente. Nada que copiar, nada que escribir.' },
-      { icon: '✏️', title: 'Solo añades contexto', desc: 'Después de cada operación, elige el tipo de setup y cómo te sentiste. 10 segundos. Eso es todo — VELQUOR se encarga del resto.' },
-      { icon: '◆', title: 'Los patrones emergen solos', desc: 'Tras 30 operaciones, VELQUOR muestra tu tasa de victorias real por sesión, setup y estado de ánimo — y te dice exactamente qué cambiar para ganar más.' },
+      { title: 'Cero entrada manual', desc: 'Conecta tu MT5 una vez. Cada operación — precio de entrada, SL, TP, tiempo, P&L — se sincroniza automáticamente. Nada que copiar, nada que escribir.' },
+      { title: 'Solo añades contexto', desc: 'Después de cada operación, elige el tipo de setup y cómo te sentiste. 10 segundos. Eso es todo — VELQUOR se encarga del resto.' },
+      { title: 'Los patrones emergen solos', desc: 'Tras 30 operaciones, VELQUOR muestra tu tasa de victorias real por sesión, setup y estado de ánimo — y te dice exactamente qué cambiar para ganar más.' },
     ],
   },
   features: {
@@ -712,7 +712,7 @@ const es: LandingT = {
     ],
   },
   propFirm: {
-    badge: '🏆 Modo Prop Firm',
+    badge: 'Modo Prop Firm',
     h2: '¿También en un desafío de prop firm?',
     subtitle: 'Activa el Modo Prop Firm y VELQUOR monitoriza cada regla de tu desafío en tiempo real — pérdida diaria máxima, drawdown total, objetivo de beneficio, días mínimos de trading. Un día equivocado ya no te pillará desprevenido.',
     firms: ['FTMO', 'The Funded Trader', 'MyFundedFX', 'E8 Funding', 'Cualquier regla personalizada'],
@@ -765,10 +765,10 @@ const es: LandingT = {
     eyebrow: 'Construido para la confianza',
     h2: 'Tu cuenta sigue siendo tuya.',
     items: [
-      { icon: '🔑', title: 'Sin compartir contraseñas', desc: 'El EA de VELQUOR corre dentro de tu propio terminal MT5. Tus credenciales del broker nunca salen de tu máquina — solo se sincronizan datos de operaciones mediante una clave API personal que puedes revocar cuando quieras.' },
-      { icon: '🇪🇺', title: 'Infraestructura en la UE', desc: 'La base de datos y el bridge corren en servidores europeos. Tus datos de trading nunca salen de la UE — conforme al RGPD por diseño.' },
-      { icon: '📤', title: 'Tus datos son tuyos', desc: 'Exporta cada operación como PDF cuando quieras. Elimina tu cuenta y todo desaparece con ella — sin ataduras, sin preguntas.' },
-      { icon: '⏻', title: 'Interruptor de emergencia', desc: 'Desconecta el EA o pausa el copiador con un clic desde tu panel. Siempre tienes el control de lo que se ejecuta.' },
+      { title: 'Sin compartir contraseñas', desc: 'El EA de VELQUOR corre dentro de tu propio terminal MT5. Tus credenciales del broker nunca salen de tu máquina — solo se sincronizan datos de operaciones mediante una clave API personal que puedes revocar cuando quieras.' },
+      { title: 'Infraestructura en la UE', desc: 'La base de datos y el bridge corren en servidores europeos. Tus datos de trading nunca salen de la UE — conforme al RGPD por diseño.' },
+      { title: 'Tus datos son tuyos', desc: 'Exporta cada operación como PDF cuando quieras. Elimina tu cuenta y todo desaparece con ella — sin ataduras, sin preguntas.' },
+      { title: 'Interruptor de emergencia', desc: 'Desconecta el EA o pausa el copiador con un clic desde tu panel. Siempre tienes el control de lo que se ejecuta.' },
     ],
   },
   faq: {

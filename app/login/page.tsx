@@ -307,7 +307,7 @@ export default function LoginPage() {
   const isDisabled = loading || !email || !password
 
   return (
-    <div style={{
+    <div className="vq2" style={{
       minHeight: '100vh',
       background: 'var(--bg)',
       display: 'flex',

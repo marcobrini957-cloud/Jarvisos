@@ -39,7 +39,7 @@ function Gate() {
   }
 
   return (
-    <div style={{
+    <div className="vq2" style={{
       minHeight: '100dvh', background: '#000000',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px',

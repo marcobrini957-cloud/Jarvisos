@@ -1,7 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Icon from '@/components/ui/Icon'
 
+/**
+ * The copier, mid-broadcast.
+ *
+ * Gold borders, gold LEADER labels, glowing green status dots and a lightning
+ * emoji for the signal — all replaced with the surfaces the Copy tab actually
+ * uses. Dots are ink or ink-4; the one green figure left is the execution
+ * confirmation, which is the product doing what it promises with money.
+ */
 export function CopierVisual() {
   const [tick, setTick] = useState(0)
   useEffect(() => {
@@ -11,81 +20,100 @@ export function CopierVisual() {
   const signalActive = tick % 4 === 1
   const execDone     = tick % 4 === 2
 
+  const label = {
+    fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+    letterSpacing: '0.16em', textTransform: 'uppercase' as const,
+    color: 'var(--color-ink-3)',
+  }
+
   return (
-    <div style={{ background: '#090d12', borderRadius: '16px', border: '1px solid rgba(255,184,48,0.14)', overflow: 'hidden' }}>
-      {/* Group header */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.018)' }}>
-        <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', fontWeight: 700 }}>My Copy Group</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00FF85', display: 'block', boxShadow: '0 0 5px #00FF85' }} />
-          <span style={{ color: '#00FF85', fontSize: '10px', fontWeight: 500 }}>Active</span>
-        </div>
-      </div>
-
-      {/* Leader */}
-      <div style={{ padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: 'rgba(255,184,48,0.03)' }}>
-        <p style={{ margin: '0 0 6px', color: '#FFB830', fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em' }}>LEADER</p>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00FF85', display: 'block', boxShadow: '0 0 5px #00FF85' }} />
-            <span style={{ color: 'rgba(255,255,255,0.88)', fontSize: '13px', fontWeight: 600 }}>ICM Main Live</span>
-          </div>
-          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px' }}>#452891</span>
-        </div>
-      </div>
-
-      {/* Signal banner */}
+    <div style={{
+      background: 'var(--color-void)', border: '1px solid var(--color-line-1)',
+      borderRadius: 'var(--radius-md)', overflow: 'hidden',
+    }}>
       <div style={{
-        padding: '7px 16px',
-        background: signalActive ? 'rgba(255,184,48,0.09)' : execDone ? 'rgba(0,255,133,0.05)' : 'transparent',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
-        display: 'flex', alignItems: 'center', gap: '7px',
-        opacity: (signalActive || execDone) ? 1 : 0,
+        padding: '10px 14px', borderBottom: '1px solid var(--color-line-1)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', color: 'var(--color-ink-1)' }}>
+          My Copy Group
+        </span>
+        <span style={label}>Active</span>
+      </div>
+
+      <div style={{ padding: '11px 14px', borderBottom: '1px solid var(--color-line-1)' }}>
+        <p style={{ ...label, margin: '0 0 7px' }}>Leader</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-ink-1)', display: 'block' }} />
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', color: 'var(--color-ink-1)' }}>
+              ICM Main Live
+            </span>
+          </div>
+          <span className="vq-num" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)' }}>#452891</span>
+        </div>
+      </div>
+
+      {/* The signal in flight. Motion here is state changing, which is the one
+          kind the ban list keeps. */}
+      <div style={{
+        padding: '7px 14px',
+        borderBottom: '1px solid var(--color-line-1)',
+        background: signalActive || execDone ? 'var(--color-surface-1)' : 'transparent',
+        display: 'flex', alignItems: 'center', gap: '8px',
+        opacity: signalActive || execDone ? 1 : 0,
         transition: 'opacity 0.3s, background 0.3s',
         minHeight: '30px',
+        color: execDone ? 'var(--color-up)' : 'var(--color-ink-3)',
       }}>
-        <span style={{ fontSize: '11px' }}>{execDone ? '✓' : '⚡'}</span>
-        <span style={{ fontSize: '10px', fontWeight: 500, color: execDone ? '#00FF85' : '#FFB830' }}>
-          {signalActive && 'XAUUSD BUY 0.5 lots → broadcasting to followers…'}
+        <Icon name={execDone ? 'check' : 'swap'} size={11} />
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)' }}>
+          {signalActive && 'XAUUSD BUY 0.5 lots — broadcasting to followers…'}
           {execDone && 'All followers executed — avg 1.8 seconds'}
         </span>
       </div>
 
-      {/* Followers */}
-      <div style={{ padding: '11px 16px' }}>
-        <p style={{ margin: '0 0 9px', color: 'rgba(255,255,255,0.28)', fontSize: '9px', fontWeight: 600, letterSpacing: '0.08em' }}>FOLLOWER ACCOUNTS (3)</p>
+      <div style={{ padding: '11px 14px' }}>
+        <p style={{ ...label, margin: '0 0 9px' }}>Follower accounts (3)</p>
         {[
-          { name: 'FTMO Demo #781234', status: 'active',  execLots: '0.5 lots' },
-          { name: 'Hedge Fund #334-B', status: 'active',  execLots: '0.25 lots' },
-          { name: 'Personal ICM #229', status: 'paused',  execLots: null },
+          { name: 'FTMO Demo #781234', status: 'active', execLots: '0.5 lots' },
+          { name: 'Hedge Fund #334-B', status: 'active', execLots: '0.25 lots' },
+          { name: 'Personal ICM #229', status: 'paused', execLots: null },
         ].map((s, i) => (
           <div key={i} style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '8px 0',
-            borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+            borderBottom: i < 2 ? '1px solid var(--color-line-1)' : 'none',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: s.status === 'active' ? '#00FF85' : '#444', display: 'block' }} />
-              <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: '12px' }}>{s.name}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                width: 5, height: 5, borderRadius: '50%', display: 'block',
+                background: s.status === 'active' ? 'var(--color-ink-2)' : 'var(--color-ink-4)',
+              }} />
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', color: 'var(--color-ink-2)' }}>
+                {s.name}
+              </span>
             </div>
             {execDone && s.execLots ? (
-              <span style={{ color: '#00FF85', fontSize: '10px', fontWeight: 600 }}>{s.execLots} ✓</span>
+              <span className="vq-num" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-up)' }}>{s.execLots}</span>
             ) : (
-              <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: '10px' }}>{s.status}</span>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)' }}>{s.status}</span>
             )}
           </div>
         ))}
       </div>
 
-      {/* Footer stats */}
-      <div style={{ padding: '9px 16px', background: 'rgba(255,255,255,0.015)', borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', gap: '20px' }}>
-        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-          <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: '10px' }}>Avg execution</span>
-          <span style={{ color: '#00FF85', fontSize: '10px', fontWeight: 600 }}>1.8s</span>
+      <div style={{
+        padding: '9px 14px', borderTop: '1px solid var(--color-line-1)',
+        display: 'flex', gap: '20px', flexWrap: 'wrap',
+      }}>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'baseline' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)' }}>Avg execution</span>
+          <span className="vq-num" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-1)' }}>1.8s</span>
         </div>
-        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-          <span style={{ color: 'rgba(255,255,255,0.28)', fontSize: '10px' }}>Signals today</span>
-          <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '10px', fontWeight: 600 }}>47</span>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'baseline' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)' }}>Signals today</span>
+          <span className="vq-num" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-1)' }}>47</span>
         </div>
       </div>
     </div>

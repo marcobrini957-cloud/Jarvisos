@@ -301,7 +301,7 @@ export default function OnboardingPage() {
     // body{overflow:hidden} in the root layout means this page must scroll
     // itself; the inner min-height:100% wrapper keeps short steps centred
     // without clipping the top of tall ones.
-    <div style={{ height: '100dvh', overflowY: 'auto', background: 'var(--bg)' }}>
+    <div className="vq2" style={{ height: '100dvh', overflowY: 'auto', background: 'var(--bg)' }}>
       <div style={{ minHeight: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div style={{ width: '100%', maxWidth: '480px' }}>
         {/* Progress */}

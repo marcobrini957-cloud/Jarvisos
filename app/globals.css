@@ -89,9 +89,17 @@ html, body { height: 100%; margin: 0; padding: 0; overflow-x: hidden; }
 body {
   background: var(--bg);
   color: var(--t1);
-  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+  /* Coolvetica carries every word in the product, marketing site included.
+     Inter-from-Google was the single loudest "built from a template" tell we
+     had (DESIGN.md §0) and it was still being served to every visitor on the
+     landing, pricing, auth and legal pages long after the dashboard had moved.
+     One weight ships, so `font-synthesis: none` — a faux-bold at 13px smears
+     the stems, and hierarchy comes from size, ink and case instead. */
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
   font-size: 13px;
   font-weight: 400;
+  font-synthesis: none;
+  -webkit-font-synthesis: none;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -729,8 +737,11 @@ html { scroll-behavior: smooth; }
    dropdowns, modals and the sticky chrome stay opaque — alpha there would let
    the page show through.
 
-   Landing, auth and /dev keep the old palette: this class is only on the
-   dashboard shell (and on <body> while it is mounted, for InfoTip's portal).
+   Stage 4 put the marketing surface on the same bridge — landing, pricing,
+   auth, gate, onboarding and the legal pages all carry `vq2` on their root, so
+   a `--bg`, `--ac` or `--go` written anywhere in those trees resolves to the
+   2.0 language instead of Void Black. /dev keeps the old palette on purpose:
+   it is the admin console, not the product.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .vq2 {
@@ -891,3 +902,51 @@ html { scroll-behavior: smooth; }
 @container (max-width: 360px) {
   .vq-year-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ── Stage 4: the marketing surface ───────────────────────────────────────────
+   The landing, pricing, auth and legal pages carry `vq2` on their roots, so
+   they already resolve the 2.0 tokens. These are the few rules that need a
+   breakpoint, which an inline style cannot express. */
+
+/* Proof band under the hero — four figures, two on a phone. The dividing
+   hairlines have to follow the column count, which an index in JSX cannot
+   see. */
+.vq-statband {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.vq-statband > * + * { border-left: 1px solid var(--color-line-1); }
+@media (max-width: 760px) {
+  .vq-statband { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vq-statband > *:nth-child(2n+1) { border-left: none; }
+  .vq-statband > *:nth-child(n+3)  { border-top: 1px solid var(--color-line-1); }
+}
+
+/* Capability spec sheet — two columns of hairline rows on a wide screen, one
+   on a phone. The rows are rules, not cards, so the grid needs no gaps. */
+.vq-spec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(24px, 5vw, 72px);
+}
+@media (max-width: 860px) { .vq-spec-grid { grid-template-columns: 1fr; } }
+
+/* The four steps. Same rules, four across. */
+.vq-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: clamp(20px, 3vw, 40px);
+  row-gap: 28px;
+}
+@media (max-width: 980px) { .vq-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .vq-steps { grid-template-columns: 1fr; } }
+
+/* Four promises / three showcase notes — same hairline rows, responsive count. */
+.vq-trust-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: clamp(18px, 3vw, 40px);
+  row-gap: 26px;
+}
+@media (max-width: 980px) { .vq-trust-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .vq-trust-grid { grid-template-columns: 1fr; } }

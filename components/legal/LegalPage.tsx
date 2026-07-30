@@ -38,7 +38,7 @@ export function LegalPage({ title, subtitle, altLang, children }: {
   }, [])
 
   return (
-    <div style={{ background: 'var(--bg)', color: 'var(--t1)', minHeight: '100dvh', padding: 'clamp(40px, 8vw, 80px) clamp(16px, 5vw, 48px)' }}>
+    <div className="vq2" style={{ background: 'var(--bg)', color: 'var(--t1)', minHeight: '100dvh', padding: 'clamp(40px, 8vw, 80px) clamp(16px, 5vw, 48px)' }}>
       <div style={{ maxWidth: '640px', margin: '0 auto' }}>
 
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--t3)', fontSize: '13px', textDecoration: 'none', marginBottom: '40px' }}>

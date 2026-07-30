@@ -1,63 +1,106 @@
 'use client'
 
 import { useLocale } from '@/hooks/useLocale'
+import { Section } from './Section'
 
+/**
+ * Prop-firm rule tracking.
+ *
+ * The section was one big 20px-radius card on a green→blue gradient wash with a
+ * green border, a green pill, green ticks and a green-glowing rule panel. Only
+ * one of those figures is money — the profit target — so only that one keeps
+ * the P&L green. The other three limits are state, and state is ink.
+ */
 export function PropFirmSection() {
   const { t } = useLocale()
   const pf = t.propFirm
 
-  return (
-    <section style={{ padding: '0 clamp(16px, 5vw, 48px) clamp(60px, 10vw, 100px)', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(0,255,133,0.04) 0%, rgba(77,143,255,0.04) 100%)',
-        border: '1px solid rgba(0,255,133,0.15)', borderRadius: '20px',
-        padding: 'clamp(28px, 5vw, 56px) clamp(20px, 5vw, 60px)',
-      }}>
-        <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'clamp(32px, 5vw, 60px)', alignItems: 'center' }}>
-          <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: '20px', marginBottom: '20px', background: 'rgba(0,255,133,0.1)', border: '1px solid rgba(0,255,133,0.25)' }}>
-              <span style={{ color: 'var(--gr2)', fontSize: '12px', fontWeight: 500 }}>{pf.badge}</span>
-            </div>
-            <h2 style={{ fontSize: 'clamp(24px, 5vw, 34px)', fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 14px', color: 'var(--t1)', lineHeight: 1.2 }}>{pf.h2}</h2>
-            <p style={{ color: 'var(--t2)', fontSize: '14px', lineHeight: 1.7, margin: '0 0 22px' }}>{pf.subtitle}</p>
-            {pf.firms.map(f => (
-              <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span style={{ color: 'var(--gr2)', fontSize: '11px' }}>✓</span>
-                <span style={{ color: 'var(--t2)', fontSize: '13px' }}>{f}</span>
-              </div>
-            ))}
-          </div>
+  const rules = [
+    { label: 'Profit Target',  current: 6.8, max: 10, unit: '%',     money: true  },
+    { label: 'Max Daily Loss', current: 1.2, max: 5,  unit: '%',     money: false },
+    { label: 'Max Drawdown',   current: 2.1, max: 10, unit: '%',     money: false },
+    { label: 'Trading Days',   current: 7,   max: 10, unit: ' days', money: false },
+  ]
 
-          <div style={{
-            background: 'var(--s1)', borderRadius: '14px', padding: '22px',
-            border: '1px solid rgba(0,255,133,0.22)',
-            boxShadow: '0 0 36px rgba(0,255,133,0.07), 0 18px 48px rgba(0,0,0,0.4)',
+  return (
+    <Section band>
+      <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 'clamp(28px, 4vw, 56px)', alignItems: 'center' }}>
+        <div>
+          <p style={{
+            fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+            letterSpacing: '0.16em', textTransform: 'uppercase',
+            color: 'var(--color-ink-3)', margin: '0 0 14px',
           }}>
-            <p style={{ margin: '0 0 18px', color: 'var(--t1)', fontSize: '13px', fontWeight: 600 }}>FTMO Challenge — Phase 1</p>
-            {[
-              { label: 'Profit Target',  current: 6.8, max: 10, color: 'var(--gr2)', unit: '%' },
-              { label: 'Max Daily Loss', current: 1.2, max: 5,  color: 'var(--go2)', unit: '%' },
-              { label: 'Max Drawdown',   current: 2.1, max: 10, color: 'var(--ac)',  unit: '%' },
-              { label: 'Trading Days',   current: 7,   max: 10, color: 'var(--pu)',  unit: ' days' },
-            ].map(r => (
-              <div key={r.label} style={{ marginBottom: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                  <span style={{ color: 'var(--t2)', fontSize: '11px' }}>{r.label}</span>
-                  <span style={{ color: r.color, fontSize: '11px', fontWeight: 600 }}>{r.current}{r.unit} / {r.max}{r.unit}</span>
-                </div>
-                <div style={{ height: '5px', borderRadius: '3px', background: 'var(--s3)', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: '3px', width: `${(r.current / r.max) * 100}%`, background: r.color }} />
-                </div>
-              </div>
+            {pf.badge}
+          </p>
+          <h2 style={{
+            fontFamily: 'var(--font-display)', fontSize: 'clamp(23px, 3vw, 34px)',
+            lineHeight: 1.1, letterSpacing: '-0.03em',
+            color: 'var(--color-ink-1)', margin: '0 0 14px',
+          }}>
+            {pf.h2}
+          </h2>
+          <p style={{
+            fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
+            lineHeight: 1.7, color: 'var(--color-ink-3)', margin: '0 0 20px', maxWidth: '54ch',
+          }}>
+            {pf.subtitle}
+          </p>
+          <div>
+            {pf.firms.map(f => (
+              <p key={f} style={{
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                color: 'var(--color-ink-3)', margin: 0, padding: '9px 0',
+                borderTop: '1px solid var(--color-line-1)',
+              }}>
+                {f}
+              </p>
             ))}
-            <div style={{ marginTop: '16px', padding: '9px 12px', borderRadius: '8px', background: 'rgba(0,255,133,0.07)', border: '1px solid rgba(0,255,133,0.18)', display: 'flex', alignItems: 'center', gap: '7px' }}>
-              <span style={{ color: 'var(--gr2)', fontSize: '13px' }}>●</span>
-              <span style={{ color: 'var(--gr2)', fontSize: '11px', fontWeight: 500 }}>{pf.trackNote}</span>
-            </div>
           </div>
         </div>
+
+        <div style={{
+          background: 'var(--color-void)', border: '1px solid var(--color-line-1)',
+          borderRadius: 'var(--radius-md)', padding: '18px',
+        }}>
+          <p style={{
+            fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+            letterSpacing: '0.16em', textTransform: 'uppercase',
+            color: 'var(--color-ink-3)', margin: '0 0 16px',
+          }}>
+            FTMO Challenge — Phase 1
+          </p>
+          {rules.map(r => (
+            <div key={r.label} style={{ marginBottom: '13px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                <span style={{
+                  fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
+                  color: 'var(--color-ink-3)',
+                }}>{r.label}</span>
+                <span className="vq-num" style={{
+                  fontSize: 'var(--text-xs)',
+                  color: r.money ? 'var(--color-up)' : 'var(--color-ink-1)',
+                }}>{r.current}{r.unit} / {r.max}{r.unit}</span>
+              </div>
+              <div style={{ height: '3px', background: 'var(--color-line-1)', borderRadius: 'var(--radius-xs)' }}>
+                <div style={{
+                  height: '100%', width: `${(r.current / r.max) * 100}%`,
+                  borderRadius: 'var(--radius-xs)',
+                  background: r.money ? 'var(--color-up)' : 'var(--color-ink-2)',
+                }} />
+              </div>
+            </div>
+          ))}
+          <p style={{
+            marginTop: '16px', paddingTop: '12px',
+            borderTop: '1px solid var(--color-line-1)',
+            fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
+            color: 'var(--color-ink-3)',
+          }}>
+            {pf.trackNote}
+          </p>
+        </div>
       </div>
-    </section>
+    </Section>
   )
 }
-
