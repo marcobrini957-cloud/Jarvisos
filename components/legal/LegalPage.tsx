@@ -83,7 +83,7 @@ export function LegalPage({ title, subtitle, altLang, children }: {
         </div>
 
         <div style={{ borderTop: '1px solid var(--color-line-1)', marginTop: '48px', paddingTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
-          <p style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)', margin: 0 }}>© 2026 Velquor</p>
+          <p style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)', margin: 0 }}>© 2026 Velquor</p>
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
             <Link href="/impressum" style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)', textDecoration: 'none' }}>Impressum</Link>
             <Link href="/privacy" style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)', textDecoration: 'none' }}>Privacy</Link>

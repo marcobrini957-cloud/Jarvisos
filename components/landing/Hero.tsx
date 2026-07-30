@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { CtaLink } from './CtaLink'
 import { useLocale } from '@/hooks/useLocale'
 import { AnimatedDashboard } from './AnimatedDashboard'
 import { TickerStrip } from './TickerStrip'
@@ -65,22 +66,22 @@ export function Hero() {
         </p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: 'clamp(28px, 4vw, 40px)' }}>
-          <Link href="/login?mode=signup" style={{
+          <CtaLink href="/login?mode=signup" style={{
             background: 'var(--color-ink-1)', color: 'var(--color-void)',
             fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
             textDecoration: 'none', padding: '11px 22px',
             borderRadius: 'var(--radius-sm)', whiteSpace: 'nowrap',
           }}>
             {t.hero.cta}
-          </Link>
-          <Link href="/pricing" style={{
+          </CtaLink>
+          <CtaLink href="/pricing" style={{
             fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
             color: 'var(--color-ink-2)', textDecoration: 'none',
             padding: '11px 18px', borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--color-line-2)', whiteSpace: 'nowrap',
           }}>
             See pricing
-          </Link>
+          </CtaLink>
         </div>
 
         {/* Trust line. The green ticks are gone — green means money in this

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { CtaLink } from './CtaLink'
 import { useLocale } from '@/hooks/useLocale'
 import Icon from '@/components/ui/Icon'
 import { Section, SectionHead } from './Section'
@@ -104,12 +104,12 @@ export function Pricing() {
               <p style={{
                 margin: '0 0 18px', minHeight: '17px',
                 fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
-                color: 'var(--color-ink-4)',
+                color: 'var(--color-ink-3)',
               }}>
                 {annual && tier.annualNote ? tier.annualNote : ''}
               </p>
 
-              <Link
+              <CtaLink
                 href={`/login?mode=signup${isFree ? '' : `&plan=${tier.name.toLowerCase()}`}`}
                 style={{
                   display: 'block', textAlign: 'center', padding: '11px',
@@ -122,7 +122,7 @@ export function Pricing() {
                 }}
               >
                 {tier.cta}
-              </Link>
+              </CtaLink>
 
               <div>
                 {tier.features.map((f, fi) => (
@@ -141,7 +141,7 @@ export function Pricing() {
                     <span style={{
                       fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
                       lineHeight: 1.5,
-                      color: f.included ? 'var(--color-ink-2)' : 'var(--color-ink-4)',
+                      color: f.included ? 'var(--color-ink-2)' : 'var(--color-ink-3)',
                     }}>{f.text}</span>
                   </div>
                 ))}
@@ -153,7 +153,7 @@ export function Pricing() {
 
       <p style={{
         marginTop: '22px', fontFamily: 'var(--font-display)',
-        fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)', lineHeight: 1.6,
+        fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)', lineHeight: 1.6,
       }}>
         {pr.footer}
       </p>

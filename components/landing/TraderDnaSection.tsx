@@ -46,7 +46,7 @@ export function TraderDnaSection() {
 
       <p style={{
         fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
-        color: 'var(--color-ink-4)', margin: '14px 0 0',
+        color: 'var(--color-ink-3)', margin: '14px 0 0',
       }}>
         Your DNA sharpens with every trade. The more you trade, the more precisely it knows you.
       </p>

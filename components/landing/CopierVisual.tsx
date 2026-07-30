@@ -108,11 +108,11 @@ export function CopierVisual() {
         display: 'flex', gap: '20px', flexWrap: 'wrap',
       }}>
         <div style={{ display: 'flex', gap: '6px', alignItems: 'baseline' }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)' }}>Avg execution</span>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)' }}>Avg execution</span>
           <span className="vq-num" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-1)' }}>1.8s</span>
         </div>
         <div style={{ display: 'flex', gap: '6px', alignItems: 'baseline' }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)' }}>Signals today</span>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)' }}>Signals today</span>
           <span className="vq-num" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-1)' }}>47</span>
         </div>
       </div>

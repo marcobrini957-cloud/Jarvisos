@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Icon from '@/components/ui/Icon'
+import { CtaLink } from '@/components/landing/CtaLink'
 import { Nav } from '@/components/landing/Nav'
 import { Footer } from '@/components/landing/Footer'
 import { Section, SectionHead, inkButton } from '@/components/landing/Section'
@@ -184,25 +185,25 @@ export default function PricingPage() {
                 <p style={{ margin: '0 0 4px', fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)' }}>
                   {annual ? 'Annual billing' : 'Monthly billing'}
                 </p>
-                <p style={{ margin: '0 0 18px', minHeight: '17px', fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)' }}>
+                <p style={{ margin: '0 0 18px', minHeight: '17px', fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)' }}>
                   {annual && tier.annualNote ? tier.annualNote : ''}
                 </p>
 
-                <Link href={tier.href} style={{
+                <CtaLink href={tier.href} style={{
                   display: 'block', textAlign: 'center', padding: '11px',
                   borderRadius: 'var(--radius-sm)', marginBottom: '6px',
                   fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', textDecoration: 'none',
                   background: isPro ? 'var(--color-ink-1)' : 'transparent',
                   color: isPro ? 'var(--color-void)' : 'var(--color-ink-1)',
                   border: isPro ? '1px solid var(--color-ink-1)' : '1px solid var(--color-line-2)',
-                }}>{tier.cta}</Link>
+                }}>{tier.cta}</CtaLink>
 
                 {!tier.isFree ? (
                   <button onClick={() => setAnnual(a => !a)} style={{
                     display: 'block', width: '100%', margin: '0 0 18px', padding: '6px 0',
                     background: 'none', border: 'none', cursor: 'pointer',
                     fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
-                    color: 'var(--color-ink-4)', textAlign: 'center',
+                    color: 'var(--color-ink-3)', textAlign: 'center',
                   }}>
                     {annual ? `or pay ${tier.monthly}/mo monthly` : `or save with annual — ${tier.annual}/mo`}
                   </button>
@@ -224,7 +225,7 @@ export default function PricingPage() {
                       </span>
                       <span style={{
                         fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', lineHeight: 1.5,
-                        color: f.included ? 'var(--color-ink-2)' : 'var(--color-ink-4)',
+                        color: f.included ? 'var(--color-ink-2)' : 'var(--color-ink-3)',
                       }}>{f.text}</span>
                     </div>
                   ))}
@@ -274,7 +275,7 @@ export default function PricingPage() {
         }}>
           Free forever. No card needed.
         </p>
-        <Link href="/login?mode=signup" style={inkButton}>Get started free</Link>
+        <CtaLink href="/login?mode=signup" style={inkButton}>Get started free</CtaLink>
       </Section>
 
       <Footer />

@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { CtaLink } from './CtaLink'
 import { useLocale } from '@/hooks/useLocale'
 import { Section, SectionHead, inkButton } from './Section'
 
@@ -22,7 +22,7 @@ export function HowItWorks() {
         label={hw.eyebrow}
         title={hw.h2}
         lead={hw.subtitle}
-        action={<Link href="/login?mode=signup" style={inkButton}>{hw.cta}</Link>}
+        action={<CtaLink href="/login?mode=signup" style={inkButton}>{hw.cta}</CtaLink>}
       />
 
       <div className="vq-steps">
@@ -48,7 +48,7 @@ export function HowItWorks() {
             </p>
             <p style={{
               fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
-              lineHeight: 1.55, color: 'var(--color-ink-4)', margin: 0,
+              lineHeight: 1.55, color: 'var(--color-ink-3)', margin: 0,
             }}>
               {s.detail}
             </p>

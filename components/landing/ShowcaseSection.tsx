@@ -39,7 +39,7 @@ export function ShowcaseSection() {
           }}>Before</p>
           <p style={{
             fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
-            color: 'var(--color-ink-4)', margin: 0,
+            color: 'var(--color-ink-3)', margin: 0,
           }}>No structure. No patterns. Just losses.</p>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -50,7 +50,7 @@ export function ShowcaseSection() {
           }}>After</p>
           <p style={{
             fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
-            color: 'var(--color-ink-4)', margin: 0,
+            color: 'var(--color-ink-3)', margin: 0,
           }}>Every trade tracked. AI finds your edge.</p>
         </div>
       </div>

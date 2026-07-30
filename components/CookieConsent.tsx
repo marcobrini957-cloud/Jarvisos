@@ -79,7 +79,7 @@ export function CookieConsent() {
           Velquor runs on <strong style={{ color: 'var(--t1)' }}>essential cookies</strong> — your login
           session and this choice. Free accounts see partner offers, but personalized ads and third-party
           widgets (TradingView) load <strong style={{ color: 'var(--t1)' }}>only if you accept</strong>.{' '}
-          <Link href="/privacy" style={{ color: 'var(--ac)', textDecoration: 'none' }}>Privacy Policy</Link>
+          <Link prefetch={false} href="/privacy" style={{ color: 'var(--ac)', textDecoration: 'none' }}>Privacy Policy</Link>
         </p>
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
           <button

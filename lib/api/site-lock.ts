@@ -56,6 +56,10 @@ export function isSiteLockExempt(pathname: string): boolean {
     pathname.startsWith('/fonts') ||
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/icon') ||
+    // The link-preview card. It is marketing, not product — it shows the
+    // wordmark and the headline and nothing behind the gate — and a link
+    // shared during the private beta should still unfurl.
+    pathname === '/og.png' ||
     pathname === '/manifest.webmanifest' ||
     pathname === '/robots.txt' ||
     pathname.startsWith('/api/cron') ||

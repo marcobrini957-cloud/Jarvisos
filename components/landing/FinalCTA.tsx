@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { CtaLink } from './CtaLink'
 import { useLocale } from '@/hooks/useLocale'
 import { Section, inkButton } from './Section'
 
@@ -34,10 +34,10 @@ export function FinalCTA() {
         }}>
           {c.subtitle}
         </p>
-        <Link href="/login?mode=signup" style={inkButton}>{c.cta}</Link>
+        <CtaLink href="/login?mode=signup" style={inkButton}>{c.cta}</CtaLink>
         <p style={{
           fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
-          color: 'var(--color-ink-4)', margin: '14px 0 0',
+          color: 'var(--color-ink-3)', margin: '14px 0 0',
         }}>
           {c.note}
         </p>
@@ -61,7 +61,7 @@ export function FinalCTA() {
           ))}
           <span style={{
             fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
-            color: 'var(--color-ink-4)',
+            color: 'var(--color-ink-3)',
           }}>+ any MT5 broker</span>
         </div>
       </div>

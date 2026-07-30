@@ -405,10 +405,37 @@ export function AnimatedDashboard() {
       }
     }
 
-    raf = requestAnimationFrame(tick)
+    // ── When this runs ──────────────────────────────────────────────────────
+    // Measured 2026-07-30: the loop was holding 57fps with the mock scrolled
+    // 6,000px off screen — it drove the cursor, the chart and the count-ups for
+    // the entire time someone read the pricing table. It now runs only while
+    // some of it is on screen, and not at all for a visitor who asked for less
+    // motion (the scene still renders; it just stops moving).
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+
+    const start = () => { if (!raf && !reduced) raf = requestAnimationFrame(tick) }
+    const stop  = () => { if (raf) { cancelAnimationFrame(raf); raf = 0 } }
+
+    const box = containerRef.current
+    const io = box
+      ? new IntersectionObserver(([e]) => (e.isIntersecting ? start() : stop()), { threshold: 0 })
+      : null
+    if (io && box) io.observe(box)
+    else start()
+
+    // A backgrounded tab already throttles rAF, but this makes it exact.
+    const onVisibility = () => (document.hidden ? stop() : start())
+    document.addEventListener('visibilitychange', onVisibility)
+
     const onResize = () => { measure(); buildSpline(stepRef.current) }
     window.addEventListener('resize', onResize)
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize) }
+
+    return () => {
+      stop()
+      io?.disconnect()
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('resize', onResize)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

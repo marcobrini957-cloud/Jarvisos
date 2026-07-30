@@ -21,12 +21,17 @@ export const metadata: Metadata = {
     description:
       'Every MT5 trade auto-logged, analysed by AI, and copied across your accounts. Built for serious traders.',
     locale: 'en_US',
+    // Without this every shared link unfurled as a bare text stub, while the
+    // Twitter card below was already promising a large image. Regenerate with
+    // `node scripts/og.mjs` — it renders in the product's own type.
+    images: [{ url: '/og.png', width: 1200, height: 630, alt: 'Velquor — your edge is already in your trades' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Velquor — Your Trading Operating System',
     description:
       'Every MT5 trade auto-logged, analysed by AI, and copied across your accounts. Built for serious traders.',
+    images: ['/og.png'],
   },
   robots: { index: true, follow: true },
   appleWebApp: {

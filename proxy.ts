@@ -40,6 +40,9 @@ export async function proxy(request: NextRequest) {
     // Partner logos appear in the free-user ad rail, which renders before the
     // session is resolved on a cold load.
     pathname.startsWith('/partners') ||
+    // The link-preview card. Discord, Slack and X fetch it signed-out, so
+    // without this it 307s to /login and every shared link unfurls blank.
+    pathname === '/og.png' ||
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml' ||
     pathname === '/manifest.webmanifest' ||

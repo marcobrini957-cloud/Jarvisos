@@ -95,7 +95,7 @@ export function VelquorSection() {
             }}>
               <span style={{
                 fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
-                color: 'var(--color-ink-4)', flex: 1,
+                color: 'var(--color-ink-3)', flex: 1,
               }}>{ai.placeholder}</span>
               <span style={{
                 fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',

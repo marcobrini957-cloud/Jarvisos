@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { LogoMark } from '@/components/ui/LogoMark'
+import { CtaLink } from './CtaLink'
 import { useLocale } from '@/hooks/useLocale'
 
 /**
@@ -38,12 +39,15 @@ export function Nav() {
     return () => window.removeEventListener('scroll', h)
   }, [])
 
+  // Whether to say "Sign in" or "Dashboard" — read from the cookie, not from
+  // the Supabase client. Importing that client here pulled 237kB of JS (the
+  // single largest script on the landing page, measured 2026-07-30) onto every
+  // anonymous visit, to answer a question a cookie already answers. @supabase/ssr
+  // writes `sb-<project-ref>-auth-token`, chunked as `.0`/`.1` when it is long.
+  // Being wrong is harmless in both directions: the dashboard bounces anyone
+  // without a session, and /login forwards anyone who has one.
   useEffect(() => {
-    import('@/lib/supabase/client').then(({ createClient }) => {
-      createClient().auth.getUser().then(({ data }) => {
-        if (data.user) setLoggedIn(true)
-      })
-    })
+    setLoggedIn(/(^|;\s*)sb-[^=]+-auth-token(\.\d+)?=/.test(document.cookie))
   }, [])
 
   useEffect(() => {
@@ -91,6 +95,7 @@ export function Nav() {
             <Link
               key={label}
               href={href}
+              prefetch={false}
               style={linkStyle}
               onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-ink-1)')}
               onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-ink-3)')}
@@ -104,15 +109,16 @@ export function Nav() {
           <Link
             href={loggedIn ? '/dashboard' : '/login'}
             className="hidden sm:block"
+            prefetch={false}
             style={linkStyle}
             onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-ink-1)')}
             onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-ink-3)')}
           >
             {loggedIn ? 'Dashboard' : t.nav.signIn}
           </Link>
-          <Link href="/login?mode=signup" className="hidden sm:block" style={ctaStyle}>
+          <CtaLink href="/login?mode=signup" className="hidden sm:block" style={ctaStyle}>
             {t.nav.getStarted}
-          </Link>
+          </CtaLink>
 
           {/* Mobile — the dashboard's own menu button, same folding lines */}
           <button
@@ -170,6 +176,7 @@ export function Nav() {
           <Link
             key={label}
             href={href}
+            prefetch={false}
             onClick={() => setMenuOpen(false)}
             style={{
               display: 'block', padding: '13px 2px',
@@ -184,6 +191,7 @@ export function Nav() {
         <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
           <Link
             href={loggedIn ? '/dashboard' : '/login'}
+            prefetch={false}
             onClick={() => setMenuOpen(false)}
             style={{
               flex: 1, textAlign: 'center', padding: '11px',
@@ -194,13 +202,13 @@ export function Nav() {
           >
             {loggedIn ? 'Dashboard' : t.nav.signIn}
           </Link>
-          <Link
+          <CtaLink
             href="/login?mode=signup"
             onClick={() => setMenuOpen(false)}
             style={{ ...ctaStyle, flex: 1, textAlign: 'center', padding: '11px' }}
           >
             {t.nav.getStarted}
-          </Link>
+          </CtaLink>
         </div>
       </div>
     </>

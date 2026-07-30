@@ -85,7 +85,7 @@ export function AutoSyncVisual() {
         padding: '9px 14px', borderTop: '1px solid var(--color-line-1)',
         display: 'flex', alignItems: 'baseline', gap: '6px',
       }}>
-        <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-4)' }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)' }}>
           Last sync
         </span>
         <span className="vq-num" style={{ fontSize: 'var(--text-xs)', color: 'var(--color-ink-1)' }}>1.2s ago</span>
