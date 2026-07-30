@@ -1,5 +1,6 @@
 {
   "crons": [
-    { "path": "/api/cron/bridge-health", "schedule": "0 8 * * *" }
+    { "path": "/api/cron/bridge-health", "schedule": "0 8 * * *" },
+    { "path": "/api/cron/prune-snapshots", "schedule": "20 3 * * *" }
   ]
 }

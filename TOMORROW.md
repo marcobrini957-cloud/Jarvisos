@@ -31,10 +31,15 @@ between this and a launchable product.
    - Email: Cloudflare routing / Resend (dev_todos has the list)
 
 ## C. Build next (priority order)
-6. **Snapshot pruning job** (~1h, no decisions needed) — keep raw
-   account_snapshots 48h, thin to hourly after, delete >90d. Runs as
-   pg_cron in Supabase or a bridge interval. Without it every connected
-   account writes ~8.6K rows/day forever.
+6. ~~**Snapshot pruning job**~~ DONE 2026-07-30 — `prune_account_snapshots()`
+   (supabase-snapshot-pruning.sql, live on the database) keeps 48h raw, thins
+   to one row per hour per account to 90 days, then deletes. Invoked daily at
+   03:20 UTC by `/api/cron/prune-snapshots` (vercel.json). First run removed
+   **104,704 of 122,552 rows** — the measurement in the old note was right,
+   8,700 rows/day from a single login. Every read in the product is
+   `order(snapshot_at desc).limit(1)`, so nothing lost resolution it was using.
+   ⚠️ The route refuses to run without `x-vercel-cron` or `CRON_SECRET`: it
+   deletes, so it does not get the watchdog's "no secret → open" default.
 7. ~~**EA Connect Wizard**~~ DONE 2026-07-25 (f26fa2a) — `/connect` +
    `components/ea/EAConnectWizard.tsx`, also embedded in onboarding step 2 and
    linked from Settings / Copy tab / the empty Trading tab. 3 steps with big
