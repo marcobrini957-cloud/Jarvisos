@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { DisplayModeProvider } from '@/context/DisplayModeContext'
 import { CookieConsent } from '@/components/CookieConsent'
+import { Analytics } from '@/components/Analytics'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -62,6 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="h-full">
         <DisplayModeProvider>{children}</DisplayModeProvider>
         <CookieConsent />
+        <Analytics />
       </body>
     </html>
   )

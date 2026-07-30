@@ -34,7 +34,7 @@ export function FinalCTA() {
         }}>
           {c.subtitle}
         </p>
-        <CtaLink href="/login?mode=signup" style={inkButton}>{c.cta}</CtaLink>
+        <CtaLink href="/login?mode=signup" where="final-cta" style={inkButton}>{c.cta}</CtaLink>
         <p style={{
           fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
           color: 'var(--color-ink-3)', margin: '14px 0 0',

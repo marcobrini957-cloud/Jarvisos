@@ -116,7 +116,7 @@ export function Nav() {
           >
             {loggedIn ? 'Dashboard' : t.nav.signIn}
           </Link>
-          <CtaLink href="/login?mode=signup" className="hidden sm:block" style={ctaStyle}>
+          <CtaLink href="/login?mode=signup" where="nav" className="hidden sm:block" style={ctaStyle}>
             {t.nav.getStarted}
           </CtaLink>
 
@@ -204,6 +204,7 @@ export function Nav() {
           </Link>
           <CtaLink
             href="/login?mode=signup"
+            where="nav-mobile"
             onClick={() => setMenuOpen(false)}
             style={{ ...ctaStyle, flex: 1, textAlign: 'center', padding: '11px' }}
           >

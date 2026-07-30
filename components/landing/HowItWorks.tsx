@@ -22,7 +22,7 @@ export function HowItWorks() {
         label={hw.eyebrow}
         title={hw.h2}
         lead={hw.subtitle}
-        action={<CtaLink href="/login?mode=signup" style={inkButton}>{hw.cta}</CtaLink>}
+        action={<CtaLink href="/login?mode=signup" where="how-it-works" style={inkButton}>{hw.cta}</CtaLink>}
       />
 
       <div className="vq-steps">

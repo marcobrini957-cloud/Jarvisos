@@ -66,7 +66,7 @@ export function Hero() {
         </p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: 'clamp(28px, 4vw, 40px)' }}>
-          <CtaLink href="/login?mode=signup" style={{
+          <CtaLink href="/login?mode=signup" where="hero" style={{
             background: 'var(--color-ink-1)', color: 'var(--color-void)',
             fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
             textDecoration: 'none', padding: '11px 22px',
@@ -74,7 +74,7 @@ export function Hero() {
           }}>
             {t.hero.cta}
           </CtaLink>
-          <CtaLink href="/pricing" style={{
+          <CtaLink href="/pricing" where="hero-pricing" style={{
             fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
             color: 'var(--color-ink-2)', textDecoration: 'none',
             padding: '11px 18px', borderRadius: 'var(--radius-sm)',

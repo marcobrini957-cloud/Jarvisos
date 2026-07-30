@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { CtaLink } from './CtaLink'
 import { useLocale } from '@/hooks/useLocale'
 import Icon from '@/components/ui/Icon'
+import { trackEvent } from '@/lib/analytics'
 import { Section, SectionHead } from './Section'
 
 /**
@@ -33,7 +34,7 @@ export function Pricing() {
               return (
                 <button
                   key={String(isAnnual)}
-                  onClick={() => setAnnual(isAnnual)}
+                  onClick={() => { setAnnual(isAnnual); trackEvent({ name: 'billing_toggle', period: isAnnual ? 'annual' : 'monthly' }) }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '8px',
                     fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
@@ -111,6 +112,7 @@ export function Pricing() {
 
               <CtaLink
                 href={`/login?mode=signup${isFree ? '' : `&plan=${tier.name.toLowerCase()}`}`}
+                where={`pricing-block-${tier.name.toLowerCase()}`}
                 style={{
                   display: 'block', textAlign: 'center', padding: '11px',
                   borderRadius: 'var(--radius-sm)', marginBottom: '18px',

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { CSSProperties, ReactNode } from 'react'
+import { trackEvent } from '@/lib/analytics'
 
 /**
  * A call-to-action that warms its destination on intent rather than on sight.
@@ -19,8 +20,11 @@ import type { CSSProperties, ReactNode } from 'react'
  * and a thumb lands before it lifts, which is enough to have the route warm —
  * and a visitor who never reaches for the button never pays for it.
  */
-export function CtaLink({ href, style, className, children, onClick }: {
+export function CtaLink({ href, where, style, className, children, onClick }: {
   href: string
+  /** Which section this button sits in — the only thing that tells us where
+      the funnel actually converts. */
+  where: string
   style?: CSSProperties
   className?: string
   children: ReactNode
@@ -28,6 +32,7 @@ export function CtaLink({ href, style, className, children, onClick }: {
 }) {
   const router = useRouter()
   const warm = () => router.prefetch(href)
+  const click = () => { trackEvent({ name: 'cta_click', where }); onClick?.() }
 
   return (
     <Link
@@ -36,7 +41,7 @@ export function CtaLink({ href, style, className, children, onClick }: {
       onMouseEnter={warm}
       onFocus={warm}
       onTouchStart={warm}
-      onClick={onClick}
+      onClick={click}
       style={style}
       className={className}
     >

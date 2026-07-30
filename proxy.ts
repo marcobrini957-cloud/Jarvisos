@@ -120,6 +120,12 @@ export const config = {
     // — so the site lock did not cover the one page an outsider would try.
     // It is safe to include: /login is in `isPublic`, so it short-circuits
     // before the auth redirect and cannot loop.
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    //
+    // `_vercel` is excluded because the platform serves it, not us:
+    // /_vercel/insights/script.js and its event beacon were being 307'd to
+    // /gate (and, once the lock is lifted, to /login), so web analytics would
+    // have silently collected nothing from exactly the signed-out visitors it
+    // exists to measure.
+    '/((?!_next/static|_next/image|_vercel|favicon.ico).*)',
   ],
 }

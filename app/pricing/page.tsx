@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Icon from '@/components/ui/Icon'
+import { trackEvent } from '@/lib/analytics'
 import { CtaLink } from '@/components/landing/CtaLink'
 import { Nav } from '@/components/landing/Nav'
 import { Footer } from '@/components/landing/Footer'
@@ -124,7 +125,7 @@ export default function PricingPage() {
                 return (
                   <button
                     key={String(isAnnual)}
-                    onClick={() => setAnnual(isAnnual)}
+                    onClick={() => { setAnnual(isAnnual); trackEvent({ name: 'billing_toggle', period: isAnnual ? 'annual' : 'monthly' }) }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '8px',
                       fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
@@ -189,7 +190,7 @@ export default function PricingPage() {
                   {annual && tier.annualNote ? tier.annualNote : ''}
                 </p>
 
-                <CtaLink href={tier.href} style={{
+                <CtaLink href={tier.href} where={`pricing-page-${tier.name.toLowerCase()}`} style={{
                   display: 'block', textAlign: 'center', padding: '11px',
                   borderRadius: 'var(--radius-sm)', marginBottom: '6px',
                   fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)', textDecoration: 'none',
@@ -275,7 +276,7 @@ export default function PricingPage() {
         }}>
           Free forever. No card needed.
         </p>
-        <CtaLink href="/login?mode=signup" style={inkButton}>Get started free</CtaLink>
+        <CtaLink href="/login?mode=signup" where="pricing-page-footer" style={inkButton}>Get started free</CtaLink>
       </Section>
 
       <Footer />
