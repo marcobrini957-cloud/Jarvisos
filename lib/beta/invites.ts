@@ -121,6 +121,19 @@ export async function claimInvite(
 
   // Already settled for this user — nothing to do, and not an error.
   if (invite.redeemed_by === userId) return { claimed: true, tier: invite.grant_tier }
+
+  // An invite is for someone who has not signed up yet. An account that already
+  // existed when the code was created passes the gate with it but must not
+  // spend it — otherwise Marco testing his own invite link burns the code he
+  // was about to send, which is exactly what happened the first time he tried.
+  const { data: account } = await db
+    .from('user_profiles')
+    .select('created_at')
+    .eq('id', userId)
+    .maybeSingle()
+  if (account?.created_at && new Date(account.created_at) < new Date(invite.created_at)) {
+    return { claimed: false, reason: 'account predates the invite' }
+  }
   // Someone else got here first. The gate cookie is shared-able; the plan grant
   // is not.
   if (invite.redeemed_by)  return { claimed: false, reason: 'already redeemed' }
