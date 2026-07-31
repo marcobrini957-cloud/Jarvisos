@@ -263,6 +263,7 @@ export default function VelquorTab() {
             padding: '10px 12px',
             }}>
             <textarea
+              data-tour="analyst"
               ref={inputRef}
               value={input}
               rows={1}

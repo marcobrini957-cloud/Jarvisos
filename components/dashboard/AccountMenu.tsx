@@ -141,6 +141,7 @@ export default function AccountMenu({
   return (
     <div ref={rootRef} style={{ position: 'relative' }}>
       <button
+        data-tour="connect-mt5"
         onClick={() => setOpen(v => !v)}
         className="flex items-center gap-2"
         style={{

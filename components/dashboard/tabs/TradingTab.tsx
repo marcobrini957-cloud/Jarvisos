@@ -134,7 +134,7 @@ export default function TradingTab() {
   // ── Empty state — no trades yet ────────────────────────────────────────────
   if (!loading && trades.length === 0) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '20px', padding: '40px 20px', textAlign: 'center' }}>
+      <div data-tour="trade-log" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '20px', padding: '40px 20px', textAlign: 'center' }}>
         {/* Icon */}
         <LogoMark size={72} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -143,7 +143,7 @@ export default function TradingTab() {
             Connect your MT5 account to start syncing trades automatically. VELQUOR will analyse your performance in real time.
           </p>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '280px' }}>
+        <div data-tour="equity" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '280px' }}>
           {[
             'Install the VELQUOR EA in your MetaTrader 5',
             'Paste your API key into the EA inputs',
@@ -353,7 +353,7 @@ export default function TradingTab() {
 
       {/* Equity Curve + Daily P&L Calendar — side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-stretch">
-        <EquityCurve trades={trades} />
+        <div data-tour="equity"><EquityCurve trades={trades} /></div>
         <Panel title="Trading calendar" className="h-full">
           <TradeCalendar allRows={allRows} />
         </Panel>
@@ -362,7 +362,7 @@ export default function TradingTab() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
         {/* Trade Log */}
         <div className="lg:col-span-3">
-          <TradeLogTable trades={trades} loading={loading} onAnnotate={setAnnotating} onViewScreenshot={setScreenshotViewing} />
+          <div data-tour="trade-log"><TradeLogTable trades={trades} loading={loading} onAnnotate={setAnnotating} onViewScreenshot={setScreenshotViewing} /></div>
         </div>
 
         {/* Stats + Position Size */}

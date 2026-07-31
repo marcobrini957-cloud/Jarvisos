@@ -237,7 +237,7 @@ export default function JournalTab() {
           </Panel>
 
           {/* Recent Entries */}
-          <Panel title="Recent entries" noPadding action={
+          <Panel data-tour="journal" title="Recent entries" noPadding action={
             isFiltered
               ? <Num size="xs" tone="muted">{filteredEntries.length} result{filteredEntries.length !== 1 ? 's' : ''}</Num>
               : undefined

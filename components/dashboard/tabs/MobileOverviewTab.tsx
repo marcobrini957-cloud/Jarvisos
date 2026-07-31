@@ -167,6 +167,7 @@ export default function MobileOverviewTab() {
       {/* ── Instrument cluster ─────────────────────────────────────
           Two bands of three instead of four tinted tiles: same figures,
           roughly half the vertical space, one surface treatment. */}
+      <div data-tour="stat-strip">
       <MetricStrip metrics={[
         { label: 'MT5 Balance', value: fmtEur(balance, 0), tone: 'neutral',
           meta: equity > 0 && equity !== balance ? `Eq ${fmtEur(equity, 0)}` : `${wins}W/${losses}L` },
@@ -176,6 +177,7 @@ export default function MobileOverviewTab() {
           num: todayPnl, tone: todayPnl === 0 ? 'muted' : 'auto',
           meta: todayPnl !== 0 ? `${(balance > 0 ? todayPnl / (balance - todayPnl) * 100 : 0).toFixed(2)}%` : 'No trades' },
       ]} />
+      </div>
 
       <MetricStrip metrics={[
         { label: 'Net worth', value: fmtEur(netWorth, 0), tone: 'neutral', meta: 'MT5 + portfolio' },

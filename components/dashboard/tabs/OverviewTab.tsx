@@ -203,6 +203,7 @@ export default function OverviewTab() {
 
       {/* ── Instrument cluster ───────────────────────────────────────────────
           Five figures in the height one padded card used to take. */}
+      <div data-tour="stat-strip">
       <MetricStrip metrics={[
         {
           label: 'MT5 Balance',
@@ -238,19 +239,20 @@ export default function OverviewTab() {
           meta:  stats ? `€${stats.avgWin.toFixed(0)} / €${stats.avgLoss.toFixed(0)} avg` : '',
         },
       ]} />
+      </div>
 
       {/* ── Net worth ────────────────────────────────────────────────────── */}
       <NetWorthCurve portfolioValue={totalValueEur} />
 
       {/* ── Calendar + right rail ────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '12px', alignItems: 'start' }}>
-        <Surface title="Trading calendar">
+        <Surface title="Trading calendar" data-tour="calendar">
           <div style={{ padding: '12px 14px' }}>
             <TradeCalendar allRows={allRows} />
           </div>
         </Surface>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 }}>
+        <div data-tour="streaks" style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 }}>
           <StreakCard
             trades={trades}
             journalStreak={journalStreak}

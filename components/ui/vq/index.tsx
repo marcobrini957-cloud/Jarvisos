@@ -61,17 +61,20 @@ export function Label({ children, style }: { children: ReactNode; style?: CSSPro
 
 // ── Surface ───────────────────────────────────────────────────────────────────
 
-export function Surface({ title, action, children, padded = false, className = '', style }: {
+export function Surface({ title, action, children, padded = false, className = '', style, 'data-tour': dataTour }: {
   title?:   ReactNode
   action?:  ReactNode
   children: ReactNode
   padded?:  boolean
   className?: string
   style?:   CSSProperties
+  /** Anchor name for the first-run tour (components/dashboard/tour). */
+  'data-tour'?: string
 }) {
   return (
     <div
       className={className}
+      data-tour={dataTour}
       style={{
         background: 'var(--color-surface-1)',
         border: '1px solid var(--color-line-1)',

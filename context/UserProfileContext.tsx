@@ -14,6 +14,9 @@ export interface UserProfile {
   tier:          Tier
   /** Pips of movement below which a trade is a scratch. See lib/trading/stats. */
   be_pips:       number
+  /** First-run tour: how many times it has appeared, and whether it is done. */
+  tour_shown_count:  number
+  tour_completed_at: string | null
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -24,6 +27,10 @@ const DEFAULT_PROFILE: UserProfile = {
   currency:      'EUR',
   tier:          'free',
   be_pips:       BE_PIPS,
+  // Assume done until the profile says otherwise, so the tour can never flash
+  // up for a returning user during the moment before their profile loads.
+  tour_shown_count:  99,
+  tour_completed_at: 'unknown',
 }
 
 interface UserProfileContextValue {

@@ -292,6 +292,36 @@ export default function SettingsTab() {
         </div>
       </Panel>
 
+      {/* ── Tour ── */}
+      <Panel title="Getting started">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+          <div>
+            <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500, margin: 0 }}>Show the tour again</p>
+            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '2px', lineHeight: 1.6 }}>
+              The walkthrough of each section. Easy to dismiss by reflex on day one.
+            </p>
+          </div>
+          <button
+            onClick={async () => {
+              await fetch('/api/user/tour', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'replay' }),
+              }).catch(() => {})
+              window.dispatchEvent(new CustomEvent('vq-replay-tour'))
+            }}
+            style={{
+              padding: '8px 14px', borderRadius: 'var(--radius-sm)', flexShrink: 0,
+              background: 'transparent', border: '1px solid var(--color-line-1)',
+              color: 'var(--color-ink-1)', fontFamily: 'var(--font-display)',
+              fontSize: 'var(--text-base)', cursor: 'pointer',
+            }}
+          >
+            Replay tour
+          </button>
+        </div>
+      </Panel>
+
       {/* ── How a trade is scored ──
           This is the one number that changes what every win rate, streak and
           calendar colour in the product means, so it is stated in plain terms

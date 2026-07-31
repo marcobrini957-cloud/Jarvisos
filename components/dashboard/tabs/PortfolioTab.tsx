@@ -280,7 +280,7 @@ export default function PortfolioTab() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
         {/* Holdings table */}
         <div className="lg:col-span-3">
-          <Panel title="Holdings" noPadding action={
+          <Panel data-tour="portfolio-add" title="Holdings" noPadding action={
             <div className="portfolio-panel-actions flex gap-2">
               {/* Search — an icon until it is needed, then an input. A permanent
                   search box in a header this crowded costs more room than it is

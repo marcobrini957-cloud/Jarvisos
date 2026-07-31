@@ -8,6 +8,8 @@ import { ReactNode } from 'react'
  * of the prop surface (`accent`, `noPadding`, `fill`) callers rely on.
  */
 interface PanelProps {
+  /** Anchor name for the first-run tour (components/dashboard/tour). */
+  'data-tour'?: string
   title?:     ReactNode
   children:   ReactNode
   className?: string
@@ -20,9 +22,10 @@ interface PanelProps {
   fill?:      boolean
 }
 
-export default function Panel({ title, children, className = '', action, noPadding = false, accent, fill = false }: PanelProps) {
+export default function Panel({ title, children, className = '', action, noPadding = false, accent, fill = false, 'data-tour': dataTour }: PanelProps) {
   return (
     <div
+      data-tour={dataTour}
       className={`flex flex-col ${className}`}
       style={{
         background:   'var(--color-surface-1)',

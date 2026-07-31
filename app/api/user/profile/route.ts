@@ -25,6 +25,8 @@ type ProfileRow = {
   daily_loss_mode?:  string | null
   daily_loss_value?: number | string | null
   be_pips?:          number | null
+  tour_shown_count?: number | null
+  tour_completed_at?: string | null
 }
 
 /**
@@ -59,6 +61,8 @@ function shapeProfile(row: ProfileRow | null, meta: Record<string, unknown> | un
     // this shaper is the response, so a column added to the query alone is
     // silently discarded on its way out.
     be_pips: row?.be_pips != null ? clampBePips(row.be_pips) : BE_PIPS,
+    tour_shown_count:  row?.tour_shown_count ?? 0,
+    tour_completed_at: row?.tour_completed_at ?? null,
   }
 }
 
@@ -74,7 +78,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value, be_pips')
+      .select('display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value, be_pips, tour_shown_count, tour_completed_at')
       .eq('id', user.id)
       .single()
 
@@ -156,7 +160,7 @@ export async function PATCH(request: Request) {
     const { data, error } = await supabase
       .from('user_profiles')
       .upsert(update, { onConflict: 'id' })
-      .select('display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value, be_pips')
+      .select('display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value, be_pips, tour_shown_count, tour_completed_at')
       .single()
 
     if (error) {
