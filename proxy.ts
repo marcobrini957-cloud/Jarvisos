@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { SITE_LOCK_COOKIE, isSiteLocked, isSiteLockExempt, isValidSiteToken } from '@/lib/api/site-lock'
+import { BETA_CODE_COOKIE, SITE_LOCK_COOKIE, isSiteLocked, isSiteLockExempt, isValidSiteToken } from '@/lib/api/site-lock'
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -10,7 +10,9 @@ export async function proxy(request: NextRequest) {
   // so the product is not visible to anyone who finds the domain while it is
   // still being built. Off entirely unless SITE_PASSWORD is set.
   if (isSiteLocked() && !isSiteLockExempt(pathname)) {
-    if (!isValidSiteToken(request.cookies.get(SITE_LOCK_COOKIE)?.value)) {
+    const siteToken = request.cookies.get(SITE_LOCK_COOKIE)?.value
+    const betaCode  = request.cookies.get(BETA_CODE_COOKIE)?.value
+    if (!isValidSiteToken(siteToken, betaCode)) {
       // An API caller gets JSON; only a browser gets sent to the gate, and it
       // remembers where it was going.
       if (pathname.startsWith('/api/')) {

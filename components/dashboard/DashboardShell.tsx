@@ -47,6 +47,18 @@ export default function DashboardShell() {
     return () => document.body.classList.remove('vq2')
   }, [])
 
+  // Settle a beta invite the browser may have arrived on. The auth callback
+  // already tries this, but a password sign-in never passes through it and
+  // Google login is a client transition — so a tester would otherwise sit on
+  // the free tier with every paid panel locked. Idempotent server-side, and
+  // once per tab is enough.
+  useEffect(() => {
+    if (sessionStorage.getItem('vq-beta-claimed')) return
+    fetch('/api/beta/claim', { method: 'POST' })
+      .then(r => r.ok && sessionStorage.setItem('vq-beta-claimed', '1'))
+      .catch(() => {})
+  }, [])
+
   // Ping last_seen_at so dev console can show "Online Now"
   useEffect(() => {
     fetch('/api/dev/ping', { method: 'POST' }).catch(() => {})

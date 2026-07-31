@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { unlockSite } from './actions'
 import { LogoMark } from '@/components/ui/LogoMark'
 
@@ -13,7 +13,6 @@ import { LogoMark } from '@/components/ui/LogoMark'
  * learn nothing about what is being built here.
  */
 function Gate() {
-  const router = useRouter()
   const params = useSearchParams()
   const next = params.get('next') || '/'
 
@@ -21,12 +20,23 @@ function Gate() {
   const [error,    setError]    = useState(false)
   const [busy,     setBusy]     = useState(false)
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!password || busy) return
+  // An invite link (/gate?code=NAME-XXXX) fills the field and submits itself.
+  // A tester should meet the product, not a password box.
+  const auto = useRef(false)
+  const invited = params.get('code')
+  useEffect(() => {
+    if (!invited || auto.current) return
+    auto.current = true
+    setPassword(invited)
+    void attempt(invited)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invited])
+
+  async function attempt(entry: string) {
+    if (!entry.trim() || busy) return
     setBusy(true)
     setError(false)
-    const ok = await unlockSite(password)
+    const ok = await unlockSite(entry)
     setBusy(false)
     if (ok) {
       // A full load, not a client transition: the proxy has to re-evaluate with
@@ -36,6 +46,11 @@ function Gate() {
       setError(true)
       setPassword('')
     }
+  }
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault()
+    void attempt(password)
   }
 
   return (
@@ -53,14 +68,21 @@ function Gate() {
       >
         <LogoMark size={34} />
 
+        {/*
+          Readable, not masked. Beta codes get dictated over the phone and read
+          off a message — hiding the characters turns every typo into a silent
+          "Incorrect". What is behind this curtain is a product, not an account.
+        */}
         <input
-          type="password"
+          type="text"
           value={password}
           onChange={e => { setPassword(e.target.value); setError(false) }}
-          placeholder="Password"
+          placeholder="Password or access code"
           autoFocus
-          autoComplete="current-password"
-          aria-label="Site password"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          aria-label="Site password or beta access code"
           aria-invalid={error}
           style={{
             width: '100%', textAlign: 'center',
@@ -73,14 +95,21 @@ function Gate() {
           }}
         />
 
+        {/*
+          Only `busy` disables this. Keying it off the input's React state as
+          well meant a value that arrived without an input event — a password
+          manager, an autofill, a fill that landed before hydration — left the
+          button dead with the field visibly full, and Enter does not submit a
+          form whose only submit button is disabled. `submit` guards on empty.
+        */}
         <button
           type="submit"
-          disabled={!password || busy}
+          disabled={busy}
           style={{
             width: '100%', padding: '10px',
             background: '#ffffff', border: 'none', borderRadius: '6px',
             color: '#000000', fontSize: '13px', cursor: busy ? 'default' : 'pointer',
-            opacity: !password || busy ? 0.35 : 1,
+            opacity: !password.trim() || busy ? 0.35 : 1,
             transition: 'opacity 0.15s',
           }}
         >

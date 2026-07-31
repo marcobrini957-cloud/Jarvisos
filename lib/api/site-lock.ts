@@ -14,6 +14,13 @@ import { createHash } from 'crypto'
 
 export const SITE_LOCK_COOKIE = '__site_access'
 
+/**
+ * Which beta code opened the curtain, if it was a code rather than the shared
+ * password. Two jobs: it lets the proxy verify the access token without a
+ * database read, and it tells the signup path which invite to credit.
+ */
+export const BETA_CODE_COOKIE = '__beta'
+
 export function siteLockPassword(): string | null {
   const pw = process.env.SITE_PASSWORD
   return pw && pw.length > 0 ? pw : null
@@ -31,14 +38,35 @@ export function siteLockToken(password: string): string {
   return createHash('sha256').update(`velquor-gate:${password}`).digest('hex')
 }
 
-export function isValidSiteToken(token: string | undefined): boolean {
+/**
+ * The same idea for a personal beta code. Minting requires SITE_PASSWORD, so a
+ * holder cannot forge a token for a code they were never given, and the proxy
+ * can verify one against the code cookie with no database read.
+ *
+ * The trade this makes: revoking a code cannot reach into a browser that is
+ * already holding a valid cookie. Revocation is enforced where it actually
+ * matters instead — the code can no longer be redeemed, and revoking bans the
+ * account that claimed it, which every API route already checks. Someone
+ * revoked keeps a view of the marketing site and loses the product.
+ */
+export function betaCodeToken(code: string): string {
+  const pw = siteLockPassword() ?? ''
+  return createHash('sha256').update(`velquor-gate-code:${normalizeBetaCode(code)}:${pw}`).digest('hex')
+}
+
+/** Codes are dictated over the phone, so compare them forgivingly. */
+export function normalizeBetaCode(raw: string): string {
+  return raw.trim().toUpperCase().replace(/\s+/g, '')
+}
+
+export function isValidSiteToken(token: string | undefined, betaCode?: string): boolean {
   const pw = siteLockPassword()
   if (!pw) return true          // gate disabled → everything passes
   if (!token) return false
-  const expected = siteLockToken(pw)
   // Same length by construction (both hex sha256), so a plain compare is fine
   // here; the digest is not a credential an attacker can grind offline.
-  return token === expected
+  if (token === siteLockToken(pw)) return true
+  return !!betaCode && token === betaCodeToken(betaCode)
 }
 
 /**
