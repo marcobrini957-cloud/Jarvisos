@@ -125,7 +125,10 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
     : 0
   // A skill score is not a P&L. Green belongs to money, so strength reads as
   // brightness and only a genuinely weak score keeps the red.
-  const scoreCol = (s: number) => s >= 70 ? '#FFFFFF' : s >= 45 ? 'rgba(255,255,255,0.55)' : 'var(--color-down)'
+  // The legend below has to keep telling the truth about these. It previously
+  // read "green / amber / red" while this function returned white, grey and
+  // red — a caption describing a palette that had been replaced underneath it.
+  const scoreCol = (s: number) => s >= 70 ? 'var(--color-key)' : s >= 45 ? 'var(--color-ink-2)' : 'var(--color-warn)'
   const ovrColor = scoreCol(ovr)
 
   // ── SVG geometry ──────────────────────────────────────────────────────────
@@ -362,7 +365,7 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
             <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
               Your <strong style={{ color: 'var(--t1)' }}>OVR</strong> is the average of the skills below, each scored 0–100.
               Skills you haven&apos;t logged data for show <span style={{ color: 'var(--t2)' }}>“—”</span> and are left out of the average — they don&apos;t drag your score down.
-              Colours: <span style={{ color: 'var(--color-up)' }}>green ≥ 70</span> · <span style={{ color: '#FFFFFF' }}>amber 45–69</span> · <span style={{ color: 'var(--color-down)' }}>red &lt; 45</span>.
+              Colours: <span style={{ color: 'var(--color-key)' }}>blue ≥ 70</span> · <span style={{ color: 'var(--color-ink-2)' }}>grey 45–69</span> · <span style={{ color: 'var(--color-warn)' }}>amber &lt; 45</span>. These are skill scores, not money, so they do not borrow green and red.
             </p>
 
             {[

@@ -58,7 +58,11 @@ export default function DisciplineTab() {
       title: 'Habits Today',
       value: `${todayCompleted}/${todayTotal}`,
       sub:   `${habitCompletionPct}% complete`,
-      color: habitCompletionPct === 100 ? 'var(--color-up)' : habitCompletionPct >= 50 ? 'var(--color-ink-3)' : 'var(--color-down)',
+      // A count of habits is not a P&L. Red on "0/0" told someone who has not
+      // set any habits up yet that they were losing, and green on a full house
+      // borrowed profit's colour for a checklist. Complete earns the key
+      // accent; everything else is ink.
+      color: habits.length > 0 && habitCompletionPct === 100 ? 'var(--color-key)' : 'var(--color-ink-1)',
     },
     {
       title: 'Best Streak',
@@ -70,13 +74,15 @@ export default function DisciplineTab() {
       title: 'Tasks Today',
       value: `${doneToday}/${todayTasks.length}`,
       sub:   'tasks completed',
-      color: 'var(--color-ink-3)',
+      color: todayTasks.length > 0 && doneToday === todayTasks.length ? 'var(--color-key)' : 'var(--color-ink-1)',
     },
     {
       title: 'Overdue',
       value: String(overdueTasks.length),
       sub:   overdueTasks.length === 0 ? 'all clear' : 'needs attention',
-      color: overdueTasks.length > 0 ? 'var(--color-down)' : 'var(--color-up)',
+      // Nothing overdue is the normal state, not a win — ink. Something
+      // overdue is a genuine warning, which is what --color-warn is for.
+      color: overdueTasks.length > 0 ? 'var(--color-warn)' : 'var(--color-ink-1)',
     },
   ]
 
@@ -298,7 +304,7 @@ export default function DisciplineTab() {
           <Panel title="Overdue" noPadding>
             {overdueTasks.length === 0 ? (
               <div className="flex items-center justify-center py-6">
-                <span style={{ color: 'var(--color-up)', fontSize: 'var(--text-base)' }}>All clear — nothing overdue</span>
+                <span style={{ color: 'var(--color-ink-2)', fontSize: 'var(--text-base)' }}>All clear — nothing overdue</span>
               </div>
             ) : (
               overdueTasks.map(t => (

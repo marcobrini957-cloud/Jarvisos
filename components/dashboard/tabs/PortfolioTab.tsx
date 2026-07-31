@@ -212,7 +212,25 @@ export default function PortfolioTab() {
     color: c.color,
   }))
 
-  const techPct = ((breakdownMap.get('tech') ?? 0) / totalBreakdown) * 100
+  // Concentration, not sector exposure.
+  //
+  // "Tech exposure" was derived from holdings.sector, which is populated for 10
+  // of 209 rows in practice — the price feed does not return it and nothing
+  // asks the user for it, so the figure read 0% for essentially everybody. A
+  // metric that is structurally always wrong is worse than no metric.
+  //
+  // The single largest position answers the question that one was reaching for
+  // — am I over-exposed to one thing — and needs only value and total, which
+  // every holding has from the moment it is added.
+  const positionValues = new Map<string, number>()
+  for (const h of holdings) {
+    const key = h.ticker.trim().toUpperCase()
+    positionValues.set(key, (positionValues.get(key) ?? 0) + (h.currentValueEur ?? 0))
+  }
+  let topTicker = '—'
+  let topValue  = 0
+  for (const [k, v] of positionValues) if (v > topValue) { topValue = v; topTicker = k }
+  const topPct = totalValueEur > 0 ? (topValue / totalValueEur) * 100 : 0
 
   return (
     <div className="flex flex-col gap-3">
@@ -270,9 +288,9 @@ export default function PortfolioTab() {
         {/* Concentration is not P&L. Green on "Within limits" read as profit on
             a line that only means "this is fine", so it stays ink either way. */}
         <MetricCard
-          title="Tech exposure"
-          value={`${techPct.toFixed(0)}%`}
-          change={techPct > 60 ? 'Overweight' : 'Within limits'}
+          title="Largest position"
+          value={loading ? '—' : `${topPct.toFixed(0)}%`}
+          change={topTicker === '—' ? 'No holdings yet' : `${topTicker}${topPct > 25 ? ' · concentrated' : ''}`}
           changePositive={null}
         />
       </div>

@@ -6,7 +6,11 @@
 
 export function WinRing({ wr }: { wr: number }) {
   const pct   = Math.min(100, Math.max(0, wr))
-  const color = pct >= 65 ? 'var(--gr2)' : pct >= 50 ? 'var(--am2)' : 'var(--re)'
+  // A win rate is not money, so it does not get money's colours. Green above
+  // 65 / amber / red below 50 made three different judgements about the same
+  // figure and put profit-green on a number that is not profit; the percentage
+  // already says whether it is good.
+  const color = 'var(--color-key)'
   const deg   = (pct / 100) * 360
 
   return (
@@ -19,7 +23,7 @@ export function WinRing({ wr }: { wr: number }) {
         position: 'absolute', inset: '7px', borderRadius: '50%', background: 'var(--s1)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <span className="num" style={{ color, fontSize: 'var(--text-base)', fontWeight: 600 }}>{pct.toFixed(0)}%</span>
+        <span className="num" style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-base)', fontWeight: 600 }}>{pct.toFixed(0)}%</span>
       </div>
     </div>
   )

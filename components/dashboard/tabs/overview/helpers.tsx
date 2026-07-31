@@ -37,6 +37,10 @@ export function fullDate() {
   return new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+// A mood is not a P&L. Profit-green on "great" put a feeling in the same
+// colour as money on screens that show both — most obviously the mood-to-P&L
+// correlation chart, where the two meanings sat side by side.
 export const MOOD_COLOR: Record<string, string> = {
-  great: 'var(--gr2)', good: 'var(--gr2)', neutral: 'var(--am2)', low: 'var(--re)', bad: 'var(--re)',
+  great: 'var(--color-key)', good: 'var(--color-key)', neutral: 'var(--color-ink-2)',
+  low: 'var(--color-warn)', bad: 'var(--color-warn)',
 }

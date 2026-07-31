@@ -715,6 +715,21 @@ html { scroll-behavior: smooth; }
      and, critically, a −€2 clip no longer shows up as red. */
   --color-flat: #E8A33D;
 
+  /* The one chroma that is not money.
+     
+     Green and red are reserved for gain and loss, amber for a scratch — that
+     leaves every *other* important thing rendering as plain ink, which flattens
+     the screen: a headline metric and a row label read the same. This is the
+     accent for figures that matter but are not euros — win rate, consistency,
+     pips, the active section. Used sparingly and never decoratively.
+     
+     Deliberately a NEW token rather than reviving --ac, which the 2.0 pass
+     neutralised to white: --ac is referenced in dozens of places that were
+     never meant to carry chroma again, and un-neutralising it would repaint
+     all of them at once. */
+  --color-key:     #4D9CFF;
+  --color-key-dim: rgba(77, 156, 255, 0.14);
+
   /* ── The one deliberate exception to "P&L is the only chroma" ──
      Outbound commercial actions — the affiliate CTAs on the Partners tab and in
      the ad slots. Those clicks are the point of that page, and an ink-on-ink

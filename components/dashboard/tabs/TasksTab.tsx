@@ -267,7 +267,7 @@ export default function TasksTab() {
           <Panel title="Overdue" noPadding>
             {overdueTasks.length === 0 ? (
               <div className="flex items-center justify-center py-6">
-                <span style={{ color: 'var(--color-up)', fontSize: 'var(--text-base)' }}>All clear — nothing overdue</span>
+                <span style={{ color: 'var(--color-ink-2)', fontSize: 'var(--text-base)' }}>All clear — nothing overdue</span>
               </div>
             ) : (
               overdueTasks.map(t => (

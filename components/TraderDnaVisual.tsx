@@ -89,7 +89,15 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
         {/* center overall score */}
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
           <div className="vq-num" style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--t1, #fff)', lineHeight: 1 }}>{dna.overall}</div>
-          <div style={{ fontSize: 'var(--text-2xs)', letterSpacing: '0.18em', color: 'var(--color-ink-4)', marginTop: 2 }}>DNA SCORE</div>
+          {/* Sat on top of the radar's own polygon lines, so the words were
+              read through the chart. A backing plate lifts it clear without
+              hiding the shape behind it. */}
+          <div style={{
+            fontSize: 'var(--text-2xs)', letterSpacing: '0.18em',
+            color: 'var(--color-ink-3)', marginTop: 3,
+            padding: '2px 7px', borderRadius: 'var(--radius-xs)',
+            background: 'var(--color-void)',
+          }}>DNA SCORE</div>
         </div>
       </div>
 

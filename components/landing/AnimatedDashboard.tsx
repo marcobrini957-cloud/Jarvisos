@@ -37,6 +37,22 @@ const SCENES = ['home', 'trading', 'journal', 'copy', 'analyst'] as const
 type Scene = typeof SCENES[number]
 const SCENE_MS: Record<Scene, number> = { home: 6200, trading: 5200, journal: 5200, copy: 4600, analyst: 7000 }
 
+/**
+ * What each scene is actually showing.
+ *
+ * Without these the hero cycles five tabs and a visitor watches competent
+ * motion without ever being able to say what the product does. One line per
+ * scene, outside the scaled stage — text placed inside the replica shrinks with
+ * it and stops being readable on a laptop.
+ */
+const SCENE_CAPTION: Record<Scene, string> = {
+  home:    'Everything in one place — and not one number typed in by hand.',
+  trading: 'Every fill pulled from MetaTrader the moment it closes.',
+  journal: 'Why you took it, not just what it paid.',
+  copy:    'One account trades. The others follow, in under two seconds.',
+  analyst: 'Ask it why you lose on gold. It answers from your own fills.',
+}
+
 // Cursor waypoints per scene, in virtual px. It never rests on one for long —
 // overlapping waypoints keep it drifting rather than parking (the cursor rule).
 const PATHS: Record<Scene, [number, number][]> = {
@@ -177,8 +193,9 @@ export function AnimatedDashboard() {
   }, [])
 
   return (
-    // The scaled canvas does not affect layout height, so the frame has to be
-    // told how tall the result is.
+    <>
+    {/* The scaled canvas does not affect layout height, so the frame has to be
+        told how tall the result is. */}
     <div ref={boxRef} style={{ width: '100%', height: `${Math.round(H * scale)}px`, overflow: 'hidden', background: VOID, position: 'relative' }}>
       <div
         ref={stageRef}
@@ -214,6 +231,79 @@ export function AnimatedDashboard() {
           @media (prefers-reduced-motion: reduce) { .vq-scene { animation: none } }
         `}</style>
       </div>
+    </div>
+
+    <SceneCaption scene={scene} />
+    </>
+  )
+}
+
+/**
+ * The caption strip.
+ *
+ * Under prefers-reduced-motion the animation never starts, so `scene` would sit
+ * on 'home' for ever and this would show one line of five. In that case it
+ * lists them all instead — the information is the point, the cycling is not.
+ */
+function SceneCaption({ scene }: { scene: Scene }) {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    if (!mq) return
+    const apply = () => setReduced(mq.matches)
+    apply()
+    mq.addEventListener?.('change', apply)
+    return () => mq.removeEventListener?.('change', apply)
+  }, [])
+
+  if (reduced) {
+    return (
+      <ul style={{
+        listStyle: 'none', margin: 0, padding: '16px clamp(12px, 3vw, 24px)',
+        display: 'flex', flexDirection: 'column', gap: '7px',
+        borderTop: '1px solid var(--color-line-1)',
+      }}>
+        {SCENES.map(s => (
+          <li key={s} style={{
+            color: 'var(--color-ink-2)', fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-base)', lineHeight: 1.55,
+          }}>
+            {SCENE_CAPTION[s]}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 'clamp(10px, 2vw, 18px)',
+      padding: '14px clamp(12px, 3vw, 24px)',
+      borderTop: '1px solid var(--color-line-1)',
+      minHeight: '56px', boxSizing: 'border-box',
+    }}>
+      <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }} aria-hidden="true">
+        {SCENES.map(s => (
+          <span key={s} style={{
+            width: '5px', height: '5px', borderRadius: '50%',
+            background: s === scene ? 'var(--color-ink-1)' : 'var(--color-line-2)',
+            transition: 'background 0.3s',
+          }} />
+        ))}
+      </div>
+      {/* Keyed so each line fades in on its own rather than cross-fading into
+          a half-legible blend of two sentences. */}
+      <p key={scene} className="vq-caption" style={{
+        margin: 0, color: 'var(--color-ink-2)',
+        fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+        lineHeight: 1.5, minWidth: 0,
+      }}>
+        {SCENE_CAPTION[scene]}
+      </p>
+      <style>{`
+        .vq-caption { animation: vqCapIn 0.4s cubic-bezier(0.16,1,0.3,1) }
+        @keyframes vqCapIn { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+      `}</style>
     </div>
   )
 }
