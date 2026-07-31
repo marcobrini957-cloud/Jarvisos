@@ -1,5 +1,5 @@
 import type { Trade } from '@/types'
-import { BE_THRESHOLD } from './stats'
+import { tradeResult } from './stats'
 
 /**
  * Current streaks, and the run of recent outcomes behind them.
@@ -17,10 +17,10 @@ import { BE_THRESHOLD } from './stats'
 export type Outcome = 'win' | 'loss' | 'breakeven'
 
 export function outcomeOf(trade: Trade): Outcome {
-  const pnl = trade.net_profit ?? 0
-  if (pnl >  BE_THRESHOLD) return 'win'
-  if (pnl < -BE_THRESHOLD) return 'loss'
-  return 'breakeven'
+  // One definition of win/loss/scratch for the whole product — see
+  // tradeResult in ./stats. Restating it here is how a streak counter and a
+  // win rate end up disagreeing about the same trade.
+  return tradeResult(trade)
 }
 
 /** Newest first, by close time. Trades without one sink to the bottom. */

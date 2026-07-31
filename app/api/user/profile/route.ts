@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse }  from 'next/server'
 import { getAuthUser } from '@/lib/api/auth'
 import { getUserTier } from '@/lib/api/tier'
+import { BE_PIPS, BE_PIPS_MIN, BE_PIPS_MAX, clampBePips } from '@/lib/trading/stats'
 
 const DEFAULT_PROFILE = {
   display_name:  'Trader',
@@ -23,6 +24,7 @@ type ProfileRow = {
   currency?:         string | null
   daily_loss_mode?:  string | null
   daily_loss_value?: number | string | null
+  be_pips?:          number | null
 }
 
 /**
@@ -53,6 +55,10 @@ function shapeProfile(row: ProfileRow | null, meta: Record<string, unknown> | un
     daily_loss_value: row?.daily_loss_value != null
       ? Number(row.daily_loss_value)
       : DEFAULT_PROFILE.daily_loss_value,
+    // Every field the client needs must be listed here, not merely selected —
+    // this shaper is the response, so a column added to the query alone is
+    // silently discarded on its way out.
+    be_pips: row?.be_pips != null ? clampBePips(row.be_pips) : BE_PIPS,
   }
 }
 
@@ -68,7 +74,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value')
+      .select('display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value, be_pips')
       .eq('id', user.id)
       .single()
 
@@ -107,6 +113,7 @@ export async function PATCH(request: Request) {
       currency:         string
       daily_loss_mode:  string
       daily_loss_value: number
+      be_pips:          number
     }>
 
     const allowed = ['display_name', 'avatar_color', 'timezone', 'currency'] as const
@@ -133,10 +140,23 @@ export async function PATCH(request: Request) {
       update.daily_loss_value = v
     }
 
+    // Validated here as well as in the UI: the column has a CHECK constraint,
+    // and a rejected upsert would lose the entire patch, not just this field.
+    // The bound is what keeps this a calibration rather than a way to file a
+    // losing month under "break-even".
+    if (body.be_pips !== undefined) {
+      const v = Number(body.be_pips)
+      if (!Number.isFinite(v) || v < BE_PIPS_MIN || v > BE_PIPS_MAX) {
+        return NextResponse.json(
+          { error: `be_pips must be between ${BE_PIPS_MIN} and ${BE_PIPS_MAX}` }, { status: 400 })
+      }
+      update.be_pips = clampBePips(v)
+    }
+
     const { data, error } = await supabase
       .from('user_profiles')
       .upsert(update, { onConflict: 'id' })
-      .select('display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value')
+      .select('display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value, be_pips')
       .single()
 
     if (error) {

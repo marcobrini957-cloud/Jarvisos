@@ -1,7 +1,8 @@
 
 import type { Trade } from '@/types'
 import type { Period } from '@/components/ui/PeriodMetricCard'
-import { tradeResult, BE_THRESHOLD } from '@/hooks/useTrades'
+import { tradeResult } from '@/hooks/useTrades'
+import { isWin, isLoss, isBreakeven } from '@/lib/trading/stats'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -55,9 +56,9 @@ export function calcPnl(trades: Trade[]): number {
 
 export function calcWinRate(trades: Trade[]): { rate: number; wins: number; losses: number; breakeven: number; total: number } {
   const closed    = trades.filter(t => t.net_profit !== null)
-  const wins      = closed.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD)
-  const losses    = closed.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD)
-  const breakeven = closed.filter(t => Math.abs(t.net_profit ?? 0) <= BE_THRESHOLD)
+  const wins      = closed.filter(t => isWin(t))
+  const losses    = closed.filter(t => isLoss(t))
+  const breakeven = closed.filter(t => isBreakeven(t))
   const decisive  = wins.length + losses.length
   return {
     rate:      decisive > 0 ? (wins.length / decisive) * 100 : 0,
@@ -127,7 +128,7 @@ export function buildHeatmap(trades: Trade[]) {
         const d = new Date(t.open_time).getDay()
         return d === dayIndex
       })
-      const wins    = filtered.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD)
+      const wins    = filtered.filter(t => isWin(t))
       const winRate = filtered.length > 0 ? wins.length / filtered.length : 0
       cells.push({ session: label, day, winRate, trades: filtered.length })
     }

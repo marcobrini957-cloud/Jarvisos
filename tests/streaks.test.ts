@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { Trade } from '@/types'
 import { currentStreaks, recentRun, newestFirst, outcomeOf } from '@/lib/trading/streaks'
+import { BE_PIPS } from '@/lib/trading/stats'
 
 /** `day` is the day of July, so 1 is oldest and 9 is newest. */
 function t(net: number, day: number): Trade {
@@ -15,12 +16,29 @@ const OLDEST_FIRST = [t(-50, 1), t(80, 2), t(90, 3), t(70, 4)]
 const NEWEST_FIRST = [...OLDEST_FIRST].reverse()
 
 describe('outcomeOf', () => {
-  it('treats the ±BE band as neither a win nor a loss', () => {
-    expect(outcomeOf(t(11, 1))).toBe('win')
-    expect(outcomeOf(t(-11, 1))).toBe('loss')
-    expect(outcomeOf(t(10, 1))).toBe('breakeven')
-    expect(outcomeOf(t(-10, 1))).toBe('breakeven')
-    expect(outcomeOf(t(0, 1))).toBe('breakeven')
+  // Delegates to tradeResult, so a streak counter and a win rate can never
+  // disagree about the same trade. These assert that delegation holds.
+  const withPips = (net: number, pips: number): Trade =>
+    ({ ...t(net, 1), pips } as Trade)
+
+  // Expressed relative to the threshold rather than in literal pips, so
+  // retuning the default cannot quietly invalidate what these assert.
+  const INSIDE  = BE_PIPS - 1
+  const OUTSIDE = BE_PIPS + 30
+
+  it('treats a small price move as neither a win nor a loss', () => {
+    expect(outcomeOf(withPips(50, OUTSIDE))).toBe('win')
+    expect(outcomeOf(withPips(-50, -OUTSIDE))).toBe('loss')
+    expect(outcomeOf(withPips(9, INSIDE))).toBe('breakeven')
+    expect(outcomeOf(withPips(-9, -INSIDE))).toBe('breakeven')
+    expect(outcomeOf(withPips(0, 0))).toBe('breakeven')
+  })
+
+  it('does not let position size change the verdict', () => {
+    const small = { ...t(-4.5, 1), lot_size: 0.05, pips: -INSIDE } as Trade
+    const big   = { ...t(-90,  1), lot_size: 1.00, pips: -INSIDE } as Trade
+    expect(outcomeOf(small)).toBe('breakeven')
+    expect(outcomeOf(big)).toBe('breakeven')
   })
 })
 

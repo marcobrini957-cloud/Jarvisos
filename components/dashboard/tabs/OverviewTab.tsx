@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import MobileOverviewTab from './MobileOverviewTab'
-import { useTrades, BE_THRESHOLD } from '@/hooks/useTrades'
+import { useTrades } from '@/hooks/useTrades'
 import { useTasks }           from '@/hooks/useTasks'
 import { useAccountSnapshot } from '@/hooks/useAccountSnapshot'
 import { usePortfolio }       from '@/hooks/usePortfolio'
@@ -23,6 +23,7 @@ import { TradeCalendar } from './overview/TradeCalendar'
 import { StreakCard, StreakBadge } from './overview/StreakCards'
 import { TodaysFocus } from './overview/TodaysFocus'
 import { EdgeReport } from './overview/EdgeReport'
+import { useClassifier } from '@/context/UserProfileContext'
 
 // ── Metric tile ───────────────────────────────────────────────────────────────
 // One shape for every hero figure: label, number, one line of context. The
@@ -60,6 +61,7 @@ function MetricTile({ label, value, sub, aside, valueColor }: {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function OverviewTab() {
+  const { isWin, isLoss } = useClassifier()
   const today = new Date().toISOString().split('T')[0]
   const { trades, allRows, stats, loading: tradesLoading } = useTrades(500)
   const { tasks }       = useTasks()
@@ -81,11 +83,11 @@ export default function OverviewTab() {
 
   const monthStart  = useMemo(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1), [])
   const monthTrades = useMemo(() => trades.filter(t => t.close_time && new Date(t.close_time) >= monthStart), [trades, monthStart])
-  const monthWins   = monthTrades.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).length
-  const monthLosses = monthTrades.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+  const monthWins   = monthTrades.filter(t => isWin(t)).length
+  const monthLosses = monthTrades.filter(t => isLoss(t)).length
 
-  const wins   = trades.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).length
-  const losses = trades.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+  const wins   = trades.filter(t => isWin(t)).length
+  const losses = trades.filter(t => isLoss(t)).length
 
   const journalStreak = useMemo(() => {
     let streak = 0

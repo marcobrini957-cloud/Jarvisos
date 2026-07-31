@@ -1,7 +1,7 @@
 'use client'
 
-import { BE_THRESHOLD } from '@/hooks/useTrades'
 import type { Trade } from '@/types'
+import { useClassifier } from '@/context/UserProfileContext'
 
 // ── Analytics helpers ─────────────────────────────────────────────────────────
 
@@ -17,11 +17,12 @@ export function StatRow({ label, trades: rowTrades, avgPnl, highlight }: {
   avgPnl: number
   highlight?: boolean
 }) {
+  const { isWin, isLoss, isBreakeven } = useClassifier()
   const total     = rowTrades.length
   if (total === 0) return null
-  const wins      = rowTrades.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).length
-  const losses    = rowTrades.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
-  const breakeven = rowTrades.filter(t => Math.abs(t.net_profit ?? 0) <= BE_THRESHOLD).length
+  const wins      = rowTrades.filter(t => isWin(t)).length
+  const losses    = rowTrades.filter(t => isLoss(t)).length
+  const breakeven = rowTrades.filter(t => isBreakeven(t)).length
   const decisive  = wins + losses
   const wr        = decisive > 0 ? (wins / decisive) * 100 : 0
   return (

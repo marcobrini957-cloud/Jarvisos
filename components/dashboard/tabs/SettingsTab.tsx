@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Panel from '@/components/ui/Panel'
+import { useUserProfile } from '@/context/UserProfileContext'
+import { BE_PIPS, BE_PIPS_MIN, BE_PIPS_MAX } from '@/lib/trading/stats'
 
 const KEY_ENABLED = 'vq_greeting_enabled'
 
@@ -201,6 +203,22 @@ function statusLabel(val: boolean | string | undefined): { text: string; ok: boo
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function SettingsTab() {
+  const { profile, updateProfile } = useUserProfile()
+  const [bePips,      setBePips]      = useState(profile.be_pips ?? BE_PIPS)
+  const [bePipsSaved, setBePipsSaved] = useState(false)
+
+  // Follow the profile once it has loaded, but never fight the user's drag.
+  const dragging = useRef(false)
+  useEffect(() => { if (!dragging.current) setBePips(profile.be_pips ?? BE_PIPS) }, [profile.be_pips])
+
+  const saveBePips = useCallback(async (v: number) => {
+    dragging.current = false
+    if (v === profile.be_pips) return
+    await updateProfile({ be_pips: v })
+    setBePipsSaved(true)
+    setTimeout(() => setBePipsSaved(false), 2500)
+  }, [profile.be_pips, updateProfile])
+
   const [greetingEnabled, setGreetingEnabled] = useState(true)
   const [health,          setHealth]          = useState<HealthData | null>(null)
   const [checking,        setChecking]        = useState(false)
@@ -272,6 +290,49 @@ export default function SettingsTab() {
           </div>
           <Toggle value={greetingEnabled} onChange={toggleGreeting} />
         </div>
+      </Panel>
+
+      {/* ── How a trade is scored ──
+          This is the one number that changes what every win rate, streak and
+          calendar colour in the product means, so it is stated in plain terms
+          and its effect is shown live rather than left to be discovered. */}
+      <Panel title="Break-even">
+        <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', margin: '0 0 4px', lineHeight: 1.6 }}>
+          A trade that moves less than this counts as a scratch — neither a win
+          nor a loss — and is left out of your win rate entirely.
+        </p>
+        <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', margin: '0 0 16px', lineHeight: 1.6 }}>
+          Measured in pips, not euros, so it means the same thing whatever size
+          you trade: {bePips} pips is{' '}
+          <span className="vq-num">€{(bePips * 0.1).toFixed(2)}</span> at 0.01 lots and{' '}
+          <span className="vq-num">€{(bePips * 10).toFixed(0)}</span> at a full lot.
+        </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <input
+            type="range"
+            min={BE_PIPS_MIN}
+            max={BE_PIPS_MAX}
+            value={bePips}
+            onChange={e => { dragging.current = true; setBePips(Number(e.target.value)) }}
+            onPointerUp={() => saveBePips(bePips)}
+            onKeyUp={() => saveBePips(bePips)}
+            style={{ flex: 1, accentColor: 'var(--color-ink-1)' }}
+            aria-label="Break-even distance in pips"
+          />
+          <span className="vq-num" style={{
+            color: 'var(--color-ink-1)', fontSize: 'var(--text-lg)', fontWeight: 700,
+            minWidth: '62px', textAlign: 'right',
+          }}>
+            {bePips} pip{bePips === 1 ? '' : 's'}
+          </span>
+        </div>
+
+        {bePipsSaved && (
+          <p style={{ color: 'var(--color-up)', fontSize: 'var(--text-sm)', marginTop: '10px' }}>
+            Saved — your figures have been recalculated.
+          </p>
+        )}
       </Panel>
 
       {/* ── System status ──────────────────────────────────────────────────

@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { BE_THRESHOLD } from '@/hooks/useTrades'
 import { Num, Label, NumText, Segmented } from '@/components/ui/vq'
 import type { Trade } from '@/types'
 import Icon from '@/components/ui/Icon'
+import { useClassifier } from '@/context/UserProfileContext'
 
 // ── Trade Calendar ────────────────────────────────────────────────────────────
 
@@ -13,9 +13,10 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
   trades: Trade[]
   onClose: () => void
 }) {
+  const { isWin, isLoss, tradeResult } = useClassifier()
   const totalPnl = trades.reduce((s, t) => s + (t.net_profit ?? 0), 0)
-  const wins     = trades.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length
-  const losses   = trades.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+  const wins     = trades.filter(t => isWin(t)).length
+  const losses   = trades.filter(t => isLoss(t)).length
   const label    = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
@@ -52,7 +53,10 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {trades.map((t, i) => {
           const pnl = t.net_profit ?? 0
-          const col = pnl > BE_THRESHOLD ? 'var(--color-up)' : pnl < -BE_THRESHOLD ? 'var(--color-down)' : 'var(--t3)'
+          // Colour follows the scratch rule, not the euro amount: a 4-pip
+          // clip on 0.30 lots is the same non-event as one on 0.01.
+          const r   = tradeResult(t)
+          const col = r === 'win' ? 'var(--color-up)' : r === 'loss' ? 'var(--color-down)' : 'var(--t3)'
           const openTime  = t.open_time  ? new Date(t.open_time ).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'
           const closeTime = t.close_time ? new Date(t.close_time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'
           return (
@@ -61,7 +65,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
               padding: '9px 12px',
               background: 'rgba(255,255,255,0.025)',
               borderRadius: 'var(--radius-md)',
-              border: `1px solid ${pnl > BE_THRESHOLD ? 'rgba(0,196,106,0.1)' : pnl < -BE_THRESHOLD ? 'rgba(240,80,75,0.1)' : 'var(--bd)'}`,
+              border: `1px solid ${r === 'win' ? 'rgba(0,196,106,0.1)' : r === 'loss' ? 'rgba(240,80,75,0.1)' : 'var(--bd)'}`,
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -95,6 +99,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
 const fmtSigned = (v: number) => `${v >= 0 ? '+' : '−'}€${Math.round(Math.abs(v)).toLocaleString('en-US')}`
 
 export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
+  const { isWin, isLoss, isBreakeven } = useClassifier()
   const now       = new Date()
   const today     = now.toISOString().split('T')[0]
   const thisYear  = now.getFullYear()
@@ -156,12 +161,15 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
       const pnl = t.net_profit ?? 0
       m.pnl += pnl
       m.trades++
-      if (pnl >  BE_THRESHOLD) m.wins++
-      if (pnl < -BE_THRESHOLD) m.losses++
+      if (isWin(t))  m.wins++
+      if (isLoss(t)) m.losses++
       traded = true
     }
     return { rows, traded, earliest }
-  }, [allRows, viewYear, thisYear])
+    // isWin/isLoss are bound to the user's break-even setting, so they belong
+    // here — without them the year view would keep last setting's month
+    // tallies while the day cells below already showed the new ones.
+  }, [allRows, viewYear, thisYear, isWin, isLoss])
 
   const selectedTrades = selectedDate ? (dailyTrades.get(selectedDate) ?? []) : []
 
@@ -288,12 +296,17 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
                   const isSelected = dateStr === selectedDate
                   const has        = pnl !== undefined
 
-                  const isWinDay  = has && pnl! >  BE_THRESHOLD
-                  const isLossDay = has && pnl! < -BE_THRESHOLD
+                  // A day counts as decided only if something in it was
+                  // decided. A day of nothing but scratches stays neutral
+                  // however its euros happen to add up, and a day that nets
+                  // near zero because a win cancelled a loss does not.
+                  const anyDecisive = list.some(t => !isBreakeven(t))
+                  const isWinDay    = has && anyDecisive && pnl! > 0
+                  const isLossDay   = has && anyDecisive && pnl! < 0
 
                   // Per-day win rate over decisive trades (wins vs losses).
-                  const decisive = list.filter(t => Math.abs(t.net_profit ?? 0) > BE_THRESHOLD)
-                  const wins     = decisive.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length
+                  const decisive = list.filter(t => !isBreakeven(t))
+                  const wins     = decisive.filter(t => isWin(t)).length
                   const winPct   = decisive.length > 0 ? Math.round((wins / decisive.length) * 100) : null
 
                   const bg = isWinDay  ? 'rgba(0,196,106,0.09)'
@@ -395,9 +408,10 @@ function YearGrid({ year, months, todayMonth, maxMonth, onPick }: {
       {months.map((m, i) => {
         const name     = new Date(year, i, 1).toLocaleDateString('en-GB', { month: 'short' })
         const has      = m.trades > 0
-        const isWin    = has && m.pnl >  BE_THRESHOLD
-        const isLoss   = has && m.pnl < -BE_THRESHOLD
         const decisive = m.wins + m.losses
+        // A month of nothing but scratches reads neutral, however its euros land.
+        const isWin    = has && decisive > 0 && m.pnl > 0
+        const isLoss   = has && decisive > 0 && m.pnl < 0
         const winPct   = decisive > 0 ? Math.round((m.wins / decisive) * 100) : null
         const isNow    = i === todayMonth
         const future   = i > maxMonth

@@ -18,7 +18,7 @@
  */
 
 import type { Trade } from '@/types'
-import { BE_THRESHOLD, isRealTrade } from '@/lib/trading/stats'
+import { isRealTrade, isWin, isLoss } from '@/lib/trading/stats'
 
 export interface Decided {
   trades:   number
@@ -26,7 +26,7 @@ export interface Decided {
   losses:   number
   /** wins + losses — the only legitimate denominator for a win rate */
   decided:  number
-  /** trades that landed inside ±BE_THRESHOLD; excluded from both sides */
+  /** trades that landed inside the pip-based scratch band; excluded from both sides */
   breakEven: number
   winRate:  number
   netPnl:   number
@@ -34,8 +34,8 @@ export interface Decided {
 
 /** The one place a win rate is worked out. Everything else calls this. */
 export function decided(trades: Trade[]): Decided {
-  const wins   = trades.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD)
-  const losses = trades.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD)
+  const wins   = trades.filter(t => isWin(t))
+  const losses = trades.filter(t => isLoss(t))
   const dec    = wins.length + losses.length
   return {
     trades:    trades.length,

@@ -6,7 +6,7 @@ import { withinAiLimit } from '@/lib/api/aiRateLimit'
 import {
   decided, realClosedTrades, monthlyFacts, groupBy, segmentLine, describeWindow,
 } from '@/lib/ai/chatFacts'
-import { BE_THRESHOLD } from '@/lib/trading/stats'
+import { BE_PIPS } from '@/lib/trading/stats'
 
 export const maxDuration = 60
 
@@ -114,8 +114,11 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>, 
 ACCOUNT: ${acct}
 
 HOW A WIN RATE IS DEFINED HERE — this is the product's rule, do not use another:
-win rate = wins / (wins + losses). A trade that closes within ±€${BE_THRESHOLD} is a
-break-even and is excluded from BOTH sides. Balance operations (deposits and
+win rate = wins / (wins + losses). A trade that moved less than ${BE_PIPS} pips is a
+break-even and is excluded from BOTH sides — the test is the DISTANCE price
+travelled, not the euros made, so the same scratch counts identically at 0.01
+lots and at 1.00. Never call a trade a loss because its euro figure looks small
+or large; that judgement is already made. Balance operations (deposits and
 withdrawals) are not trades and are already excluded from everything below.
 Every percentage in this block is already computed correctly — quote it as
 given. Never re-derive a rate from trade counts, and never divide by total

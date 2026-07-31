@@ -7,7 +7,7 @@
 // `impulsiveness` which is a High/Medium/Low label (higher = worse).
 
 import type { Trade } from '@/types'
-import { BE_THRESHOLD, isRealTrade, tradeResult } from './stats'
+import { isRealTrade, isWin, isLoss, tradeResult } from './stats'
 
 export interface DnaDimension {
   key:   string
@@ -50,16 +50,16 @@ function cv(xs: number[]): number | null {
 }
 
 function expectancy(rows: Trade[]): number {
-  const wins   = rows.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD)
-  const losses = rows.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD)
+  const wins   = rows.filter(t => isWin(t))
+  const losses = rows.filter(t => isLoss(t))
   const dec    = wins.length + losses.length
   if (dec === 0) return 0
   return rows.reduce((s, t) => s + (t.net_profit ?? 0), 0) / dec
 }
 
 function winRate(rows: Trade[]): number {
-  const w = rows.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).length
-  const l = rows.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+  const w = rows.filter(t => isWin(t)).length
+  const l = rows.filter(t => isLoss(t)).length
   return (w + l) > 0 ? (w / (w + l)) * 100 : 0
 }
 
@@ -68,8 +68,8 @@ function winRate(rows: Trade[]): number {
 // Decision Quality: are the trades themselves good bets? Blend profit factor
 // and average realized R. PF 1.0→50, 2.0→82, 3.0→95; avg R adds up to ±15.
 function scoreDecisionQuality(rows: Trade[]): number {
-  const wins   = rows.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD)
-  const losses = rows.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD)
+  const wins   = rows.filter(t => isWin(t))
+  const losses = rows.filter(t => isLoss(t))
   const gw = wins.reduce((s, t) => s + (t.net_profit ?? 0), 0)
   const gl = Math.abs(losses.reduce((s, t) => s + (t.net_profit ?? 0), 0))
   const pf = gl > 0 ? gw / gl : gw > 0 ? 3 : 0
@@ -152,7 +152,7 @@ function impulsivenessLabel(rows: Trade[]): { label: 'Low' | 'Medium' | 'High'; 
     const prevClose = c[i - 1].close_time ? new Date(c[i - 1].close_time!).getTime() : null
     const open      = c[i].open_time ? new Date(c[i].open_time!).getTime() : null
     if (prevClose && open && open - prevClose <= 15 * 60 * 1000 && open >= prevClose) rapid++
-    if ((c[i - 1].net_profit ?? 0) < -BE_THRESHOLD && open && prevClose && open - prevClose <= 30 * 60 * 1000) revenge++
+    if (isLoss(c[i - 1]) && open && prevClose && open - prevClose <= 30 * 60 * 1000) revenge++
   }
   const offPlan = rows.filter(t => t.followed_plan === false).length
   const n = Math.max(rows.length, 1)
@@ -167,7 +167,7 @@ function recoveryLabel(rows: Trade[]): 'Strong' | 'Fair' | 'Poor' {
   const c = chrono(rows)
   const afterLoss: Trade[] = []
   for (let i = 1; i < c.length; i++) {
-    if (tradeResult(c[i - 1].net_profit ?? 0) === 'loss') afterLoss.push(c[i])
+    if (tradeResult(c[i - 1]) === 'loss') afterLoss.push(c[i])
   }
   if (afterLoss.length < 4) return 'Fair'
   const base = expectancy(rows)
@@ -206,8 +206,8 @@ function worstCondition(rows: Trade[]): string | null {
   // After two consecutive losses
   const after2: Trade[] = []
   for (let i = 2; i < c.length; i++) {
-    if (tradeResult(c[i - 1].net_profit ?? 0) === 'loss' &&
-        tradeResult(c[i - 2].net_profit ?? 0) === 'loss') after2.push(c[i])
+    if (tradeResult(c[i - 1]) === 'loss' &&
+        tradeResult(c[i - 2]) === 'loss') after2.push(c[i])
   }
   candidates.push({ label: 'After two consecutive losses', rows: after2 })
 

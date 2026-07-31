@@ -62,11 +62,18 @@ describe('decided — the win-rate denominator', () => {
     expect(d.netPnl).toBeGreaterThan(0)
   })
 
-  it('treats ±€10 as the break-even band, exclusive at the edges', () => {
-    expect(decided([trade(10, '2026-07-01T10:00:00Z')]).decided).toBe(0)
-    expect(decided([trade(-10, '2026-07-01T10:00:00Z')]).decided).toBe(0)
-    expect(decided([trade(10.01, '2026-07-01T10:00:00Z')]).wins).toBe(1)
-    expect(decided([trade(-10.01, '2026-07-01T10:00:00Z')]).losses).toBe(1)
+  it('excludes small price moves from the denominator, whatever they cost', () => {
+    const px = (net: number, pips: number) =>
+      trade(net, '2026-07-01T10:00:00Z', { pips } as Partial<Trade>)
+    expect(decided([px(9, 5)]).decided).toBe(0)
+    expect(decided([px(-9, -5)]).decided).toBe(0)
+    expect(decided([px(50, 40)]).wins).toBe(1)
+    expect(decided([px(-50, -40)]).losses).toBe(1)
+
+    // A large euro figure that is only a few pips is still a scratch — this is
+    // the case the old flat ±€10 band got wrong.
+    const bigLotScratch = trade(-150, '2026-07-01T10:00:00Z', { lot_size: 5, pips: -3 } as Partial<Trade>)
+    expect(decided([bigLotScratch]).decided).toBe(0)
   })
 
   it('reports 0%, not NaN, when nothing was decided', () => {

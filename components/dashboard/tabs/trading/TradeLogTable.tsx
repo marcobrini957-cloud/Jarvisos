@@ -1,6 +1,5 @@
 'use client'
 
-import { tradeResult } from '@/hooks/useTrades'
 import Panel from '@/components/ui/Panel'
 import Badge from '@/components/ui/Badge'
 import { Label, Num, Segmented } from '@/components/ui/vq'
@@ -8,6 +7,7 @@ import type { Trade } from '@/types'
 import { fmtPnl, fmtPips, fmtDate, fmtTime } from './helpers'
 import { useTradeFilters } from './useTradeFilters'
 import Icon from '@/components/ui/Icon'
+import { useClassifier } from '@/context/UserProfileContext'
 
 /** Outcome marker. W / L / BE, coloured by outcome — the row's only chroma. */
 function ResultMark({ result }: { result: 'win' | 'loss' | 'breakeven' }) {
@@ -34,6 +34,7 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
   onAnnotate: (t: Trade) => void
   onViewScreenshot: (url: string) => void
 }) {
+  const { tradeResult } = useClassifier()
   const { symbolFilter, setSymbol, dirFilter, setDir, page, setPage, filtered, paginated, totalPages } = useTradeFilters(trades)
 
   return (
@@ -68,7 +69,7 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
           <Label>Loading trades</Label>
         </div>
       ) : paginated.map((trade: Trade) => {
-        const result = tradeResult(trade.net_profit ?? 0)
+        const result = tradeResult(trade)
         // Row tint carries the outcome at a glance; kept at 5% so a full page of
         // trades still reads as a table and not as two blocks of colour.
         const rowBg  = result === 'win'  ? 'rgba(0,196,106,0.05)'

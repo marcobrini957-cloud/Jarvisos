@@ -173,8 +173,11 @@ export default function AccountMenu({
                 {pillOpen} open
               </span>
             )}
+            {/* Derived from Date.now(), so the server's string and the client's
+                can straddle a minute boundary. Same guard as SessionClock and
+                the News clocks. */}
             {pillSynced && (
-              <span className="topbar-mt5-time"><Num size="2xs" tone="muted">{timeAgo(pillSynced)}</Num></span>
+              <span className="topbar-mt5-time" suppressHydrationWarning><Num size="2xs" tone="muted">{timeAgo(pillSynced)}</Num></span>
             )}
             <span style={{
               color: 'var(--color-ink-4)', fontSize: 'var(--text-2xs)',
@@ -253,7 +256,7 @@ export default function AccountMenu({
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {acc.groupName ?? acc.broker ?? (acc.kind === 'primary' ? 'Main account' : 'Copy account')}
-                      {acc.lastSeen ? ` · ${timeAgo(acc.lastSeen)}` : ''}
+                      <span suppressHydrationWarning>{acc.lastSeen ? ` · ${timeAgo(acc.lastSeen)}` : ''}</span>
                     </span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flexShrink: 0 }}>

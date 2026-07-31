@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
-import { useTrades, BE_THRESHOLD } from '@/hooks/useTrades'
+import { useTrades } from '@/hooks/useTrades'
 import { useTasks }           from '@/hooks/useTasks'
 import { useAccountSnapshot } from '@/hooks/useAccountSnapshot'
 import { usePortfolio }       from '@/hooks/usePortfolio'
@@ -22,6 +22,7 @@ import AdSlot                 from '@/components/dashboard/AdSlot'
 import type { Trade }         from '@/types'
 import Icon from '@/components/ui/Icon'
 import { habitIcon } from './discipline/habitIcon'
+import { useClassifier } from '@/context/UserProfileContext'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -39,6 +40,7 @@ function fmtPnl(n: number) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function MobileOverviewTab() {
+  const { isWin, isLoss } = useClassifier()
   const today = new Date().toISOString().split('T')[0]
   const [dailyLimit, setDailyLimit] = useState(200)
 
@@ -75,11 +77,11 @@ export default function MobileOverviewTab() {
 
   const monthStart  = useMemo(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1), [])
   const monthTrades = useMemo(() => trades.filter(t => t.close_time && new Date(t.close_time) >= monthStart), [trades, monthStart])
-  const monthWins   = monthTrades.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).length
-  const monthLosses = monthTrades.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+  const monthWins   = monthTrades.filter(t => isWin(t)).length
+  const monthLosses = monthTrades.filter(t => isLoss(t)).length
 
-  const wins   = trades.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).length
-  const losses = trades.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+  const wins   = trades.filter(t => isWin(t)).length
+  const losses = trades.filter(t => isLoss(t)).length
   const wr     = stats?.winRate ?? 0
 
   const journalStreak = useMemo(() => {

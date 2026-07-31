@@ -1,12 +1,17 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BE_THRESHOLD } from '@/hooks/useTrades'
 import { WinRing } from './WinRing'
+import { useClassifier } from '@/context/UserProfileContext'
 
 interface TradeLike {
   close_time: string | null
   net_profit: number | null
+  // Read by the win/loss rule — see tradeResult in lib/trading/stats. Without
+  // these the card would silently fall back to a different definition of a
+  // win than the rest of the product uses.
+  pips:       number | null
+  lot_size:   number | null
 }
 
 type PeriodKey = 'month' | 'q1' | 'q2' | 'q3' | 'q4' | 'year' | 'all'
@@ -107,9 +112,10 @@ function PeriodMenu({ value, onChange }: { value: PeriodKey; onChange: (k: Perio
 
 // Win-rate metric card with a period switcher (month / quarters / year / all).
 export function WinRateCard({ trades }: { trades: TradeLike[] }) {
+  const { isWin, isLoss } = useClassifier()
   const [period, setPeriod] = useState<PeriodKey>('month')
 
-  const { wr, wins, losses, count } = useMemo(() => {
+  const { wr, wins, losses, count, breakeven } = useMemo(() => {
     const range = periodRange(period)
     const inRange = range
       ? trades.filter(t => {
@@ -118,11 +124,18 @@ export function WinRateCard({ trades }: { trades: TradeLike[] }) {
           return d >= range.from && d < range.to
         })
       : trades
-    const wins   = inRange.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).length
-    const losses = inRange.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+    const wins   = inRange.filter(t => isWin(t)).length
+    const losses = inRange.filter(t => isLoss(t)).length
     const dec = wins + losses
-    return { wr: dec > 0 ? (wins / dec) * 100 : 0, wins, losses, count: inRange.length }
-  }, [trades, period])
+    return {
+      wr: dec > 0 ? (wins / dec) * 100 : 0,
+      wins, losses, count: inRange.length,
+      // Surfaced deliberately. Break-evens are excluded from the rate, so a
+      // widened break-even setting would otherwise quietly lift the percentage
+      // with nothing on screen to say why.
+      breakeven: inRange.length - dec,
+    }
+  }, [trades, period, isWin, isLoss])
 
   return (
     <div className="metric-card" style={{
@@ -140,7 +153,9 @@ export function WinRateCard({ trades }: { trades: TradeLike[] }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
           <span className="num" style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--t1)' }}>{wins}W / {losses}L</span>
           <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
-            {count > 0 ? `${count} trades` : 'No trades in period'}
+            {count > 0
+              ? `${count} trades${breakeven > 0 ? ` · ${breakeven} scratch` : ''}`
+              : 'No trades in period'}
           </span>
         </div>
       </div>

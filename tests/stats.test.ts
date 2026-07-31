@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
-import { tradeResult, computeStats, isRealTrade, BE_THRESHOLD } from '@/lib/trading/stats'
+import { tradeResult, computeStats, isRealTrade, isWin, isLoss, isBreakeven, BE_PIPS, PER_LOT_PER_PIP, makeClassifier } from '@/lib/trading/stats'
 import type { Trade } from '@/types'
 
 // Fixed "now" so month/week bucketing is deterministic: Monday 2026-07-13 12:00 UTC
@@ -25,13 +25,78 @@ function trade(over: Partial<Trade>): Trade {
   } as Trade
 }
 
-describe('tradeResult', () => {
-  it('classifies wins, losses and break-evens around ±BE_THRESHOLD', () => {
-    expect(tradeResult(BE_THRESHOLD + 0.01)).toBe('win')
-    expect(tradeResult(BE_THRESHOLD)).toBe('breakeven')
-    expect(tradeResult(0)).toBe('breakeven')
-    expect(tradeResult(-BE_THRESHOLD)).toBe('breakeven')
-    expect(tradeResult(-BE_THRESHOLD - 0.01)).toBe('loss')
+describe('tradeResult — break-even is distance, not money', () => {
+  it('classifies on pips, at the boundary', () => {
+    expect(tradeResult(trade({ pips: BE_PIPS,        net_profit:  50 }))).toBe('win')
+    expect(tradeResult(trade({ pips: BE_PIPS - 0.1,  net_profit:  50 }))).toBe('breakeven')
+    expect(tradeResult(trade({ pips: 0,              net_profit:   0 }))).toBe('breakeven')
+    expect(tradeResult(trade({ pips: -(BE_PIPS - 0.1), net_profit: -50 }))).toBe('breakeven')
+    expect(tradeResult(trade({ pips: -BE_PIPS,       net_profit: -50 }))).toBe('loss')
+  })
+
+  it('gives the same verdict at every position size — the whole point', () => {
+    // One scratch, three lot sizes, three very different euro figures.
+    const scratch = [
+      trade({ lot_size: 0.01, pips: -5, net_profit:  -0.45 }),
+      trade({ lot_size: 0.20, pips: -5, net_profit:  -9.00 }),
+      trade({ lot_size: 1.00, pips: -5, net_profit: -45.00 }),
+    ]
+    expect(scratch.map(t => tradeResult(t))).toEqual(['breakeven', 'breakeven', 'breakeven'])
+
+    // And one real move, likewise.
+    const real = [
+      trade({ lot_size: 0.01, pips: -40, net_profit:  -3.60 }),
+      trade({ lot_size: 1.00, pips: -40, net_profit: -360.00 }),
+    ]
+    expect(real.map(t => tradeResult(t))).toEqual(['loss', 'loss'])
+  })
+
+  it('does not call a big loss break-even just because the lot was large', () => {
+    // The old ±€10 rule got this right by accident; the regression to guard is
+    // the reverse — a huge euro figure that is only a few pips.
+    expect(tradeResult(trade({ lot_size: 5, pips: -3, net_profit: -150 }))).toBe('breakeven')
+    expect(tradeResult(trade({ lot_size: 5, pips: -60, net_profit: -3000 }))).toBe('loss')
+  })
+
+  it('past the scratch band, the money decides', () => {
+    // A 40-pip move that commission turned negative is a loss, not a win.
+    expect(tradeResult(trade({ pips: 40, net_profit: -0.5 }))).toBe('loss')
+    expect(tradeResult(trade({ pips: 40, net_profit:  0.5 }))).toBe('win')
+  })
+
+  it('falls back to money-per-lot when a row carries no pips', () => {
+    // Hand-entered and CSV-imported rows. Still size-normalised.
+    const band = BE_PIPS * PER_LOT_PER_PIP        // € per full lot at the threshold
+    expect(tradeResult(trade({ pips: null, lot_size: 1,   net_profit: -(band - 1) }))).toBe('breakeven')
+    expect(tradeResult(trade({ pips: null, lot_size: 1,   net_profit: -(band + 1) }))).toBe('loss')
+    expect(tradeResult(trade({ pips: null, lot_size: 0.1, net_profit: -3 }))).toBe('breakeven')
+    expect(tradeResult(trade({ pips: null, lot_size: 0.1, net_profit: -50 }))).toBe('loss')
+  })
+
+  it('cannot be varied by a stray positional argument', () => {
+    // `rows.map(tradeResult)` hands map's index in as a second argument. The
+    // public signature takes one parameter precisely so that is impossible.
+    const rows = [trade({ pips: -5, net_profit: -20 }), trade({ pips: -5, net_profit: -20 })]
+    expect(rows.map(tradeResult)).toEqual(['breakeven', 'breakeven'])
+  })
+
+  it('honours a per-user threshold, and clamps nonsense', () => {
+    const t = trade({ pips: -9, net_profit: -40 })
+    expect(makeClassifier(7).tradeResult(t)).toBe('loss')        // 9 pips is decided at 7
+    expect(makeClassifier(12).tradeResult(t)).toBe('breakeven')  // ...and a scratch at 12
+
+    // Bounded, so the setting stays a calibration rather than a way to make a
+    // losing month vanish into the break-even bucket.
+    expect(makeClassifier(9999).bePips).toBe(25)
+    expect(makeClassifier(0).bePips).toBe(1)
+    expect(makeClassifier(NaN).bePips).toBe(BE_PIPS)
+  })
+
+  it('predicates agree with tradeResult', () => {
+    const t = trade({ pips: 40, net_profit: 100 })
+    expect([isWin(t), isLoss(t), isBreakeven(t)]).toEqual([true, false, false])
+    const b = trade({ pips: 1, net_profit: 2 })
+    expect([isWin(b), isLoss(b), isBreakeven(b)]).toEqual([false, false, true])
   })
 })
 

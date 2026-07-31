@@ -3,6 +3,7 @@ import {
   Document, Page, View, Text, Svg, Path, Line,
 } from '@react-pdf/renderer'
 import type { Trade } from '@/types'
+import { isWin, isLoss, tradeResult } from '@/lib/trading/stats'
 
 const C = {
   bg:     '#0C0C12',
@@ -19,7 +20,7 @@ const C = {
   gold:   '#C8851A',
 } as const
 
-const BE = 10
+
 
 function realTrades(all: Trade[]) {
   return all.filter(t => t.net_profit !== null && t.symbol !== 'BALANCE' && (t.lot_size ?? 0) > 0)
@@ -28,8 +29,8 @@ function realTrades(all: Trade[]) {
 function computeStats(trades: Trade[]) {
   const real    = realTrades(trades)
   const sorted  = [...real].sort((a, b) => (a.close_time ?? '') < (b.close_time ?? '') ? -1 : 1)
-  const wins    = real.filter(t => (t.net_profit ?? 0) >  BE)
-  const losses  = real.filter(t => (t.net_profit ?? 0) < -BE)
+  const wins    = real.filter(t => isWin(t))
+  const losses  = real.filter(t => isLoss(t))
   const netPnl  = real.reduce((s, t) => s + (t.net_profit ?? 0), 0)
   const decisive = wins.length + losses.length
   const winRate  = decisive > 0 ? (wins.length / decisive) * 100 : 0
@@ -57,9 +58,9 @@ function computeStats(trades: Trade[]) {
   const chrono = [...real].sort((a, b) => (a.close_time ?? '').localeCompare(b.close_time ?? ''))
   let maxCW = 0, maxCL = 0, curW = 0, curL = 0
   for (const t of chrono) {
-    const p = t.net_profit ?? 0
-    if (p >  BE) { curW++; curL = 0; if (curW > maxCW) maxCW = curW }
-    if (p < -BE) { curL++; curW = 0; if (curL > maxCL) maxCL = curL }
+    const r = tradeResult(t)
+    if (r === 'win')  { curW++; curL = 0; if (curW > maxCW) maxCW = curW }
+    if (r === 'loss') { curL++; curW = 0; if (curL > maxCL) maxCL = curL }
   }
 
   const rrArr = real.filter(t => t.stop_loss && t.open_price && t.close_price && t.trade_type)
@@ -83,7 +84,7 @@ function computeStats(trades: Trade[]) {
     setupMap.set(key, {
       pnl:   cur.pnl   + (t.net_profit ?? 0),
       count: cur.count + 1,
-      wins:  cur.wins  + ((t.net_profit ?? 0) > BE ? 1 : 0),
+      wins:  cur.wins  + (isWin(t) ? 1 : 0),
     })
   }
   const setupBreakdown = Array.from(setupMap.entries())
@@ -133,7 +134,10 @@ const fmt     = (n: number) => `${n >= 0 ? '+' : '-'}€${Math.abs(n).toLocaleSt
 const fmtS    = (n: number) => `${n >= 0 ? '+' : '-'}€${Math.abs(n).toFixed(0)}`
 const fmtDate = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
 const scoreCol = (s: number) => s >= 70 ? C.green : s >= 45 ? C.yellow : C.red
-const pnlCol   = (n: number) => n > BE ? C.green : n < -BE ? C.red : C.t2
+const pnlCol   = (t: Trade) => {
+  const r = tradeResult(t)
+  return r === 'win' ? C.green : r === 'loss' ? C.red : C.t2
+}
 
 // ── Equity curve ──────────────────────────────────────────────────────────────
 function EquityCurveSvg({ equity }: { equity: number[] }) {
@@ -440,7 +444,7 @@ export function TradingReport({ trades, from, to, period, traderName = 'Trader',
             {/* Rows — react-pdf auto-paginates if they overflow */}
             {sorted.map((t, i) => {
               const pnl  = t.net_profit ?? 0
-              const pnlC = pnlCol(pnl)
+              const pnlC = pnlCol(t)
               const rowBg = i % 2 === 0 ? 'transparent' : C.card2
 
               // Per-trade realized R:R
@@ -469,7 +473,7 @@ export function TradingReport({ trades, from, to, period, traderName = 'Trader',
                   <Text style={{ color: C.t2, fontSize: 6.5, flex: 2 }}>
                     {t.setup_type ?? (t.notes?.slice(0, 20)) ?? '—'}
                   </Text>
-                  <Text style={{ color: pnl > BE ? C.green : pnl < -BE ? C.red : C.t3, fontSize: 7, flex: 1 }}>
+                  <Text style={{ color: pnlC, fontSize: 7, flex: 1 }}>
                     {rrStr}
                   </Text>
                   <Text style={{ color: pnlC, fontSize: 7, flex: 1, fontFamily: 'Helvetica-Bold', textAlign: 'right' }}>

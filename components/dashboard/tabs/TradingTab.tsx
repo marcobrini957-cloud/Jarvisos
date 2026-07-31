@@ -11,7 +11,6 @@ import Badge from '@/components/ui/Badge'
 import ScreenshotGallery from '@/components/ui/ScreenshotGallery'
 import SessionAnalyticsChart from '@/components/ui/SessionAnalyticsChart'
 import type { Trade } from '@/types'
-import { BE_THRESHOLD } from '@/lib/trading/stats'
 import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
 import {
   filterByPeriod, calcPnl, calcWinRate, calcPips,
@@ -29,6 +28,7 @@ import { WinRing } from './overview/WinRing'
 import { PnlDonut } from './trading/PnlDonut'
 import { MetricRing } from './trading/MetricRing'
 import { Label, Num } from '@/components/ui/vq'
+import { useClassifier } from '@/context/UserProfileContext'
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -52,13 +52,18 @@ function calcConsistency(trades: Trade[]): { green: number; totalDays: number; p
 }
 
 export default function TradingTab() {
+  const { isWin } = useClassifier()
   const { trades, allRows, openPositions, stats, loading } = useTrades(2000)
   const { snapshot } = useAccountSnapshot()
   const balance = snapshot?.balance ?? 0
   const balanceOps = allRows.filter(t => t.symbol === 'BALANCE')
   // Cash flow (all-time) — an account fact, kept out of the performance KPI row.
-  const totalWithdrawn = balanceOps.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).reduce((s, t) => s + Math.abs(t.net_profit ?? 0), 0)
-  const totalDeposited = balanceOps.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).reduce((s, t) => s + (t.net_profit ?? 0), 0)
+  // Deliberately a plain sign test, NOT the trade win/loss rule: a deposit is
+  // not a trade. Balance rows carry no lot size and no pips, so classifying
+  // them with tradeResult would call every transfer a break-even and this
+  // would read €0.
+  const totalWithdrawn = balanceOps.filter(t => (t.net_profit ?? 0) < 0).reduce((s, t) => s + Math.abs(t.net_profit ?? 0), 0)
+  const totalDeposited = balanceOps.filter(t => (t.net_profit ?? 0) > 0).reduce((s, t) => s + (t.net_profit ?? 0), 0)
   const [annotating,       setAnnotating]       = useState<Trade | null>(null)
   const [screenshotViewing, setScreenshotViewing] = useState<string | null>(null)
 
@@ -92,7 +97,7 @@ export default function TradingTab() {
     for (const tag of t.tags ?? []) {
       const s = tagStats.get(tag) ?? { wins: 0, total: 0 }
       s.total++
-      if ((t.net_profit ?? 0) > BE_THRESHOLD) s.wins++
+      if (isWin(t)) s.wins++
       tagStats.set(tag, s)
     }
   }

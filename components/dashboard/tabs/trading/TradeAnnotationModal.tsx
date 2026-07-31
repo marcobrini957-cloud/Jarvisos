@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { tradeResult } from '@/hooks/useTrades'
 import Badge from '@/components/ui/Badge'
 import type { Trade } from '@/types'
 import Icon from '@/components/ui/Icon'
 import { Select } from '@/components/ui/vq'
+import { useClassifier } from '@/context/UserProfileContext'
 
 // ── Trade Annotation Modal ─────────────────────────────────────────────────────
 
@@ -13,6 +13,7 @@ const SETUP_TYPES = ['ICT Order Block', 'BOS / CHoCH', 'Fair Value Gap', 'Liquid
 const MISTAKE_TAGS = ['FOMO', 'Revenge trade', 'Early exit', 'Late entry', 'Oversize', 'No SL', 'News blindspot', 'Emotional']
 
 export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose: () => void }) {
+  const { tradeResult } = useClassifier()
   const [setupType,    setSetup]    = useState(trade.setup_type  ?? '')
   const [rationale,   setRationale] = useState(trade.trade_rationale ?? '')
   const [emotion,     setEmotion]   = useState(trade.emotion_pre ?? '')
@@ -130,7 +131,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
               {' · '}
               {(() => {
                 const pnl = trade.net_profit ?? 0
-                const result = tradeResult(pnl)
+                const result = tradeResult(trade)
                 const color = result === 'win' ? 'var(--gr2)' : result === 'loss' ? 'var(--re)' : 'var(--ac)'
                 return (
                   <>

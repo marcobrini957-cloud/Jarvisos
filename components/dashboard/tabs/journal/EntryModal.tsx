@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { useJournalEntries } from '@/hooks/useJournalEntries'
-import { tradeResult } from '@/hooks/useTrades'
 import type { JournalEntry } from '@/types'
 import { type Mood, MOOD_COLOR, MOODS } from './helpers'
 import VoiceDictationButton from '@/components/ui/VoiceDictationButton'
 import Icon from '@/components/ui/Icon'
+import { useClassifier } from '@/context/UserProfileContext'
 
 // ── Add / Edit Entry Modal ────────────────────────────────────────────────────
 
@@ -20,11 +20,12 @@ export function EntryModal({
 }: {
   date: string
   existing?: JournalEntry
-  dayTrades: Array<{ symbol: string; net_profit: number | null; trade_type: string }>
+  dayTrades: Array<{ symbol: string; net_profit: number | null; trade_type: string; pips: number | null; lot_size: number | null }>
   onSave: (data: Parameters<ReturnType<typeof useJournalEntries>['addEntry']>[0]) => Promise<unknown>
   onDelete?: (id: string) => Promise<void>
   onClose: () => void
 }) {
+  const { tradeResult } = useClassifier()
   const [mood, setMood]         = useState<Mood>((existing?.mood as Mood) ?? 'neutral')
   const [energy, setEnergy]     = useState(existing?.energy_level ?? 7)
   const [body, setBody]         = useState(existing?.body_text ?? '')
@@ -107,8 +108,8 @@ export function EntryModal({
         {/* Today's trades summary — auto-pulled */}
         {dayTrades.length > 0 && (() => {
           const dayPnl = dayTrades.reduce((s, t) => s + (t.net_profit ?? 0), 0)
-          const wins   = dayTrades.filter(t => tradeResult(t.net_profit ?? 0) === 'win').length
-          const losses = dayTrades.filter(t => tradeResult(t.net_profit ?? 0) === 'loss').length
+          const wins   = dayTrades.filter(t => tradeResult(t) === 'win').length
+          const losses = dayTrades.filter(t => tradeResult(t) === 'loss').length
           return (
             <div style={{ background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
               <p style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
@@ -123,7 +124,7 @@ export function EntryModal({
                 </div>
                 <div style={{ flex: 1, display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {dayTrades.slice(0, 5).map((t, i) => {
-                    const r = tradeResult(t.net_profit ?? 0)
+                    const r = tradeResult(t)
                     const color = r === 'win' ? 'var(--gr2)' : r === 'loss' ? 'var(--re)' : 'var(--t3)'
                     return (
                       <span className="vq-num" key={i} style={{

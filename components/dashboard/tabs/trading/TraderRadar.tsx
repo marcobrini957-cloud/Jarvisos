@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { BE_THRESHOLD } from '@/hooks/useTrades'
 import type { Trade } from '@/types'
+import { useClassifier } from '@/context/UserProfileContext'
 
 // ── FIFA-style Trader Radar ───────────────────────────────────────────────────
 
 export function TraderRadar({ closed }: { closed: Trade[] }) {
+  const { isWin, isLoss } = useClassifier()
   const [showLegend, setShowLegend] = useState(false)
   const N  = 6
   // Give the hex generous room so labels never clip
@@ -16,8 +17,8 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
   // ── Metric computations ───────────────────────────────────────────────────
 
   // 1. Win Rate
-  const wins   = closed.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).length
-  const losses = closed.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+  const wins   = closed.filter(t => isWin(t)).length
+  const losses = closed.filter(t => isLoss(t)).length
   const winRate = (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : 0
 
   // 2. Profit Factor — the single most important edge metric

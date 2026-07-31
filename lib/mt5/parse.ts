@@ -13,18 +13,53 @@ export function detectSession(isoTime: string): string {
   return 'asian'
 }
 
+/**
+ * Price distance in pips, per instrument class.
+ *
+ * This matters more than it used to: `tradeResult` classifies break-evens on
+ * pips now, so a wrong pip size here does not just mislabel a column, it
+ * mislabels the trade. Anything not matched below falls through to the 4-digit
+ * forex convention, which is right for FX pairs and catastrophically wrong for
+ * anything priced in the thousands — a €1.19 move on BTCUSD was coming out as
+ * 272,000 pips.
+ */
 export function calcPips(symbol: string, open: number, close: number, type: 'buy' | 'sell'): number {
   const diff = type === 'buy' ? close - open : open - close
-  if (symbol.toUpperCase().includes('XAU') || symbol.toUpperCase().includes('GOLD')) {
+  const s = symbol.toUpperCase()
+
+  // Gold and silver: quoted to 2 decimals, so a $1.00 move is 10 pips.
+  if (s.includes('XAU') || s.includes('GOLD') || s.includes('XAG') || s.includes('SILVER')) {
     return parseFloat((diff * 10).toFixed(1))
   }
-  if (symbol.toUpperCase().includes('NAS') || symbol.toUpperCase().includes('US100') ||
-      symbol.toUpperCase().includes('SPX') || symbol.toUpperCase().includes('DOW')) {
+
+  // Crypto: priced in the thousands and quoted in whole units, so one point of
+  // price is one pip. Without this, BTCUSD ran through the FX branch below and
+  // produced six-figure pip counts from ordinary moves.
+  if (s.includes('BTC') || s.includes('ETH') || s.includes('XRP') ||
+      s.includes('LTC') || s.includes('SOL') || s.includes('DOGE') ||
+      s.includes('ADA') || s.includes('BNB')) {
     return parseFloat(diff.toFixed(1))
   }
-  if (symbol.toUpperCase().includes('JPY')) {
+
+  // Index CFDs: one index point is one pip.
+  if (s.includes('NAS') || s.includes('US100') || s.includes('US30') ||
+      s.includes('SPX') || s.includes('US500') || s.includes('DOW') ||
+      s.includes('GER') || s.includes('DAX') || s.includes('UK100') ||
+      s.includes('JP225') || s.includes('HK50') || s.includes('AUS200')) {
+    return parseFloat(diff.toFixed(1))
+  }
+
+  // Energies, quoted to 2 decimals like the metals.
+  if (s.includes('OIL') || s.includes('WTI') || s.includes('BRENT') || s.includes('USOIL')) {
+    return parseFloat((diff * 10).toFixed(1))
+  }
+
+  // JPY crosses are 2-decimal FX.
+  if (s.includes('JPY')) {
     return parseFloat((diff / 0.01).toFixed(1))
   }
+
+  // Everything else: standard 4-decimal FX.
   return parseFloat((diff / 0.0001).toFixed(1))
 }
 

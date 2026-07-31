@@ -1,5 +1,5 @@
 import type { Trade, JournalEntry, Task } from '@/types'
-import { BE_THRESHOLD } from '@/lib/trading/stats'
+import { isWin, isLoss } from '@/lib/trading/stats'
 import type { HoldingWithPrice } from '@/hooks/usePortfolio'
 import { eurSigned } from '@/lib/utils/formatting'
 
@@ -54,13 +54,13 @@ function realTrades(trades: Trade[]): Trade[] {
   return trades.filter(t => t.symbol !== 'BALANCE' && !!t.symbol && (t.lot_size ?? 0) > 0)
 }
 
-// Win rate on DECIDED trades only — break-evens (within ±BE_THRESHOLD) are
+// Win rate on DECIDED trades only — break-evens (inside the pip-based scratch band) are
 // excluded from BOTH sides. 3 wins + 0 losses + 10 scratches is a 100% win
 // rate, not 23%. Counting scratches against the trader produced a false
 // "difficult month" on a green month.
 function decidedStats(trades: Trade[]) {
-  const wins    = trades.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD).length
-  const losses  = trades.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+  const wins    = trades.filter(t => isWin(t)).length
+  const losses  = trades.filter(t => isLoss(t)).length
   const decided = wins + losses
   return { wins, losses, decided, wr: decided > 0 ? (wins / decided) * 100 : 0 }
 }
@@ -159,11 +159,11 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
   const last3 = recent.slice(0, 3)
   const last5 = recent.slice(0, 5)
 
-  if (last3.length === 3 && last3.every(t => (t.net_profit ?? 0) < -BE_THRESHOLD)) {
+  if (last3.length === 3 && last3.every(t => isLoss(t))) {
     push({ category: 'warning', source: 'trades', priority: 'high',
       message: '3 losses in a row detected. Step away for at least 30 minutes before considering another trade. Revenge trading costs you.',
       action: 'Take a break' })
-  } else if (last5.length === 5 && last5.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length >= 4) {
+  } else if (last5.length === 5 && last5.filter(t => isLoss(t)).length >= 4) {
     push({ category: 'warning', source: 'trades', priority: 'high',
       message: '4 of your last 5 trades are losses. Today is not your day. Protect your capital — consider stopping for the day.',
       action: 'Stop trading for today' })
@@ -222,8 +222,8 @@ export function generateInsights(data: VelquorData): VelquorInsight[] {
   // described every trade — and it contradicted the payoff ratio displayed
   // beside it in the same panel (R:R 0.03 vs €44/€71 = 0.62). Payoff ratio uses
   // every decided trade and cannot disagree with itself.
-  const winners = closed.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD)
-  const losers  = closed.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD)
+  const winners = closed.filter(t => isWin(t))
+  const losers  = closed.filter(t => isLoss(t))
   if (winners.length >= 5 && losers.length >= 5) {
     const avgWin  = winners.reduce((s, t) => s + (t.net_profit ?? 0), 0) / winners.length
     const avgLoss = Math.abs(losers.reduce((s, t) => s + (t.net_profit ?? 0), 0) / losers.length)

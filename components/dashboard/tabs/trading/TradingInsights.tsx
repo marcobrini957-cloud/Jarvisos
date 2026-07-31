@@ -1,17 +1,18 @@
 'use client'
 
 import { useMemo } from 'react'
-import { BE_THRESHOLD } from '@/hooks/useTrades'
 import { generateInsights } from '@/lib/intelligence'
 import InsightCard from '@/components/ui/InsightCard'
 import Panel from '@/components/ui/Panel'
 import type { Trade } from '@/types'
 import { StatRow, TableHeader } from './analytics-shared'
 import { TraderRadar } from './TraderRadar'
+import { useClassifier } from '@/context/UserProfileContext'
 
 // ── Full analytics panel ──────────────────────────────────────────────────────
 
 export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows: Trade[] }) {
+  const { isWin, isLoss } = useClassifier()
   const closed = useMemo(() =>
     trades.filter(t => t.net_profit !== null && t.symbol !== 'BALANCE'),
   [trades])
@@ -64,7 +65,7 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
     return [...map.entries()]
       .map(([label, trades]) => ({ label, trades }))
       .sort((a, b) => {
-        const wrOf = (ts: Trade[]) => { const w = ts.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length; const l = ts.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length; return (w + l) > 0 ? w / (w + l) : 0 }
+        const wrOf = (ts: Trade[]) => { const w = ts.filter(t => isWin(t)).length; const l = ts.filter(t => isLoss(t)).length; return (w + l) > 0 ? w / (w + l) : 0 }
         return wrOf(b.trades) - wrOf(a.trades)
       })
   }, [closed])

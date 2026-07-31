@@ -1,13 +1,14 @@
 'use client'
 
-import { BE_THRESHOLD } from '@/hooks/useTrades'
 import Panel from '@/components/ui/Panel'
 import { Label, Num } from '@/components/ui/vq'
 import type { Trade } from '@/types'
+import { useClassifier } from '@/context/UserProfileContext'
 
 // ── Your Edge Panel ───────────────────────────────────────────────────────────
 
 export function YourEdge({ trades }: { trades: Trade[] }) {
+  const { isWin, isLoss } = useClassifier()
   const closed = trades.filter(t => t.net_profit !== null && t.symbol !== 'BALANCE')
   if (closed.length < 10) return null
 
@@ -18,8 +19,8 @@ export function YourEdge({ trades }: { trades: Trade[] }) {
 
   // Helper
   const wrOf = (ts: Trade[]) => {
-    const w = ts.filter(t => (t.net_profit ?? 0) > BE_THRESHOLD).length
-    const l = ts.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD).length
+    const w = ts.filter(t => isWin(t)).length
+    const l = ts.filter(t => isLoss(t)).length
     return (w + l) > 0 ? { wr: (w / (w + l)) * 100, trades: ts.length, w, l } : null
   }
   const avgPnl = (ts: Trade[]) => ts.reduce((s, t) => s + (t.net_profit ?? 0), 0) / (ts.length || 1)
@@ -106,8 +107,8 @@ export function YourEdge({ trades }: { trades: Trade[] }) {
   // Loss streak warning
   let streak = 0
   for (const t of [...closed].reverse()) {
-    if ((t.net_profit ?? 0) < -BE_THRESHOLD) streak++
-    else if ((t.net_profit ?? 0) > BE_THRESHOLD) break
+    if (isLoss(t)) streak++
+    else if (isWin(t)) break
   }
   if (streak >= 3) edges.push({
     label: `${streak}-trade loss streak`,

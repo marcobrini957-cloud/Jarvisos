@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Trade } from '@/types'
 import { computeStats, isRealTrade, type TradeStats } from '@/lib/trading/stats'
+import { useUserProfile } from '@/context/UserProfileContext'
 
 // Re-exported so existing imports from '@/hooks/useTrades' keep working
-export { BE_THRESHOLD, tradeResult, computeStats, isRealTrade } from '@/lib/trading/stats'
+export { BE_PIPS, tradeResult, computeStats, isRealTrade, isWin, isLoss, isBreakeven } from '@/lib/trading/stats'
 export type { TradeStats } from '@/lib/trading/stats'
 
 
@@ -15,7 +16,6 @@ export function useTrades(limit = 50) {
   const [trades,        setTrades]        = useState<Trade[]>([])
   const [allRows,       setAllRows]       = useState<Trade[]>([])
   const [openPositions, setOpenPositions] = useState<Trade[]>([])
-  const [stats,         setStats]         = useState<TradeStats | null>(null)
   const [loading,       setLoading]       = useState(true)
   const [error,         setError]         = useState<string | null>(null)
   const initialized = useRef(false)
@@ -47,7 +47,6 @@ export function useTrades(limit = 50) {
       const rows = (closedRes.data ?? []) as Trade[]
       setTrades(rows.filter(isRealTrade))
       setAllRows(rows)
-      setStats(computeStats(rows))
       setOpenPositions((openRes.data ?? []).filter(isRealTrade) as Trade[])
       initialized.current = true
     } catch (e: unknown) {
@@ -90,6 +89,16 @@ export function useTrades(limit = 50) {
     window.addEventListener('mt5-synced', handler)
     return () => window.removeEventListener('mt5-synced', handler)
   }, [load])
+
+  // Derived rather than stored, so moving the break-even setting recomputes
+  // every figure immediately instead of waiting for the next fetch — otherwise
+  // the calendar (which reads the setting live) and the win rate (which would
+  // not) disagree until something happened to reload.
+  const { profile } = useUserProfile()
+  const stats = useMemo<TradeStats | null>(
+    () => (allRows.length > 0 ? computeStats(allRows, profile.be_pips) : null),
+    [allRows, profile.be_pips],
+  )
 
   return { trades, allRows, openPositions, stats, loading, error, reload: load }
 }

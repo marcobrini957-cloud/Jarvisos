@@ -30,12 +30,13 @@ export default function JournalTab() {
 
   // Trades by date for the EntryModal auto-pull
   const tradesByDate = useMemo(() => {
-    const map = new Map<string, Array<{ symbol: string; net_profit: number | null; trade_type: string }>>()
+    const map = new Map<string, Array<{ symbol: string; net_profit: number | null; trade_type: string; pips: number | null; lot_size: number | null }>>()
     for (const t of trades) {
       if (!t.close_time) continue
       const d = toDateStr(new Date(t.close_time))
       const arr = map.get(d) ?? []
-      arr.push({ symbol: t.symbol ?? '', net_profit: t.net_profit, trade_type: t.trade_type })
+      // pips and lot_size ride along because the win/loss rule reads them.
+      arr.push({ symbol: t.symbol ?? '', net_profit: t.net_profit, trade_type: t.trade_type, pips: t.pips, lot_size: t.lot_size })
       map.set(d, arr)
     }
     return map

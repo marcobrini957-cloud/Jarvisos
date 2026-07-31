@@ -7,7 +7,7 @@
 // numbers itself. Every figure a user ever sees originates here.
 
 import type { Trade } from '@/types'
-import { BE_THRESHOLD, isRealTrade, tradeResult } from './stats'
+import { isRealTrade, isWin, isLoss, tradeResult } from './stats'
 
 export interface Segment {
   key:         string   // the bucket value, e.g. 'anxious', 'london', 'Mon'
@@ -45,8 +45,8 @@ function realizedR(t: Trade): number | null {
 }
 
 function segment(key: string, ts: Trade[]): Segment {
-  const wins   = ts.filter(t => (t.net_profit ?? 0) >  BE_THRESHOLD)
-  const losses = ts.filter(t => (t.net_profit ?? 0) < -BE_THRESHOLD)
+  const wins   = ts.filter(t => isWin(t))
+  const losses = ts.filter(t => isLoss(t))
   const dec    = wins.length + losses.length
   const netPnl = ts.reduce((s, t) => s + (t.net_profit ?? 0), 0)
   const rs     = ts.map(realizedR).filter((r): r is number => r !== null)
