@@ -18,6 +18,7 @@ import PartnersTab     from './tabs/PartnersTab'
 import SettingsTab     from './tabs/SettingsTab'
 import WelcomeGreeting from './WelcomeGreeting'
 import PartnerRail     from './PartnerRail'
+import FeedbackButton  from './FeedbackButton'
 import { tabLabel }    from './tabs'
 
 const TAB_COMPONENTS: Record<number, React.ComponentType> = {
@@ -115,6 +116,8 @@ export default function DashboardShell() {
   return (
     <UserProfileProvider>
       <WelcomeGreeting />
+      {/* Outside the tab wrapper on purpose — see FeedbackButton's header. */}
+      <FeedbackButton activeTab={activeTab} showSettings={showSettings} />
       {/* Exactly one viewport tall, and it owns its own scrolling — the page
           behind it no longer needs to be locked. */}
       <div className="vq2" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>

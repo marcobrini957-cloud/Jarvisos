@@ -126,9 +126,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
  */
 const USER_TABLES = [
   'account_snapshots', 'ai_usage', 'calendar_events', 'copy_accounts', 'copy_groups',
-  'habit_completions', 'habits', 'journal_entries', 'macro_briefings', 'mt5_candles',
-  'partner_clicks', 'portfolio_holdings', 'portfolio_snapshots', 'tasks',
-  'telegram_messages', 'trades', 'weekly_reviews',
+  'feedback', 'habit_completions', 'habits', 'journal_entries', 'macro_briefings',
+  'mt5_candles', 'partner_clicks', 'portfolio_holdings', 'portfolio_snapshots',
+  'tasks', 'telegram_messages', 'trades', 'weekly_reviews',
 ] as const
 
 /**
@@ -190,6 +190,16 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     // A table that does not exist in this environment is not a failure.
     if (error && !isMissingSchemaError(error.message)) failed.push(`${table}: ${error.message}`)
   }
+
+  // A beta invite is a record of who was let in, so it outlives the account —
+  // but it must not keep pointing at a user id that no longer resolves. Unlink
+  // it and revoke it: the code stops working, and the row still shows in the
+  // Beta tab that this person came and went. Marco can restore it to re-issue.
+  const { error: inviteErr } = await sb
+    .from('beta_invites')
+    .update({ redeemed_by: null, revoked_at: new Date().toISOString() })
+    .eq('redeemed_by', id)
+  if (inviteErr && !isMissingSchemaError(inviteErr.message)) failed.push(`beta_invites: ${inviteErr.message}`)
 
   const { error: profileErr } = await sb.from('user_profiles').delete().eq('id', id)
   if (profileErr && !isMissingSchemaError(profileErr.message)) failed.push(`user_profiles: ${profileErr.message}`)

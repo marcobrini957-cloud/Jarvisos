@@ -10,10 +10,12 @@ import { BridgeTab } from './tabs/BridgeTab'
 import { AuditTab } from './tabs/AuditTab'
 import { TodoTab } from './tabs/TodoTab'
 import { BetaTab } from './tabs/BetaTab'
+import { FeedbackTab } from './tabs/FeedbackTab'
 
 const TABS = [
   { id: 'overview', label: 'Overview' },
   { id: 'beta', label: 'Beta' },
+  { id: 'feedback', label: 'Feedback' },
   { id: 'users', label: 'Users' },
   { id: 'costs', label: 'Costs' },
   { id: 'bridge', label: 'Bridge' },
@@ -81,6 +83,7 @@ export default function DevDashboard() {
       <div style={{ padding: '24px 28px', maxWidth: '1400px', margin: '0 auto' }}>
         {tab === 'overview' && <OverviewTab />}
         {tab === 'beta' && <BetaTab />}
+        {tab === 'feedback' && <FeedbackTab />}
         {tab === 'users' && <UsersTab />}
         {tab === 'costs' && <CostsTab />}
         {tab === 'bridge' && <BridgeTab />}
