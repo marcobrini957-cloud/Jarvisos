@@ -36,10 +36,40 @@ export const PLANS: Record<Tier, TierPlan> = {
   },
   ultra: {
     tier: 'ultra',
-    aiProvider: 'anthropic', aiModel: 'claude-sonnet-4-6',
+    aiProvider: 'anthropic', aiModel: 'claude-sonnet-5',
     cloudTerminals: 3,       copyGroups: 3, copyFollowersEach: 5,
     aiCoaching: true,        weeklyReviewAi: true,
   },
+}
+
+/**
+ * The strongest model Groq serves us. Paid tiers fall back to this when there
+ * is no Anthropic key — it is the same model the Analyst chat already runs on,
+ * so a beta tester gets real coaching rather than a blank panel.
+ */
+export const GROQ_FALLBACK_MODEL = 'llama-3.3-70b-versatile'
+
+/** A real key, not the `your_anthropic_key_here` placeholder in .env.local. */
+export function hasAnthropicKey(): boolean {
+  return process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant') === true
+}
+
+/**
+ * What the AI calls should ACTUALLY use, given what is configured right now.
+ *
+ * The plans above describe the product we are selling; this describes the
+ * product we can currently deliver. Paid tiers asked for Anthropic while
+ * ANTHROPIC_API_KEY was a placeholder, so every paid coaching call threw and
+ * was swallowed into '' — the panels rendered empty and nothing said why.
+ *
+ * Now the absence of a key routes to Groq instead of to silence, and adding a
+ * real key upgrades every paid tier on the next request with no code change.
+ */
+export function resolveAi(plan: TierPlan): { provider: 'groq' | 'anthropic'; model: string } {
+  if (plan.aiProvider === 'anthropic' && !hasAnthropicKey()) {
+    return { provider: 'groq', model: GROQ_FALLBACK_MODEL }
+  }
+  return { provider: plan.aiProvider, model: plan.aiModel }
 }
 
 function service() {

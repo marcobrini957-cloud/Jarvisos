@@ -3,14 +3,17 @@
 // from lib/trading/stats + lib/trading/breakdowns. This keeps the money-facing
 // numbers correct (no LLM arithmetic) and makes the AI's job pure synthesis.
 //
-// Model by tier (see lib/api/tier.ts): free→Groq Llama, pro→Haiku, ultra→Sonnet.
+// Model by tier (see lib/api/tier.ts): free→Groq Llama, pro→Haiku, ultra→Sonnet —
+// but always via resolveAi(), which routes paid tiers to Groq while no Anthropic
+// key is configured. Every entry point below resolves; none reads plan.aiModel
+// directly, or a missing key would come back as an empty panel.
 
 import Anthropic from '@anthropic-ai/sdk'
 import Groq from 'groq-sdk'
 import type { TradeStats } from '@/lib/trading/stats'
 import type { Breakdowns, Segment } from '@/lib/trading/breakdowns'
 import type { TraderDna } from '@/lib/trading/traderDna'
-import type { TierPlan } from '@/lib/api/tier'
+import { resolveAi, type TierPlan } from '@/lib/api/tier'
 
 const SYSTEM = `You are VELQUOR, an elite trading performance coach.
 You are given a trader's PRE-COMPUTED statistics — win rates, expectancy, and
@@ -88,11 +91,12 @@ export function dnaFacts(dna: TraderDna): string {
 export async function generateDnaFocus(plan: TierPlan, dna: TraderDna): Promise<string> {
   const facts = dnaFacts(dna)
   const task  = `TRADER DNA:\n${facts}\n\nWrite the single biggest-opportunity focus paragraph.`
+  const ai = resolveAi(plan)
   try {
-    if (plan.aiProvider === 'anthropic') {
+    if (ai.provider === 'anthropic') {
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
       const msg = await client.messages.create({
-        model: plan.aiModel, max_tokens: 400,
+        model: ai.model, max_tokens: 400,
         system: DNA_SYSTEM,
         messages: [{ role: 'user', content: task }],
       })
@@ -100,11 +104,14 @@ export async function generateDnaFocus(plan: TierPlan, dna: TraderDna): Promise<
     }
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
     const r = await groq.chat.completions.create({
-      model: plan.aiModel, max_tokens: 400, temperature: 0.5,
+      model: ai.model, max_tokens: 400, temperature: 0.5,
       messages: [{ role: 'user', content: `${DNA_SYSTEM}\n\n${task}` }],
     })
     return r.choices[0]?.message?.content ?? ''
-  } catch {
+  } catch (e) {
+    // '' renders as an empty card. Say so in the log at least — a silent
+    // failure here is what hid the placeholder API key for two weeks.
+    console.error('[coach] dnaFocus failed', ai.provider, ai.model, e)
     return ''
   }
 }
@@ -119,11 +126,12 @@ export async function generateCoachNotes(
   const userContent = extraContext
     ? `${facts}\n\nTRADER CONTEXT:\n${extraContext}\n\n${REPORT_TASK}`
     : `${facts}\n\n${REPORT_TASK}`
+  const ai = resolveAi(plan)
   try {
-    if (plan.aiProvider === 'anthropic') {
+    if (ai.provider === 'anthropic') {
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
       const msg = await client.messages.create({
-        model: plan.aiModel,
+        model: ai.model,
         max_tokens: 1400,
         system: [
           { type: 'text', text: SYSTEM },
@@ -135,11 +143,12 @@ export async function generateCoachNotes(
     }
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
     const r = await groq.chat.completions.create({
-      model: plan.aiModel, max_tokens: 1200, temperature: 0.4,
+      model: ai.model, max_tokens: 1200, temperature: 0.4,
       messages: [{ role: 'user', content: `${SYSTEM}\n\n${userContent}` }],
     })
     return r.choices[0]?.message?.content ?? ''
-  } catch {
+  } catch (e) {
+    console.error('[coach] notes failed', ai.provider, ai.model, e)
     return ''
   }
 }
@@ -154,10 +163,11 @@ export async function streamCoachNotes(
     ? `${facts}\n\nTRADER CONTEXT:\n${extraContext}\n\n${REPORT_TASK}`
     : `${facts}\n\n${REPORT_TASK}`
 
-  if (plan.aiProvider === 'anthropic') {
-    return streamAnthropic(plan.aiModel, facts, userContent)
+  const ai = resolveAi(plan)
+  if (ai.provider === 'anthropic') {
+    return streamAnthropic(ai.model, facts, userContent)
   }
-  return streamGroq(plan.aiModel, `${SYSTEM}\n\n${userContent}`)
+  return streamGroq(ai.model, `${SYSTEM}\n\n${userContent}`)
 }
 
 function streamAnthropic(model: string, facts: string, userContent: string): ReadableStream<Uint8Array> {

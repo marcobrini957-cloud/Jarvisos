@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { GROQ_FALLBACK_MODEL, PLANS, hasAnthropicKey } from '@/lib/api/tier'
 
 function isAuthed(req: NextRequest) {
   const secret = process.env.DEV_SECRET
@@ -138,16 +139,25 @@ export async function GET(req: NextRequest) {
     probe('https://nfs.faireconomy.media/ff_calendar_thisweek.json'),
   ])
 
+  const anthropicLive = hasAnthropicKey()
+
   const integrations = [
     { name: 'Supabase',       role: 'Database · auth · screenshot storage',  status: 'online',
       note: 'bucket: trade-screenshots' },
     { name: 'Hetzner bridge', role: 'MT5 sync · copy trading · cloud terminals', status: bridgeStatus,
       note: process.env.BRIDGE_URL ?? 'BRIDGE_URL not set' },
-    { name: 'Groq',           role: 'Analyst chat · Whisper dictation',
-      status: process.env.GROQ_API_KEY?.startsWith('gsk_') ? 'online' : 'not_configured', note: 'llama-3.3-70b' },
+    { name: 'Groq',           role: anthropicLive
+        ? 'Analyst chat · Whisper dictation'
+        : 'Analyst chat · Whisper dictation · ALL coaching (Anthropic fallback)',
+      status: process.env.GROQ_API_KEY?.startsWith('gsk_') ? 'online' : 'not_configured',
+      note: `llama-3.3-70b · ${GROQ_FALLBACK_MODEL}` },
+    // 'not_configured' here is not cosmetic: without a key every paid tier's
+    // coaching is being served by Groq instead (lib/api/tier.ts resolveAi).
     { name: 'Anthropic',      role: 'Coach notes · Trader DNA focus (paid tiers)',
-      status: process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant') ? 'online' : 'not_configured',
-      note: 'claude-haiku-4-5 / claude-sonnet-4-6' },
+      status: anthropicLive ? 'online' : 'not_configured',
+      note: anthropicLive
+        ? `${PLANS.pro.aiModel} / ${PLANS.ultra.aiModel}`
+        : `no key — paid tiers running on Groq ${GROQ_FALLBACK_MODEL}` },
     { name: 'Yahoo Finance',  role: 'Portfolio & metals prices · EUR/USD FX', status: pricesStatus,
       note: 'query2.finance.yahoo.com' },
     { name: 'Forex Factory',  role: 'Economic calendar (red folders)',        status: calendarStatus,
