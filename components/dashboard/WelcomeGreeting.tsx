@@ -55,6 +55,10 @@ export default function WelcomeGreeting() {
   const { profile, loading } = useUserProfile()
   const [visible, setVisible]   = useState(false)
   const [rendered, setRendered] = useState(false)
+  // No greeting has ever been dismissed here, so this is a first arrival —
+  // "Welcome back" to someone who has never been back reads like the product
+  // has mistaken them for somebody else.
+  const [returning, setReturning] = useState(true)
 
   useEffect(() => {
     if (loading) return
@@ -63,6 +67,7 @@ export default function WelcomeGreeting() {
     const today    = new Date().toDateString()
     const lastSeen = localStorage.getItem(KEY_DATE)
     if (lastSeen === today) return
+    setReturning(lastSeen !== null)
     setVisible(true)
     requestAnimationFrame(() => requestAnimationFrame(() => setRendered(true)))
   }, [loading])
@@ -125,8 +130,8 @@ export default function WelcomeGreeting() {
           marginBottom: '24px',
         }}>
           {firstName
-            ? <>Welcome back,{' '}<span style={{ color: 'var(--go2)' }}>{firstName}</span>.</>
-            : 'Welcome back.'
+            ? <>{returning ? 'Welcome back' : 'Welcome'},{' '}<span style={{ color: 'var(--go2)' }}>{firstName}</span>.</>
+            : returning ? 'Welcome back.' : 'Welcome.'
           }
         </h1>
 

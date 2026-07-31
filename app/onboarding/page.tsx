@@ -297,7 +297,16 @@ export default function OnboardingPage() {
     })
   }, [router])
 
-  function finish() {
+  // Record that setup has been seen — on skip as much as on completion. The
+  // dashboard sends first-time accounts here, so without this the two would
+  // bounce a user between them forever. Awaited, or the redirect can outrun the
+  // write and land the user straight back on step 1.
+  async function finish() {
+    try {
+      await fetch('/api/user/onboarded', { method: 'POST' })
+    } catch {
+      /* the dashboard fails open on a read error; worst case is one more pass */
+    }
     router.replace('/dashboard')
   }
 

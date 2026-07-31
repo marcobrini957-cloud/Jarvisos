@@ -131,24 +131,46 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
     return () => clearInterval(id)
   }, [])
 
-  const runSync = useCallback(async (quick = true) => {
+  /**
+   * Read the account pill from the newest snapshot.
+   *
+   * This used to POST /api/mt5-sync?quick=true every 30 seconds — the legacy
+   * MetaAPI pull. Accounts now reach us the other way round: the EA or a cloud
+   * terminal pushes to the bridge, which writes account_snapshots, and the GET
+   * below reads it. For anyone without MetaAPI credentials — which is every
+   * user who signed up after Instant Connect — the POST could only fail, so a
+   * brand-new account was met by a red "Reconnect MT5" before it had ever
+   * connected anything.
+   *
+   * `connected` now means "we have a snapshot for you". How fresh it is shows
+   * as the timestamp beside the balance, which is the honest way to say it.
+   */
+  const runSync = useCallback(async () => {
     if (syncingRef.current) return
     syncingRef.current = true
     setSyncing(true)
     try {
-      const res  = await fetch(`/api/mt5-sync?quick=${quick}`, { method: 'POST' })
-      const data = await res.json()
-      if (res.ok) {
+      const res = await fetch('/api/mt5-sync')
+      const d = await res.json() as {
+        snapshot?: { balance: number; equity: number; open_trades_count?: number; snapshot_at: string } | null
+      }
+      if (d.snapshot) {
         setStatus({
-          connected: true, balance: data.balance, equity: data.equity,
-          openPositions: data.openPositions, syncedAt: data.syncedAt, error: null,
+          connected:     true,
+          balance:       d.snapshot.balance,
+          equity:        d.snapshot.equity,
+          openPositions: d.snapshot.open_trades_count ?? 0,
+          syncedAt:      d.snapshot.snapshot_at,
+          error:         null,
         })
         window.dispatchEvent(new CustomEvent('mt5-synced'))
       } else {
-        setStatus(prev => ({ ...prev, connected: prev.connected, error: data.error ?? 'Sync error' }))
+        // No snapshot is not an error — it is an account that has not been
+        // connected yet, and the pill says "Connect MT5".
+        setStatus(prev => ({ ...prev, connected: false, error: null }))
       }
     } catch {
-      setStatus(prev => ({ ...prev, error: 'Sync failed — showing cached data' }))
+      setStatus(prev => ({ ...prev, error: 'Could not reach VELQUOR — showing cached data' }))
     } finally {
       syncingRef.current = false
       setSyncing(false)
@@ -157,28 +179,10 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return
-    fetch('/api/mt5-sync')
-      .then(r => r.json())
-      .then((d: { snapshot?: { balance: number; equity: number; open_trades_count?: number; snapshot_at: string } }) => {
-        if (d.snapshot) {
-          setStatus({
-            connected:     true,
-            balance:       d.snapshot.balance,
-            equity:        d.snapshot.equity,
-            openPositions: d.snapshot.open_trades_count ?? 0,
-            syncedAt:      d.snapshot.snapshot_at,
-            error:         null,
-          })
-        }
-      })
-      .catch(() => {})
-
-    const t = setTimeout(() => runSync(true), 3000)
-    const q = setInterval(() => runSync(true), 30 * 1000)        // quick sync every 30s
-    const i = setInterval(() => runSync(false), 60 * 60 * 1000)  // deep sync hourly
-    return () => { clearTimeout(t); clearInterval(q); clearInterval(i) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    runSync()
+    const q = setInterval(runSync, 30 * 1000)
+    return () => clearInterval(q)
+  }, [runSync])
 
 
   const avatarLetter = (profile.display_name || 'T')[0].toUpperCase()
@@ -251,7 +255,7 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
         <AccountMenu
           status={status}
           syncing={syncing}
-          onSync={() => runSync(true)}
+          onSync={() => runSync()}
           onConnect={() => setShowModal(true)}
         />
 
@@ -441,7 +445,7 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
       {showModal && (
         <MT5ConnectModal
           onClose={() => setShowModal(false)}
-          onConnected={() => setTimeout(() => runSync(true), 5000)}
+          onConnected={() => setTimeout(() => runSync(), 5000)}
           isConnected={status.connected}
         />
       )}
