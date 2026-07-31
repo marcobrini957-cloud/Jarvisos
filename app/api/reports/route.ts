@@ -53,6 +53,14 @@ export async function GET(req: NextRequest) {
     // generateCoachNotes returns '' on any failure.
     let coachNotes = ''
     const plan = await getUserPlan(user.id)
+    // Only the AI notes section was gated; the report itself was not, so a
+    // free account could download the whole thing the page says it cannot.
+    if (!plan.can.pdfReports) {
+      return NextResponse.json(
+        { error: 'PDF reports are part of Pro.', code: 'tier_required', requires: 'pro' },
+        { status: 403 },
+      )
+    }
     if (plan.aiCoaching && rows.filter(r => r.net_profit !== null).length >= 5) {
       const facts = buildFacts(computeStats(rows), computeBreakdowns(rows))
       coachNotes  = await generateCoachNotes(plan, facts)

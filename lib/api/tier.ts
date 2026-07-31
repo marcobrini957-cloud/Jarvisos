@@ -6,6 +6,27 @@ import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export type Tier = 'free' | 'pro' | 'ultra'
 
+/**
+ * Every capability the pricing page names, as a flag.
+ *
+ * The page used to hardcode its own list of strings while this file held the
+ * flags, and nothing joined them — so the page could promise that session
+ * analytics were Pro-only while the app handed them to everyone, and neither
+ * side would ever notice. `capabilityLabel` below closes that loop: the page is
+ * rendered FROM these, so an advertised feature and an enforced feature are the
+ * same declaration.
+ */
+export type Capability =
+  | 'sessionAnalytics'      // London / NY / Asia breakdowns
+  | 'setupAnalytics'        // per-setup and per-emotion win rates
+  | 'analyst'               // the Ask VELQUOR chat
+  | 'behaviorCorrelations'  // mood, discipline and streak correlations
+  | 'pdfReports'
+  | 'propFirmTracker'
+  | 'copyTrading'
+  | 'cloudTerminal'
+  | 'prioritySupport'
+
 export interface TierPlan {
   tier:            Tier
   // AI coaching
@@ -19,6 +40,39 @@ export interface TierPlan {
   // Feature flags
   aiCoaching:      boolean   // AI "Coach's Notes" (deterministic stats are always free)
   weeklyReviewAi:  boolean
+  /** What this plan may reach. The pricing page renders from exactly this. */
+  can:             Record<Capability, boolean>
+  /** Days of trade history the app will show. null = everything. */
+  historyDays:     number | null
+  /** Journal entries the account may hold. null = unlimited. */
+  journalLimit:    number | null
+}
+
+/**
+ * The words the pricing page prints. Kept beside the flags so a capability
+ * cannot be added without deciding how it is described to someone paying.
+ */
+export const CAPABILITY_LABEL: Record<Capability, string> = {
+  sessionAnalytics:     'Session analytics (London / NY / Asia)',
+  setupAnalytics:       'Setup analytics (per-setup win rate)',
+  analyst:              'VELQUOR Analyst',
+  behaviorCorrelations: 'Behavior correlations',
+  pdfReports:           'PDF trade reports',
+  propFirmTracker:      'Prop firm tracker',
+  copyTrading:          'Trade copier',
+  cloudTerminal:        'Zero-setup cloud connection',
+  prioritySupport:      'Priority support',
+}
+
+const NONE: Record<Capability, boolean> = {
+  sessionAnalytics: false, setupAnalytics: false, analyst: false,
+  behaviorCorrelations: false, pdfReports: false, propFirmTracker: false,
+  copyTrading: false, cloudTerminal: false, prioritySupport: false,
+}
+const ALL: Record<Capability, boolean> = {
+  sessionAnalytics: true, setupAnalytics: true, analyst: true,
+  behaviorCorrelations: true, pdfReports: true, propFirmTracker: true,
+  copyTrading: true, cloudTerminal: true, prioritySupport: true,
 }
 
 export const PLANS: Record<Tier, TierPlan> = {
@@ -27,18 +81,24 @@ export const PLANS: Record<Tier, TierPlan> = {
     aiProvider: 'groq',   aiModel: 'llama-3.1-8b-instant',
     cloudTerminals: 0,    copyGroups: 0, copyFollowersEach: 0,
     aiCoaching: false,    weeklyReviewAi: true, // free keeps the existing Groq weekly review
+    can: { ...NONE },
+    historyDays: 30, journalLimit: 100,
   },
   pro: {
     tier: 'pro',
     aiProvider: 'anthropic', aiModel: 'claude-haiku-4-5',
     cloudTerminals: 1,       copyGroups: 1, copyFollowersEach: 1,
     aiCoaching: true,        weeklyReviewAi: true,
+    can: { ...ALL, prioritySupport: false },
+    historyDays: null, journalLimit: null,
   },
   ultra: {
     tier: 'ultra',
     aiProvider: 'anthropic', aiModel: 'claude-sonnet-5',
     cloudTerminals: 3,       copyGroups: 3, copyFollowersEach: 5,
     aiCoaching: true,        weeklyReviewAi: true,
+    can: { ...ALL },
+    historyDays: null, journalLimit: null,
   },
 }
 
@@ -100,4 +160,9 @@ export async function getUserTier(userId: string): Promise<Tier> {
 
 export async function getUserPlan(userId: string): Promise<TierPlan> {
   return PLANS[await getUserTier(userId)]
+}
+
+/** Does this tier reach that capability? The one question every gate asks. */
+export function tierCan(tier: Tier, cap: Capability): boolean {
+  return PLANS[tier].can[cap]
 }

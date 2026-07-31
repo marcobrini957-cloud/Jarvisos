@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUserId } from '@/lib/api/auth'
+import { getUserPlan } from '@/lib/api/tier'
 import { withinAiLimit } from '@/lib/api/aiRateLimit'
 import {
   decided, realClosedTrades, monthlyFacts, groupBy, segmentLine, describeWindow,
@@ -156,6 +157,18 @@ export async function POST(req: NextRequest) {
   try {
     const userId = await getAuthUserId()
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // The pricing page lists the Analyst as Pro and above. It was open to
+    // everyone, which made the page a false claim and left a free account with
+    // no reason to upgrade.
+    const plan = await getUserPlan(userId)
+    if (!plan.can.analyst) {
+      return NextResponse.json(
+        { error: 'The Analyst is part of Pro. Upgrade to ask questions about your own trading.', code: 'tier_required', requires: 'pro' },
+        { status: 403 },
+      )
+    }
+
     if (!(await withinAiLimit(userId, 'velquor-chat'))) return NextResponse.json({ error: 'Daily AI limit reached — try again tomorrow.' }, { status: 429 })
 
     const { message, history = [] } = await req.json()

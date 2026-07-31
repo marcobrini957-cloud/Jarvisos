@@ -8,6 +8,7 @@ import { CtaLink } from '@/components/landing/CtaLink'
 import { Nav } from '@/components/landing/Nav'
 import { Footer } from '@/components/landing/Footer'
 import { Section, SectionHead, inkButton } from '@/components/landing/Section'
+import { PLANS, CAPABILITY_LABEL, type Capability, type Tier } from '@/lib/api/tier'
 
 /**
  * The standalone price list, on the 2.0 language.
@@ -22,47 +23,54 @@ import { Section, SectionHead, inkButton } from '@/components/landing/Section'
 
 type Feature = { text: string; included: boolean }
 
-const F_FREE: Feature[] = [
-  { text: 'MT5 auto-sync (30-day history)',         included: true  },
-  { text: 'Trade journal (up to 100 trades)',        included: true  },
-  { text: 'Core P&L & win rate stats',              included: true  },
-  { text: 'Session analytics (London / NY / Asia)', included: false },
-  { text: 'Setup analytics (per-setup win rate)',    included: false },
-  { text: 'VELQUOR Analyst',                    included: false },
-  { text: 'Behavior correlations',                  included: false },
-  { text: 'PDF trade reports',                      included: false },
-  { text: 'Prop firm tracker',                      included: false },
-  { text: 'Trade copier',                           included: false },
-  { text: 'Priority support',                       included: false },
-]
+/**
+ * Rendered from the plan definitions, not written out by hand.
+ *
+ * These lists used to be three hardcoded arrays of strings sitting next to a
+ * completely separate set of flags in lib/api/tier.ts, with nothing joining
+ * them. The page promised that the Analyst, PDF reports, session and setup
+ * analytics were Pro-only while the app served all four to anyone — and since
+ * the claim and the enforcement were different declarations, no change to
+ * either could ever reveal the gap. Now an advertised feature IS the enforced
+ * feature.
+ */
+function featuresFor(tier: Tier): Feature[] {
+  const plan = PLANS[tier]
+  const head: Feature[] = [
+    {
+      text: plan.historyDays
+        ? `MT5 auto-sync (${plan.historyDays}-day history)`
+        : 'MT5 auto-sync (unlimited history)',
+      included: true,
+    },
+    {
+      text: plan.journalLimit
+        ? `Trade journal (up to ${plan.journalLimit} trades)`
+        : 'Trade journal (unlimited trades)',
+      included: true,
+    },
+    { text: 'Core P&L & win rate stats', included: true },
+  ]
+  const caps = (Object.keys(CAPABILITY_LABEL) as Capability[]).map(cap => {
+    let text = CAPABILITY_LABEL[cap]
+    // The copier's allowance is the differentiator between Pro and Ultra, so
+    // it is spelled out rather than left as a tick.
+    if (cap === 'copyTrading' && plan.can.copyTrading) {
+      text = plan.copyFollowersEach > 1
+        ? `Trade copier (${plan.copyGroups} groups, ${plan.copyFollowersEach} followers each)`
+        : `Trade copier (${plan.copyGroups} group, ${plan.copyFollowersEach} follower)`
+    }
+    if (cap === 'cloudTerminal' && plan.can.cloudTerminal) {
+      text = `Zero-setup cloud connection (${plan.cloudTerminals})`
+    }
+    return { text, included: plan.can[cap] }
+  })
+  return [...head, ...caps]
+}
 
-const F_PRO: Feature[] = [
-  { text: 'MT5 auto-sync (unlimited history)',       included: true  },
-  { text: 'Trade journal (unlimited trades)',         included: true  },
-  { text: 'Core P&L & win rate stats',              included: true  },
-  { text: 'Session analytics (London / NY / Asia)', included: true  },
-  { text: 'Setup analytics (per-setup win rate)',    included: true  },
-  { text: 'VELQUOR Analyst',                    included: true  },
-  { text: 'Behavior correlations',                  included: true  },
-  { text: 'PDF trade reports',                      included: true  },
-  { text: 'Prop firm tracker',                      included: true  },
-  { text: 'Trade copier (1 group, 1 follower)',         included: true  },
-  { text: 'Priority support',                       included: false },
-]
-
-const F_ULTRA: Feature[] = [
-  { text: 'MT5 auto-sync (unlimited history)',       included: true },
-  { text: 'Trade journal (unlimited trades)',         included: true },
-  { text: 'Core P&L & win rate stats',              included: true },
-  { text: 'Session analytics (London / NY / Asia)', included: true },
-  { text: 'Setup analytics (per-setup win rate)',    included: true },
-  { text: 'VELQUOR Analyst',                    included: true },
-  { text: 'Behavior correlations',                  included: true },
-  { text: 'PDF trade reports',                      included: true },
-  { text: 'Prop firm tracker',                      included: true },
-  { text: 'Trade copier (3 groups, 5 followers each)', included: true },
-  { text: 'Priority support',                       included: true },
-]
+const F_FREE  = featuresFor('free')
+const F_PRO   = featuresFor('pro')
+const F_ULTRA = featuresFor('ultra')
 
 const TIERS = [
   {
