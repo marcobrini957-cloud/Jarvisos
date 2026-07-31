@@ -1,55 +1,51 @@
 interface LogoMarkProps {
   size?: number
+  /** Draw the mark on its black tile. False gives the bare V on whatever is behind it. */
   showBackground?: boolean
+  className?: string
 }
 
-// The VELQUOR mark — a calligraphic V cut with Renaissance stroke contrast
-// (broad down-stroke, hairline up-stroke) and the Q reduced to a small
-// orbital ring with a tail at the V's shoulder, like a notation mark on a
-// draftsman's sheet. A construction circle sits behind at 5% — the kind of
-// guide line Leonardo never erased. Letters carry a white → 50% white fade.
-export function LogoMark({ size = 32, showBackground = true }: LogoMarkProps) {
+/**
+ * The VELQUOR mark.
+ *
+ * Replaced the hand-drawn SVG monogram (a calligraphic V with an orbital Q) in
+ * July 2026. The new mark is a sculpted V carrying real light, which is not
+ * something flat vector paths reproduce — so it ships as raster, generated from
+ * one 1254px master into the sizes actually used.
+ *
+ * Two assets, because a logo has to work on two kinds of surface:
+ *  · `vq-logo-*.png` — the mark on its black tile. Its own lockup.
+ *  · `vq-mark-*.png` — alpha cut from the master's luminance, so it keeps the
+ *                      shading and sits on any colour without dragging a black
+ *                      square onto it. This is what emails and light surfaces
+ *                      need.
+ *
+ * A plain <img> rather than next/image on purpose: this renders at 20–72px in
+ * flex rows all over the app, and the wrapper next/image introduces would have
+ * to be fought in every one of them to save no bytes on an asset this small.
+ */
+export function LogoMark({ size = 32, showBackground = true, className }: LogoMarkProps) {
+  // Serve the next size up from the master set so it stays sharp on 2× screens.
+  const asset = showBackground ? 'vq-logo' : 'vq-mark'
+  const step  = size <= 32 ? 64 : size <= 96 ? 192 : 512
+
   return (
-    <svg
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/brand/${asset}-${step}.png`}
       width={size}
       height={size}
-      viewBox="0 0 64 64"
-      role="img"
-      aria-label="VELQUOR"
-      style={{ flexShrink: 0, display: 'block' }}
-    >
-      <defs>
-        <linearGradient id="vq-ink" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.5" />
-        </linearGradient>
-        <radialGradient id="vq-sheen" cx="0.3" cy="0.12" r="1.1">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.06" />
-          <stop offset="45%" stopColor="#FFFFFF" stopOpacity="0.012" />
-          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-
-      {showBackground && (
-        <>
-          <rect x="1" y="1" width="62" height="62" rx="14" fill="#04060A" />
-          <rect x="1" y="1" width="62" height="62" rx="14" fill="url(#vq-sheen)" />
-          <rect x="1.5" y="1.5" width="61" height="61" rx="13.5" fill="none" stroke="#FFFFFF" strokeOpacity="0.13" />
-        </>
-      )}
-
-      {/* construction circle — the guide line left in, 5% */}
-      <circle cx="31" cy="34" r="23" fill="none" stroke="#FFFFFF" strokeOpacity="0.05" strokeWidth="1" />
-
-      {/* V — broad down-stroke, hairline up-stroke */}
-      <path
-        d="M 12 18 L 21 18 L 31.6 42.8 L 43 18 L 46.5 18 L 33.2 48 L 28.2 48 Z"
-        fill="url(#vq-ink)"
-      />
-
-      {/* Q — small orbital ring at the V's shoulder */}
-      <circle cx="51" cy="14.5" r="4.6" fill="none" stroke="url(#vq-ink)" strokeWidth="2.1" />
-      <line x1="52.4" y1="15.9" x2="56.4" y2="20.1" stroke="url(#vq-ink)" strokeWidth="2.1" strokeLinecap="round" />
-    </svg>
+      alt="VELQUOR"
+      className={className}
+      style={{
+        flexShrink: 0,
+        display: 'block',
+        width: `${size}px`,
+        height: `${size}px`,
+        // The tile is a square bitmap; the corner rounding is ours, scaled with
+        // the mark so it reads the same at 26px and at 72px.
+        borderRadius: showBackground ? `${Math.round(size * 0.22)}px` : undefined,
+      }}
+    />
   )
 }
