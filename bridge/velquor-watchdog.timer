@@ -1,0 +1,14 @@
+[Unit]
+Description=Run the VELQUOR bridge watchdog every minute
+
+[Timer]
+# First run shortly after boot, then every minute. With FAIL_THRESHOLD=2 in
+# watchdog.sh that means a real outage pages in ~2 minutes, while a deploy's
+# brief pm2 restart passes unnoticed.
+OnBootSec=90s
+OnUnitActiveSec=60s
+AccuracySec=10s
+Unit=velquor-watchdog.service
+
+[Install]
+WantedBy=timers.target

@@ -57,6 +57,25 @@ export function BridgeTab() {
   const [form, setForm] = useState<Record<string, unknown> | null>(null)
   const [busy, setBusy] = useState(false)
   const [flash, setFlash] = useState<string | null>(null)
+  const [alerting, setAlerting] = useState<{ configured: boolean; telegram: boolean; webhook: boolean } | null>(null)
+  const [testing, setTesting] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/dev/alert-test').then(r => r.ok && r.json()).then(d => d && setAlerting(d)).catch(() => {})
+  }, [])
+
+  async function testAlert() {
+    setTesting(true)
+    try {
+      const r = await fetch('/api/dev/alert-test', { method: 'POST' })
+      const d = await r.json()
+      setFlash(r.ok
+        ? `Test alert sent via ${d.channels.join(' + ')} — check your phone.`
+        : `Failed: ${(d.errors ?? ['unknown']).join('; ')}`)
+    } catch {
+      setFlash('Failed: could not reach the alert endpoint')
+    } finally { setTesting(false) }
+  }
 
   const load = useCallback(async () => {
     const res = await fetch('/api/dev/bridge', { cache: 'no-store' })
@@ -140,6 +159,32 @@ export function BridgeTab() {
             <Toggle label="Copy trading" desc="/copy/* — signals, polling, acks"
               value={!!form?.copy_enabled}
               onChange={v => { setForm(f => ({ ...f, copy_enabled: v })); save({ copy_enabled: v }) }} />
+          </div>
+        </Card>
+
+        {/* Alerting — the answer to "would I actually find out?" */}
+        <Card
+          title="Alerting"
+          right={<Btn small disabled={testing || !alerting?.configured} onClick={testAlert}>
+            {testing ? 'Sending…' : 'Send test'}
+          </Btn>}
+        >
+          <div style={{ fontFamily: MONO, fontSize: '11px', lineHeight: 1.8 }}>
+            <div style={{ color: alerting?.configured ? G : GO }}>
+              {alerting === null ? 'checking…'
+                : alerting.configured
+                  ? `Vercel backstop armed — ${[alerting.telegram && 'Telegram', alerting.webhook && 'webhook'].filter(Boolean).join(' + ')}`
+                  : 'Vercel backstop NOT configured — set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID'}
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.35)', marginTop: '8px' }}>
+              Fast detection runs on the bridge box itself, every minute
+              (systemd <code>velquor-watchdog.timer</code>) — pm2, /health, TLS,
+              disk and terminal containers, alerting after 2 consecutive failures.
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.35)', marginTop: '6px' }}>
+              This daily cron only covers the case the box cannot report: the box
+              being gone.
+            </div>
           </div>
         </Card>
 

@@ -1,0 +1,14 @@
+[Unit]
+Description=VELQUOR bridge watchdog (one check pass)
+# Not a dependency on pm2: the watchdog must survive whatever it is watching.
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/velquor-watchdog/watchdog.sh
+WorkingDirectory=/opt/velquor-watchdog
+# pm2 and docker live outside a bare systemd PATH.
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# A failing check is the normal signalling path, not a service fault — without
+# this every outage would also spam the systemd journal with unit failures.
+SuccessExitStatus=0 1
