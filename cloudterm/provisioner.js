@@ -14,6 +14,29 @@ const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
 
+// Read /opt/velquor-term/.env ourselves.
+//
+// pm2 inherits the environment of whatever shell launched it, and its config
+// here names no env file — so editing .env and restarting changed nothing, and
+// the process kept running with values from a shell session that ended weeks
+// ago. TERM_CAPACITY was raised to 6 and the provisioner went on reporting 4.
+// Values already in the environment still win, so an explicit
+// `TERM_CAPACITY=8 pm2 restart` override keeps working.
+(function loadEnvFile() {
+  const file = path.join(__dirname, '.env');
+  let raw;
+  try { raw = fs.readFileSync(file, 'utf8'); } catch { return; }
+  for (const line of raw.split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const eq = t.indexOf('=');
+    if (eq < 1) continue;
+    const key = t.slice(0, eq).trim();
+    if (process.env[key] !== undefined) continue;
+    process.env[key] = t.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+  }
+})();
+
 const PORT = process.env.PORT || 3002;
 const ADMIN_TOKEN = process.env.BRIDGE_ADMIN_TOKEN;
 const CRED_KEY = Buffer.from(process.env.TERMINAL_CRED_KEY || '', 'hex');
