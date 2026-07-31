@@ -25,7 +25,7 @@ function trade(over: Partial<Trade>): Trade {
   } as Trade
 }
 
-describe('tradeResult — break-even is distance, not money', () => {
+describe('tradeResult — decided means real movement AND real money', () => {
   it('classifies on pips, at the boundary', () => {
     expect(tradeResult(trade({ pips: BE_PIPS,        net_profit:  50 }))).toBe('win')
     expect(tradeResult(trade({ pips: BE_PIPS - 0.1,  net_profit:  50 }))).toBe('breakeven')
@@ -43,25 +43,38 @@ describe('tradeResult — break-even is distance, not money', () => {
     ]
     expect(scratch.map(t => tradeResult(t))).toEqual(['breakeven', 'breakeven', 'breakeven'])
 
-    // And one real move, likewise.
+    // And two real losses — same distance, both past the money floor.
     const real = [
-      trade({ lot_size: 0.01, pips: -40, net_profit:  -3.60 }),
+      trade({ lot_size: 0.10, pips: -40, net_profit:  -36.00 }),
       trade({ lot_size: 1.00, pips: -40, net_profit: -360.00 }),
     ]
     expect(real.map(t => tradeResult(t))).toEqual(['loss', 'loss'])
   })
 
-  it('does not call a big loss break-even just because the lot was large', () => {
-    // The old ±€10 rule got this right by accident; the regression to guard is
-    // the reverse — a huge euro figure that is only a few pips.
+  it('does not call cents a loss just because price moved', () => {
+    // The regression this rule was rewritten for. A pip-only rule turned a
+    // month with two losses into one with eight: four BTCUSD test fills worth
+    // 17-119 cents, and a 15-pip clip on 0.01 lots that cost €1.36.
+    expect(tradeResult(trade({ lot_size: 0.01, pips: -15.6, net_profit: -1.36 }))).toBe('breakeven')
+    expect(tradeResult(trade({ lot_size: 0.05, pips: -272000, net_profit: -1.19 }))).toBe('breakeven')
+    expect(tradeResult(trade({ lot_size: 0.01, pips: 20000, net_profit: 0.02 }))).toBe('breakeven')
+    // ...while the genuine loss in that same month is untouched.
+    expect(tradeResult(trade({ lot_size: 0.10, pips: -198.5, net_profit: -173.70 }))).toBe('loss')
+    expect(tradeResult(trade({ lot_size: 0.20, pips: -10.8, net_profit: -18.93 }))).toBe('loss')
+  })
+
+  it('a large euro figure that is only a few pips is still a scratch', () => {
+    // Marco's own example: €50 lost on a full lot is five pips.
     expect(tradeResult(trade({ lot_size: 5, pips: -3, net_profit: -150 }))).toBe('breakeven')
+    expect(tradeResult(trade({ lot_size: 1, pips: -5, net_profit:  -50 }))).toBe('breakeven')
     expect(tradeResult(trade({ lot_size: 5, pips: -60, net_profit: -3000 }))).toBe('loss')
   })
 
-  it('past the scratch band, the money decides', () => {
-    // A 40-pip move that commission turned negative is a loss, not a win.
-    expect(tradeResult(trade({ pips: 40, net_profit: -0.5 }))).toBe('loss')
-    expect(tradeResult(trade({ pips: 40, net_profit:  0.5 }))).toBe('win')
+  it('past both bands, the money decides direction', () => {
+    expect(tradeResult(trade({ pips: 40, net_profit: -25 }))).toBe('loss')
+    expect(tradeResult(trade({ pips: 40, net_profit:  25 }))).toBe('win')
+    // A 40-pip move that commission reduced to small change is neither.
+    expect(tradeResult(trade({ pips: 40, net_profit: -0.5 }))).toBe('breakeven')
   })
 
   it('falls back to money-per-lot when a row carries no pips', () => {
@@ -69,7 +82,7 @@ describe('tradeResult — break-even is distance, not money', () => {
     const band = BE_PIPS * PER_LOT_PER_PIP        // € per full lot at the threshold
     expect(tradeResult(trade({ pips: null, lot_size: 1,   net_profit: -(band - 1) }))).toBe('breakeven')
     expect(tradeResult(trade({ pips: null, lot_size: 1,   net_profit: -(band + 1) }))).toBe('loss')
-    expect(tradeResult(trade({ pips: null, lot_size: 0.1, net_profit: -3 }))).toBe('breakeven')
+    expect(tradeResult(trade({ pips: null, lot_size: 0.1, net_profit: -3 }))).toBe('breakeven')  // under the money floor too
     expect(tradeResult(trade({ pips: null, lot_size: 0.1, net_profit: -50 }))).toBe('loss')
   })
 

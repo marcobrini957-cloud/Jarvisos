@@ -18,10 +18,10 @@ function ResultMark({ result }: { result: 'win' | 'loss' | 'breakeven' }) {
       flexShrink: 0, minWidth: '24px', textAlign: 'center',
       background: result === 'win'  ? 'var(--color-up-dim)'
                 : result === 'loss' ? 'var(--color-down-dim)'
-                : 'var(--color-surface-2)',
+                : 'rgba(232,163,61,0.12)',
       color:      result === 'win'  ? 'var(--color-up)'
                 : result === 'loss' ? 'var(--color-down)'
-                : 'var(--color-ink-2)',
+                : 'var(--color-flat)',
     }}>
       {result === 'win' ? 'W' : result === 'loss' ? 'L' : 'BE'}
     </span>
@@ -93,7 +93,7 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
                 <Badge variant={trade.trade_type as 'buy'|'sell'}>{trade.trade_type}</Badge>
               </div>
               <div className="flex items-center gap-2">
-                <Num size="md" value={trade.net_profit ?? 0} tone={result === 'breakeven' ? 'neutral' : 'auto'}>
+                <Num size="md" value={trade.net_profit ?? 0} tone={result === 'breakeven' ? 'flat' : 'auto'}>
                   {fmtPnl(trade.net_profit)}
                 </Num>
                 <ResultMark result={result} />
@@ -169,7 +169,7 @@ export function TradeLogTable({ trades, loading, onAnnotate, onViewScreenshot }:
 
             <div className="flex items-center justify-end gap-3" style={{ minWidth: '92px' }}>
               <Num size="2xs" tone="muted">{fmtPips(trade.pips)}</Num>
-              <Num size="sm" value={trade.net_profit ?? 0} tone={result === 'breakeven' ? 'neutral' : 'auto'}>
+              <Num size="sm" value={trade.net_profit ?? 0} tone={result === 'breakeven' ? 'flat' : 'auto'}>
                 {fmtPnl(trade.net_profit)}
               </Num>
             </div>

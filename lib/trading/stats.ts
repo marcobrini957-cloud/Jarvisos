@@ -56,10 +56,25 @@ export function clampBePips(v: unknown): number {
 }
 
 /**
- * Rows that carry no pip data — hand-entered trades and CSV imports — fall back
- * to money per lot, which is the identical idea in different clothes: on every
- * instrument this product handles, one pip is about €10 per full lot. Still
- * size-normalised, so the fallback does not reintroduce the flaw above.
+ * The second axis. A trade is decided only if it was meaningful in BOTH — it
+ * moved far enough AND it actually cost or made something.
+ *
+ * Distance alone is not enough, and getting that wrong produced eight "losses"
+ * in a month that had two: four were BTCUSD test fills worth 17 to 119 cents,
+ * one was a 15-pip clip on 0.01 lots that cost €1.36. Real movement, no money.
+ * Nobody would call any of those a losing trade.
+ *
+ * The two axes cover each other's blind spot:
+ *   · €50 lost on a full lot is 5 pips — trivial move, real money  → scratch
+ *   · €1.36 lost on 0.01 lots is 15 pips — real move, trivial money → scratch
+ *   · €173 lost on 0.10 lots is 198 pips — both real               → LOSS
+ */
+export const BE_MONEY = 10
+
+/**
+ * Rows with no pip data — hand-entered trades and CSV imports — fall back to
+ * money per lot: on every instrument this product handles, one pip is about
+ * €10 per full lot. Still size-normalised.
  */
 export const PER_LOT_PER_PIP = 10
 
@@ -76,10 +91,14 @@ export function tradeResult(t: Scoreable): 'win' | 'breakeven' | 'loss' {
   return classify(t, BE_PIPS)
 }
 
-function classify(t: Scoreable, bePips: number): 'win' | 'breakeven' | 'loss' {
+function classify(t: Scoreable, bePips: number, beMoney: number = BE_MONEY): 'win' | 'breakeven' | 'loss' {
   const pnl  = t.net_profit ?? 0
   const pips = t.pips
 
+  // Trivial money is a scratch however far price travelled.
+  if (Math.abs(pnl) < beMoney) return 'breakeven'
+
+  // Trivial movement is a scratch however much money changed hands.
   if (pips != null && Number.isFinite(pips)) {
     if (Math.abs(pips) < bePips) return 'breakeven'
   } else {

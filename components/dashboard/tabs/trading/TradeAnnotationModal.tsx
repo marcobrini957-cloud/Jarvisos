@@ -132,7 +132,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
               {(() => {
                 const pnl = trade.net_profit ?? 0
                 const result = tradeResult(trade)
-                const color = result === 'win' ? 'var(--gr2)' : result === 'loss' ? 'var(--re)' : 'var(--ac)'
+                const color = result === 'win' ? 'var(--gr2)' : result === 'loss' ? 'var(--re)' : 'var(--color-flat)'
                 return (
                   <>
                     <span className="vq-num" style={{ color, fontWeight: 500 }}>{pnl >= 0 ? '+' : ''}€{pnl.toFixed(2)}</span>

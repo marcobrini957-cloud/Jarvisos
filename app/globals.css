@@ -709,6 +709,12 @@ html { scroll-behavior: smooth; }
   /* Non-P&L status. Used for system state only, never decoration. */
   --color-warn: #E8A33D;
 
+  /* A scratch is its own outcome, not a muted win or a quiet loss, so it gets
+     its own colour rather than borrowing ink. Amber reads as "nothing
+     happened here" beside the green/red pair without competing with them —
+     and, critically, a −€2 clip no longer shows up as red. */
+  --color-flat: #E8A33D;
+
   /* ── The one deliberate exception to "P&L is the only chroma" ──
      Outbound commercial actions — the affiliate CTAs on the Partners tab and in
      the ad slots. Those clicks are the point of that page, and an ink-on-ink

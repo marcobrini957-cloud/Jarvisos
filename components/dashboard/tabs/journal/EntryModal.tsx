@@ -125,7 +125,7 @@ export function EntryModal({
                 <div style={{ flex: 1, display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {dayTrades.slice(0, 5).map((t, i) => {
                     const r = tradeResult(t)
-                    const color = r === 'win' ? 'var(--gr2)' : r === 'loss' ? 'var(--re)' : 'var(--t3)'
+                    const color = r === 'win' ? 'var(--gr2)' : r === 'loss' ? 'var(--re)' : 'var(--color-flat)'
                     return (
                       <span className="vq-num" key={i} style={{
                         fontSize: 'var(--text-xs)', padding: '2px 8px', borderRadius: 'var(--radius-sm)',

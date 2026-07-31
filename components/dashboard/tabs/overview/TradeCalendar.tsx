@@ -56,7 +56,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
           // Colour follows the scratch rule, not the euro amount: a 4-pip
           // clip on 0.30 lots is the same non-event as one on 0.01.
           const r   = tradeResult(t)
-          const col = r === 'win' ? 'var(--color-up)' : r === 'loss' ? 'var(--color-down)' : 'var(--t3)'
+          const col = r === 'win' ? 'var(--color-up)' : r === 'loss' ? 'var(--color-down)' : 'var(--color-flat)'
           const openTime  = t.open_time  ? new Date(t.open_time ).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'
           const closeTime = t.close_time ? new Date(t.close_time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '—'
           return (
@@ -65,7 +65,7 @@ export function DayDetailPanel({ dateStr, trades, onClose }: {
               padding: '9px 12px',
               background: 'rgba(255,255,255,0.025)',
               borderRadius: 'var(--radius-md)',
-              border: `1px solid ${r === 'win' ? 'rgba(0,196,106,0.1)' : r === 'loss' ? 'rgba(240,80,75,0.1)' : 'var(--bd)'}`,
+              border: `1px solid ${r === 'win' ? 'rgba(0,196,106,0.1)' : r === 'loss' ? 'rgba(240,80,75,0.1)' : 'rgba(232,163,61,0.14)'}`,
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -311,7 +311,7 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
 
                   const bg = isWinDay  ? 'rgba(0,196,106,0.09)'
                            : isLossDay ? 'rgba(240,80,75,0.10)'
-                           : has       ? 'rgba(255,255,255,0.08)'  // break-even day
+                           : has       ? 'rgba(232,163,61,0.10)'   // scratch day — amber, not red
                            : 'transparent'
 
                   return (
@@ -332,8 +332,10 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
                       {has && (
                         <>
                           {/* Signed: a red tint alone left "€175" ambiguous —
-                              a losing day must read as a loss on its own. */}
-                          <Num size="xs" tone={pnl! >= 0 ? 'up' : 'down'}>{fmtSigned(pnl!)}</Num>
+                              a losing day must read as a loss on its own. And a
+                              day where nothing was decided is amber, not red:
+                              −€2 of spread is not a losing day. */}
+                          <Num size="xs" tone={!anyDecisive ? 'flat' : pnl! >= 0 ? 'up' : 'down'}>{fmtSigned(pnl!)}</Num>
                           {winPct != null && (
                             <Num size="2xs" tone="muted">{winPct}%</Num>
                           )}
@@ -419,7 +421,7 @@ function YearGrid({ year, months, todayMonth, maxMonth, onPick }: {
 
         const bg = isWin  ? 'rgba(0,196,106,0.09)'
                  : isLoss ? 'rgba(240,80,75,0.10)'
-                 : has    ? 'rgba(255,255,255,0.08)'   // break-even month
+                 : has    ? 'rgba(232,163,61,0.10)'    // scratch month — amber, not red
                  : 'transparent'
 
         return (
@@ -441,7 +443,7 @@ function YearGrid({ year, months, todayMonth, maxMonth, onPick }: {
             }}
           >
             <Label style={{ color: has ? 'var(--color-ink-2)' : 'var(--color-ink-3)' }}>{name}</Label>
-            <Num size="md" tone={has ? (m.pnl >= 0 ? 'up' : 'down') : 'muted'} style={{ fontWeight: 700 }}>
+            <Num size="md" tone={!has ? 'muted' : decisive === 0 ? 'flat' : m.pnl >= 0 ? 'up' : 'down'} style={{ fontWeight: 700 }}>
               {has ? fmtSigned(m.pnl) : '—'}
             </Num>
             <div style={{

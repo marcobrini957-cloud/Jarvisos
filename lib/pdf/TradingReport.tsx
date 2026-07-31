@@ -14,6 +14,7 @@ const C = {
   green:  '#4ADE80',
   red:    '#F87171',
   yellow: '#FACC15',
+  amber:  '#E8A33D',   // break-even — matches --color-flat in globals.css
   t1:     '#FFFFFF',
   t2:     '#9090A8',
   t3:     '#48485E',
@@ -136,7 +137,7 @@ const fmtDate = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString(
 const scoreCol = (s: number) => s >= 70 ? C.green : s >= 45 ? C.yellow : C.red
 const pnlCol   = (t: Trade) => {
   const r = tradeResult(t)
-  return r === 'win' ? C.green : r === 'loss' ? C.red : C.t2
+  return r === 'win' ? C.green : r === 'loss' ? C.red : C.amber
 }
 
 // ── Equity curve ──────────────────────────────────────────────────────────────

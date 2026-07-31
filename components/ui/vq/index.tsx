@@ -19,12 +19,15 @@ import { splitFigures } from '@/lib/ui/figures'
 
 // ── Figures ───────────────────────────────────────────────────────────────────
 
-export type Tone = 'auto' | 'neutral' | 'muted' | 'up' | 'down'
+export type Tone = 'auto' | 'neutral' | 'muted' | 'flat' | 'up' | 'down'
 
 function toneColor(tone: Tone, value?: number): string {
   if (tone === 'up')      return 'var(--color-up)'
   if (tone === 'down')    return 'var(--color-down)'
   if (tone === 'muted')   return 'var(--color-ink-3)'
+  // A scratch is its own outcome — neither a gain nor a loss — so it must not
+  // borrow the loss colour just because the figure happens to be negative.
+  if (tone === 'flat')    return 'var(--color-flat)'
   if (tone === 'neutral') return 'var(--color-ink-1)'
   if (value === undefined || value === 0) return 'var(--color-ink-1)'
   return value > 0 ? 'var(--color-up)' : 'var(--color-down)'
