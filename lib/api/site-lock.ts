@@ -84,6 +84,16 @@ export function isSiteLockExempt(pathname: string): boolean {
     pathname.startsWith('/fonts') ||
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/icon') ||
+    // Not covered by /icon above — Next serves the touch icon at its own path.
+    pathname.startsWith('/apple-icon') ||
+    // The logo. Two reasons it cannot be gated, and the second is the sharp one:
+    //  · the gate page renders the mark, so gating it breaks the one page whose
+    //    whole job is to be reachable — it drew a broken-image glyph.
+    //  · the confirmation email points at /brand/vq-logo-192.png. An <img> that
+    //    302s to an HTML login page renders as nothing in a mail client, so
+    //    every beta invite would have arrived logoless — the exact failure the
+    //    hosted URL replaced a data: URI to avoid.
+    pathname.startsWith('/brand') ||
     // The link-preview card. It is marketing, not product — it shows the
     // wordmark and the headline and nothing behind the gate — and a link
     // shared during the private beta should still unfurl.

@@ -89,6 +89,12 @@
   --text-d2: 48px;
   --text-d3: 64px;
   --text-d4: 88px;
+  /* One step above d4, for the hero headline alone. The scale topping out at
+     88px meant the h1 hit its ceiling around 1190px wide and then stayed
+     identical on every larger display — a 15" laptop and a 27" monitor drew the
+     same size type. Named rather than typed inline so the clamp still runs
+     between two steps of the scale, per the rule above. */
+  --text-d5: 104px;
 
   /* ── Radius ── */
   --r-sm: 6px;

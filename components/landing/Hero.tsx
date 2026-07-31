@@ -31,9 +31,14 @@ export function Hero() {
     <section style={{ position: 'relative', background: 'var(--color-void)' }}>
       <TickerStrip />
 
+      {/* The pitch is centred over the full-bleed product frame below it. It was
+          ranged left against the nav margin, which on a wide screen left the
+          headline pinned to one edge with a third of the viewport empty beside
+          it — the sentence read as a caption rather than the claim. Centred, the
+          column and the frame share one axis. */}
       <div style={{
         padding: 'clamp(56px, 8vw, 104px) clamp(14px, 4vw, 32px) clamp(40px, 6vw, 72px)',
-        maxWidth: '1560px',
+        maxWidth: '1560px', margin: '0 auto', textAlign: 'center',
       }}>
         {/* Eyebrow — the three capabilities, in the label voice, not a blue pill */}
         <p style={{
@@ -45,12 +50,15 @@ export function Hero() {
         </p>
 
         {/* Headline. Two lines, two inks: the claim is dimmer than where the
-            claim lands, which is the sentence's actual emphasis. */}
+            claim lands, which is the sentence's actual emphasis.
+            Tops out at --text-d5, a step added for this one line: the old
+            ceiling of d4 was already reached at ~1190px, so every wider screen
+            rendered it at exactly the same size. */}
         <h1 style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(var(--text-d1), 7.4vw, var(--text-d4))', lineHeight: 0.98,
-          letterSpacing: '-0.035em', margin: '0 0 clamp(20px, 3vw, 28px)',
-          maxWidth: '15ch', textWrap: 'balance',
+          fontSize: 'clamp(var(--text-d1), 8.2vw, var(--text-d5))', lineHeight: 0.98,
+          letterSpacing: '-0.035em', margin: '0 auto clamp(20px, 3vw, 28px)',
+          maxWidth: '16ch', textWrap: 'balance',
         }}>
           <span style={{ color: 'var(--color-ink-2)' }}>{t.hero.h1a}</span>{' '}
           <span style={{ color: 'var(--color-ink-1)' }}>{t.hero.h1b}</span>
@@ -59,15 +67,21 @@ export function Hero() {
         <p style={{
           fontFamily: 'var(--font-display)',
           fontSize: 'clamp(var(--text-md), 1.5vw, var(--text-lg))', lineHeight: 1.6,
-          color: 'var(--color-ink-3)', margin: '0 0 clamp(28px, 4vw, 40px)',
+          color: 'var(--color-ink-3)', margin: '0 auto clamp(28px, 4vw, 40px)',
           maxWidth: '52ch',
         }}>
           {t.hero.subtitle}
         </p>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: 'clamp(28px, 4vw, 40px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: 'clamp(28px, 4vw, 40px)' }}>
+          {/* The one commercial click on the page, so it takes the action blue
+              rather than the ink-on-void the rest of the site uses. Same token
+              the affiliate CTAs carry — deliberately outside the P&L hues, and
+              the only chroma in this viewport. Not --color-key: that blue is
+              tuned to sit quietly under white text (2.8:1) and would fail as a
+              button; --color-action clears AA at 4.5:1. */}
           <CtaLink href="/login?mode=signup" where="hero" style={{
-            background: 'var(--color-ink-1)', color: 'var(--color-void)',
+            background: 'var(--color-action)', color: 'var(--color-action-ink)',
             fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
             textDecoration: 'none', padding: '11px 22px',
             borderRadius: 'var(--radius-sm)', whiteSpace: 'nowrap',
@@ -86,7 +100,7 @@ export function Hero() {
 
         {/* Trust line. The green ticks are gone — green means money in this
             product, and "Any MT5 broker" is not money. */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 18px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '10px 18px', alignItems: 'center' }}>
           {t.hero.trust.map((b, i) => (
             <div key={b} style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
               {i > 0 && <span aria-hidden style={{ width: '1px', height: '11px', background: 'var(--color-line-2)' }} />}
