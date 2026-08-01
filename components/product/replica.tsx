@@ -51,56 +51,45 @@ export const easeInOutCubic = (t: number) =>
 
 /**
  * The beat of the camera move, in milliseconds — absolute, not a fraction of
- * the scene, so a punch is the same speed whether the scene runs 3s or 4.5s.
+ * the scene, so the snap is the same speed whether the scene runs 3s or 4.5s.
+ * Only the hold flexes with the length of the scene.
  */
-const ESTABLISH = 340   // see the whole screen first
-const WIDE      = 190   // sit wide between punches
+const ESTABLISH = 500   // see the whole screen first
 const PUNCH     = 230   // the move itself. Short: this is a snap, not a glide
-const HOLD      = 500   // long enough to read it, short enough to feel alive
-const PERIOD    = WIDE + PUNCH + HOLD + PUNCH
+const TAIL      = 340   // sit wide again before the cut
 
-/** How many punches fit in a scene of this length. */
-export function punchCount(durationMs: number): number {
-  return Math.max(1, Math.floor((durationMs - ESTABLISH) / PERIOD))
+/** How long the frame rests on the detail, given the scene it has to fit in. */
+export function holdMs(durationMs: number): number {
+  return Math.max(240, durationMs - ESTABLISH - PUNCH * 2 - TAIL)
 }
 
 /**
  * A scene's zoom over its own length, as a fraction of the focus scale.
  *
- * This was one slow push in and back out, and it read as a slideshow
- * transition: a single event stretched over three seconds, so nothing ever felt
- * like it was *happening*. It punches now — establish wide, snap in over 230ms,
- * hold half a second, snap out, and repeat for as many beats as the scene
- * affords. Each punch leans a little deeper than the last, so repeats build
- * instead of looping.
+ * One move: establish wide, snap in, stay there, snap back out, done.
+ *
+ * Two earlier versions were wrong in opposite directions. The first glided in
+ * and out across the whole scene — a single event stretched over three seconds,
+ * which reads as a slideshow transition rather than a camera. The second fixed
+ * the speed but repeated the punch, each one deeper than the last; that reads as
+ * a stair-step, a zoom on top of a zoom. The move is fast, and it happens once.
  */
 export function punchEnvelope(ageMs: number, durationMs: number): number {
-  const n = punchCount(durationMs)
+  const hold = holdMs(durationMs)
   let t = ageMs - ESTABLISH
   if (t < 0) return 0
-  const i = Math.floor(t / PERIOD)
-  if (i >= n) return 0
-  t -= i * PERIOD
-
-  const depth = n > 1 ? 0.74 + 0.26 * (i / (n - 1)) : 1
-  if (t < WIDE) return 0
-  t -= WIDE
-  if (t < PUNCH) return depth * easeInOutCubic(t / PUNCH)
+  if (t < PUNCH) return easeInOutCubic(t / PUNCH)
   t -= PUNCH
-  if (t < HOLD) return depth
-  t -= HOLD
-  if (t < PUNCH) return depth * (1 - easeInOutCubic(t / PUNCH))
+  if (t < hold) return 1
+  t -= hold
+  if (t < PUNCH) return 1 - easeInOutCubic(t / PUNCH)
   return 0
 }
 
-/**
- * The note holds across the whole run of punches rather than blinking with each
- * one — three flashes in four seconds is a strobe, not a caption.
- */
+/** The note fades up behind the punch and away with it. */
 export function noteOpacity(ageMs: number, durationMs: number): number {
-  const n = punchCount(durationMs)
-  const from = ESTABLISH + WIDE + PUNCH * 0.6
-  const to   = ESTABLISH + n * PERIOD - PUNCH * 0.5
+  const from = ESTABLISH + PUNCH * 0.6
+  const to   = ESTABLISH + PUNCH + holdMs(durationMs) + PUNCH * 0.5
   return clamp01((ageMs - from) / 170) * clamp01((to - ageMs) / 170)
 }
 
