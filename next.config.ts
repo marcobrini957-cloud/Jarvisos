@@ -3,6 +3,14 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // @react-pdf/renderer is server-only (used in /api/reports) — keep it out of bundles
   serverExternalPackages: ['@react-pdf/renderer'],
+  // The report is set in the site's own faces, which @react-pdf loads from disk
+  // at render time. Nothing imports the .ttf files, so tracing cannot see them
+  // and the serverless function would ship without them — the failure mode is
+  // silent: fonts fall back to Helvetica and the PDF still renders, so it looks
+  // fine locally and wrong in production.
+  outputFileTracingIncludes: {
+    '/api/reports': ['./lib/pdf/fonts/**'],
+  },
   poweredByHeader: false,
   images: {
     formats: ['image/avif', 'image/webp'],

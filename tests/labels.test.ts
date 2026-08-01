@@ -45,7 +45,7 @@ describe('normaliseLabels', () => {
 
   it('caps label length', () => {
     const long = 'x'.repeat(LABEL_MAX_LEN + 20)
-    expect(normaliseLabels([long])[0]).toHaveLength(LABEL_MAX_LEN)
+    expect(normaliseLabels([long])![0]).toHaveLength(LABEL_MAX_LEN)
   })
 
   it('caps how many labels a user may keep', () => {

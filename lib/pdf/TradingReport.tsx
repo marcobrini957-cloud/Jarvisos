@@ -1,25 +1,14 @@
 import React from 'react'
 import {
-  Document, Page, View, Text, Svg, Path, Line,
+  Document, Page, View, Text, Svg, Path, Line, Rect,
 } from '@react-pdf/renderer'
 import type { Trade } from '@/types'
 import { isWin, isLoss, tradeResult } from '@/lib/trading/stats'
+import { registerReportFonts, C, WORDS, MONO, MARK, label, figure } from './theme'
 
-const C = {
-  bg:     '#0C0C12',
-  card:   '#12121A',
-  card2:  '#0F0F16',
-  border: '#1E1E30',
-  accent: '#4D8FFF',
-  green:  '#4ADE80',
-  red:    '#F87171',
-  yellow: '#FACC15',
-  amber:  '#E8A33D',   // break-even — matches --color-flat in globals.css
-  t1:     '#FFFFFF',
-  t2:     '#9090A8',
-  t3:     '#48485E',
-  gold:   '#C8851A',
-} as const
+registerReportFonts()
+
+
 
 
 
@@ -93,6 +82,26 @@ function computeStats(trades: Trade[]) {
     .sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl))
     .slice(0, 5)
 
+  // Instrument breakdown — every symbol traded, biggest contribution first.
+  const symMap = new Map<string, { pnl: number; count: number; wins: number }>()
+  for (const t of real) {
+    const cur = symMap.get(t.symbol) ?? { pnl: 0, count: 0, wins: 0 }
+    symMap.set(t.symbol, {
+      pnl:   cur.pnl   + (t.net_profit ?? 0),
+      count: cur.count + 1,
+      wins:  cur.wins  + (isWin(t) ? 1 : 0),
+    })
+  }
+  const symBreakdown = Array.from(symMap.entries())
+    .map(([name, d]) => ({ name, ...d }))
+    .sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl))
+    .slice(0, 6)
+
+  // The five that moved the account most in each direction.
+  const byPnl   = [...real].sort((a, b) => (b.net_profit ?? 0) - (a.net_profit ?? 0))
+  const topWins = byPnl.filter(t => (t.net_profit ?? 0) > 0).slice(0, 5)
+  const topLoss = byPnl.filter(t => (t.net_profit ?? 0) < 0).slice(-5).reverse()
+
   // Day-of-week P&L (Mon–Fri)
   const dowMap = new Map<number, number>()
   for (const t of real) {
@@ -125,7 +134,7 @@ function computeStats(trades: Trade[]) {
   return {
     sorted, real, wins, losses, netPnl, winRate, pf, avgWin, avgLoss,
     expectancy, bestTrade, worstTrade, maxDD, maxCW, maxCL,
-    avgRR, equity, setupBreakdown, dayPnl,
+    avgRR, equity, setupBreakdown, dayPnl, symBreakdown, topWins, topLoss,
     pfScore, rrScore, discScore, riskScore, mindScore, ovr, planTrades, emoTrades,
   }
 }
@@ -134,102 +143,201 @@ function computeStats(trades: Trade[]) {
 const fmt     = (n: number) => `${n >= 0 ? '+' : '-'}€${Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const fmtS    = (n: number) => `${n >= 0 ? '+' : '-'}€${Math.abs(n).toFixed(0)}`
 const fmtDate = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-const scoreCol = (s: number) => s >= 70 ? C.green : s >= 45 ? C.yellow : C.red
-const pnlCol   = (t: Trade) => {
+/** Money only. A scratch is ink, not amber — it did not move the account. */
+const pnlCol = (t: Trade) => {
   const r = tradeResult(t)
-  return r === 'win' ? C.green : r === 'loss' ? C.red : C.amber
+  return r === 'win' ? C.up : r === 'loss' ? C.down : C.ink3
+}
+
+
+// ── Primitives ────────────────────────────────────────────────────────────────
+
+/** A hairline. The report's only divider — no boxes inside boxes. */
+const Rule = ({ mt = 0, mb = 0 }: { mt?: number; mb?: number }) => (
+  <View style={{ height: 0.6, backgroundColor: C.line, marginTop: mt, marginBottom: mb }} />
+)
+
+/** Section opener: a tracked label over a rule, the way each page block starts. */
+function SectionHead({ title, note }: { title: string; note?: string }) {
+  return (
+    <View style={{ marginBottom: 8 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <Text style={{ ...label, fontSize: 7.5, color: C.ink2 }}>{title}</Text>
+        {note ? <Text style={{ ...label, fontSize: 6.5 }}>{note}</Text> : null}
+      </View>
+      <Rule mt={4} />
+    </View>
+  )
+}
+
+/**
+ * One figure with its name under it. `money` is the only way colour enters the
+ * report — pass it for anything denominated in currency, leave it off for
+ * counts, ratios and percentages.
+ */
+interface Fig { name: string; value: string; money?: number | null; size?: number; sub?: string }
+
+/**
+ * A row of figures, evenly divided, hairline-separated.
+ *
+ * Written as one flat row of cells rather than a Figure component nested inside
+ * a wrapper: two levels of `flex: 1` collapsed the cell's height in yoga and
+ * every value and sub-line rendered blank while the label above it survived —
+ * a report of nothing but field names. The divider is a left border on the cell
+ * for the same reason, instead of a zero-width sibling View.
+ */
+function FigureRow({ items }: { items: Fig[] }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+      {items.map((f, i) => (
+        <View
+          key={f.name}
+          style={{
+            flexGrow: 1, flexShrink: 1, flexBasis: 0,
+            paddingLeft: i > 0 ? 12 : 0,
+            paddingRight: 8,
+            borderLeftWidth: i > 0 ? 0.6 : 0,
+            borderLeftColor: C.line,
+          }}
+        >
+          <Text style={label}>{f.name}</Text>
+          <Text style={{ ...figure(f.size ?? 15, { money: f.money }), marginTop: 4 }}>{f.value}</Text>
+          {f.sub ? (
+            <Text style={{ fontFamily: WORDS, fontSize: 6.5, color: C.ink3, marginTop: 3 }}>{f.sub}</Text>
+          ) : null}
+        </View>
+      ))}
+    </View>
+  )
 }
 
 // ── Equity curve ──────────────────────────────────────────────────────────────
-function EquityCurveSvg({ equity }: { equity: number[] }) {
-  if (equity.length < 2) return null
-  const W = 491, H = 68, PX = 2, PY = 4
-  const maxV   = Math.max(...equity, 0.01)
-  const minV   = Math.min(...equity, -0.01)
-  const range  = maxV - minV || 1
-  const xOf    = (i: number) => PX + (i / (equity.length - 1)) * (W - PX * 2)
-  const yOf    = (v: number) => PY + (1 - (v - minV) / range) * (H - PY * 2)
-  const zeroY  = yOf(0)
-  const stroke = equity[equity.length - 1] >= 0 ? C.green : C.red
-  const pts    = equity.map((v, i) => `${i === 0 ? 'M' : 'L'}${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).join(' ')
-  const fill   = `${pts} L${xOf(equity.length - 1).toFixed(1)},${zeroY.toFixed(1)} L${xOf(0).toFixed(1)},${zeroY.toFixed(1)} Z`
+
+function EquityCurve({ equity }: { equity: number[] }) {
+  const W = 531, H = 96
+  if (equity.length < 2) {
+    return (
+      <View style={{ height: H, justifyContent: 'center' }}>
+        <Text style={{ fontFamily: WORDS, fontSize: 8, color: C.ink4 }}>
+          Not enough closed trades in this period to plot a curve.
+        </Text>
+      </View>
+    )
+  }
+  const min = Math.min(0, ...equity)
+  const max = Math.max(0, ...equity)
+  const span = max - min || 1
+  const x = (i: number) => (i / (equity.length - 1)) * W
+  const y = (v: number) => H - ((v - min) / span) * H
+  const line = equity.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ')
+  const last = equity[equity.length - 1]
+  const stroke = last >= 0 ? C.up : C.down
+  const zeroY = y(0)
+
   return (
-    <Svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
-      <Line x1={PX} y1={zeroY.toFixed(1)} x2={W - PX} y2={zeroY.toFixed(1)} stroke={C.border} strokeWidth={1} />
-      <Path d={fill} fill={stroke} fillOpacity={0.07} />
-      <Path d={pts}  fill="none"   stroke={stroke}    strokeWidth={1.5} />
-    </Svg>
+    <View>
+      <Svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
+        {/* Break-even. Every point below this line is the account underwater. */}
+        <Line x1={0} y1={zeroY} x2={W} y2={zeroY} strokeWidth={0.6} stroke={C.line2} strokeDasharray="2 3" />
+        <Path d={`${line} L${W} ${zeroY} L0 ${zeroY} Z`} fill={stroke} fillOpacity={0.1} />
+        <Path d={line} stroke={stroke} strokeWidth={1.2} fill="none" />
+      </Svg>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+        <Text style={{ ...label, fontSize: 6 }}>First close</Text>
+        <Text style={{ ...label, fontSize: 6 }}>Cumulative, {equity.length} trades</Text>
+        <Text style={{ ...label, fontSize: 6 }}>Last close</Text>
+      </View>
+    </View>
   )
 }
 
-// ── Score bar (performance profile) ──────────────────────────────────────────
-function ScoreBar({ label, value, score }: { label: string; value: string; score: number }) {
-  const col = scoreCol(score)
+// ── Horizontal magnitude bar, signed about a centre line ─────────────────────
+
+function SignedBar({ name, meta, pnl, maxAbs }: { name: string; meta?: string; pnl: number; maxAbs: number }) {
+  const W = 300, half = W / 2
+  const w = Math.max(1, (Math.abs(pnl) / maxAbs) * half)
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-      <Text style={{ color: C.t3, fontSize: 7, width: 82, letterSpacing: 0.5 }}>{label}</Text>
-      <View style={{ flex: 1, height: 5, backgroundColor: C.border, borderRadius: 3, marginRight: 8 }}>
-        <View style={{ width: `${Math.max(2, score)}%`, height: 5, backgroundColor: col, borderRadius: 3 }} />
+      <View style={{ width: 118 }}>
+        <Text style={{ fontFamily: WORDS, fontSize: 8, color: C.ink1 }}>{name}</Text>
+        {meta ? <Text style={{ fontFamily: WORDS, fontSize: 6.5, color: C.ink4, marginTop: 1 }}>{meta}</Text> : null}
       </View>
-      <Text style={{ color: col, fontSize: 8, fontFamily: 'Helvetica-Bold', width: 36, textAlign: 'right' }}>{value}</Text>
+      <Svg width={W} height={10} viewBox={`0 0 ${W} 10`}>
+        <Line x1={half} y1={0} x2={half} y2={10} strokeWidth={0.6} stroke={C.line2} />
+        <Rect
+          x={pnl >= 0 ? half : half - w}
+          y={2.5}
+          width={w}
+          height={5}
+          fill={pnl >= 0 ? C.up : C.down}
+        />
+      </Svg>
+      <Text style={{ ...figure(8.5, { money: pnl }), width: 68, textAlign: 'right' }}>{fmtS(pnl)}</Text>
     </View>
   )
 }
 
-// ── Setup bar ─────────────────────────────────────────────────────────────────
-function SetupBar({ name, pnl, maxAbs }: { name: string; pnl: number; maxAbs: number }) {
-  const col   = pnl > 0 ? C.green : pnl < 0 ? C.red : C.t2
-  const pct   = Math.max(2, (Math.abs(pnl) / Math.max(maxAbs, 1)) * 100)
-  const label = name.length > 13 ? name.slice(0, 12) + '…' : name
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-      <Text style={{ color: C.t3, fontSize: 6.5, width: 78 }}>{label}</Text>
-      <View style={{ flex: 1, height: 5, backgroundColor: C.border, borderRadius: 3, marginRight: 6 }}>
-        <View style={{ width: `${pct}%`, height: 5, backgroundColor: col, borderRadius: 3 }} />
-      </View>
-      <Text style={{ color: col, fontSize: 7.5, fontFamily: 'Helvetica-Bold', width: 46, textAlign: 'right' }}>
-        {fmtS(pnl)}
-      </Text>
-    </View>
-  )
-}
+// ── Page furniture ────────────────────────────────────────────────────────────
 
-// ── Day bar ───────────────────────────────────────────────────────────────────
-function DayBar({ day, pnl, maxAbs }: { day: string; pnl: number; maxAbs: number }) {
-  const col = pnl > 0 ? C.green : pnl < 0 ? C.red : C.t3
-  const pct = Math.max(2, (Math.abs(pnl) / Math.max(maxAbs, 1)) * 100)
+function Masthead({ traderName, ref_, dateRange, periodLbl }: {
+  traderName: string; ref_: string; dateRange: string; periodLbl: string
+}) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
-      <Text style={{ color: C.t3, fontSize: 7, width: 26 }}>{day}</Text>
-      <View style={{ flex: 1, height: 6, backgroundColor: C.border, borderRadius: 3, marginRight: 8 }}>
-        <View style={{ width: `${pct}%`, height: 6, backgroundColor: col, borderRadius: 3 }} />
+    <View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Text style={{ fontFamily: MARK, fontSize: 19, color: C.ink1, letterSpacing: 0.4 }}>VELQUOR</Text>
+        <Text style={{ ...label, fontSize: 7 }}>{periodLbl}</Text>
       </View>
-      <Text style={{ color: col, fontSize: 7.5, fontFamily: 'Helvetica-Bold', width: 50, textAlign: 'right' }}>
-        {pnl !== 0 ? fmtS(pnl) : '—'}
-      </Text>
-    </View>
-  )
-}
-
-// ── Compact page header (page 2+) ─────────────────────────────────────────────
-function PageHeader({ label, dateRange }: { label: string; dateRange: string }) {
-  return (
-    <>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <View style={{ width: 20, height: 20, backgroundColor: C.gold, borderRadius: 5, alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: '#fff', fontSize: 10, fontFamily: 'Helvetica-Bold' }}>V</Text>
-          </View>
-          <Text style={{ color: C.t2, fontSize: 9, fontFamily: 'Helvetica-Bold' }}>VELQUOR</Text>
-          <Text style={{ color: C.t3, fontSize: 8 }}>·</Text>
-          <Text style={{ color: C.t3, fontSize: 8, letterSpacing: 1 }}>{label}</Text>
+      <Rule mt={9} mb={9} />
+      <View style={{ flexDirection: 'row' }}>
+        <View style={{ flex: 1 }}>
+          <Text style={label}>Prepared for</Text>
+          <Text style={{ fontFamily: WORDS, fontSize: 10, color: C.ink1, marginTop: 3 }}>{traderName}</Text>
         </View>
-        <Text style={{ color: C.t3, fontSize: 7.5 }}>{dateRange}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={label}>Period</Text>
+          <Text style={{ ...figure(9), marginTop: 3 }}>{dateRange}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={label}>Reference</Text>
+          <Text style={{ ...figure(9, { dim: true }), marginTop: 3 }}>{ref_}</Text>
+        </View>
       </View>
-      <View style={{ height: 1, backgroundColor: C.border, marginBottom: 14 }} />
-    </>
+    </View>
   )
 }
+
+/**
+ * Fixed footer. `render` gives @react-pdf the page numbers, and `fixed` repeats
+ * it on every page including ones the trade log spills onto.
+ */
+function Footer({ generated }: { generated: string }) {
+  return (
+    <View fixed style={{ position: 'absolute', left: 32, right: 32, bottom: 22 }}>
+      <Rule mb={6} />
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <Text style={{ fontFamily: WORDS, fontSize: 6, color: C.ink4, maxWidth: 380 }}>
+          Computed from executed fills recorded on the connected MetaTrader account.
+          Past performance is not indicative of future results. Not investment advice.
+        </Text>
+        <Text
+          style={{ fontFamily: MONO, fontSize: 6, color: C.ink4 }}
+          render={({ pageNumber, totalPages }) => `${generated}   ${pageNumber}/${totalPages}`}
+        />
+      </View>
+    </View>
+  )
+}
+
+const PAGE = {
+  backgroundColor: C.void,
+  paddingTop: 32,
+  paddingBottom: 54,
+  paddingHorizontal: 32,
+  fontFamily: WORDS,
+  fontSize: 9,
+  color: C.ink1,
+} as const
 
 // ── Main document ─────────────────────────────────────────────────────────────
 export interface ReportProps {
@@ -238,288 +346,281 @@ export interface ReportProps {
   to:          string
   period:      'weekly' | 'monthly'
   traderName?: string
-  coachNotes?: string   // AI Coach's Notes (Pro/Ultra only); omitted → section hidden
+  /** The Analyst brief (Pro/Ultra). Empty string hides the section. */
+  coachNotes?: string
 }
 
 export function TradingReport({ trades, from, to, period, traderName = 'Trader', coachNotes }: ReportProps) {
   const {
     sorted, wins, losses, netPnl, winRate, pf, avgWin, avgLoss,
     expectancy, bestTrade, worstTrade, maxDD, maxCW, maxCL,
-    avgRR, equity, setupBreakdown, dayPnl,
-    pfScore, rrScore, discScore, riskScore, mindScore, ovr, planTrades, emoTrades,
+    avgRR, equity, setupBreakdown, dayPnl, symBreakdown, topWins, topLoss,
+    discScore, riskScore, ovr, planTrades, emoTrades,
   } = computeStats(trades)
 
-  const pnlColor  = netPnl >= 0 ? C.green : C.red
-  const ovrColor  = scoreCol(ovr)
-  const periodLbl = period === 'weekly' ? 'WEEKLY REPORT' : 'MONTHLY REPORT'
-  const dateRange = `${fmtDate(from)} – ${fmtDate(to)}`
-  const today     = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  const periodLbl = period === 'weekly' ? 'Weekly performance report' : 'Monthly performance report'
+  const dateRange = `${fmtDate(from)} — ${fmtDate(to)}`
+  const generated = new Date().toISOString().slice(0, 16).replace('T', ' ') + 'Z'
+  // Deterministic and period-scoped, so two downloads of the same window carry
+  // the same reference and a support conversation can name one document.
+  const ref_ = `VQ-${from.replaceAll('-', '')}-${period[0].toUpperCase()}${String(sorted.length).padStart(3, '0')}`
 
-  const kpis = [
-    { label: 'NET P&L',       value: fmt(netPnl),                                                                    color: pnlColor          },
-    { label: 'WIN RATE',      value: `${winRate.toFixed(0)}%`,                                                        color: scoreCol(winRate) },
-    { label: 'PROFIT FACTOR', value: `${pf.toFixed(2)}×`,                                                            color: scoreCol(pfScore) },
-    { label: 'AVG R:R',       value: avgRR !== null ? `${avgRR >= 0 ? '+' : ''}${avgRR.toFixed(2)}R` : '—',          color: scoreCol(rrScore) },
-    { label: 'EXPECTANCY',    value: `${expectancy >= 0 ? '+' : '-'}€${Math.abs(expectancy).toFixed(0)}/trade`,       color: expectancy >= 0 ? C.green : C.red },
-    { label: 'TOTAL TRADES',  value: `${sorted.length}`,                                                              color: C.accent          },
-  ]
-
-  const secondary = [
-    { label: 'AVG WIN',     value: avgWin   > 0 ? `+€${avgWin.toFixed(0)}`   : '—',                    color: C.green },
-    { label: 'AVG LOSS',    value: avgLoss  > 0 ? `-€${avgLoss.toFixed(0)}`  : '—',                    color: C.red   },
-    { label: 'MAX DD DAY',  value: maxDD    < 0 ? `-€${Math.abs(maxDD).toFixed(0)}` : '—',             color: maxDD < 0 ? C.red : C.t2 },
-    { label: 'BEST TRADE',  value: bestTrade  ? fmt(bestTrade.net_profit ?? 0)  : '—',                  color: C.green },
-    { label: 'WORST TRADE', value: worstTrade ? fmt(worstTrade.net_profit ?? 0) : '—',                  color: C.red   },
-    { label: 'STREAK',      value: `${maxCW}W  /  ${maxCL}L`,                                           color: C.t2    },
-  ]
-
-  const scoreAxes = [
-    { label: 'WIN RATE',      value: `${winRate.toFixed(0)}%`,                                              score: winRate   },
-    { label: 'PROFIT FACTOR', value: `${pf.toFixed(2)}×`,                                                   score: pfScore   },
-    { label: 'AVG R:R',       value: avgRR !== null ? `${avgRR >= 0 ? '+' : ''}${avgRR.toFixed(2)}R` : '—', score: rrScore   },
-    { label: 'DISCIPLINE',    value: planTrades.length > 0 ? `${discScore.toFixed(0)}%` : '—',              score: discScore },
-    { label: 'RISK MGMT',     value: `${riskScore.toFixed(0)}%`,                                            score: riskScore },
-    { label: 'MINDSET',       value: emoTrades.length > 0 ? `${mindScore.toFixed(0)}%` : '—',               score: mindScore },
-  ]
-
+  const decisive = wins.length + losses.length
   const setupMaxAbs = Math.max(1, ...setupBreakdown.map(s => Math.abs(s.pnl)))
+  const symMaxAbs   = Math.max(1, ...symBreakdown.map(s => Math.abs(s.pnl)))
   const dayMaxAbs   = Math.max(1, ...dayPnl.map(d => Math.abs(d.pnl)))
   const hasDayData  = dayPnl.some(d => d.pnl !== 0)
 
   return (
-    <Document>
+    <Document
+      title={`VELQUOR ${periodLbl} · ${dateRange}`}
+      author="VELQUOR"
+      subject={`Trading performance, ${dateRange}`}
+    >
+      {/* ══════════════ PAGE 1 — SUMMARY ══════════════ */}
+      <Page size="A4" style={PAGE}>
+        <Masthead traderName={traderName} ref_={ref_} dateRange={dateRange} periodLbl={periodLbl} />
 
-      {/* ════════════════════ PAGE 1: OVERVIEW ════════════════════ */}
-      <Page size="A4" style={{ backgroundColor: C.bg, padding: 32, fontFamily: 'Helvetica', fontSize: 10 }}>
-
-        {/* Header */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-          <View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-              <View style={{ width: 28, height: 28, backgroundColor: C.gold, borderRadius: 7, alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
-                <Text style={{ color: '#fff', fontSize: 14, fontFamily: 'Helvetica-Bold' }}>V</Text>
-              </View>
-              <View>
-                <Text style={{ color: C.t1, fontSize: 14, fontFamily: 'Helvetica-Bold', letterSpacing: 1.5 }}>VELQUOR</Text>
-                <Text style={{ color: C.t3, fontSize: 7, letterSpacing: 2 }}>TRADING INTELLIGENCE</Text>
-              </View>
-            </View>
-            <Text style={{ color: C.t3, fontSize: 7, letterSpacing: 2, marginBottom: 2 }}>{periodLbl}</Text>
-            <Text style={{ color: C.t2, fontSize: 11, fontFamily: 'Helvetica-Bold' }}>{dateRange}</Text>
-            <Text style={{ color: C.t3, fontSize: 7.5, marginTop: 2 }}>Generated {today}</Text>
-          </View>
-
-          {/* OVR badge */}
-          <View style={{ alignItems: 'center', padding: 16, backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: ovrColor + '40' }}>
-            <Text style={{ color: C.t3, fontSize: 7, letterSpacing: 2.5, marginBottom: 5 }}>OVR</Text>
-            <Text style={{ color: ovrColor, fontSize: 34, fontFamily: 'Helvetica-Bold', lineHeight: 1 }}>{ovr}</Text>
-            <Text style={{ color: C.t3, fontSize: 7.5, marginTop: 6 }}>{traderName}</Text>
-            <View style={{ flexDirection: 'row', marginTop: 4, gap: 6 }}>
-              <Text style={{ color: C.green, fontSize: 7.5 }}>{wins.length}W</Text>
-              <Text style={{ color: C.t3, fontSize: 7.5 }}>·</Text>
-              <Text style={{ color: C.red, fontSize: 7.5 }}>{losses.length}L</Text>
-            </View>
-          </View>
+        {/* The headline. One number, at the size it deserves. */}
+        <View style={{ marginTop: 22, marginBottom: 20 }}>
+          <Text style={label}>Net profit and loss</Text>
+          <Text style={{ ...figure(38, { money: netPnl }), marginTop: 6 }}>{fmt(netPnl)}</Text>
+          <Text style={{ fontFamily: WORDS, fontSize: 8, color: C.ink3, marginTop: 5 }}>
+            {sorted.length} closed {sorted.length === 1 ? 'trade' : 'trades'}
+            {decisive > 0 ? ` · ${wins.length} won, ${losses.length} lost` : ''}
+            {sorted.length - decisive > 0 ? ` · ${sorted.length - decisive} scratch` : ''}
+          </Text>
         </View>
 
-        <View style={{ height: 1, backgroundColor: C.border, marginBottom: 12 }} />
+        <SectionHead title="Headline figures" />
+        <FigureRow items={[
+          { name: 'Win rate', value: decisive > 0 ? `${winRate.toFixed(1)}%` : '—',
+            sub: decisive > 0 ? `${wins.length}W / ${losses.length}L decided` : 'no decided trades' },
+          { name: 'Profit factor', value: pf > 0 ? pf.toFixed(2) : '—',
+            sub: pf > 0 ? (pf >= 1 ? 'gross win per unit lost' : 'losing more than winning') : undefined },
+          { name: 'Expectancy', value: decisive > 0 ? fmtS(expectancy) : '—',
+            money: decisive > 0 ? expectancy : null, sub: 'per trade' },
+          { name: 'Avg R multiple', value: avgRR !== null ? `${avgRR >= 0 ? '+' : ''}${avgRR.toFixed(2)}R` : '—',
+            sub: avgRR === null ? 'needs stop losses' : 'realised vs risked' },
+        ]} />
 
-        {/* KPI row */}
-        <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
-          {kpis.map(k => (
-            <View key={k.label} style={{ flex: 1, backgroundColor: C.card, borderRadius: 8, padding: 10, borderWidth: 1, borderColor: C.border }}>
-              <Text style={{ color: C.t3, fontSize: 6, letterSpacing: 1.5, marginBottom: 5 }}>{k.label}</Text>
-              <Text style={{ color: k.color, fontSize: 11, fontFamily: 'Helvetica-Bold' }}>{k.value}</Text>
-            </View>
-          ))}
+        <Rule mt={14} mb={14} />
+
+        <FigureRow items={[
+          { name: 'Average win',  value: avgWin > 0 ? fmtS(avgWin) : '—',    money: avgWin > 0 ? avgWin : null,   size: 12 },
+          { name: 'Average loss', value: avgLoss > 0 ? fmtS(-avgLoss) : '—', money: avgLoss > 0 ? -avgLoss : null, size: 12 },
+          { name: 'Best trade',   value: bestTrade ? fmtS(bestTrade.net_profit ?? 0) : '—',
+            money: bestTrade?.net_profit ?? null, size: 12, sub: bestTrade?.symbol ?? undefined },
+          { name: 'Worst trade',  value: worstTrade ? fmtS(worstTrade.net_profit ?? 0) : '—',
+            money: worstTrade?.net_profit ?? null, size: 12, sub: worstTrade?.symbol ?? undefined },
+          { name: 'Worst day',    value: maxDD < 0 ? fmtS(maxDD) : '—', money: maxDD < 0 ? maxDD : null,
+            size: 12, sub: 'net, single session' },
+          { name: 'Longest runs', value: `${maxCW}W · ${maxCL}L`, size: 12, sub: 'consecutive' },
+        ]} />
+
+        <View style={{ marginTop: 22 }}>
+          <SectionHead title="Cumulative profit and loss" note="Closed trades, in order" />
+          <EquityCurve equity={equity} />
         </View>
 
-        {/* Secondary stats */}
-        <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
-          {secondary.map(s => (
-            <View key={s.label} style={{ flex: 1, backgroundColor: C.card2, borderRadius: 7, padding: 8, borderWidth: 1, borderColor: C.border }}>
-              <Text style={{ color: C.t3, fontSize: 5.5, letterSpacing: 1, marginBottom: 4 }}>{s.label}</Text>
-              <Text style={{ color: s.color, fontSize: 9, fontFamily: 'Helvetica-Bold' }}>{s.value}</Text>
-            </View>
-          ))}
+        <View style={{ marginTop: 22 }}>
+          <SectionHead title="Profit and loss by instrument" note={symBreakdown.length > 1 ? `${symBreakdown.length} traded` : undefined} />
+          {symBreakdown.length > 0 ? symBreakdown.map(sb => (
+            <SignedBar
+              key={sb.name}
+              name={sb.name}
+              meta={`${sb.count} ${sb.count === 1 ? 'trade' : 'trades'} · ${Math.round((sb.wins / sb.count) * 100)}% won`}
+              pnl={sb.pnl}
+              maxAbs={symMaxAbs}
+            />
+          )) : (
+            <Text style={{ fontFamily: WORDS, fontSize: 8, color: C.ink4 }}>No closed trades in this period.</Text>
+          )}
         </View>
 
-        {/* Equity curve */}
-        {equity.length >= 2 && (
-          <View style={{ backgroundColor: C.card, borderRadius: 8, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: C.border }}>
-            <Text style={{ color: C.t3, fontSize: 7, letterSpacing: 2, marginBottom: 8 }}>EQUITY CURVE</Text>
-            <EquityCurveSvg equity={equity} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 }}>
-              <Text style={{ color: C.t3, fontSize: 7 }}>{fmtDate(from)}</Text>
-              <Text style={{ color: pnlColor, fontSize: 8, fontFamily: 'Helvetica-Bold' }}>{fmt(netPnl)}</Text>
-              <Text style={{ color: C.t3, fontSize: 7 }}>{fmtDate(to)}</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Two columns: Performance Profile + Setup Breakdown */}
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
-          <View style={{ flex: 55, backgroundColor: C.card, borderRadius: 8, padding: 12, borderWidth: 1, borderColor: C.border }}>
-            <Text style={{ color: C.t3, fontSize: 7, letterSpacing: 2, marginBottom: 10 }}>PERFORMANCE PROFILE</Text>
-            {scoreAxes.map(a => <ScoreBar key={a.label} label={a.label} value={a.value} score={a.score} />)}
-          </View>
-          <View style={{ flex: 45, backgroundColor: C.card, borderRadius: 8, padding: 12, borderWidth: 1, borderColor: C.border }}>
-            <Text style={{ color: C.t3, fontSize: 7, letterSpacing: 2, marginBottom: 10 }}>SETUP PERFORMANCE</Text>
-            {setupBreakdown.length > 0
-              ? setupBreakdown.map(s => <SetupBar key={s.name} name={s.name} pnl={s.pnl} maxAbs={setupMaxAbs} />)
-              : <Text style={{ color: C.t3, fontSize: 8 }}>No setup data tagged</Text>
-            }
-          </View>
-        </View>
-
-        {/* Day of week */}
-        {hasDayData && (
-          <View style={{ backgroundColor: C.card, borderRadius: 8, padding: 12, marginBottom: 14, borderWidth: 1, borderColor: C.border }}>
-            <Text style={{ color: C.t3, fontSize: 7, letterSpacing: 2, marginBottom: 10 }}>P&L BY DAY OF WEEK</Text>
-            {dayPnl.map(d => <DayBar key={d.day} day={d.day} pnl={d.pnl} maxAbs={dayMaxAbs} />)}
-          </View>
-        )}
-
-        {/* Footer */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={{ color: C.t3, fontSize: 7 }}>Velquor · Trading Intelligence Platform</Text>
-          <Text style={{ color: C.t3, fontSize: 7 }}>Page 1 · {periodLbl} · {dateRange}</Text>
-        </View>
+        <Footer generated={generated} />
       </Page>
 
-      {/* ════════════════════ PAGE 2: TRADE LOG ════════════════════ */}
-      <Page size="A4" style={{ backgroundColor: C.bg, padding: 32, fontFamily: 'Helvetica', fontSize: 10 }}>
-        <PageHeader label="TRADE LOG" dateRange={dateRange} />
+      {/* ══════════════ PAGE 2 — ANALYSIS ══════════════ */}
+      <Page size="A4" style={PAGE}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
+          <Text style={{ ...label, fontSize: 7.5, color: C.ink2 }}>Analysis</Text>
+          <Text style={{ ...figure(7, { dim: true }) }}>{ref_}</Text>
+        </View>
 
-        {/* Best & worst highlight */}
-        {(bestTrade || worstTrade) && (
-          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
-            {bestTrade && (
-              <View style={{ flex: 1, backgroundColor: C.card, borderRadius: 8, padding: 12, borderWidth: 1, borderColor: C.green + '33' }}>
-                <Text style={{ color: C.green, fontSize: 6.5, letterSpacing: 1.5, marginBottom: 4 }}>BEST TRADE</Text>
-                <Text style={{ color: C.t1, fontSize: 13, fontFamily: 'Helvetica-Bold' }}>{fmt(bestTrade.net_profit ?? 0)}</Text>
-                <View style={{ flexDirection: 'row', gap: 6, marginTop: 5, flexWrap: 'wrap' }}>
-                  <Text style={{ color: C.t2, fontSize: 7.5 }}>{bestTrade.symbol}</Text>
-                  <Text style={{ color: bestTrade.trade_type === 'buy' ? C.green : C.red, fontSize: 7.5 }}>
-                    {(bestTrade.trade_type ?? '').toUpperCase()}
-                  </Text>
-                  {bestTrade.setup_type ? <Text style={{ color: C.t2, fontSize: 7.5 }}>{bestTrade.setup_type}</Text> : null}
-                  {bestTrade.close_time
-                    ? <Text style={{ color: C.t3, fontSize: 7.5 }}>
-                        {new Date(bestTrade.close_time).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                      </Text>
-                    : null}
-                </View>
-              </View>
-            )}
-            {worstTrade && (
-              <View style={{ flex: 1, backgroundColor: C.card, borderRadius: 8, padding: 12, borderWidth: 1, borderColor: C.red + '33' }}>
-                <Text style={{ color: C.red, fontSize: 6.5, letterSpacing: 1.5, marginBottom: 4 }}>WORST TRADE</Text>
-                <Text style={{ color: C.t1, fontSize: 13, fontFamily: 'Helvetica-Bold' }}>{fmt(worstTrade.net_profit ?? 0)}</Text>
-                <View style={{ flexDirection: 'row', gap: 6, marginTop: 5, flexWrap: 'wrap' }}>
-                  <Text style={{ color: C.t2, fontSize: 7.5 }}>{worstTrade.symbol}</Text>
-                  <Text style={{ color: worstTrade.trade_type === 'buy' ? C.green : C.red, fontSize: 7.5 }}>
-                    {(worstTrade.trade_type ?? '').toUpperCase()}
-                  </Text>
-                  {worstTrade.setup_type ? <Text style={{ color: C.t2, fontSize: 7.5 }}>{worstTrade.setup_type}</Text> : null}
-                  {worstTrade.close_time
-                    ? <Text style={{ color: C.t3, fontSize: 7.5 }}>
-                        {new Date(worstTrade.close_time).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                      </Text>
-                    : null}
-                </View>
-              </View>
-            )}
-          </View>
+        <SectionHead title="Profit and loss by setup" note={setupBreakdown.length ? 'Top 5 by absolute contribution' : undefined} />
+        {setupBreakdown.length > 0 ? (
+          setupBreakdown.map(s => (
+            <SignedBar
+              key={s.name}
+              name={s.name}
+              meta={`${s.count} ${s.count === 1 ? 'trade' : 'trades'} · ${s.count > 0 ? Math.round((s.wins / s.count) * 100) : 0}% won`}
+              pnl={s.pnl}
+              maxAbs={setupMaxAbs}
+            />
+          ))
+        ) : (
+          <Text style={{ fontFamily: WORDS, fontSize: 8, color: C.ink4 }}>
+            No trades in this period carry a setup name. Annotating them turns this
+            section into the most useful page of the report.
+          </Text>
         )}
 
-        {/* Full trade log */}
-        {sorted.length > 0 ? (
-          <View style={{ backgroundColor: C.card, borderRadius: 8, borderWidth: 1, borderColor: C.border }}>
-            {/* Table header */}
-            <View style={{ flexDirection: 'row', padding: '9 14 7 14', borderBottomWidth: 1, borderBottomColor: C.border }}>
-              {['DATE', 'PAIR', 'DIR', 'SETUP', 'R:R', 'P&L'].map((h, i) => (
-                <Text key={h} style={{ color: C.t3, fontSize: 6.5, letterSpacing: 1.2, flex: i === 3 ? 2 : 1 }}>{h}</Text>
+        <View style={{ marginTop: 20 }}>
+          <SectionHead title="Profit and loss by weekday" />
+          {hasDayData ? (
+            dayPnl.map(d => <SignedBar key={d.day} name={d.day} pnl={d.pnl} maxAbs={dayMaxAbs} />)
+          ) : (
+            <Text style={{ fontFamily: WORDS, fontSize: 8, color: C.ink4 }}>No closed trades on weekdays in this period.</Text>
+          )}
+        </View>
+
+        <View style={{ marginTop: 20 }}>
+          <SectionHead title="Process" note="Scored from what was logged, not from profit" />
+          <FigureRow items={[
+            { name: 'Overall', value: `${ovr}`, size: 13, sub: '0–100, six axes' },
+            { name: 'Plan adherence', value: planTrades.length > 0 ? `${discScore.toFixed(0)}%` : '—',
+              size: 13, sub: planTrades.length > 0 ? `${planTrades.length} annotated` : 'not logged' },
+            { name: 'Risk control', value: `${riskScore.toFixed(0)}%`, size: 13, sub: 'stops set, sizing' },
+            { name: 'Emotional logs', value: emoTrades.length > 0 ? `${emoTrades.length}` : '—',
+              size: 13, sub: emoTrades.length > 0 ? 'trades with a mood' : 'not logged' },
+          ]} />
+        </View>
+
+        {(topWins.length > 0 || topLoss.length > 0) ? (
+          <View style={{ marginTop: 20 }}>
+            <SectionHead title="Notable trades" note="Largest movers in each direction" />
+            <View style={{ flexDirection: 'row' }}>
+              {([['Largest gains', topWins], ['Largest losses', topLoss]] as const).map(([heading, list], col) => (
+                <View key={heading} style={{
+                  flexGrow: 1, flexShrink: 1, flexBasis: 0,
+                  paddingLeft: col > 0 ? 14 : 0, paddingRight: col === 0 ? 14 : 0,
+                  borderLeftWidth: col > 0 ? 0.6 : 0, borderLeftColor: C.line,
+                }}>
+                  <Text style={{ ...label, marginBottom: 5 }}>{heading}</Text>
+                  {list.length === 0 ? (
+                    <Text style={{ fontFamily: WORDS, fontSize: 7.5, color: C.ink4 }}>None in this period.</Text>
+                  ) : list.map((t, i) => (
+                    <View key={t.id ?? i} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 2.6 }}>
+                      <Text style={{ ...figure(7.5), width: 56 }}>{t.symbol}</Text>
+                      <Text style={{ fontFamily: WORDS, fontSize: 7, color: C.ink3, flexGrow: 1, flexShrink: 1, flexBasis: 0 }}>
+                        {t.setup_type ?? '—'}
+                      </Text>
+                      <Text style={{ ...figure(7.5, { money: t.net_profit ?? 0 }), width: 56, textAlign: 'right' }}>
+                        {fmtS(t.net_profit ?? 0)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
               ))}
             </View>
-            {/* Rows — react-pdf auto-paginates if they overflow */}
-            {sorted.map((t, i) => {
-              const pnl  = t.net_profit ?? 0
-              const pnlC = pnlCol(t)
-              const rowBg = i % 2 === 0 ? 'transparent' : C.card2
-
-              // Per-trade realized R:R
-              let rrStr = '—'
-              if (t.stop_loss && t.open_price && t.close_price && t.trade_type) {
-                const dir      = t.trade_type === 'buy' ? 1 : -1
-                const realized = dir * ((t.close_price ?? 0) - (t.open_price ?? 0))
-                const risk     = Math.abs((t.open_price ?? 0) - (t.stop_loss ?? 0))
-                if (risk > 0) {
-                  const rr = realized / risk
-                  rrStr = `${rr >= 0 ? '+' : ''}${rr.toFixed(2)}R`
-                }
-              }
-
-              return (
-                <View key={t.id} style={{ flexDirection: 'row', padding: '4 14', backgroundColor: rowBg }}>
-                  <Text style={{ color: C.t2, fontSize: 7, flex: 1 }}>
-                    {t.close_time
-                      ? new Date(t.close_time).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
-                      : '—'}
-                  </Text>
-                  <Text style={{ color: C.t1, fontSize: 7, flex: 1, fontFamily: 'Helvetica-Bold' }}>{t.symbol}</Text>
-                  <Text style={{ color: t.trade_type === 'buy' ? C.green : C.red, fontSize: 7, flex: 1 }}>
-                    {(t.trade_type ?? '').toUpperCase()}
-                  </Text>
-                  <Text style={{ color: C.t2, fontSize: 6.5, flex: 2 }}>
-                    {t.setup_type ?? (t.notes?.slice(0, 20)) ?? '—'}
-                  </Text>
-                  <Text style={{ color: pnlC, fontSize: 7, flex: 1 }}>
-                    {rrStr}
-                  </Text>
-                  <Text style={{ color: pnlC, fontSize: 7, flex: 1, fontFamily: 'Helvetica-Bold', textAlign: 'right' }}>
-                    {fmt(pnl)}
-                  </Text>
-                </View>
-              )
-            })}
           </View>
-        ) : (
-          <View style={{ alignItems: 'center', padding: 48 }}>
-            <Text style={{ color: C.t3, fontSize: 11 }}>No trades in this period</Text>
-          </View>
-        )}
+        ) : null}
 
-        {/* Footer */}
-        <View style={{ marginTop: 16, flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={{ color: C.t3, fontSize: 7 }}>Velquor · Trading Intelligence Platform</Text>
-          <Text style={{ color: C.t3, fontSize: 7 }}>Page 2 · {periodLbl} · {dateRange}</Text>
-        </View>
+        <Footer generated={generated} />
       </Page>
 
-      {/* ── Page 3 — Coach's Notes (Pro/Ultra) ─────────────────────────────── */}
-      {coachNotes && coachNotes.trim().length > 0 && (
-        <Page size="A4" style={{ backgroundColor: C.bg, padding: 32, fontFamily: 'Helvetica', fontSize: 10 }}>
-          <PageHeader label="COACH'S NOTES" dateRange={dateRange} />
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 6 }}>
-            <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: C.gold }} />
-            <Text style={{ color: C.t1, fontSize: 13, fontFamily: 'Helvetica-Bold' }}>VELQUOR AI · Performance Coaching</Text>
+      {/* ══════════════ PAGE 3 — ANALYST BRIEF ══════════════ */}
+      {coachNotes ? (
+        <Page size="A4" style={PAGE}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
+            <Text style={{ ...label, fontSize: 7.5, color: C.ink2 }}>Analyst brief</Text>
+            <Text style={{ ...figure(7, { dim: true }) }}>{ref_}</Text>
           </View>
-          <Text style={{ color: C.t3, fontSize: 7.5, marginBottom: 14 }}>
-            Generated from your statistics for this period. Figures are computed; the analysis is AI-written.
-          </Text>
-          {coachNotes.trim().split(/\n\s*\n/).map((para, i) => (
-            <Text key={i} style={{ color: C.t2, fontSize: 9.5, lineHeight: 1.6, marginBottom: 9 }}>
-              {para.trim()}
-            </Text>
-          ))}
-          <View style={{ marginTop: 'auto', flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={{ color: C.t3, fontSize: 7 }}>Velquor · Trading Intelligence Platform</Text>
-            <Text style={{ color: C.t3, fontSize: 7 }}>Page 3 · {periodLbl} · {dateRange}</Text>
-          </View>
-        </Page>
-      )}
 
+          {/* What the brief is reasoning over, stated before the prose. A reader
+              should be able to check the argument against the numbers without
+              turning back a page. */}
+          <SectionHead title="Basis" note="The figures this brief was written from" />
+          <FigureRow items={[
+            { name: 'Trades',        value: `${sorted.length}`, size: 11 },
+            { name: 'Win rate',      value: decisive > 0 ? `${winRate.toFixed(1)}%` : '—', size: 11 },
+            { name: 'Profit factor', value: pf > 0 ? pf.toFixed(2) : '—', size: 11 },
+            { name: 'Expectancy',    value: decisive > 0 ? fmtS(expectancy) : '—',
+              money: decisive > 0 ? expectancy : null, size: 11 },
+            { name: 'Net',           value: fmtS(netPnl), money: netPnl, size: 11 },
+          ]} />
+
+          <View style={{ marginTop: 20 }}>
+            <SectionHead title="Assessment" />
+            {coachNotes.split(/\n{2,}/).filter(Boolean).map((para, i) => (
+              <Text key={i} style={{
+                fontFamily: WORDS, fontSize: 9.5, color: C.ink2,
+                lineHeight: 1.65, marginBottom: 9,
+              }}>
+                {para.trim()}
+              </Text>
+            ))}
+          </View>
+
+          <View style={{ marginTop: 16 }}>
+            <Rule mb={7} />
+            <Text style={{ fontFamily: WORDS, fontSize: 6.5, color: C.ink4, lineHeight: 1.5 }}>
+              Written by the VELQUOR Analyst from this period&apos;s executed trades and
+              the annotations on them. It quotes only figures computed above; it does
+              not forecast, and it is not investment advice.
+            </Text>
+          </View>
+
+          <Footer generated={generated} />
+        </Page>
+      ) : null}
+
+      {/* ══════════════ TRADE LOG ══════════════ */}
+      <Page size="A4" style={PAGE}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
+          <Text style={{ ...label, fontSize: 7.5, color: C.ink2 }}>Trade log</Text>
+          <Text style={{ ...figure(7, { dim: true }) }}>{sorted.length} closed</Text>
+        </View>
+
+        {/* Column headings repeat when the log spills onto another page. */}
+        <View fixed style={{ flexDirection: 'row', paddingBottom: 5 }}>
+          <Text style={{ ...label, width: 58 }}>Closed</Text>
+          <Text style={{ ...label, width: 58 }}>Symbol</Text>
+          <Text style={{ ...label, width: 30 }}>Side</Text>
+          <Text style={{ ...label, width: 34, textAlign: 'right' }}>Lots</Text>
+          <Text style={{ ...label, flex: 1, marginLeft: 10 }}>Setup</Text>
+          <Text style={{ ...label, width: 62, textAlign: 'right' }}>Net</Text>
+        </View>
+        <View fixed><Rule mb={3} /></View>
+
+        {sorted.length === 0 ? (
+          <Text style={{ fontFamily: WORDS, fontSize: 8, color: C.ink4, marginTop: 8 }}>
+            No closed trades in this period.
+          </Text>
+        ) : sorted.map((t, i) => (
+          <View key={t.id ?? i} wrap={false} style={{
+            flexDirection: 'row', alignItems: 'center', paddingVertical: 3.4,
+            borderBottomWidth: 0.4, borderBottomColor: C.line,
+          }}>
+            <Text style={{ ...figure(7, { dim: true }), width: 58 }}>
+              {t.close_time ? t.close_time.slice(0, 10).split('-').reverse().slice(0, 2).join('/') + ' ' + t.close_time.slice(11, 16) : '—'}
+            </Text>
+            <Text style={{ ...figure(7.5), width: 58 }}>{t.symbol}</Text>
+            <Text style={{ fontFamily: WORDS, fontSize: 7, color: C.ink3, width: 30, textTransform: 'uppercase' }}>
+              {t.trade_type ?? '—'}
+            </Text>
+            <Text style={{ ...figure(7, { dim: true }), width: 34, textAlign: 'right' }}>
+              {(t.lot_size ?? 0).toFixed(2)}
+            </Text>
+            <Text style={{ fontFamily: WORDS, fontSize: 7.5, color: C.ink2, flex: 1, marginLeft: 10 }}>
+              {t.setup_type ?? '—'}
+            </Text>
+            <Text style={{ fontFamily: MONO, fontSize: 7.5, color: pnlCol(t), width: 62, textAlign: 'right' }}>
+              {fmt(t.net_profit ?? 0)}
+            </Text>
+          </View>
+        ))}
+
+        {sorted.length > 0 ? (
+          <View style={{ flexDirection: 'row', marginTop: 7, paddingTop: 6, borderTopWidth: 0.6, borderTopColor: C.line2 }}>
+            <Text style={{ ...label, flex: 1 }}>Total, {sorted.length} trades</Text>
+            <Text style={{ ...figure(9, { money: netPnl }), width: 62, textAlign: 'right' }}>{fmt(netPnl)}</Text>
+          </View>
+        ) : null}
+
+        <Footer generated={generated} />
+      </Page>
     </Document>
   )
 }

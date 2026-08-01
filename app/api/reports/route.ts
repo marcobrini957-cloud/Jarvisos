@@ -66,7 +66,6 @@ export async function GET(req: NextRequest) {
       coachNotes  = await generateCoachNotes(plan, facts)
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const buffer = await renderToBuffer(
       createElement(TradingReport, {
         trades:      rows,
@@ -75,7 +74,9 @@ export async function GET(req: NextRequest) {
         period,
         traderName,
         coachNotes,
-      }) as any
+        // renderToBuffer's parameter type is @react-pdf's own DocumentElement,
+        // which createElement cannot be narrowed to from a plain component.
+      }) as unknown as Parameters<typeof renderToBuffer>[0]
     )
 
     const filename = `velquor-${period}-${from}.pdf`
