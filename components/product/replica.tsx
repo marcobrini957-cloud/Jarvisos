@@ -22,7 +22,7 @@
  * 11px/14px padding, values 21px mono, labels 10px at 0.16em.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LogoMark } from '@/components/ui/LogoMark'
 import Icon from '@/components/ui/Icon'
 import { TABS } from '@/components/dashboard/tabs'
@@ -44,6 +44,22 @@ export const words = { fontFamily: 'var(--font-display)' } as const
 
 export const easeOutExpo = (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -9 * t))
 export const clamp01     = (t: number) => Math.min(Math.max(t, 0), 1)
+
+/**
+ * Re-times travel along the path so the pointer accelerates between waypoints
+ * and eases through them, instead of sliding at one constant speed like a
+ * machine. Monotonic by construction, and its derivative bottoms out at
+ * `1 - amp` — so it slows near a target but never actually stops, which is the
+ * standing rule for these cursors.
+ */
+export function paced(x: number, n: number, amp = 0.55): number {
+  return x + (amp / (2 * Math.PI * n)) * Math.sin(2 * Math.PI * n * x)
+}
+
+/** How fast the pointer is travelling right now, 1 = its average. */
+export function pacedSpeed(x: number, n: number, amp = 0.55): number {
+  return 1 + amp * Math.cos(2 * Math.PI * n * x)
+}
 
 /** Catmull-Rom through the waypoints, so the cursor curves instead of darting. */
 export function splineAt(pts: [number, number][], u: number): { x: number; y: number } {
@@ -223,6 +239,19 @@ export interface StageProps {
   minScale?: number
   /** Cursor waypoints in virtual px, or none for a still replica. */
   path?: [number, number][]
+  /**
+   * How long the current scene lasts. The cursor used to be hardcoded to a
+   * 6-second lap regardless, so on the 7s Analyst scene it finished its path
+   * and then sat perfectly still for a second — the one thing these cursors are
+   * never allowed to do.
+   */
+  durationMs?: number
+  /**
+   * Ken Burns push, as a fraction. The frame creeps in over the scene and
+   * resets on the cut, which is what makes a sequence of screens read as footage
+   * rather than as a slideshow. 0 disables it.
+   */
+  zoom?: number
   /** Restarts the count-ups and the entry animation when it changes. */
   sceneKey: string
   children: React.ReactNode
@@ -236,15 +265,42 @@ export interface StageProps {
  * and never starts under prefers-reduced-motion — this used to hold 60fps while
  * you read the pricing table further down the page.
  */
-export function Stage({ width: W, height: H, minScale = 0.5, path, sceneKey, children }: StageProps) {
+export function Stage({
+  width: W, height: H, minScale = 0.5, path, sceneKey,
+  durationMs = 6000, zoom = 0.03, children,
+}: StageProps) {
   const boxRef    = useRef<HTMLDivElement>(null)
   const stageRef  = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLDivElement>(null)
+  const zoomRef   = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
   // Held in a ref so a new waypoint array on every render does not restart the
   // clock — the clock restarts on `sceneKey`, which is when the path changes.
   const pathRef = useRef(path)
   useEffect(() => { pathRef.current = path })
+  // Where the pointer actually is, and where it was when the last scene ended.
+  // A cut used to teleport it to the next path's first waypoint — measured at
+  // 7,500 px/s across one frame. A real pointer does not jump when a tab
+  // changes under it, so the new scene eases out of the old position instead.
+  const atRef   = useRef<{ x: number; y: number } | null>(null)
+  const fromRef = useRef<{ x: number; y: number } | null>(null)
+
+  /**
+   * Where the push comes from. Horizontally it follows the middle of this
+   * scene's cursor path, so the frame drifts toward whatever is being worked on.
+   *
+   * Vertically it is pinned high on purpose. A centred origin pushes the top
+   * edge out of frame — at 3% with the origin at mid-height that is 11px, and
+   * the top bar's mark sits at y=10, so the logo lost its head on every scene.
+   * Anchored near the top, the crop happens at the bottom instead, where the
+   * content is already running past the edge of the frame.
+   */
+  const origin = useMemo(() => {
+    if (!path || !path.length) return '50% 14%'
+    const cx = path.reduce((a, [x]) => a + x, 0) / path.length
+    const pct = Math.min(Math.max((cx / W) * 100, 22), 78)
+    return `${pct.toFixed(1)}% 14%`
+  }, [path, W])
 
   useEffect(() => {
     const box = boxRef.current
@@ -264,6 +320,9 @@ export function Stage({ width: W, height: H, minScale = 0.5, path, sceneKey, chi
   useEffect(() => {
     let raf = 0
     let start = 0
+    // Runs before this scene's first frame, so it holds the previous scene's
+    // final position.
+    fromRef.current = atRef.current
 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick)
@@ -271,12 +330,41 @@ export function Stage({ width: W, height: H, minScale = 0.5, path, sceneKey, chi
 
       const pts = pathRef.current
       if (pts && cursorRef.current) {
-        // A slow drift on top of the spline, so it is never perfectly still
-        // even at a waypoint.
-        const p  = splineAt(pts, clamp01(age / 6000))
-        const dx = Math.sin(now / 430) * 1.6
-        const dy = Math.cos(now / 480) * 1.3
+        // One lap of the path per scene, looped rather than clamped so a long
+        // scene never leaves the pointer parked at the last waypoint.
+        const lap   = (age / durationMs) % 1
+        const n     = pts.length
+        const t     = splineAt(pts, paced(lap, n))
+        const speed = pacedSpeed(lap, n)
+
+        // Carry the pointer over the cut rather than snapping it.
+        let p = t
+        const blend = clamp01(age / 340)
+        if (fromRef.current && blend < 1) {
+          const e = blend * blend * (3 - 2 * blend)   // smoothstep
+          p = {
+            x: fromRef.current.x + (t.x - fromRef.current.x) * e,
+            y: fromRef.current.y + (t.y - fromRef.current.y) * e,
+          }
+        }
+
+        // Two tremors, both scaled by how slowly it is moving: a hand is
+        // steadiest mid-travel and shakiest hovering over a target. Without the
+        // fast one the drift reads as a float rather than as a hand.
+        const shake = 1.35 / (0.55 + speed)
+        const dx = Math.sin(now / 430) * 1.5 * shake + Math.sin(now / 97) * 0.32 * shake
+        const dy = Math.cos(now / 480) * 1.2 * shake + Math.cos(now / 111) * 0.28 * shake
+        // Hand over the *rendered* position, tremor included, so the seam at a
+        // cut is exact rather than off by the tremor's current offset.
+        atRef.current = { x: p.x + dx, y: p.y + dy }
         cursorRef.current.style.transform = `translate3d(${(p.x + dx).toFixed(1)}px, ${(p.y + dy).toFixed(1)}px, 0)`
+      }
+
+      // Ken Burns. Eased so the push is quickest just after the cut and settles
+      // as the scene runs — a linear creep reads as a slow drift, not a move.
+      if (zoomRef.current && zoom > 0) {
+        const z = 1 + zoom * easeOutExpo(clamp01(age / (durationMs * 1.35)))
+        zoomRef.current.style.transform = `scale(${z.toFixed(4)})`
       }
 
       const k = easeOutExpo(clamp01(age / 1100))
@@ -300,6 +388,7 @@ export function Stage({ width: W, height: H, minScale = 0.5, path, sceneKey, chi
     // With motion off the figures still have to arrive at their real values,
     // or the replica advertises a dashboard of zeroes.
     if (reduced) {
+      if (zoomRef.current) zoomRef.current.style.transform = 'none'
       stageRef.current?.querySelectorAll<HTMLElement>('[data-to]').forEach(el => {
         const to  = parseFloat(el.dataset.to || '0')
         const dec = parseInt(el.dataset.dec || '0')
@@ -319,7 +408,7 @@ export function Stage({ width: W, height: H, minScale = 0.5, path, sceneKey, chi
     document.addEventListener('visibilitychange', onVis)
 
     return () => { stop(); io?.disconnect(); document.removeEventListener('visibilitychange', onVis) }
-  }, [sceneKey])
+  }, [sceneKey, durationMs, zoom])
 
   return (
     // The scaled canvas does not affect layout height, so the frame has to be
@@ -334,17 +423,31 @@ export function Stage({ width: W, height: H, minScale = 0.5, path, sceneKey, chi
           background: VOID, color: INK1, ...words,
         }}
       >
-        {children}
+        {/*
+          The Ken Burns layer. The pointer lives inside it so it stays over the
+          content it is pointing at as the frame pushes in, and the origin sits
+          on the centre of this scene's path — so the push drifts toward
+          whatever the cursor is working on rather than always the middle.
+        */}
+        <div
+          ref={zoomRef}
+          style={{
+            flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',
+            transformOrigin: origin, willChange: zoom > 0 ? 'transform' : undefined,
+          }}
+        >
+          {children}
 
-        {path && (
-          // The pointer. Drawn, not a real cursor, so it can be styled.
-          <div ref={cursorRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 40, pointerEvents: 'none', willChange: 'transform' }}>
-            <svg width="17" height="22" viewBox="0 0 17 22" fill="none" aria-hidden="true">
-              <path d="M1 1 L1 15.5 L4.8 11.6 L7.4 18.6 L10.1 17.5 L7.5 10.6 L13.2 10.6 Z"
-                fill="#fff" stroke="rgba(0,0,0,0.55)" strokeWidth="1" strokeLinejoin="round" />
-            </svg>
-          </div>
-        )}
+          {path && (
+            // The pointer. Drawn, not a real cursor, so it can be styled.
+            <div ref={cursorRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 40, pointerEvents: 'none', willChange: 'transform' }}>
+              <svg width="17" height="22" viewBox="0 0 17 22" fill="none" aria-hidden="true">
+                <path d="M1 1 L1 15.5 L4.8 11.6 L7.4 18.6 L10.1 17.5 L7.5 10.6 L13.2 10.6 Z"
+                  fill="#fff" stroke="rgba(0,0,0,0.55)" strokeWidth="1" strokeLinejoin="round" />
+              </svg>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

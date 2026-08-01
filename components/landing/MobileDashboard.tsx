@@ -39,8 +39,11 @@ const H = 560
 
 const SCENES = ['Home', 'Trading', 'Journal', 'Copy', 'Analyst'] as const
 type Scene = typeof SCENES[number]
+// Scene lengths, cut 35% on 2026-08-01 — the sequence read as a slideshow
+// at the old pace. The Analyst scene stays the longest because it has to
+// finish typing a question and an answer inside its own cut.
 const SCENE_MS: Record<Scene, number> = {
-  Home: 5600, Trading: 4800, Journal: 4800, Copy: 4400, Analyst: 6600,
+  Home: 3640, Trading: 3120, Journal: 3120, Copy: 2860, Analyst: 4290,
 }
 
 // A thumb, not a cursor — this is a touch device. It drifts between the places
@@ -70,7 +73,8 @@ export function MobileDashboard() {
 
   return (
     <>
-      <Stage width={W} height={H} minScale={0.62} sceneKey={scene} path={PATHS[scene]}>
+      <Stage width={W} height={H} minScale={0.62} sceneKey={scene} path={PATHS[scene]}
+             durationMs={SCENE_MS[scene]} zoom={0.022}>
         <MobileTopbar section={scene} />
         <div key={scene} className="mb-scene" style={{
           flex: 1, minHeight: 0, padding: '10px 10px 14px',

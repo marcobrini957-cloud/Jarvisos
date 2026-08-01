@@ -41,7 +41,10 @@ const H = 430
 
 const SCENES = ['Home', 'Trading', 'Journal', 'Analyst'] as const
 type Scene = typeof SCENES[number]
-const SCENE_MS: Record<Scene, number> = { Home: 5200, Trading: 4600, Journal: 4600, Analyst: 6600 }
+// Scene lengths, cut 35% on 2026-08-01 — the sequence read as a slideshow
+// at the old pace. The Analyst scene stays the longest because it has to
+// finish typing a question and an answer inside its own cut.
+const SCENE_MS: Record<Scene, number> = { Home: 3380, Trading: 2990, Journal: 2990, Analyst: 4290 }
 
 // Cursor waypoints per scene, in virtual px. Overlapping waypoints keep it
 // drifting rather than parking on one.
@@ -68,7 +71,8 @@ export function LoginDashboardPreview() {
   }, [scene])
 
   return (
-    <Stage width={W} height={H} minScale={0.58} sceneKey={scene} path={PATHS[scene]}>
+    <Stage width={W} height={H} minScale={0.58} sceneKey={scene} path={PATHS[scene]}
+           durationMs={SCENE_MS[scene]} zoom={0.02}>
       <Topbar stale="2m ago" />
       <TabBar active={scene} />
 

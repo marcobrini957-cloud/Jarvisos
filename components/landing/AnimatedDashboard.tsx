@@ -31,7 +31,7 @@ import { LogoMark } from '@/components/ui/LogoMark'
 import {
   Topbar, TabBar, Panel, Num, Segmented,
   INK1, INK2, INK3, INK4, LINE, UP, DOWN, VOID, SURF,
-  mono, label, words, easeOutExpo, clamp01, splineAt, SceneCaption, LiveChartShot, ChartAttribution, CHART_QUOTE,
+  mono, label, words, SceneCaption, LiveChartShot, Stage, ChartAttribution, CHART_QUOTE,
 } from '@/components/product/replica'
 
 // ── Geometry ─────────────────────────────────────────────────────────────────
@@ -42,7 +42,10 @@ const H = 812
 
 const SCENES = ['home', 'trading', 'journal', 'copy', 'analyst'] as const
 type Scene = typeof SCENES[number]
-const SCENE_MS: Record<Scene, number> = { home: 6200, trading: 5200, journal: 5200, copy: 4600, analyst: 7000 }
+// Scene lengths, cut 35% on 2026-08-01 — the sequence read as a slideshow
+// at the old pace. The Analyst scene stays the longest because it has to
+// finish typing a question and an answer inside its own cut.
+const SCENE_MS: Record<Scene, number> = { home: 4030, trading: 3380, journal: 3380, copy: 2990, analyst: 4550 }
 
 // Cursor waypoints per scene, in virtual px. It never rests on one for long —
 // overlapping waypoints keep it drifting rather than parking (the cursor rule).
@@ -60,131 +63,49 @@ const SCENE_TAB: Record<Scene, string> = {
 }
 
 export function AnimatedDashboard() {
-  const boxRef    = useRef<HTMLDivElement>(null)
-  const cursorRef = useRef<HTMLDivElement>(null)
-  const stageRef  = useRef<HTMLDivElement>(null)
   const [scene, setScene] = useState<Scene>('home')
-  const [scale, setScale] = useState(1)
   const sceneRef = useRef<Scene>('home')
-  const startRef = useRef(0)
 
-  // ── Fit the true-scale canvas to whatever width the hero gives us ──────────
+  // Scene cycling only. Everything else — fitting the canvas, the cursor, the
+  // count-ups, the Ken Burns push — belongs to `Stage`, which the phone and the
+  // login preview already ran on. This used to be a second hand-rolled rAF loop
+  // doing all of it, and it drifted: its cursor was still hardcoded to a
+  // 6-second lap, so the 7s Analyst scene ended with the pointer parked.
   useEffect(() => {
-    const box = boxRef.current
-    if (!box) return
-    const fit = () => {
-      const w = box.getBoundingClientRect().width
-      // Fill the width exactly, but never past 1:1 — the frame used to be
-      // full-bleed, so a 2560px screen drew the replica at 1.78×: soft, 1445px
-      // tall, and the whole viewport. Below ~0.5 the type stops reading as type,
-      // so on a phone the canvas is cropped from the right instead of shrunk
-      // further — the left column stays legible.
-      setScale(Math.min(Math.max(w / W, 0.5), 1))
-    }
-    fit()
-    const ro = new ResizeObserver(fit)
-    ro.observe(box)
-    return () => ro.disconnect()
-  }, [])
-
-  // ── One clock: scene cycling, the cursor, the count-ups ───────────────────
-  useEffect(() => {
-    let raf = 0
-    startRef.current = performance.now()
-
-    const tick = (now: number) => {
-      raf = requestAnimationFrame(tick)
-      const cur = sceneRef.current
-      const dur = SCENE_MS[cur]
-      const age = now - startRef.current
-      const u = clamp01(age / dur)
-
-      const p = splineAt(PATHS[cur], u)
-      if (cursorRef.current) {
-        // A slow drift on top of the spline, so it is never perfectly still
-        // even at a waypoint.
-        const dx = Math.sin(now / 430) * 1.6
-        const dy = Math.cos(now / 480) * 1.3
-        cursorRef.current.style.transform = `translate3d(${(p.x + dx).toFixed(1)}px, ${(p.y + dy).toFixed(1)}px, 0)`
-      }
-
-      // Numbers count up over the first second of a scene.
-      const k = easeOutExpo(clamp01(age / 1100))
-      stageRef.current?.querySelectorAll<HTMLElement>('[data-to]').forEach(el => {
-        const to  = parseFloat(el.dataset.to || '0')
-        const dec = parseInt(el.dataset.dec || '0')
-        const v   = to * k
-        el.textContent =
-          (el.dataset.pre || '') +
-          (el.dataset.plain != null
-            ? v.toFixed(dec)
-            : v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec })) +
-          (el.dataset.suf || '')
-      })
-
-      if (age >= dur) {
-        const next = SCENES[(SCENES.indexOf(cur) + 1) % SCENES.length]
-        sceneRef.current = next
-        startRef.current = now
-        setScene(next)
-      }
-    }
-
-    // Runs only while visible, and not at all if the visitor asked for less
-    // motion — the loop used to hold 60fps while you read the pricing table.
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-    const start = () => { if (!raf && !reduced) { startRef.current = performance.now(); raf = requestAnimationFrame(tick) } }
-    const stop  = () => { if (raf) { cancelAnimationFrame(raf); raf = 0 } }
-
-    const box = boxRef.current
-    const io = box ? new IntersectionObserver(([e]) => (e.isIntersecting ? start() : stop()), { threshold: 0 }) : null
-    if (io && box) io.observe(box); else start()
-    const onVis = () => (document.hidden ? stop() : start())
-    document.addEventListener('visibilitychange', onVis)
-
-    return () => { stop(); io?.disconnect(); document.removeEventListener('visibilitychange', onVis) }
-  }, [])
+    if (reduced) return
+    const id = setTimeout(() => {
+      const next = SCENES[(SCENES.indexOf(sceneRef.current) + 1) % SCENES.length]
+      sceneRef.current = next
+      setScene(next)
+    }, SCENE_MS[scene])
+    return () => clearTimeout(id)
+  }, [scene])
 
   return (
     <>
-    {/* The scaled canvas does not affect layout height, so the frame has to be
-        told how tall the result is. */}
-    <div ref={boxRef} style={{ width: '100%', height: `${Math.round(H * scale)}px`, overflow: 'hidden', background: VOID, position: 'relative' }}>
-      <div
-        ref={stageRef}
-        style={{
-          width: `${W}px`, height: `${H}px`,
-          transform: `scale(${scale})`, transformOrigin: 'top left',
-          position: 'relative', display: 'flex', flexDirection: 'column',
-          background: VOID, color: INK1, ...words,
-        }}
-      >
-        <Topbar />
-        <TabBar active={SCENE_TAB[scene]} />
+    <Stage
+      width={W} height={H} minScale={0.5}
+      sceneKey={scene} path={PATHS[scene]}
+      durationMs={SCENE_MS[scene]} zoom={0.03}
+    >
+      <Topbar />
+      <TabBar active={SCENE_TAB[scene]} />
 
-        <div key={scene} className="vq-scene" style={{ flex: 1, minHeight: 0, padding: '12px', overflow: 'hidden' }}>
-          {scene === 'home'    && <Home />}
-          {scene === 'trading' && <Trading />}
-          {scene === 'journal' && <Journal />}
-          {scene === 'copy'    && <Copy />}
-          {scene === 'analyst' && <Analyst />}
-        </div>
-
-        {/* The pointer. Drawn, not a real cursor, so it can be styled. */}
-        <div ref={cursorRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 40, pointerEvents: 'none', willChange: 'transform' }}>
-          <svg width="17" height="22" viewBox="0 0 17 22" fill="none" aria-hidden="true">
-            <path d="M1 1 L1 15.5 L4.8 11.6 L7.4 18.6 L10.1 17.5 L7.5 10.6 L13.2 10.6 Z"
-              fill="#fff" stroke="rgba(0,0,0,0.55)" strokeWidth="1" strokeLinejoin="round" />
-          </svg>
-        </div>
-
-        <style>{`
-          .vq-scene { animation: vqSceneIn 0.42s cubic-bezier(0.16,1,0.3,1) }
-          @keyframes vqSceneIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
-          @media (prefers-reduced-motion: reduce) { .vq-scene { animation: none } }
-        `}</style>
+      <div key={scene} className="vq-scene" style={{ flex: 1, minHeight: 0, padding: '12px', overflow: 'hidden' }}>
+        {scene === 'home'    && <Home />}
+        {scene === 'trading' && <Trading />}
+        {scene === 'journal' && <Journal />}
+        {scene === 'copy'    && <Copy />}
+        {scene === 'analyst' && <Analyst />}
       </div>
-    </div>
+
+      <style>{`
+        .vq-scene { animation: vqSceneIn 0.42s cubic-bezier(0.16,1,0.3,1) }
+        @keyframes vqSceneIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+        @media (prefers-reduced-motion: reduce) { .vq-scene { animation: none } }
+      `}</style>
+    </Stage>
 
     <SceneCaption scenes={SCENES.map(x => SCENE_TAB[x])} active={SCENE_TAB[scene]} />
     </>
