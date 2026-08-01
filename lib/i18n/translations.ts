@@ -193,15 +193,15 @@ const en: LandingT = {
   features: {
     eyebrow: 'Everything in one place',
     h2: 'Three core tools. One complete edge.',
-    subtitle: 'Auto-logging, AI behavior analysis, and trade copying — built together and working as one system.',
+    subtitle: 'Auto-logging, AI behavior analysis, and trade copying — [[built together and working as one system]].',
     items: [
-      { title: 'Auto-synced from MT5', desc: 'Every trade, position, and P&L syncs from your MT5 account in real time. No manual entry, no CSV uploads, no spreadsheets. Connect once and it runs forever.' },
-      { title: 'Built-in Trade Copier', desc: 'Mirror every trade from your leader MT5 to any number of follower accounts in under 2 seconds. Proportional or fixed lot sizing. Fully managed from your dashboard.' },
-      { title: 'AI behavior analysis', desc: 'VELQUOR correlates your behavior, your strategy, and your trading habits across every trade — and surfaces the exact combinations that win and the ones that lose.' },
+      { title: 'Auto-synced from MT5', desc: 'Every trade, position, and P&L syncs from your MT5 account in real time. [[No manual entry, no CSV uploads, no spreadsheets.]] Connect once and it runs forever.' },
+      { title: 'Built-in Trade Copier', desc: 'Mirror every trade from your leader MT5 to any number of follower accounts in [[under 2 seconds]]. Proportional or fixed lot sizing. Fully managed from your dashboard.' },
+      { title: 'AI behavior analysis', desc: 'VELQUOR correlates your behavior, your strategy, and your trading habits across every trade — and surfaces [[the exact combinations that win and the ones that lose]].' },
       { title: 'Session & setup analytics', desc: 'Instantly see your win rate broken down by London, New York, and Asian session — and by every setup type you trade. Find your real edge in the numbers.' },
       { title: 'Live TradingView charts', desc: 'A full TradingView chart, live ticker tape, and market overview built straight into your dashboard. Watch Gold and NAS100 without leaving your journal.' },
       { title: 'Journal, habits & discipline', desc: 'Daily journal with mood tracking, habit streaks, discipline scoring, and AI-graded weekly reviews. Your routine and your P&L, finally connected.' },
-      { title: 'Prop firm tracker', desc: 'Running a challenge? Activate Prop Firm Mode and VELQUOR watches every rule — max daily loss, drawdown, profit target — in real time.' },
+      { title: 'Prop firm tracker', desc: 'Running a challenge? Activate Prop Firm Mode and VELQUOR watches [[every rule]] — max daily loss, drawdown, profit target — [[in real time]].' },
       { title: 'Market news & portfolio', desc: 'A Bloomberg-style calendar of red-folder USD releases with live countdowns and plain-English briefs on what each number moves — plus a long-term portfolio tracker for stocks, ETFs, and metals.' },
       { title: 'PDF trade reports', desc: 'Generate a professional PDF report for any date range. Weekly reviews, monthly summaries, or a full account audit — formatted and ready to go.' },
     ],
@@ -209,11 +209,11 @@ const en: LandingT = {
   howItWorks: {
     eyebrow: 'How it works',
     h2: 'Up and running in under 2 minutes',
-    subtitle: 'No spreadsheets. No CSV exports. No manual data entry. Just connect your MT5 and trade.',
+    subtitle: '[[No spreadsheets. No CSV exports. No manual data entry.]] Just connect your MT5 and trade.',
     cta: 'Start your free account →',
     steps: [
-      { title: 'Create your free account', desc: 'Sign up with email or Google in under 30 seconds. No credit card, no commitment.', detail: 'Your data is fully private and isolated — secured with row-level encryption from day one.' },
-      { title: 'Connect your MT5 account', desc: 'Enter your MT5 login number, investor password, and broker server name. That\'s it — your entire trade history syncs automatically.', detail: 'Works with every MT5 broker worldwide — IC Markets, Blueberry, Pepperstone, FTMO live accounts, and more.' },
+      { title: 'Create your free account', desc: 'Sign up with email or Google in under 30 seconds. No credit card, no commitment.', detail: 'Your data is fully private and isolated — secured with [[row-level encryption]] from day one.' },
+      { title: 'Connect your MT5 account', desc: 'Enter your MT5 login number, investor password, and broker server name. That\'s it — your entire trade history syncs automatically.', detail: 'Works with [[every MT5 broker worldwide]] — IC Markets, Blueberry, Pepperstone, FTMO live accounts, and more.' },
       { title: 'See your real numbers', desc: 'Your dashboard fills instantly. Win rate, profit factor, P&L by instrument, session, and day of week — all calculated from your actual trades.', detail: 'VELQUOR AI immediately surfaces your biggest patterns and the areas costing you the most money.' },
       { title: 'Build a consistent process', desc: 'Journal every trade, track your daily habits, run weekly reviews. Over time, VELQUOR correlates your routine with your results.', detail: 'Most traders identify their biggest leak within the first week of using the journal and analytics together.' },
     ],
@@ -221,7 +221,7 @@ const en: LandingT = {
   velquorAI: {
     eyebrow: 'VELQUOR AI',
     h2: 'An AI analyst that knows your every trade',
-    subtitle: 'Most analysis stops at P&L. VELQUOR goes three levels deeper — correlating your behavior (mood, energy, confidence), your strategy (setups, sessions, instruments), and your habits (timing, frequency, risk sizing). Then it shows you exactly where those three dimensions intersect to win or lose.',
+    subtitle: 'Most analysis stops at P&L. VELQUOR goes [[three levels deeper]] — correlating your behavior (mood, energy, confidence), your strategy (setups, sessions, instruments), and your habits (timing, frequency, risk sizing). Then it shows you exactly where those three dimensions intersect to win or lose.',
     placeholder: 'Ask VELQUOR anything…',
     online: 'Online',
     qa: [
@@ -234,7 +234,7 @@ const en: LandingT = {
   propFirm: {
     badge: 'Prop Firm Mode',
     h2: 'Also running a prop firm challenge?',
-    subtitle: 'Activate Prop Firm Mode and VELQUOR monitors every rule of your challenge in real time — max daily loss, total drawdown, profit target, minimum trading days. One wrong day won\'t catch you off guard again.',
+    subtitle: 'Activate Prop Firm Mode and VELQUOR monitors [[every rule of your challenge in real time]] — max daily loss, total drawdown, profit target, minimum trading days. One wrong day won\'t catch you off guard again.',
     firms: ['FTMO', 'The Funded Trader', 'MyFundedFX', 'E8 Funding', 'Any custom rules'],
     trackNote: 'On track — 3 days to target at current pace',
   },
@@ -285,10 +285,10 @@ const en: LandingT = {
     eyebrow: 'Built for trust',
     h2: 'Your account stays yours.',
     items: [
-      { title: 'No passwords shared', desc: 'The VELQUOR EA runs inside your own MT5 terminal. Your broker credentials never leave your machine — only trade data syncs, over a personal API key you can revoke anytime.' },
-      { title: 'EU infrastructure', desc: 'Database and bridge both run on European servers. Your trading data never leaves the EU — GDPR-compliant by design.' },
-      { title: 'You own your data', desc: 'Export every trade as PDF whenever you want. Delete your account and everything goes with it — no lock-in, no questions.' },
-      { title: 'Kill switch built in', desc: 'Disconnect the EA or pause the trade copier with one click from your dashboard. You are always in control of what executes.' },
+      { title: 'No passwords shared', desc: 'The VELQUOR EA runs inside your own MT5 terminal. Your broker credentials [[never leave your machine]] — only trade data syncs, over a personal API key you can revoke anytime.' },
+      { title: 'EU infrastructure', desc: 'Database and bridge both run on European servers. Your trading data [[never leaves the EU]] — GDPR-compliant by design.' },
+      { title: 'You own your data', desc: 'Export every trade as PDF whenever you want. Delete your account and everything goes with it — [[no lock-in, no questions]].' },
+      { title: 'Kill switch built in', desc: 'Disconnect the EA or pause the trade copier with one click from your dashboard. [[You are always in control]] of what executes.' },
     ],
   },
   faq: {
@@ -355,8 +355,8 @@ const de: LandingT = {
     h2: 'Gebaut für Trader, die es ernst meinen',
     subtitle: 'Kein weiteres Handelsjournal. Ein vollständiges Betriebssystem für dein Trading-Business.',
     items: [
-      { title: 'Auto-Sync von MT5', desc: 'Jeder Trade, jede Position, jede GuV synchronisiert in Echtzeit. Keine manuelle Eingabe, keine CSV-Uploads, keine Tabellen.' },
-      { title: 'Integrierter Trade-Copier', desc: 'Spiegle jeden Trade von deinem Leader-MT5 auf beliebig viele Follower-Konten in unter 2 Sekunden. Proportionale oder feste Lots — komplett vom Dashboard aus verwaltet.' },
+      { title: 'Auto-Sync von MT5', desc: 'Jeder Trade, jede Position, jede GuV synchronisiert in Echtzeit. [[Keine manuelle Eingabe, keine CSV-Uploads, keine Tabellen.]]' },
+      { title: 'Integrierter Trade-Copier', desc: 'Spiegle jeden Trade von deinem Leader-MT5 auf beliebig viele Follower-Konten in [[unter 2 Sekunden]]. Proportionale oder feste Lots — komplett vom Dashboard aus verwaltet.' },
       { title: 'KI-Verhaltensanalyse', desc: 'VELQUOR korreliert dein Verhalten, deine Strategie und deine Gewohnheiten über jeden Trade — und zeigt exakt die Kombinationen, die gewinnen und die, die verlieren.' },
       { title: 'Session- & Setup-Analyse', desc: 'Sieh sofort deine Gewinnrate nach London-, New York- und Asia-Session — und nach jedem Setup-Typ, den du tradest.' },
       { title: 'Live-TradingView-Charts', desc: 'Vollständiger TradingView-Chart, Live-Ticker und Marktübersicht direkt im Dashboard. Gold und NAS100 im Blick, ohne dein Journal zu verlassen.' },
@@ -381,7 +381,7 @@ const de: LandingT = {
   velquorAI: {
     eyebrow: 'VELQUOR KI',
     h2: 'Eine KI, die dein Trading wirklich kennt',
-    subtitle: 'VELQUOR hat Zugriff auf jeden Trade, jeden Journal-Eintrag, jedes Stimmungslog. Sie gibt keine generischen Ratschläge — sie analysiert deine Daten und sagt dir genau, was dich aufhält.',
+    subtitle: 'VELQUOR hat Zugriff auf jeden Trade, jeden Journal-Eintrag, jedes Stimmungslog. Sie gibt keine generischen Ratschläge — sie [[analysiert deine Daten]] und sagt dir genau, was dich aufhält.',
     placeholder: 'Frag VELQUOR alles…',
     online: 'Online',
     qa: [
@@ -394,7 +394,7 @@ const de: LandingT = {
   propFirm: {
     badge: 'Prop-Firm-Modus',
     h2: 'Läuft auch eine Prop-Firm-Challenge?',
-    subtitle: 'Aktiviere den Prop-Firm-Modus und VELQUOR überwacht jede Regel deiner Challenge in Echtzeit — Max Daily Loss, Gesamtdrawdown, Profitziel, Mindesthandelstage. Ein falscher Tag überrascht dich nicht mehr.',
+    subtitle: 'Aktiviere den Prop-Firm-Modus und VELQUOR überwacht [[jede Regel deiner Challenge in Echtzeit]] — Max Daily Loss, Gesamtdrawdown, Profitziel, Mindesthandelstage. Ein falscher Tag überrascht dich nicht mehr.',
     firms: ['FTMO', 'The Funded Trader', 'MyFundedFX', 'E8 Funding', 'Beliebige eigene Regeln'],
     trackNote: 'Auf Kurs — 3 Tage bis zum Ziel im aktuellen Tempo',
   },
@@ -445,10 +445,10 @@ const de: LandingT = {
     eyebrow: 'Auf Vertrauen gebaut',
     h2: 'Dein Konto bleibt deins.',
     items: [
-      { title: 'Keine Passwörter geteilt', desc: 'Der VELQUOR EA läuft in deinem eigenen MT5-Terminal. Deine Broker-Zugangsdaten verlassen nie deinen Rechner — nur Handelsdaten werden über einen persönlichen API-Key synchronisiert, den du jederzeit widerrufen kannst.' },
-      { title: 'EU-Infrastruktur', desc: 'Datenbank und Bridge laufen auf europäischen Servern. Deine Trading-Daten verlassen die EU nicht — DSGVO-konform by design.' },
-      { title: 'Deine Daten gehören dir', desc: 'Exportiere jeden Trade als PDF, wann immer du willst. Lösche dein Konto und alles verschwindet mit — kein Lock-in, keine Fragen.' },
-      { title: 'Kill-Switch eingebaut', desc: 'Trenne den EA oder pausiere den Trade-Copier mit einem Klick direkt vom Dashboard. Du behältst immer die Kontrolle darüber, was ausgeführt wird.' },
+      { title: 'Keine Passwörter geteilt', desc: 'Der VELQUOR EA läuft in deinem eigenen MT5-Terminal. Deine Broker-Zugangsdaten [[verlassen nie deinen Rechner]] — nur Handelsdaten werden über einen persönlichen API-Key synchronisiert, den du jederzeit widerrufen kannst.' },
+      { title: 'EU-Infrastruktur', desc: 'Datenbank und Bridge laufen auf europäischen Servern. Deine Trading-Daten [[verlassen die EU nicht]] — DSGVO-konform by design.' },
+      { title: 'Deine Daten gehören dir', desc: 'Exportiere jeden Trade als PDF, wann immer du willst. Lösche dein Konto und alles verschwindet mit — [[kein Lock-in, keine Fragen]].' },
+      { title: 'Kill-Switch eingebaut', desc: 'Trenne den EA oder pausiere den Trade-Copier mit einem Klick direkt vom Dashboard. [[Du behältst immer die Kontrolle]] darüber, was ausgeführt wird.' },
     ],
   },
   faq: {
@@ -515,7 +515,7 @@ const zh: LandingT = {
     h2: '为认真对待交易的人而建',
     subtitle: '不只是交易日志，而是你交易事业的完整操作系统。',
     items: [
-      { title: '从MT5自动同步', desc: '每笔交易、每个持仓、每笔盈亏实时同步。无手动输入，无CSV上传，无电子表格。' },
+      { title: '从MT5自动同步', desc: '每笔交易、每个持仓、每笔盈亏实时同步。[[无手动输入，无CSV上传，无电子表格。]]' },
       { title: '内置跟单系统', desc: '2秒内将主账户的每笔交易镜像到任意数量的从账户。按比例或固定手数——全部在仪表盘中管理。' },
       { title: 'AI行为分析', desc: 'VELQUOR关联你的行为、策略和交易习惯——精准找出赢钱的组合和亏钱的组合。' },
       { title: '时段与策略分析', desc: '立即查看按伦敦、纽约、亚洲时段分解的胜率——以及每种策略类型的表现。' },
@@ -541,7 +541,7 @@ const zh: LandingT = {
   velquorAI: {
     eyebrow: 'VELQUOR AI',
     h2: '真正了解你交易的AI',
-    subtitle: 'VELQUOR能访问每笔交易、每条日志、每次情绪记录。它不给出泛泛建议——它分析你的数据，准确告诉你是什么在阻碍你。',
+    subtitle: 'VELQUOR能访问每笔交易、每条日志、每次情绪记录。它不给出泛泛建议——它[[分析你的数据]]，准确告诉你是什么在阻碍你。',
     placeholder: '问VELQUOR任何问题…',
     online: '在线',
     qa: [
@@ -554,7 +554,7 @@ const zh: LandingT = {
   propFirm: {
     badge: '自营公司模式',
     h2: '同时在参加自营公司挑战赛？',
-    subtitle: '激活自营公司模式，VELQUOR实时监控你挑战赛的每条规则——最大每日亏损、总体回撤、盈利目标、最少交易天数。一个错误的交易日再也不会让你猝不及防。',
+    subtitle: '激活自营公司模式，VELQUOR[[实时监控你挑战赛的每条规则]]——最大每日亏损、总体回撤、盈利目标、最少交易天数。一个错误的交易日再也不会让你猝不及防。',
     firms: ['FTMO', 'The Funded Trader', 'MyFundedFX', 'E8 Funding', '任何自定义规则'],
     trackNote: '进度正常——按当前速度还需3天达成目标',
   },
@@ -605,10 +605,10 @@ const zh: LandingT = {
     eyebrow: '为信任而建',
     h2: '你的账户始终属于你。',
     items: [
-      { title: '不共享任何密码', desc: 'VELQUOR EA在你自己的MT5终端内运行。经纪商登录凭证永远不会离开你的电脑——仅通过可随时撤销的个人API密钥同步交易数据。' },
-      { title: '欧盟基础设施', desc: '数据库和桥接服务均运行在欧洲服务器上。你的交易数据不会离开欧盟——设计即符合GDPR。' },
-      { title: '数据归你所有', desc: '随时将每笔交易导出为PDF。删除账户后所有数据一并清除——无锁定，无追问。' },
-      { title: '内置紧急开关', desc: '在仪表盘上一键断开EA或暂停跟单。执行什么，始终由你掌控。' },
+      { title: '不共享任何密码', desc: 'VELQUOR EA在你自己的MT5终端内运行。经纪商登录凭证[[永远不会离开你的电脑]]——仅通过可随时撤销的个人API密钥同步交易数据。' },
+      { title: '欧盟基础设施', desc: '数据库和桥接服务均运行在欧洲服务器上。你的交易数据[[不会离开欧盟]]——设计即符合GDPR。' },
+      { title: '数据归你所有', desc: '随时将每笔交易导出为PDF。删除账户后所有数据一并清除——[[无锁定，无追问]]。' },
+      { title: '内置紧急开关', desc: '在仪表盘上一键断开EA或暂停跟单。[[执行什么，始终由你掌控]]。' },
     ],
   },
   faq: {
@@ -675,7 +675,7 @@ const es: LandingT = {
     h2: 'Creado para el trader que se lo toma en serio',
     subtitle: 'No es otro diario de trading. Es un sistema operativo completo para tu negocio de trading.',
     items: [
-      { title: 'Sincronización automática de MT5', desc: 'Cada operación, posición y P&L se sincroniza desde tu cuenta MT5 en tiempo real. Sin entrada manual, sin subidas CSV, sin hojas de cálculo.' },
+      { title: 'Sincronización automática de MT5', desc: 'Cada operación, posición y P&L se sincroniza desde tu cuenta MT5 en tiempo real. [[Sin entrada manual, sin subidas CSV, sin hojas de cálculo]].' },
       { title: 'Copiador de operaciones integrado', desc: 'Replica cada operación de tu MT5 maestro a cualquier número de cuentas esclavas en menos de 2 segundos. Lotes proporcionales o fijos — gestionado desde tu panel.' },
       { title: 'Análisis de comportamiento con IA', desc: 'VELQUOR correlaciona tu comportamiento, tu estrategia y tus hábitos en cada operación — y muestra exactamente las combinaciones que ganan y las que pierden.' },
       { title: 'Análisis de sesión y setup', desc: 'Ve al instante tu tasa de victorias por sesión London, New York y Asia — y por cada tipo de setup que operas.' },
@@ -701,7 +701,7 @@ const es: LandingT = {
   velquorAI: {
     eyebrow: 'IA VELQUOR',
     h2: 'Una IA que realmente conoce tu trading',
-    subtitle: 'VELQUOR tiene acceso a cada operación, cada entrada de diario, cada registro de estado de ánimo. No da consejos genéricos — analiza tus datos y te dice exactamente qué te está frenando.',
+    subtitle: 'VELQUOR tiene acceso a cada operación, cada entrada de diario, cada registro de estado de ánimo. No da consejos genéricos — [[analiza tus datos]] y te dice exactamente qué te está frenando.',
     placeholder: 'Pregunta a VELQUOR lo que sea…',
     online: 'En línea',
     qa: [
@@ -714,7 +714,7 @@ const es: LandingT = {
   propFirm: {
     badge: 'Modo Prop Firm',
     h2: '¿También en un desafío de prop firm?',
-    subtitle: 'Activa el Modo Prop Firm y VELQUOR monitoriza cada regla de tu desafío en tiempo real — pérdida diaria máxima, drawdown total, objetivo de beneficio, días mínimos de trading. Un día equivocado ya no te pillará desprevenido.',
+    subtitle: 'Activa el Modo Prop Firm y VELQUOR monitoriza [[cada regla de tu desafío en tiempo real]] — pérdida diaria máxima, drawdown total, objetivo de beneficio, días mínimos de trading. Un día equivocado ya no te pillará desprevenido.',
     firms: ['FTMO', 'The Funded Trader', 'MyFundedFX', 'E8 Funding', 'Cualquier regla personalizada'],
     trackNote: 'En camino — 3 días para el objetivo al ritmo actual',
   },
@@ -765,10 +765,10 @@ const es: LandingT = {
     eyebrow: 'Construido para la confianza',
     h2: 'Tu cuenta sigue siendo tuya.',
     items: [
-      { title: 'Sin compartir contraseñas', desc: 'El EA de VELQUOR corre dentro de tu propio terminal MT5. Tus credenciales del broker nunca salen de tu máquina — solo se sincronizan datos de operaciones mediante una clave API personal que puedes revocar cuando quieras.' },
-      { title: 'Infraestructura en la UE', desc: 'La base de datos y el bridge corren en servidores europeos. Tus datos de trading nunca salen de la UE — conforme al RGPD por diseño.' },
-      { title: 'Tus datos son tuyos', desc: 'Exporta cada operación como PDF cuando quieras. Elimina tu cuenta y todo desaparece con ella — sin ataduras, sin preguntas.' },
-      { title: 'Interruptor de emergencia', desc: 'Desconecta el EA o pausa el copiador con un clic desde tu panel. Siempre tienes el control de lo que se ejecuta.' },
+      { title: 'Sin compartir contraseñas', desc: 'El EA de VELQUOR corre dentro de tu propio terminal MT5. Tus credenciales del broker [[nunca salen de tu máquina]] — solo se sincronizan datos de operaciones mediante una clave API personal que puedes revocar cuando quieras.' },
+      { title: 'Infraestructura en la UE', desc: 'La base de datos y el bridge corren en servidores europeos. Tus datos de trading [[nunca salen de la UE]] — conforme al RGPD por diseño.' },
+      { title: 'Tus datos son tuyos', desc: 'Exporta cada operación como PDF cuando quieras. Elimina tu cuenta y todo desaparece con ella — [[sin ataduras, sin preguntas]].' },
+      { title: 'Interruptor de emergencia', desc: 'Desconecta el EA o pausa el copiador con un clic desde tu panel. [[Siempre tienes el control]] de lo que se ejecuta.' },
     ],
   },
   faq: {

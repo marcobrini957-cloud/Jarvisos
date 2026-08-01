@@ -2,6 +2,7 @@
 
 import { useLocale } from '@/hooks/useLocale'
 import { Section, SectionHead } from './Section'
+import { mark } from './Mark'
 
 /**
  * The capability list.
@@ -48,7 +49,7 @@ export function Features() {
                 fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
                 lineHeight: 1.6, color: 'var(--color-ink-3)', margin: 0,
               }}>
-                {f.desc}
+                {mark(f.desc)}
               </p>
             </div>
           </div>

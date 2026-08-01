@@ -90,11 +90,12 @@ export function AnimatedDashboard() {
     if (!box) return
     const fit = () => {
       const w = box.getBoundingClientRect().width
-      // Fill the width exactly, so the frame never leaves a strip of void on a
-      // wide screen. Below ~0.5 the type stops reading as type, so on a phone
-      // the canvas is cropped from the right instead of shrunk further — the
-      // left column stays legible.
-      setScale(Math.max(w / W, 0.5))
+      // Fill the width exactly, but never past 1:1 — the frame used to be
+      // full-bleed, so a 2560px screen drew the replica at 1.78×: soft, 1445px
+      // tall, and the whole viewport. Below ~0.5 the type stops reading as type,
+      // so on a phone the canvas is cropped from the right instead of shrunk
+      // further — the left column stays legible.
+      setScale(Math.min(Math.max(w / W, 0.5), 1))
     }
     fit()
     const ro = new ResizeObserver(fit)

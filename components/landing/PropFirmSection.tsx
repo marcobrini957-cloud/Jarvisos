@@ -2,6 +2,7 @@
 
 import { useLocale } from '@/hooks/useLocale'
 import { Section } from './Section'
+import { mark } from './Mark'
 
 /**
  * Prop-firm rule tracking.
@@ -44,7 +45,7 @@ export function PropFirmSection() {
             fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
             lineHeight: 1.7, color: 'var(--color-ink-3)', margin: '0 0 20px', maxWidth: '54ch',
           }}>
-            {pf.subtitle}
+            {mark(pf.subtitle)}
           </p>
           <div>
             {pf.firms.map(f => (

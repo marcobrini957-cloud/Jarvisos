@@ -3,6 +3,7 @@
 import { CtaLink } from './CtaLink'
 import { useLocale } from '@/hooks/useLocale'
 import { Section, SectionHead, inkButton } from './Section'
+import { mark } from './Mark'
 
 /**
  * Four steps, as a ladder rather than four cards.
@@ -44,13 +45,13 @@ export function HowItWorks() {
               fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
               lineHeight: 1.6, color: 'var(--color-ink-3)', margin: '0 0 6px',
             }}>
-              {s.desc}
+              {mark(s.desc)}
             </p>
             <p style={{
               fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
               lineHeight: 1.55, color: 'var(--color-ink-3)', margin: 0,
             }}>
-              {s.detail}
+              {mark(s.detail)}
             </p>
           </div>
         ))}

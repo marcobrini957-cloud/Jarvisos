@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { mark } from './Mark'
 
 /**
  * The marketing page's two structural primitives.
@@ -63,7 +64,7 @@ export function SectionHead({ label, title, lead, action }: {
           letterSpacing: '-0.03em', color: 'var(--color-ink-1)',
           margin: 0, maxWidth: '22ch',
         }}>
-          {title}
+          {typeof title === 'string' ? mark(title) : title}
         </h2>
         {lead && (
           <p style={{
@@ -71,7 +72,7 @@ export function SectionHead({ label, title, lead, action }: {
             lineHeight: 1.6, color: 'var(--color-ink-3)',
             margin: '14px 0 0', maxWidth: '56ch',
           }}>
-            {lead}
+            {typeof lead === 'string' ? mark(lead) : lead}
           </p>
         )}
       </div>

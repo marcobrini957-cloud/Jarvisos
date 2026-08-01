@@ -113,10 +113,50 @@ export function Hero() {
         </div>
       </div>
 
-      {/* The product itself, full-bleed under one hairline. */}
-      <div style={{ borderTop: '1px solid var(--color-line-1)', background: 'var(--s1)' }}>
-        <AnimatedDashboard />
+      {/*
+        The product itself — a framed object on its own axis.
+
+        It ran full-bleed until 2026-08-01. Full-bleed only reads as "the
+        machine continues past the edge" up to about 1440px; past that the
+        replica was being *upscaled* — at 2560 it drew at 1.78×, 1445px tall,
+        and swallowed the viewport. Now it is capped at its true 1:1 width and
+        set to 70% of the column above ~1000px, so a wide screen gets a smaller,
+        sharper product with room around it instead of a blown-up one.
+
+        The halo is white, not coloured — DESIGN.md §2 bans coloured glows and
+        this does not reintroduce one. It exists to lift the frame off the void
+        now that it no longer touches the edges.
+      */}
+      <div style={{
+        padding: '0 clamp(14px, 4vw, 32px) clamp(44px, 6vw, 88px)',
+        display: 'flex', justifyContent: 'center',
+      }}>
+        <div className="vq-hero-frame" style={{ position: 'relative' }}>
+          <div aria-hidden className="vq-hero-glow" />
+          <div className="vq-hero-box" style={{
+            position: 'relative', zIndex: 1,
+            border: '1px solid var(--color-line-2)', borderRadius: 'var(--radius-lg)',
+            background: 'var(--s1)', overflow: 'hidden',
+          }}>
+            <AnimatedDashboard />
+          </div>
+        </div>
       </div>
+
+      <style>{`
+        .vq-hero-frame { width: 100%; max-width: 1440px; min-width: 0 }
+        @media (min-width: 1000px) { .vq-hero-frame { width: 70% } }
+        /* The halo. Drawn as a shadow rather than a blurred gradient panel so it
+           follows the frame's rounded shape — a rectangular gradient behind a
+           rounded box shows its corners. Peak 50% white right at the edge,
+           falling off twice: a tight rim and a wide bloom. */
+        .vq-hero-box {
+          box-shadow:
+            0 0 44px -8px rgba(255,255,255,0.50),
+            0 0 130px -24px rgba(255,255,255,0.24);
+        }
+        .vq-hero-glow { display: none }
+      `}</style>
     </section>
   )
 }

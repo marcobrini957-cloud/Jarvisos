@@ -2,6 +2,7 @@
 
 import { useLocale } from '@/hooks/useLocale'
 import { Section, SectionHead } from './Section'
+import { mark } from './Mark'
 
 // Line icons by item order (no passwords / EU infra / your data / kill switch) —
 // same order in every locale.
@@ -45,7 +46,7 @@ export function TrustSection() {
               fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
               lineHeight: 1.6, color: 'var(--color-ink-3)', margin: 0,
             }}>
-              {item.desc}
+              {mark(item.desc)}
             </p>
           </div>
         ))}
