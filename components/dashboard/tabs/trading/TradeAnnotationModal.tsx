@@ -5,15 +5,23 @@ import Badge from '@/components/ui/Badge'
 import type { Trade } from '@/types'
 import Icon from '@/components/ui/Icon'
 import { Select } from '@/components/ui/vq'
-import { useClassifier } from '@/context/UserProfileContext'
+import { useClassifier, useUserProfile } from '@/context/UserProfileContext'
+import { LabelEditor } from './LabelEditor'
+import { DEFAULT_SETUP_TYPES, DEFAULT_TRADE_TAGS, resolveLabels } from '@/lib/trading/labels'
 
 // ── Trade Annotation Modal ─────────────────────────────────────────────────────
 
-const SETUP_TYPES = ['ICT Order Block', 'BOS / CHoCH', 'Fair Value Gap', 'Liquidity Grab', 'Support / Resistance', 'Trend Follow', 'Scalp', 'Other']
-const MISTAKE_TAGS = ['FOMO', 'Revenge trade', 'Early exit', 'Late entry', 'Oversize', 'No SL', 'News blindspot', 'Emotional']
-
 export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose: () => void }) {
   const { tradeResult } = useClassifier()
+  const { profile, updateProfile } = useUserProfile()
+
+  // The trader's own vocabulary, with what we ship as the starting point. An
+  // empty stored array is respected — see lib/trading/labels.
+  const setupTypes  = resolveLabels(profile.setup_types, DEFAULT_SETUP_TYPES)
+  const mistakeTags = resolveLabels(profile.trade_tags,  DEFAULT_TRADE_TAGS)
+  const [editSetups, setEditSetups] = useState(false)
+  const [editTags,   setEditTags]   = useState(false)
+
   const [setupType,    setSetup]    = useState(trade.setup_type  ?? '')
   const [rationale,   setRationale] = useState(trade.trade_rationale ?? '')
   const [emotion,     setEmotion]   = useState(trade.emotion_pre ?? '')
@@ -147,15 +155,49 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--t3)', fontSize: 'var(--text-xl)', cursor: 'pointer' }}><Icon name="close" size={13} /></button>
         </div>
 
-        {/* Setup type */}
+        {/* Setup type — the trader's own list, editable in place */}
         <div className="flex flex-col gap-1.5">
-          <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Setup Type</label>
-          <Select
-            ariaLabel="Setup type"
-            value={setupType}
-            onChange={setSetup}
-            options={[{ key: '', label: '— Select setup —' }, ...SETUP_TYPES.map(t => ({ key: t, label: t }))]}
-          />
+          <div className="flex items-center justify-between">
+            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Setup Type</label>
+            <button
+              onClick={() => setEditSetups(v => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '5px', background: 'none',
+                border: 'none', cursor: 'pointer', padding: 0,
+                fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)',
+              }}
+            >
+              <Icon name="pencil" size={11} />
+              {editSetups ? 'Done' : 'Edit list'}
+            </button>
+          </div>
+
+          {editSetups ? (
+            <LabelEditor
+              noun="setup"
+              labels={setupTypes}
+              onClose={() => setEditSetups(false)}
+              onChange={next => {
+                updateProfile({ setup_types: next })
+                // A setup renamed out from under the current selection would
+                // otherwise leave the Select showing a value it no longer offers.
+                if (setupType && !next.includes(setupType)) setSetup('')
+              }}
+            />
+          ) : (
+            <Select
+              ariaLabel="Setup type"
+              value={setupType}
+              onChange={setSetup}
+              options={[
+                { key: '', label: setupTypes.length ? '— Select setup —' : '— No setups yet, use Edit list —' },
+                // A setup saved before it was renamed or deleted still shows,
+                // so opening an old trade never silently blanks its annotation.
+                ...(setupType && !setupTypes.includes(setupType) ? [{ key: setupType, label: `${setupType} (removed)` }] : []),
+                ...setupTypes.map(t => ({ key: t, label: t })),
+              ]}
+            />
+          )}
         </div>
 
         {/* Why I took this trade */}
@@ -196,11 +238,39 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
           </div>
         </div>
 
-        {/* Tags (mistakes + setups) */}
+        {/* Tags — same story: the trader's own list */}
         <div className="flex flex-col gap-2">
-          <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Tags</label>
+          <div className="flex items-center justify-between">
+            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Tags</label>
+            <button
+              onClick={() => setEditTags(v => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '5px', background: 'none',
+                border: 'none', cursor: 'pointer', padding: 0,
+                fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)',
+              }}
+            >
+              <Icon name="pencil" size={11} />
+              {editTags ? 'Done' : 'Edit list'}
+            </button>
+          </div>
+
+          {editTags && (
+            <LabelEditor
+              noun="tag"
+              labels={mistakeTags}
+              onClose={() => setEditTags(false)}
+              onChange={next => {
+                updateProfile({ trade_tags: next })
+                setTags(prev => prev.filter(t => next.includes(t)))
+              }}
+            />
+          )}
+
           <div className="flex flex-wrap gap-1.5">
-            {MISTAKE_TAGS.map(t => (
+            {/* Tags already on this trade that are no longer in the list stay
+                visible and removable, so history is never rewritten silently. */}
+            {[...mistakeTags, ...tags.filter(t => !mistakeTags.includes(t))].map(t => (
               <button key={t} onClick={() => toggleTag(t)}
                 style={{
                   padding: '4px 10px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', cursor: 'pointer',

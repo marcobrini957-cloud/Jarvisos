@@ -17,6 +17,13 @@ export interface UserProfile {
   /** First-run tour: how many times it has appeared, and whether it is done. */
   tour_shown_count:  number
   tour_completed_at: string | null
+  /**
+   * The trader's own setup names and tags. `null` means untouched — show the
+   * defaults from lib/trading/labels. An empty array means they deleted them
+   * all, which is a real answer and is respected.
+   */
+  setup_types:  string[] | null
+  trade_tags:   string[] | null
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -31,6 +38,8 @@ const DEFAULT_PROFILE: UserProfile = {
   // up for a returning user during the moment before their profile loads.
   tour_shown_count:  99,
   tour_completed_at: 'unknown',
+  setup_types:  null,
+  trade_tags:   null,
 }
 
 interface UserProfileContextValue {
