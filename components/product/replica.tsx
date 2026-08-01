@@ -22,7 +22,7 @@
  * 11px/14px padding, values 21px mono, labels 10px at 0.16em.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { LogoMark } from '@/components/ui/LogoMark'
 import Icon from '@/components/ui/Icon'
 import { TABS } from '@/components/dashboard/tabs'
@@ -44,54 +44,6 @@ export const words = { fontFamily: 'var(--font-display)' } as const
 
 export const easeOutExpo = (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -9 * t))
 export const clamp01     = (t: number) => Math.min(Math.max(t, 0), 1)
-
-/** Symmetric velocity curve — starts at rest, ends at rest, quickest in the middle. */
-export const easeInOutCubic = (t: number) =>
-  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
-
-/**
- * The beat of the camera move, in milliseconds — absolute, not a fraction of
- * the scene, so the snap is the same speed whether the scene runs 3s or 4.5s.
- * Only the hold flexes with the length of the scene.
- */
-const ESTABLISH = 500   // see the whole screen first
-const PUNCH     = 230   // the move itself. Short: this is a snap, not a glide
-const TAIL      = 340   // sit wide again before the cut
-
-/** How long the frame rests on the detail, given the scene it has to fit in. */
-export function holdMs(durationMs: number): number {
-  return Math.max(240, durationMs - ESTABLISH - PUNCH * 2 - TAIL)
-}
-
-/**
- * A scene's zoom over its own length, as a fraction of the focus scale.
- *
- * One move: establish wide, snap in, stay there, snap back out, done.
- *
- * Two earlier versions were wrong in opposite directions. The first glided in
- * and out across the whole scene — a single event stretched over three seconds,
- * which reads as a slideshow transition rather than a camera. The second fixed
- * the speed but repeated the punch, each one deeper than the last; that reads as
- * a stair-step, a zoom on top of a zoom. The move is fast, and it happens once.
- */
-export function punchEnvelope(ageMs: number, durationMs: number): number {
-  const hold = holdMs(durationMs)
-  let t = ageMs - ESTABLISH
-  if (t < 0) return 0
-  if (t < PUNCH) return easeInOutCubic(t / PUNCH)
-  t -= PUNCH
-  if (t < hold) return 1
-  t -= hold
-  if (t < PUNCH) return 1 - easeInOutCubic(t / PUNCH)
-  return 0
-}
-
-/** The note fades up behind the punch and away with it. */
-export function noteOpacity(ageMs: number, durationMs: number): number {
-  const from = ESTABLISH + PUNCH * 0.6
-  const to   = ESTABLISH + PUNCH + holdMs(durationMs) + PUNCH * 0.5
-  return clamp01((ageMs - from) / 170) * clamp01((to - ageMs) / 170)
-}
 
 /**
  * Re-times travel along the path so the pointer accelerates between waypoints
@@ -276,37 +228,6 @@ export function Segmented({ options, active, size = 9 }: { options: string[]; ac
 
 // ── The scaled canvas ────────────────────────────────────────────────────────
 
-/** A detail worth pushing in on, in the canvas's own coordinates. */
-export interface Focus {
-  /** Centre of the detail, virtual px. The push happens about this point. */
-  at: [number, number]
-  /** How far in. 1.35–1.5 reads as a move; below ~1.2 nobody notices it. */
-  scale: number
-  /** One line naming what is being shown, held while the frame is pushed in. */
-  note?: string
-  /**
-   * Where the note sits, virtual px. Defaults to just under `at`, which is only
-   * right when the focus is centred — these panels are left-aligned, so their
-   * origin usually sits near the left edge and the note has to be placed by hand.
-   */
-  noteAt?: [number, number]
-  /** Fallback offset below `at` when `noteAt` is not given. */
-  noteDy?: number
-}
-
-/**
- * What a push of `scale` about `originX` leaves visible on a canvas `W` wide.
- *
- * Worth keeping in mind when choosing a focus: a centred origin eats *both*
- * edges, and everything in this product is left-aligned — labels, account
- * names, row headers. Centring the Copy scene's push cropped every account name
- * off the frame and left a column of "…kets-Live02 · 2m ago". Bias the origin
- * left for left-aligned content.
- */
-export function visibleRange(origin: number, scale: number, extent: number): [number, number] {
-  return [origin - origin / scale, origin + (extent - origin) / scale]
-}
-
 export interface StageProps {
   /** Virtual canvas, in true dashboard pixels. */
   width: number
@@ -325,17 +246,6 @@ export interface StageProps {
    * never allowed to do.
    */
   durationMs?: number
-  /**
-   * Ken Burns push, as a fraction, for scenes with no `focus`. The frame creeps
-   * in over the scene and resets on the cut. 0 disables it.
-   */
-  zoom?: number
-  /**
-   * A detail to push in on and back out of. Overrides `zoom` for this scene.
-   * Deliberately not set on every scene — a move on a screen with nothing
-   * particular to look at is just motion.
-   */
-  focus?: Focus
   /** Restarts the count-ups and the entry animation when it changes. */
   sceneKey: string
   children: React.ReactNode
@@ -351,12 +261,11 @@ export interface StageProps {
  */
 export function Stage({
   width: W, height: H, minScale = 0.5, path, sceneKey,
-  durationMs = 6000, zoom = 0.03, focus, children,
+  durationMs = 6000, children,
 }: StageProps) {
   const boxRef    = useRef<HTMLDivElement>(null)
   const stageRef  = useRef<HTMLDivElement>(null)
   const cursorRef = useRef<HTMLDivElement>(null)
-  const zoomRef   = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
   // Held in a ref so a new waypoint array on every render does not restart the
   // clock — the clock restarts on `sceneKey`, which is when the path changes.
@@ -368,34 +277,15 @@ export function Stage({
   // changes under it, so the new scene eases out of the old position instead.
   const atRef   = useRef<{ x: number; y: number } | null>(null)
   const fromRef = useRef<{ x: number; y: number } | null>(null)
-  const noteRef = useRef<HTMLDivElement>(null)
-  const focusRef = useRef(focus)
-  useEffect(() => { focusRef.current = focus })
 
-  /**
-   * Where the push comes from. Horizontally it follows the middle of this
-   * scene's cursor path, so the frame drifts toward whatever is being worked on.
-   *
-   * Vertically it is pinned high on purpose. A centred origin pushes the top
-   * edge out of frame — at 3% with the origin at mid-height that is 11px, and
-   * the top bar's mark sits at y=10, so the logo lost its head on every scene.
-   * Anchored near the top, the crop happens at the bottom instead, where the
-   * content is already running past the edge of the frame.
-   */
-  const origin = useMemo(() => {
-    if (focus) return `${focus.at[0]}px ${focus.at[1]}px`
-    if (!path || !path.length) return '50% 14%'
-    const cx = path.reduce((a, [x]) => a + x, 0) / path.length
-    const pct = Math.min(Math.max((cx / W) * 100, 22), 78)
-    return `${pct.toFixed(1)}% 14%`
-  }, [path, W, focus])
-
+  // Fit the true-scale canvas to whatever width the frame gives it.
   useEffect(() => {
     const box = boxRef.current
     if (!box) return
     const fit = () => {
       const w = box.getBoundingClientRect().width
-      // Never upscale — a replica blown up past its true size goes soft.
+      // Never upscale past 1:1 — the hero ran full-bleed once and drew the
+      // replica at 1.78x on a 2560 screen: soft, and the whole viewport.
       setScale(Math.min(Math.max(w / W, minScale), 1))
     }
     fit()
@@ -448,27 +338,6 @@ export function Stage({
         cursorRef.current.style.transform = `translate3d(${(p.x + dx).toFixed(1)}px, ${(p.y + dy).toFixed(1)}px, 0)`
       }
 
-      // The camera move.
-      const f = focusRef.current
-      if (zoomRef.current) {
-        let z = 1
-        if (f) {
-          z = 1 + (f.scale - 1) * punchEnvelope(age, durationMs)
-        } else if (zoom > 0) {
-          // No detail worth framing: a slow settle-in creep instead.
-          z = 1 + zoom * easeOutExpo(clamp01(age / (durationMs * 1.35)))
-        }
-        zoomRef.current.style.transform = `scale(${z.toFixed(4)})`
-
-        // The annotation rides the move but counter-scales, so it stays one
-        // size on screen while the footage behind it grows — a caption burned
-        // into the frame, not a label glued to the pixels.
-        if (noteRef.current && f?.note) {
-          noteRef.current.style.opacity   = noteOpacity(age, durationMs).toFixed(3)
-          noteRef.current.style.transform = `translate(-50%, 0) scale(${(1 / z).toFixed(4)})`
-        }
-      }
-
       const k = easeOutExpo(clamp01(age / 1100))
       stageRef.current?.querySelectorAll<HTMLElement>('[data-to]').forEach(el => {
         const to  = parseFloat(el.dataset.to || '0')
@@ -490,8 +359,6 @@ export function Stage({
     // With motion off the figures still have to arrive at their real values,
     // or the replica advertises a dashboard of zeroes.
     if (reduced) {
-      if (zoomRef.current) zoomRef.current.style.transform = 'none'
-      if (noteRef.current) noteRef.current.style.opacity = '0'
       stageRef.current?.querySelectorAll<HTMLElement>('[data-to]').forEach(el => {
         const to  = parseFloat(el.dataset.to || '0')
         const dec = parseInt(el.dataset.dec || '0')
@@ -511,7 +378,7 @@ export function Stage({
     document.addEventListener('visibilitychange', onVis)
 
     return () => { stop(); io?.disconnect(); document.removeEventListener('visibilitychange', onVis) }
-  }, [sceneKey, durationMs, zoom])
+  }, [sceneKey, durationMs])
 
   return (
     // The scaled canvas does not affect layout height, so the frame has to be
@@ -526,50 +393,17 @@ export function Stage({
           background: VOID, color: INK1, ...words,
         }}
       >
-        {/*
-          The Ken Burns layer. The pointer lives inside it so it stays over the
-          content it is pointing at as the frame pushes in, and the origin sits
-          on the centre of this scene's path — so the push drifts toward
-          whatever the cursor is working on rather than always the middle.
-        */}
-        <div
-          ref={zoomRef}
-          style={{
-            flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',
-            transformOrigin: origin, willChange: zoom > 0 ? 'transform' : undefined,
-          }}
-        >
-          {children}
+        {children}
 
-          {focus?.note && (
-            <div
-              ref={noteRef}
-              aria-hidden="true"
-              style={{
-                position: 'absolute', zIndex: 45, pointerEvents: 'none',
-                left: `${focus.noteAt ? focus.noteAt[0] : focus.at[0]}px`,
-                top:  `${focus.noteAt ? focus.noteAt[1] : focus.at[1] + (focus.noteDy ?? 78)}px`,
-                transformOrigin: 'top center', opacity: 0, willChange: 'transform, opacity',
-                whiteSpace: 'nowrap',
-                background: 'rgba(0,0,0,0.82)', border: `1px solid ${LINE}`,
-                borderRadius: 'var(--radius-sm)', padding: '6px 11px',
-                ...label, fontSize: '11px', color: INK1,
-              }}
-            >
-              {focus.note}
-            </div>
-          )}
-
-          {path && (
-            // The pointer. Drawn, not a real cursor, so it can be styled.
-            <div ref={cursorRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 40, pointerEvents: 'none', willChange: 'transform' }}>
-              <svg width="17" height="22" viewBox="0 0 17 22" fill="none" aria-hidden="true">
-                <path d="M1 1 L1 15.5 L4.8 11.6 L7.4 18.6 L10.1 17.5 L7.5 10.6 L13.2 10.6 Z"
-                  fill="#fff" stroke="rgba(0,0,0,0.55)" strokeWidth="1" strokeLinejoin="round" />
-              </svg>
-            </div>
-          )}
-        </div>
+        {path && (
+          // The pointer. Drawn, not a real cursor, so it can be styled.
+          <div ref={cursorRef} style={{ position: 'absolute', top: 0, left: 0, zIndex: 40, pointerEvents: 'none', willChange: 'transform' }}>
+            <svg width="17" height="22" viewBox="0 0 17 22" fill="none" aria-hidden="true">
+              <path d="M1 1 L1 15.5 L4.8 11.6 L7.4 18.6 L10.1 17.5 L7.5 10.6 L13.2 10.6 Z"
+                fill="#fff" stroke="rgba(0,0,0,0.55)" strokeWidth="1" strokeLinejoin="round" />
+            </svg>
+          </div>
+        )}
       </div>
     </div>
   )

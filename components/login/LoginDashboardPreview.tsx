@@ -72,7 +72,7 @@ export function LoginDashboardPreview() {
 
   return (
     <Stage width={W} height={H} minScale={0.58} sceneKey={scene} path={PATHS[scene]}
-           durationMs={SCENE_MS[scene]} zoom={0.02}>
+           durationMs={SCENE_MS[scene]}>
       <Topbar stale="2m ago" />
       <TabBar active={scene} />
 
