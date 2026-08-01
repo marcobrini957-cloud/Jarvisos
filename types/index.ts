@@ -10,6 +10,9 @@ export interface Trade {
   created_at: string
   updated_at: string
   mt5_ticket: number | null
+  /** The MT5 account this fill belongs to. Null on rows synced before the
+   *  bridge started stamping it, and on the seeded test account. */
+  mt5_login: number | null
   symbol: string
   trade_type: TradeType
   lot_size: number | null

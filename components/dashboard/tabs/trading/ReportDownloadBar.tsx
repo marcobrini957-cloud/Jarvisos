@@ -3,10 +3,9 @@
 import { useState } from 'react'
 import { Label } from '@/components/ui/vq'
 import Icon from '@/components/ui/Icon'
+import { monthBounds } from '@/lib/dates'
 
 // ── Report download bar ───────────────────────────────────────────────────────
-
-function toYMD(d: Date) { return d.toISOString().split('T')[0] }
 
 export function ReportDownloadBar() {
   const [downloading, setDownloading] = useState<string | null>(null)
@@ -35,15 +34,17 @@ export function ReportDownloadBar() {
     }
   }
 
-  const now     = new Date()
-  const m1Start = new Date(now.getFullYear(), now.getMonth(), 1)
-  const m1End   = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-  const m2Start = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-  const m2End   = new Date(now.getFullYear(), now.getMonth(), 0)
+  // These were formatted with toISOString, which converts to UTC first. Built
+  // at local midnight, that rolls back a day for anyone east of Greenwich: on
+  // 1 August in Vienna, "Last Month" asked for 30 June to 30 July — missing the
+  // last day of July and including a day of June.
+  const now  = new Date()
+  const thisM = monthBounds(now, 0)
+  const lastM = monthBounds(now, -1)
 
   const presets = [
-    { label: 'This Month', from: toYMD(m1Start), to: toYMD(m1End),   period: 'monthly' as const },
-    { label: 'Last Month', from: toYMD(m2Start), to: toYMD(m2End),   period: 'monthly' as const },
+    { label: 'This Month', from: thisM.from, to: thisM.to, period: 'monthly' as const },
+    { label: 'Last Month', from: lastM.from, to: lastM.to, period: 'monthly' as const },
     { label: 'Last Year',  from: `${now.getFullYear() - 1}-01-01`, to: `${now.getFullYear() - 1}-12-31`, period: 'monthly' as const },
   ]
 

@@ -1,10 +1,10 @@
 import React from 'react'
 import {
-  Document, Page, View, Text, Svg, Path, Line, Rect,
+  Document, Page, View, Text, Image, Svg, Path, Line, Rect,
 } from '@react-pdf/renderer'
 import type { Trade } from '@/types'
 import { isWin, isLoss, tradeResult } from '@/lib/trading/stats'
-import { registerReportFonts, C, WORDS, MONO, MARK, label, figure } from './theme'
+import { registerReportFonts, C, WORDS, MONO, MARK_PNG, label, figure } from './theme'
 
 registerReportFonts()
 
@@ -279,26 +279,33 @@ function SignedBar({ name, meta, pnl, maxAbs }: { name: string; meta?: string; p
 
 // ── Page furniture ────────────────────────────────────────────────────────────
 
-function Masthead({ traderName, ref_, dateRange, periodLbl }: {
-  traderName: string; ref_: string; dateRange: string; periodLbl: string
+function Masthead({ account, ref_, dateRange, periodLbl }: {
+  account: string; ref_: string; dateRange: string; periodLbl: string
 }) {
   return (
     <View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <Text style={{ fontFamily: MARK, fontSize: 19, color: C.ink1, letterSpacing: 0.4 }}>VELQUOR</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        {/* The mark itself, not the wordmark set in type.
+            eslint's a11y rule is aimed at HTML <img>; @react-pdf's Image has no
+            alt prop, and a PDF carries its title in the document metadata. */}
+        {/* eslint-disable-next-line jsx-a11y/alt-text */}
+        <Image src={MARK_PNG} style={{ width: 26, height: 26 }} />
         <Text style={{ ...label, fontSize: 7 }}>{periodLbl}</Text>
       </View>
       <Rule mt={9} mb={9} />
       <View style={{ flexDirection: 'row' }}>
-        <View style={{ flex: 1 }}>
-          <Text style={label}>Prepared for</Text>
-          <Text style={{ fontFamily: WORDS, fontSize: 10, color: C.ink1, marginTop: 3 }}>{traderName}</Text>
+        <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }}>
+          {/* The account, not a display name. A statement identifies the
+              account it covers — a trader with two accounts has to be able to
+              tell two reports apart. */}
+          <Text style={label}>Prepared for account</Text>
+          <Text style={{ ...figure(10), marginTop: 3 }}>{account}</Text>
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }}>
           <Text style={label}>Period</Text>
           <Text style={{ ...figure(9), marginTop: 3 }}>{dateRange}</Text>
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }}>
           <Text style={label}>Reference</Text>
           <Text style={{ ...figure(9, { dim: true }), marginTop: 3 }}>{ref_}</Text>
         </View>
@@ -345,12 +352,13 @@ export interface ReportProps {
   from:        string
   to:          string
   period:      'weekly' | 'monthly'
-  traderName?: string
+  /** The MT5 login this report covers. */
+  account?:    string
   /** The Analyst brief (Pro/Ultra). Empty string hides the section. */
   coachNotes?: string
 }
 
-export function TradingReport({ trades, from, to, period, traderName = 'Trader', coachNotes }: ReportProps) {
+export function TradingReport({ trades, from, to, period, account, coachNotes }: ReportProps) {
   const {
     sorted, wins, losses, netPnl, winRate, pf, avgWin, avgLoss,
     expectancy, bestTrade, worstTrade, maxDD, maxCW, maxCL,
@@ -379,7 +387,7 @@ export function TradingReport({ trades, from, to, period, traderName = 'Trader',
     >
       {/* ══════════════ PAGE 1 — SUMMARY ══════════════ */}
       <Page size="A4" style={PAGE}>
-        <Masthead traderName={traderName} ref_={ref_} dateRange={dateRange} periodLbl={periodLbl} />
+        <Masthead account={account || '—'} ref_={ref_} dateRange={dateRange} periodLbl={periodLbl} />
 
         {/* The headline. One number, at the size it deserves. */}
         <View style={{ marginTop: 22, marginBottom: 20 }}>

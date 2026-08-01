@@ -9,6 +9,7 @@ import { getUserPlan } from '@/lib/api/tier'
 import { computeStats } from '@/lib/trading/stats'
 import { computeBreakdowns } from '@/lib/trading/breakdowns'
 import { buildFacts, generateCoachNotes } from '@/lib/ai/coach'
+import { zonedRangeToUtc } from '@/lib/dates'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -30,14 +31,22 @@ export async function GET(req: NextRequest) {
     const user = await getAuthUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    // The window is a run of calendar days in the trader's own timezone, not in
+    // UTC. Naive `Z` bounds put a trade closed at 00:30 on 1 July in Vienna —
+    // 22:30 on 30 June UTC — into the previous month's report.
+    const { data: prof } = await supabase
+      .from('user_profiles').select('timezone').eq('id', user.id).maybeSingle()
+    const tz = prof?.timezone || 'UTC'
+    const { startUtc, endUtc } = zonedRangeToUtc(from, to, tz)
+
     // Fetch trades in the date window (closed, real trades only)
     const { data: trades, error } = await supabase
       .from('trades')
       .select('*')
       .eq('user_id', user.id)
       .eq('status', 'closed')
-      .gte('close_time', `${from}T00:00:00.000Z`)
-      .lte('close_time', `${to}T23:59:59.999Z`)
+      .gte('close_time', startUtc)
+      .lte('close_time', endUtc)
       .order('close_time', { ascending: true })
 
     if (error) {
@@ -45,8 +54,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    const traderName = user?.email?.split('@')[0] ?? 'Trader'
-    const rows       = (trades ?? []) as Trade[]
+    const rows = (trades ?? []) as Trade[]
+
+    // The account the report covers. Prefer a login seen in this window, so a
+    // trader with more than one account gets the right number on the right
+    // report; fall back to the latest snapshot when the window is empty.
+    let account = rows.find(r => r.mt5_login)?.mt5_login?.toString() ?? ''
+    if (!account) {
+      const { data: snap } = await supabase
+        .from('account_snapshots')
+        .select('mt5_login')
+        .eq('user_id', user.id)
+        .not('mt5_login', 'is', null)
+        .order('snapshot_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      account = snap?.mt5_login?.toString() ?? ''
+    }
 
     // Coach's Notes: AI narration for Pro/Ultra, computed from this period's
     // stats. Free tier omits it (section hidden). Never blocks the report —
@@ -72,7 +96,7 @@ export async function GET(req: NextRequest) {
         from,
         to,
         period,
-        traderName,
+        account,
         coachNotes,
         // renderToBuffer's parameter type is @react-pdf's own DocumentElement,
         // which createElement cannot be narrowed to from a plain component.

@@ -18,6 +18,13 @@ import { Font } from '@react-pdf/renderer'
 
 const FONT_DIR = path.join(process.cwd(), 'lib', 'pdf', 'fonts')
 
+/**
+ * The mark, beside the fonts so one tracing rule covers both. The transparent
+ * variant, because the report ground is black — the tiled `vq-logo-*` would
+ * paint a black square on a black page.
+ */
+export const MARK_PNG = path.join(FONT_DIR, 'vq-mark.jpg')
+
 let registered = false
 
 /** Idempotent: @react-pdf keeps one global registry and re-registering warns. */
