@@ -32,6 +32,7 @@ import {
   Topbar, TabBar, Panel, Num, Segmented,
   INK1, INK2, INK3, INK4, LINE, UP, DOWN, VOID, SURF,
   mono, label, words, SceneCaption, LiveChartShot, Stage, ChartAttribution, CHART_QUOTE,
+  type Focus,
 } from '@/components/product/replica'
 
 // ── Geometry ─────────────────────────────────────────────────────────────────
@@ -55,6 +56,29 @@ const PATHS: Record<Scene, [number, number][]> = {
   journal: [[260, 140], [160, 250], [430, 400], [900, 330], [1200, 470], [820, 620], [320, 640], [150, 380]],
   copy:    [[280, 160], [200, 260], [560, 300], [980, 340], [1180, 430], [700, 520], [280, 560], [160, 330]],
   analyst: [[400, 200], [720, 300], [980, 380], [720, 470], [500, 560], [700, 690], [900, 640], [620, 380]],
+}
+
+/**
+ * Which scenes push in on a detail, and on what.
+ *
+ * Deliberately not all five. A camera move on a screen with nothing particular
+ * to look at is just motion — Journal and Analyst carry their own (the mood bars
+ * read fine at full size, and the Analyst scene's motion is the typing). The
+ * three below each have one thing that is the argument, and it is too small to
+ * register at full frame. Coordinates measured off the running replica.
+ */
+const FOCUS: Partial<Record<Scene, Focus>> = {
+  // Origin near the left edge: the metric strip's labels start at x=12, and a
+  // centred push cut the MT5 balance cell in half. Leaves x 12→1006 visible.
+  home:    { at: [40, 160],  scale: 1.45, note: 'Every number pulled from MT5',
+             noteAt: [430, 243] },
+  // The chart is the one symmetric thing here, so this one can centre.
+  trading: { at: [722, 430], scale: 1.46, note: 'Live chart on your instruments',
+             noteAt: [722, 585] },
+  // Account names sit at x 40–300 and the cloud buttons at 1100–1400; nothing
+  // frames both, so the names win and the push stays gentle.
+  copy:    { at: [60, 320],  scale: 1.24, note: 'One leader, every follower',
+             noteAt: [640, 472] },
 }
 
 /** The tab strip lights by label, and the scene ids are those labels lowercased. */
@@ -87,7 +111,7 @@ export function AnimatedDashboard() {
     <Stage
       width={W} height={H} minScale={0.5}
       sceneKey={scene} path={PATHS[scene]}
-      durationMs={SCENE_MS[scene]} zoom={0.03}
+      durationMs={SCENE_MS[scene]} zoom={0.03} focus={FOCUS[scene]}
     >
       <Topbar />
       <TabBar active={SCENE_TAB[scene]} />
@@ -520,7 +544,7 @@ function Copy() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: UP }} />
             <span style={{ fontSize: '13px', color: INK1 }}>Main Group</span>
-            <span style={{ ...mono, fontSize: '10px', color: INK3, border: `1px solid ${LINE}`, borderRadius: 'var(--radius-xs)', padding: '2px 7px' }}>0.5× lots</span>
+            <span style={{ ...mono, fontSize: '10px', color: INK3, border: `1px solid ${LINE}`, borderRadius: 'var(--radius-xs)', padding: '2px 7px' }}>1:1 lots</span>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {['Pause', 'Delete'].map(b => (

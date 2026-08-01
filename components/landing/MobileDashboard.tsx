@@ -29,6 +29,7 @@ import { LogoMark } from '@/components/ui/LogoMark'
 import Icon from '@/components/ui/Icon'
 import {
   Panel, Num, Segmented, Stage, SceneCaption, LiveChartShot, ChartAttribution, CHART_QUOTE,
+  type Focus,
   INK1, INK2, INK3, INK4, LINE, UP, DOWN, VOID, SURF,
   mono, label, words,
 } from '@/components/product/replica'
@@ -56,6 +57,28 @@ const PATHS: Record<Scene, [number, number][]> = {
   Analyst: [[200, 200], [290, 280], [200, 350], [120, 300], [230, 420], [310, 350], [160, 250], [250, 170]],
 }
 
+/**
+ * The same three scenes push in as on desktop, but less far — a 1.45x move on a
+ * 390px frame throws most of the screen away. Coordinates measured off the
+ * running replica at 390x560.
+ */
+const FOCUS: Partial<Record<Scene, Focus>> = {
+  // Gentler than desktop throughout: the cells are 3-up in 390px, so anything
+  // past ~1.25 eats the outer two. Origins sit left because every label in this
+  // product is left-aligned — a centred push cropped "MT5 BALANCE" to "5
+  // BALANCE" and the account names to nothing.
+  //
+  // The notes sit near the bottom of what stays visible rather than beside the
+  // thing they name: at this width every position overlaps something, and a
+  // subtitle occludes the least while reading the way a caption should.
+  Home:    { at: [30, 258],  scale: 1.22, note: 'Every number from MT5',
+             noteAt: [165, 470] },
+  Trading: { at: [195, 320], scale: 1.36, note: 'Live chart',
+             noteAt: [195, 458] },
+  Copy:    { at: [60, 250],  scale: 1.25, note: 'One leader, every follower',
+             noteAt: [168, 462] },
+}
+
 export function MobileDashboard() {
   const [scene, setScene] = useState<Scene>('Home')
   const sceneRef = useRef<Scene>('Home')
@@ -74,7 +97,7 @@ export function MobileDashboard() {
   return (
     <>
       <Stage width={W} height={H} minScale={0.62} sceneKey={scene} path={PATHS[scene]}
-             durationMs={SCENE_MS[scene]} zoom={0.022}>
+             durationMs={SCENE_MS[scene]} zoom={0.022} focus={FOCUS[scene]}>
         <MobileTopbar section={scene} />
         <div key={scene} className="mb-scene" style={{
           flex: 1, minHeight: 0, padding: '10px 10px 14px',

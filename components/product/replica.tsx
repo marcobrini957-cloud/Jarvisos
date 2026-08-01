@@ -45,6 +45,28 @@ export const words = { fontFamily: 'var(--font-display)' } as const
 export const easeOutExpo = (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -9 * t))
 export const clamp01     = (t: number) => Math.min(Math.max(t, 0), 1)
 
+/** Symmetric velocity curve — starts at rest, ends at rest, quickest in the middle. */
+export const easeInOutCubic = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+
+/**
+ * A scene's zoom over its own length: hold wide, push in, hold on the detail,
+ * pull back out, hold wide. Returns 0 (wide) → 1 (fully in) → 0.
+ *
+ * The holds are the point. A push that starts on the cut and reverses at the
+ * halfway mark reads as a wobble; establishing the whole screen first, resting
+ * long enough to actually read the detail, then returning is what makes it a
+ * camera move rather than a scale animation.
+ */
+export function zoomEnvelope(u: number): number {
+  const IN0 = 0.16, IN1 = 0.40, OUT0 = 0.70, OUT1 = 0.92
+  if (u <= IN0)  return 0
+  if (u <  IN1)  return easeInOutCubic((u - IN0) / (IN1 - IN0))
+  if (u <= OUT0) return 1
+  if (u <  OUT1) return 1 - easeInOutCubic((u - OUT0) / (OUT1 - OUT0))
+  return 0
+}
+
 /**
  * Re-times travel along the path so the pointer accelerates between waypoints
  * and eases through them, instead of sliding at one constant speed like a
@@ -228,6 +250,37 @@ export function Segmented({ options, active, size = 9 }: { options: string[]; ac
 
 // ── The scaled canvas ────────────────────────────────────────────────────────
 
+/** A detail worth pushing in on, in the canvas's own coordinates. */
+export interface Focus {
+  /** Centre of the detail, virtual px. The push happens about this point. */
+  at: [number, number]
+  /** How far in. 1.35–1.5 reads as a move; below ~1.2 nobody notices it. */
+  scale: number
+  /** One line naming what is being shown, held while the frame is pushed in. */
+  note?: string
+  /**
+   * Where the note sits, virtual px. Defaults to just under `at`, which is only
+   * right when the focus is centred — these panels are left-aligned, so their
+   * origin usually sits near the left edge and the note has to be placed by hand.
+   */
+  noteAt?: [number, number]
+  /** Fallback offset below `at` when `noteAt` is not given. */
+  noteDy?: number
+}
+
+/**
+ * What a push of `scale` about `originX` leaves visible on a canvas `W` wide.
+ *
+ * Worth keeping in mind when choosing a focus: a centred origin eats *both*
+ * edges, and everything in this product is left-aligned — labels, account
+ * names, row headers. Centring the Copy scene's push cropped every account name
+ * off the frame and left a column of "…kets-Live02 · 2m ago". Bias the origin
+ * left for left-aligned content.
+ */
+export function visibleRange(origin: number, scale: number, extent: number): [number, number] {
+  return [origin - origin / scale, origin + (extent - origin) / scale]
+}
+
 export interface StageProps {
   /** Virtual canvas, in true dashboard pixels. */
   width: number
@@ -247,11 +300,16 @@ export interface StageProps {
    */
   durationMs?: number
   /**
-   * Ken Burns push, as a fraction. The frame creeps in over the scene and
-   * resets on the cut, which is what makes a sequence of screens read as footage
-   * rather than as a slideshow. 0 disables it.
+   * Ken Burns push, as a fraction, for scenes with no `focus`. The frame creeps
+   * in over the scene and resets on the cut. 0 disables it.
    */
   zoom?: number
+  /**
+   * A detail to push in on and back out of. Overrides `zoom` for this scene.
+   * Deliberately not set on every scene — a move on a screen with nothing
+   * particular to look at is just motion.
+   */
+  focus?: Focus
   /** Restarts the count-ups and the entry animation when it changes. */
   sceneKey: string
   children: React.ReactNode
@@ -267,7 +325,7 @@ export interface StageProps {
  */
 export function Stage({
   width: W, height: H, minScale = 0.5, path, sceneKey,
-  durationMs = 6000, zoom = 0.03, children,
+  durationMs = 6000, zoom = 0.03, focus, children,
 }: StageProps) {
   const boxRef    = useRef<HTMLDivElement>(null)
   const stageRef  = useRef<HTMLDivElement>(null)
@@ -284,6 +342,9 @@ export function Stage({
   // changes under it, so the new scene eases out of the old position instead.
   const atRef   = useRef<{ x: number; y: number } | null>(null)
   const fromRef = useRef<{ x: number; y: number } | null>(null)
+  const noteRef = useRef<HTMLDivElement>(null)
+  const focusRef = useRef(focus)
+  useEffect(() => { focusRef.current = focus })
 
   /**
    * Where the push comes from. Horizontally it follows the middle of this
@@ -296,11 +357,12 @@ export function Stage({
    * content is already running past the edge of the frame.
    */
   const origin = useMemo(() => {
+    if (focus) return `${focus.at[0]}px ${focus.at[1]}px`
     if (!path || !path.length) return '50% 14%'
     const cx = path.reduce((a, [x]) => a + x, 0) / path.length
     const pct = Math.min(Math.max((cx / W) * 100, 22), 78)
     return `${pct.toFixed(1)}% 14%`
-  }, [path, W])
+  }, [path, W, focus])
 
   useEffect(() => {
     const box = boxRef.current
@@ -360,11 +422,26 @@ export function Stage({
         cursorRef.current.style.transform = `translate3d(${(p.x + dx).toFixed(1)}px, ${(p.y + dy).toFixed(1)}px, 0)`
       }
 
-      // Ken Burns. Eased so the push is quickest just after the cut and settles
-      // as the scene runs — a linear creep reads as a slow drift, not a move.
-      if (zoomRef.current && zoom > 0) {
-        const z = 1 + zoom * easeOutExpo(clamp01(age / (durationMs * 1.35)))
+      // The camera move.
+      const f = focusRef.current
+      if (zoomRef.current) {
+        let z = 1
+        if (f) {
+          z = 1 + (f.scale - 1) * zoomEnvelope(clamp01(age / durationMs))
+        } else if (zoom > 0) {
+          // No detail worth framing: a slow settle-in creep instead.
+          z = 1 + zoom * easeOutExpo(clamp01(age / (durationMs * 1.35)))
+        }
         zoomRef.current.style.transform = `scale(${z.toFixed(4)})`
+
+        // The annotation rides the move but counter-scales, so it stays one
+        // size on screen while the footage behind it grows — a caption burned
+        // into the frame, not a label glued to the pixels.
+        if (noteRef.current && f?.note) {
+          const t = zoomEnvelope(clamp01(age / durationMs))
+          noteRef.current.style.opacity   = clamp01((t - 0.45) / 0.3).toFixed(3)
+          noteRef.current.style.transform = `translate(-50%, 0) scale(${(1 / z).toFixed(4)})`
+        }
       }
 
       const k = easeOutExpo(clamp01(age / 1100))
@@ -389,6 +466,7 @@ export function Stage({
     // or the replica advertises a dashboard of zeroes.
     if (reduced) {
       if (zoomRef.current) zoomRef.current.style.transform = 'none'
+      if (noteRef.current) noteRef.current.style.opacity = '0'
       stageRef.current?.querySelectorAll<HTMLElement>('[data-to]').forEach(el => {
         const to  = parseFloat(el.dataset.to || '0')
         const dec = parseInt(el.dataset.dec || '0')
@@ -437,6 +515,25 @@ export function Stage({
           }}
         >
           {children}
+
+          {focus?.note && (
+            <div
+              ref={noteRef}
+              aria-hidden="true"
+              style={{
+                position: 'absolute', zIndex: 45, pointerEvents: 'none',
+                left: `${focus.noteAt ? focus.noteAt[0] : focus.at[0]}px`,
+                top:  `${focus.noteAt ? focus.noteAt[1] : focus.at[1] + (focus.noteDy ?? 78)}px`,
+                transformOrigin: 'top center', opacity: 0, willChange: 'transform, opacity',
+                whiteSpace: 'nowrap',
+                background: 'rgba(0,0,0,0.82)', border: `1px solid ${LINE}`,
+                borderRadius: 'var(--radius-sm)', padding: '6px 11px',
+                ...label, fontSize: '11px', color: INK1,
+              }}
+            >
+              {focus.note}
+            </div>
+          )}
 
           {path && (
             // The pointer. Drawn, not a real cursor, so it can be styled.
