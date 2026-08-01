@@ -24,8 +24,15 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { LogoMark } from '@/components/ui/LogoMark'
 import Icon, { type IconName } from '@/components/ui/Icon'
+import { LogoMark } from '@/components/ui/LogoMark'
+// The chrome is shared with the login page's replica so the two can never again
+// advertise different products — see components/product/replica.tsx.
+import {
+  Topbar, TabBar, Panel, Num, Segmented,
+  INK1, INK2, INK3, INK4, LINE, UP, DOWN, VOID, SURF,
+  mono, label, words, easeOutExpo, clamp01, splineAt,
+} from '@/components/product/replica'
 
 // ── Geometry ─────────────────────────────────────────────────────────────────
 // The virtual canvas is the real dashboard's width. Everything inside is in
@@ -63,49 +70,10 @@ const PATHS: Record<Scene, [number, number][]> = {
   analyst: [[400, 200], [720, 300], [980, 380], [720, 470], [500, 560], [700, 690], [900, 640], [620, 380]],
 }
 
-const easeOutExpo   = (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -9 * t))
-const clamp01       = (t: number) => Math.min(Math.max(t, 0), 1)
-
-/** Catmull-Rom through the waypoints, so the cursor curves instead of darting. */
-function splineAt(pts: [number, number][], u: number): { x: number; y: number } {
-  const n = pts.length
-  const f = clamp01(u) * n
-  const i = Math.min(Math.floor(f), n - 1)
-  const t = f - i
-  const p = (k: number) => pts[(k + n) % n]
-  const [x0, y0] = p(i - 1), [x1, y1] = p(i), [x2, y2] = p(i + 1), [x3, y3] = p(i + 2)
-  const cr = (a: number, b: number, c: number, d: number) =>
-    0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t)
-  return { x: cr(x0, x1, x2, x3), y: cr(y0, y1, y2, y3) }
+/** The tab strip lights by label, and the scene ids are those labels lowercased. */
+const SCENE_TAB: Record<Scene, string> = {
+  home: 'Home', trading: 'Trading', journal: 'Journal', copy: 'Copy', analyst: 'Analyst',
 }
-
-// ── Tokens, as the dashboard writes them ─────────────────────────────────────
-const INK1 = 'var(--color-ink-1)'
-const INK2 = 'var(--color-ink-2)'
-const INK3 = 'var(--color-ink-3)'
-const INK4 = 'var(--color-ink-4)'
-const LINE = 'var(--color-line-1)'
-const UP   = 'var(--color-up)'
-const DOWN = 'var(--color-down)'
-const VOID = 'var(--color-void)'
-const SURF = 'var(--color-surface-1)'
-
-const mono  = { fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' } as const
-const label = { fontFamily: 'var(--font-display)', fontSize: '10px', letterSpacing: '0.16em', textTransform: 'uppercase', color: INK3 } as const
-const words = { fontFamily: 'var(--font-display)' } as const
-
-const TABS: { id: Scene | null; name: string; icon: IconName }[] = [
-  { id: 'home',    name: 'Home',       icon: 'home' },
-  { id: 'trading', name: 'Trading',    icon: 'chart' },
-  { id: null,      name: 'Portfolio',  icon: 'briefcase' },
-  { id: 'journal', name: 'Journal',    icon: 'journal' },
-  { id: null,      name: 'News',       icon: 'globe' },
-  { id: null,      name: 'Discipline', icon: 'target' },
-  { id: null,      name: 'Tasks',      icon: 'checkSquare' },
-  { id: 'copy',    name: 'Copy',       icon: 'swap' },
-  { id: null,      name: 'Partners',   icon: 'gift' },
-  { id: 'analyst', name: 'Analyst',    icon: 'spark' },
-]
 
 export function AnimatedDashboard() {
   const boxRef    = useRef<HTMLDivElement>(null)
@@ -207,7 +175,7 @@ export function AnimatedDashboard() {
         }}
       >
         <Topbar />
-        <TabBar active={scene} />
+        <TabBar active={SCENE_TAB[scene]} />
 
         <div key={scene} className="vq-scene" style={{ flex: 1, minHeight: 0, padding: '12px', overflow: 'hidden' }}>
           {scene === 'home'    && <Home />}
@@ -304,139 +272,6 @@ function SceneCaption({ scene }: { scene: Scene }) {
         .vq-caption { animation: vqCapIn 0.4s cubic-bezier(0.16,1,0.3,1) }
         @keyframes vqCapIn { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
       `}</style>
-    </div>
-  )
-}
-
-// ── Chrome ───────────────────────────────────────────────────────────────────
-
-function Topbar() {
-  return (
-    <div style={{
-      height: '40px', flexShrink: 0, padding: '0 12px',
-      borderBottom: `1px solid ${LINE}`, background: VOID,
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-        <LogoMark size={20} />
-        <span style={{ fontFamily: 'var(--font-mark)', fontSize: '17px', lineHeight: 1, letterSpacing: '0.02em', textTransform: 'uppercase' }}>
-          Velquor
-        </span>
-      </div>
-
-      {/* The account pill sits dead centre in the real bar. */}
-      <div style={{
-        position: 'absolute', left: '50%', transform: 'translateX(-50%)',
-        display: 'flex', alignItems: 'center', gap: '9px',
-        background: SURF, border: `1px solid ${LINE}`, borderRadius: 'var(--radius-md)',
-        padding: '5px 10px',
-      }}>
-        <span style={{ width: 5, height: 5, borderRadius: '50%', background: UP }} />
-        <span style={{ ...label, fontSize: '10px', letterSpacing: '0.14em' }}>MT5</span>
-        <span style={{ ...mono, fontSize: '13px' }}>€24,830.50</span>
-        <span style={{ ...mono, fontSize: '11px', color: INK4 }}>2m ago</span>
-        <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke={INK4} strokeWidth="2" strokeLinecap="round"><path d="M3 5.5 8 10.5l5-5" /></svg>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{
-          width: '24px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: `1px solid ${LINE}`, borderRadius: 'var(--radius-sm)', fontSize: '11px', color: INK2,
-        }}>€</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-          <span style={{
-            width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: `1px solid ${LINE}`, borderRadius: 'var(--radius-sm)', fontSize: '11px', color: INK2,
-          }}>M</span>
-          <div style={{ lineHeight: 1.25 }}>
-            <div style={{ fontSize: '11px', color: INK1 }}>MobileTest</div>
-            <div style={{ ...label, fontSize: '8.5px' }}>Vienna · EUR</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function TabBar({ active }: { active: Scene }) {
-  return (
-    <div style={{
-      height: '34px', flexShrink: 0, borderBottom: `1px solid ${LINE}`,
-      display: 'flex', alignItems: 'stretch', justifyContent: 'space-between', background: VOID,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'stretch' }}>
-        {TABS.map(t => {
-          const on = t.id === active
-          return (
-            <div key={t.name} style={{
-              display: 'flex', alignItems: 'center', gap: '7px', padding: '0 14px',
-              borderBottom: `2px solid ${on ? INK1 : 'transparent'}`,
-              background: on ? SURF : 'transparent',
-              color: on ? INK1 : INK3,
-              transition: 'color 0.2s, background 0.2s, border-color 0.2s',
-            }}>
-              <Icon name={t.icon} size={13} />
-              <span style={{ ...label, fontSize: '10px', color: 'inherit' }}>{t.name}</span>
-            </div>
-          )
-        })}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', padding: '0 12px', color: INK3 }}>
-        <Icon name="settings" size={13} />
-      </div>
-    </div>
-  )
-}
-
-// ── Shared bits ──────────────────────────────────────────────────────────────
-
-function Panel({ title, action, children, style }: {
-  title?: string; action?: React.ReactNode; children: React.ReactNode; style?: React.CSSProperties
-}) {
-  return (
-    <div style={{
-      background: SURF, border: `1px solid ${LINE}`, borderRadius: 'var(--radius-md)',
-      display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden', ...style,
-    }}>
-      {title && (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '9px 14px', borderBottom: `1px solid ${LINE}`,
-        }}>
-          <span style={{ fontSize: '13px', color: INK1 }}>{title}</span>
-          {action}
-        </div>
-      )}
-      <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
-    </div>
-  )
-}
-
-/** A figure that counts up when its scene opens. */
-function Num({ to, pre = '', suf = '', dec = 0, plain, size = 21, color = INK1 }: {
-  to: number; pre?: string; suf?: string; dec?: number; plain?: boolean; size?: number; color?: string
-}) {
-  return (
-    <span
-      data-to={to} data-pre={pre} data-suf={suf} data-dec={dec} {...(plain ? { 'data-plain': '1' } : {})}
-      style={{ ...mono, fontSize: `${size}px`, color, lineHeight: 1 }}
-    >
-      {pre}0{suf}
-    </span>
-  )
-}
-
-function Segmented({ options, active }: { options: string[]; active: string }) {
-  return (
-    <div style={{ display: 'flex', gap: '1px', padding: '1px', background: 'var(--color-surface-2)', borderRadius: 'var(--radius-sm)' }}>
-      {options.map(o => (
-        <span key={o} style={{
-          ...label, fontSize: '9px', letterSpacing: '0.1em', padding: '3px 8px',
-          borderRadius: 'var(--radius-xs)',
-          background: o === active ? 'var(--color-surface-3)' : 'transparent',
-          color: o === active ? INK1 : INK3,
-        }}>{o}</span>
-      ))}
     </div>
   )
 }
