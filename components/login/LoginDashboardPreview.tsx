@@ -28,7 +28,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Icon from '@/components/ui/Icon'
 import {
-  Topbar, TabBar, Panel, Num, Segmented, Stage,
+  Topbar, TabBar, Panel, Num, Segmented, Stage, LiveChartShot, ChartAttribution, CHART_QUOTE,
   INK1, INK2, INK3, INK4, LINE, UP, DOWN, SURF,
   mono, label, words,
 } from '@/components/product/replica'
@@ -227,7 +227,7 @@ function Trading() {
         </span>
       </div>
 
-      <Panel title="Live chart" style={{ flex: 1, minHeight: 0 }}>
+      <Panel title="Live chart" column style={{ flex: 1, minHeight: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px 4px' }}>
           <div style={{ display: 'flex', gap: '6px' }}>
             {['NAS100', 'XAUUSD'].map((s, i) => (
@@ -249,67 +249,21 @@ function Trading() {
           </div>
         </div>
 
-        <div style={{ padding: '0 14px 2px', display: 'flex', alignItems: 'baseline', gap: '9px', ...mono, fontSize: '10px' }}>
-          <span style={{ color: INK2 }}>US Nas 100 · 5 · OANDA</span>
-          <span style={{ color: INK4 }}>O<span style={{ color: DOWN }}>28,051.6</span></span>
-          <span style={{ color: INK4 }}>H<span style={{ color: DOWN }}>28,062.0</span></span>
-          <span style={{ color: INK4 }}>L<span style={{ color: DOWN }}>27,961.3</span></span>
-          <span style={{ color: INK4 }}>C<span style={{ color: DOWN }}>27,963.0</span></span>
-          <span style={{ color: DOWN }}>−88.6 (−0.32%)</span>
+        <div style={{ padding: '0 14px 4px', display: 'flex', alignItems: 'baseline', gap: '10px', ...mono, fontSize: '11px' }}>
+          <span style={{ color: INK2 }}>{CHART_QUOTE.symbol}</span>
+          <span style={{ color: INK4 }}>O<span style={{ color: DOWN }}>{CHART_QUOTE.o}</span></span>
+          <span style={{ color: INK4 }}>H<span style={{ color: DOWN }}>{CHART_QUOTE.h}</span></span>
+          <span style={{ color: INK4 }}>L<span style={{ color: DOWN }}>{CHART_QUOTE.l}</span></span>
+          <span style={{ color: INK4 }}>C<span style={{ color: DOWN }}>{CHART_QUOTE.c}</span></span>
+          <span style={{ color: DOWN }}>{CHART_QUOTE.chg}</span>
         </div>
-
-        <Candles />
+        <LiveChartShot />
+        <ChartAttribution />
       </Panel>
     </div>
   )
 }
 
-/**
- * A seeded series, so the chart is identical on every render and never
- * disagrees with the O/H/L/C line above it.
- */
-function Candles() {
-  const w = 906, h = 186, n = 84
-  let seed = 20260801
-  const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296 }
-
-  let price = 28040
-  const bars: { o: number; h: number; l: number; c: number }[] = []
-  for (let i = 0; i < n; i++) {
-    const o = price
-    const drift = (rnd() - 0.52) * 22
-    const c = o + drift
-    const hi = Math.max(o, c) + rnd() * 9
-    const lo = Math.min(o, c) - rnd() * 9
-    bars.push({ o, h: hi, l: lo, c })
-    price = c
-  }
-  const lows = Math.min(...bars.map(b => b.l))
-  const highs = Math.max(...bars.map(b => b.h))
-  const Y = (v: number) => h - ((v - lows) / (highs - lows)) * h
-  const step = w / n
-  const bw = Math.max(2, step * 0.58)
-
-  return (
-    <div style={{ padding: '2px 14px 0' }}>
-      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
-        {bars.map((b, i) => {
-          const x = i * step + step / 2
-          const up = b.c >= b.o
-          const col = up ? UP : DOWN
-          const top = Y(Math.max(b.o, b.c))
-          const bot = Y(Math.min(b.o, b.c))
-          return (
-            <g key={i}>
-              <line x1={x} x2={x} y1={Y(b.h)} y2={Y(b.l)} stroke={col} strokeWidth="1" />
-              <rect x={x - bw / 2} y={top} width={bw} height={Math.max(1, bot - top)} fill={col} />
-            </g>
-          )
-        })}
-      </svg>
-    </div>
-  )
-}
 
 // ── Journal ──────────────────────────────────────────────────────────────────
 

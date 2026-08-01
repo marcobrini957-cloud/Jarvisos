@@ -149,8 +149,15 @@ export function TabBar({ active }: { active: string }) {
   )
 }
 
-export function Panel({ title, action, children, style }: {
+export function Panel({ title, action, children, style, column }: {
   title?: string; action?: React.ReactNode; children: React.ReactNode; style?: React.CSSProperties
+  /**
+   * Make the body a flex column. Needed by anything inside that wants to claim
+   * the leftover height with `flex: 1` — the body is a plain block otherwise, so
+   * a `flex: 1` child silently collapses to its intrinsic size. That is exactly
+   * how the chart ended up a wide strip floating in a tall panel on mobile.
+   */
+  column?: boolean
 }) {
   return (
     <div style={{
@@ -166,7 +173,10 @@ export function Panel({ title, action, children, style }: {
           {action}
         </div>
       )}
-      <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
+      <div style={{
+        flex: 1, minHeight: 0,
+        ...(column ? { display: 'flex', flexDirection: 'column' as const } : null),
+      }}>{children}</div>
     </div>
   )
 }
@@ -426,6 +436,87 @@ export function SceneCaption({ scenes, active }: { scenes: readonly string[]; ac
         @keyframes vqCapIn { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
         @media (prefers-reduced-motion: reduce) { .vq-caption { animation: none } }
       `}</style>
+    </div>
+  )
+}
+
+// ── The live chart ───────────────────────────────────────────────────────────
+
+/**
+ * The Trading tab's chart, as a frame of the real thing.
+ *
+ * Every replica used to draw this panel's candles from a seeded random walk,
+ * and it looked exactly like what it was — uniform bar widths, no volume, no
+ * price axis, a price that belonged to no instrument. It was the one element on
+ * the hero a trader would clock as fake in a second, which is a bad thing for
+ * the element whose whole job is "this is a real terminal".
+ *
+ * So this is a capture of the **real TradingView widget inside VELQUOR's own
+ * Trading tab** — the same official embed the product ships
+ * (`components/widgets/TradingViewWidget.tsx`), real NAS100 5-minute data, real
+ * volume pane, real price axis, TradingView's own mark and attribution left in
+ * frame. It is the product's actual screen, not a drawing of it.
+ *
+ * Why a still and not a clip: the live widget cannot run here — it only loads
+ * after `vq-cookie-consent` is `'all'`, and a first-time visitor meets the hero
+ * long before they meet the cookie banner, so the panel would advertise a
+ * consent placeholder. A recording was the alternative, but it was captured on
+ * a Saturday with the market shut: 29 seconds of footage moved 0.03% of its
+ * pixels. That is a 500 kB video of a still image. This is 82 kB and sharper.
+ * Re-shoot on a weekday if the panel should ever actually tick.
+ *
+ * `cover` + right alignment means a narrower panel shows *fewer, most recent*
+ * candles at native scale with the price axis intact — which is what a real
+ * chart does in a narrow window — rather than squashing the whole series.
+ *
+ * The frame is cropped to the **plot area only**. TradingView's toolbar and its
+ * O/H/L/C line are left-aligned, so on a narrow panel they cropped away and left
+ * an empty band above the candles. The quote line is drawn below instead, in our
+ * own type, carrying the same figures the capture shows — and the attribution
+ * goes with it, since TradingView's own mark sits bottom-left of the plot and
+ * would be cropped off on a phone.
+ */
+export const CHART_QUOTE = {
+  symbol: 'US Nas 100 · 5 · OANDA',
+  o: '28,233.2', h: '28,233.2', l: '28,183.7', c: '28,191.8',
+  chg: '−41.6 (−0.15%)',
+}
+
+export function LiveChartShot({ radius }: { radius?: string }) {
+  return (
+    <div style={{
+      flex: 1, minHeight: 0, overflow: 'hidden', background: VOID,
+      borderRadius: radius, display: 'flex',
+    }}>
+      {/* Deliberately a plain <img>, not next/image: this asset is already a
+          hand-encoded WebP at exactly the size the largest surface needs
+          (2814px for a 1416px panel at 2x). Routing it through the optimizer
+          would re-encode an optimal file and bill image-optimization units for
+          the privilege. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/brand/tv-nas100-m5.webp"
+        decoding="async"
+        alt="NAS100 five-minute chart in the VELQUOR trading tab"
+        draggable={false}
+        style={{
+          width: '100%', height: '100%',
+          objectFit: 'cover', objectPosition: '100% 50%',
+          display: 'block', userSelect: 'none',
+        }}
+      />
+    </div>
+  )
+}
+
+/** "Chart by TradingView" — their attribution, and the app shows it too. */
+export function ChartAttribution({ size = 9 }: { size?: number }) {
+  return (
+    <div style={{
+      ...label, fontSize: `${size}px`, letterSpacing: '0.1em',
+      color: INK4, textAlign: 'center', padding: '4px 0 6px', flexShrink: 0,
+    }}>
+      Chart by TradingView
     </div>
   )
 }

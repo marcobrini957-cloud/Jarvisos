@@ -28,7 +28,7 @@ import { useEffect, useRef, useState } from 'react'
 import { LogoMark } from '@/components/ui/LogoMark'
 import Icon from '@/components/ui/Icon'
 import {
-  Panel, Num, Segmented, Stage, SceneCaption,
+  Panel, Num, Segmented, Stage, SceneCaption, LiveChartShot, ChartAttribution, CHART_QUOTE,
   INK1, INK2, INK3, INK4, LINE, UP, DOWN, VOID, SURF,
   mono, label, words,
 } from '@/components/product/replica'
@@ -288,7 +288,7 @@ function Trading() {
         ))}
       </div>
 
-      <Panel title="Live chart" style={{ flex: 1, minHeight: 0 }}>
+      <Panel title="Live chart" column style={{ flex: 1, minHeight: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px 4px', flexWrap: 'wrap' }}>
           {['NAS100', 'XAUUSD'].map((s, i) => (
             <span key={s} style={{
@@ -305,10 +305,11 @@ function Trading() {
             ))}
           </span>
         </div>
-        <div style={{ padding: '0 12px 2px', ...mono, fontSize: '9px', color: INK4 }}>
-          US Nas 100 · 5 · OANDA <span style={{ color: DOWN }}>−88.6 (−0.32%)</span>
+        <div style={{ padding: '0 12px 3px', ...mono, fontSize: '9px', color: INK4 }}>
+          {CHART_QUOTE.symbol} <span style={{ color: DOWN }}>{CHART_QUOTE.chg}</span>
         </div>
-        <Candles />
+        <LiveChartShot />
+        <ChartAttribution size={8} />
       </Panel>
 
       <MetricRow cells={[
@@ -320,43 +321,6 @@ function Trading() {
   )
 }
 
-/** Seeded, so the chart never disagrees with the quote line above it. */
-function Candles() {
-  // Tall enough to fill the panel it sits in — at 132 the chart floated in the
-  // top third with 78px of dead surface under it.
-  const w = 346, h = 208, n = 42
-  let seed = 20260801
-  const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296 }
-  let price = 28040
-  const bars: { o: number; h: number; l: number; c: number }[] = []
-  for (let i = 0; i < n; i++) {
-    const o = price
-    const c = o + (rnd() - 0.52) * 26
-    bars.push({ o, h: Math.max(o, c) + rnd() * 10, l: Math.min(o, c) - rnd() * 10, c })
-    price = c
-  }
-  const lo = Math.min(...bars.map(b => b.l)), hi = Math.max(...bars.map(b => b.h))
-  const Y = (v: number) => h - ((v - lo) / (hi - lo)) * h
-  const step = w / n, bw = Math.max(2, step * 0.56)
-
-  return (
-    <div style={{ padding: '2px 12px 8px' }}>
-      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
-        {bars.map((b, i) => {
-          const x = i * step + step / 2
-          const col = b.c >= b.o ? UP : DOWN
-          const top = Y(Math.max(b.o, b.c)), bot = Y(Math.min(b.o, b.c))
-          return (
-            <g key={i}>
-              <line x1={x} x2={x} y1={Y(b.h)} y2={Y(b.l)} stroke={col} strokeWidth="1" />
-              <rect x={x - bw / 2} y={top} width={bw} height={Math.max(1, bot - top)} fill={col} />
-            </g>
-          )
-        })}
-      </svg>
-    </div>
-  )
-}
 
 // ── Journal ──────────────────────────────────────────────────────────────────
 

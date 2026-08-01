@@ -31,7 +31,7 @@ import { LogoMark } from '@/components/ui/LogoMark'
 import {
   Topbar, TabBar, Panel, Num, Segmented,
   INK1, INK2, INK3, INK4, LINE, UP, DOWN, VOID, SURF,
-  mono, label, words, easeOutExpo, clamp01, splineAt, SceneCaption,
+  mono, label, words, easeOutExpo, clamp01, splineAt, SceneCaption, LiveChartShot, ChartAttribution, CHART_QUOTE,
 } from '@/components/product/replica'
 
 // ── Geometry ─────────────────────────────────────────────────────────────────
@@ -403,7 +403,7 @@ function Trading() {
         </span>
       </div>
 
-      <Panel title="Live chart" style={{ flex: 1, minHeight: 0 }}>
+      <Panel title="Live chart" column style={{ flex: 1, minHeight: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px' }}>
           <div style={{ display: 'flex', gap: '6px' }}>
             {['NAS100', 'XAUUSD'].map((s, i) => (
@@ -426,15 +426,15 @@ function Trading() {
         </div>
 
         <div style={{ padding: '0 14px 4px', display: 'flex', alignItems: 'baseline', gap: '10px', ...mono, fontSize: '11px' }}>
-          <span style={{ color: INK2 }}>US Nas 100 · 5 · OANDA</span>
-          <span style={{ color: INK4 }}>O<span style={{ color: DOWN }}>28,051.6</span></span>
-          <span style={{ color: INK4 }}>H<span style={{ color: DOWN }}>28,062.0</span></span>
-          <span style={{ color: INK4 }}>L<span style={{ color: DOWN }}>27,961.3</span></span>
-          <span style={{ color: INK4 }}>C<span style={{ color: DOWN }}>27,963.0</span></span>
-          <span style={{ color: DOWN }}>−88.6 (−0.32%)</span>
+          <span style={{ color: INK2 }}>{CHART_QUOTE.symbol}</span>
+          <span style={{ color: INK4 }}>O<span style={{ color: DOWN }}>{CHART_QUOTE.o}</span></span>
+          <span style={{ color: INK4 }}>H<span style={{ color: DOWN }}>{CHART_QUOTE.h}</span></span>
+          <span style={{ color: INK4 }}>L<span style={{ color: DOWN }}>{CHART_QUOTE.l}</span></span>
+          <span style={{ color: INK4 }}>C<span style={{ color: DOWN }}>{CHART_QUOTE.c}</span></span>
+          <span style={{ color: DOWN }}>{CHART_QUOTE.chg}</span>
         </div>
-
-        <Candles />
+        <LiveChartShot />
+        <ChartAttribution />
       </Panel>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', flexShrink: 0 }}>
@@ -477,45 +477,6 @@ function Ring({ text, sub, color }: { text: string; sub: string; color: string }
   )
 }
 
-/** Deterministic candles — the same shape on every visit, drawn left to right. */
-function Candles() {
-  const n = 96, w = 1386, h = 250
-  const bars = Array.from({ length: n }, (_, i) => {
-    const drift = 27200 + i * 8 + Math.sin(i / 7) * 90 + Math.sin(i / 23) * 160
-    const o = drift + Math.sin(i * 2.3) * 22
-    const c = drift + Math.cos(i * 1.7) * 26
-    return { o, c, hi: Math.max(o, c) + 14 + Math.abs(Math.sin(i * 3.1)) * 20, lo: Math.min(o, c) - 12 - Math.abs(Math.cos(i * 2.7)) * 18 }
-  })
-  const lo = Math.min(...bars.map(b => b.lo)), hi = Math.max(...bars.map(b => b.hi))
-  const Y = (v: number) => h - ((v - lo) / (hi - lo)) * h
-  const bw = w / n
-
-  return (
-    <div style={{ padding: '0 14px 10px', position: 'relative' }}>
-      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block' }}>
-        {bars.map((b, i) => {
-          const up = b.c >= b.o
-          const col = up ? UP : DOWN
-          const x = i * bw + bw / 2
-          return (
-            <g key={i} style={{ animation: `vqBar 0.5s ease ${(i / n) * 0.9}s both` }}>
-              <line x1={x} x2={x} y1={Y(b.hi)} y2={Y(b.lo)} stroke={col} strokeWidth="1" />
-              <rect x={i * bw + bw * 0.18} width={bw * 0.64} y={Y(Math.max(b.o, b.c))}
-                height={Math.max(1, Math.abs(Y(b.o) - Y(b.c)))} fill={col} />
-            </g>
-          )
-        })}
-        <line x1="0" x2={w} y1={Y(bars[n - 1].c)} y2={Y(bars[n - 1].c)} stroke={DOWN} strokeWidth="1" strokeDasharray="3 3" opacity="0.7" />
-        <style>{`@keyframes vqBar { from { opacity: 0 } to { opacity: 1 } }
-          @media (prefers-reduced-motion: reduce) { g { animation: none !important } }`}</style>
-      </svg>
-      <span style={{
-        position: 'absolute', right: '14px', top: `${Y(bars[n - 1].c) - 9}px`,
-        ...mono, fontSize: '10px', background: DOWN, color: '#fff', padding: '2px 6px', borderRadius: '3px',
-      }}>27,963.0</span>
-    </div>
-  )
-}
 
 // ── Scene: Journal ───────────────────────────────────────────────────────────
 
