@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { CtaLink } from './CtaLink'
 import { useLocale } from '@/hooks/useLocale'
 import { AnimatedDashboard } from './AnimatedDashboard'
+import { MobileDashboard } from './MobileDashboard'
 import { TickerStrip } from './TickerStrip'
 
 /**
@@ -18,11 +19,10 @@ import { TickerStrip } from './TickerStrip'
  * violations in one viewport (DESIGN.md §2) — and between them they were doing
  * the work the product screenshot should be doing.
  *
- * What replaced it: the pitch is set left, ranged against the same margin as
- * the nav, and hierarchy comes from ink and size rather than colour. The
- * product frame then runs full-bleed under it with one hairline above — the
- * dashboard reads as a machine that continues past the edge of the screen
- * rather than a card floating in a glow.
+ * What replaced it: the pitch is centred, and hierarchy comes from ink and size
+ * rather than colour. Under it the product sits in a framed box on the same
+ * axis, capped at its true 1:1 width — and on a phone that box holds a portrait
+ * replica of the app's real mobile layout rather than a cropped desktop one.
  */
 export function Hero() {
   const { t } = useLocale()
@@ -138,7 +138,22 @@ export function Hero() {
             border: '1px solid var(--color-line-2)', borderRadius: 'var(--radius-lg)',
             background: 'var(--s1)', overflow: 'hidden',
           }}>
-            <AnimatedDashboard />
+            {/*
+              Two replicas, one shown. The desktop canvas is 1440×812 and cannot
+              shrink below ~0.5 without the type dissolving, so on a phone it was
+              cropped from the right — half a landscape dashboard on a portrait
+              screen. The phone gets the app's real mobile layout instead.
+
+              Swapped in CSS rather than by measuring the viewport in JS: the
+              server cannot know the width, so a JS swap either mismatches on
+              hydration or flashes the wrong replica for a frame on every phone
+              load (the dashboard hit exactly this — see useIsMobile's comment).
+              The hidden one costs nothing to animate: `display: none` has no
+              box, so its IntersectionObserver never fires and its rAF loop never
+              starts.
+            */}
+            <div className="vq-hero-desktop"><AnimatedDashboard /></div>
+            <div className="vq-hero-mobile"><MobileDashboard /></div>
           </div>
         </div>
       </div>
@@ -156,6 +171,15 @@ export function Hero() {
             0 0 130px -24px rgba(255,255,255,0.24);
         }
         .vq-hero-glow { display: none }
+
+        /* The 639px line is the dashboard's own mobile breakpoint
+           (components/dashboard/tabs/overview/helpers.tsx), so the hero swaps
+           to the portrait replica at exactly the width the product does. */
+        .vq-hero-mobile  { display: none }
+        @media (max-width: 639px) {
+          .vq-hero-desktop { display: none }
+          .vq-hero-mobile  { display: block }
+        }
       `}</style>
     </section>
   )

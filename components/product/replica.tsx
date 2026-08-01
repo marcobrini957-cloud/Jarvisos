@@ -339,3 +339,93 @@ export function Stage({ width: W, height: H, minScale = 0.5, path, sceneKey, chi
     </div>
   )
 }
+
+// ── The caption strip ────────────────────────────────────────────────────────
+
+/**
+ * What each scene is actually showing.
+ *
+ * Without these a hero cycles tabs and a visitor watches competent motion
+ * without ever being able to say what the product does. Keyed by tab label so
+ * the desktop and portrait replicas cannot drift into telling different
+ * stories about the same screen.
+ */
+export const SCENE_CAPTIONS: Record<string, string> = {
+  Home:    'Everything in one place — and not one number typed in by hand.',
+  Trading: 'Every fill pulled from MetaTrader the moment it closes.',
+  Journal: 'Why you took it, not just what it paid.',
+  Copy:    'One account trades. The others follow, in under two seconds.',
+  Analyst: 'Ask it why you lose on gold. It answers from your own fills.',
+}
+
+/**
+ * One line under the replica, plus a dot per scene.
+ *
+ * Under prefers-reduced-motion the animation never starts, so `active` would
+ * sit on the first scene for ever and this would show one line of five. In that
+ * case it lists them all instead — the information is the point, the cycling is
+ * not.
+ */
+export function SceneCaption({ scenes, active }: { scenes: readonly string[]; active: string }) {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    if (!mq) return
+    const apply = () => setReduced(mq.matches)
+    apply()
+    mq.addEventListener?.('change', apply)
+    return () => mq.removeEventListener?.('change', apply)
+  }, [])
+
+  if (reduced) {
+    return (
+      <ul style={{
+        listStyle: 'none', margin: 0, padding: '16px clamp(12px, 3vw, 24px)',
+        display: 'flex', flexDirection: 'column', gap: '7px',
+        borderTop: `1px solid ${LINE}`,
+      }}>
+        {scenes.map(s => (
+          <li key={s} style={{
+            color: INK2, fontFamily: 'var(--font-display)',
+            fontSize: 'var(--text-base)', lineHeight: 1.55,
+          }}>
+            {SCENE_CAPTIONS[s]}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 'clamp(10px, 2vw, 18px)',
+      padding: '14px clamp(12px, 3vw, 24px)',
+      borderTop: `1px solid ${LINE}`,
+      minHeight: '56px', boxSizing: 'border-box',
+    }}>
+      <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }} aria-hidden="true">
+        {scenes.map(s => (
+          <span key={s} style={{
+            width: '5px', height: '5px', borderRadius: '50%',
+            background: s === active ? INK1 : 'var(--color-line-2)',
+            transition: 'background 0.3s',
+          }} />
+        ))}
+      </div>
+      {/* Keyed so each line fades in on its own rather than cross-fading into
+          a half-legible blend of two sentences. */}
+      <p key={active} className="vq-caption" style={{
+        margin: 0, color: INK2,
+        fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+        lineHeight: 1.5, minWidth: 0,
+      }}>
+        {SCENE_CAPTIONS[active]}
+      </p>
+      <style>{`
+        .vq-caption { animation: vqCapIn 0.4s cubic-bezier(0.16,1,0.3,1) }
+        @keyframes vqCapIn { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+        @media (prefers-reduced-motion: reduce) { .vq-caption { animation: none } }
+      `}</style>
+    </div>
+  )
+}
