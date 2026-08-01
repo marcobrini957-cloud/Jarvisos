@@ -50,21 +50,58 @@ export const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
 
 /**
- * A scene's zoom over its own length: hold wide, push in, hold on the detail,
- * pull back out, hold wide. Returns 0 (wide) → 1 (fully in) → 0.
- *
- * The holds are the point. A push that starts on the cut and reverses at the
- * halfway mark reads as a wobble; establishing the whole screen first, resting
- * long enough to actually read the detail, then returning is what makes it a
- * camera move rather than a scale animation.
+ * The beat of the camera move, in milliseconds — absolute, not a fraction of
+ * the scene, so a punch is the same speed whether the scene runs 3s or 4.5s.
  */
-export function zoomEnvelope(u: number): number {
-  const IN0 = 0.16, IN1 = 0.40, OUT0 = 0.70, OUT1 = 0.92
-  if (u <= IN0)  return 0
-  if (u <  IN1)  return easeInOutCubic((u - IN0) / (IN1 - IN0))
-  if (u <= OUT0) return 1
-  if (u <  OUT1) return 1 - easeInOutCubic((u - OUT0) / (OUT1 - OUT0))
+const ESTABLISH = 340   // see the whole screen first
+const WIDE      = 190   // sit wide between punches
+const PUNCH     = 230   // the move itself. Short: this is a snap, not a glide
+const HOLD      = 500   // long enough to read it, short enough to feel alive
+const PERIOD    = WIDE + PUNCH + HOLD + PUNCH
+
+/** How many punches fit in a scene of this length. */
+export function punchCount(durationMs: number): number {
+  return Math.max(1, Math.floor((durationMs - ESTABLISH) / PERIOD))
+}
+
+/**
+ * A scene's zoom over its own length, as a fraction of the focus scale.
+ *
+ * This was one slow push in and back out, and it read as a slideshow
+ * transition: a single event stretched over three seconds, so nothing ever felt
+ * like it was *happening*. It punches now — establish wide, snap in over 230ms,
+ * hold half a second, snap out, and repeat for as many beats as the scene
+ * affords. Each punch leans a little deeper than the last, so repeats build
+ * instead of looping.
+ */
+export function punchEnvelope(ageMs: number, durationMs: number): number {
+  const n = punchCount(durationMs)
+  let t = ageMs - ESTABLISH
+  if (t < 0) return 0
+  const i = Math.floor(t / PERIOD)
+  if (i >= n) return 0
+  t -= i * PERIOD
+
+  const depth = n > 1 ? 0.74 + 0.26 * (i / (n - 1)) : 1
+  if (t < WIDE) return 0
+  t -= WIDE
+  if (t < PUNCH) return depth * easeInOutCubic(t / PUNCH)
+  t -= PUNCH
+  if (t < HOLD) return depth
+  t -= HOLD
+  if (t < PUNCH) return depth * (1 - easeInOutCubic(t / PUNCH))
   return 0
+}
+
+/**
+ * The note holds across the whole run of punches rather than blinking with each
+ * one — three flashes in four seconds is a strobe, not a caption.
+ */
+export function noteOpacity(ageMs: number, durationMs: number): number {
+  const n = punchCount(durationMs)
+  const from = ESTABLISH + WIDE + PUNCH * 0.6
+  const to   = ESTABLISH + n * PERIOD - PUNCH * 0.5
+  return clamp01((ageMs - from) / 170) * clamp01((to - ageMs) / 170)
 }
 
 /**
@@ -427,7 +464,7 @@ export function Stage({
       if (zoomRef.current) {
         let z = 1
         if (f) {
-          z = 1 + (f.scale - 1) * zoomEnvelope(clamp01(age / durationMs))
+          z = 1 + (f.scale - 1) * punchEnvelope(age, durationMs)
         } else if (zoom > 0) {
           // No detail worth framing: a slow settle-in creep instead.
           z = 1 + zoom * easeOutExpo(clamp01(age / (durationMs * 1.35)))
@@ -438,8 +475,7 @@ export function Stage({
         // size on screen while the footage behind it grows — a caption burned
         // into the frame, not a label glued to the pixels.
         if (noteRef.current && f?.note) {
-          const t = zoomEnvelope(clamp01(age / durationMs))
-          noteRef.current.style.opacity   = clamp01((t - 0.45) / 0.3).toFixed(3)
+          noteRef.current.style.opacity   = noteOpacity(age, durationMs).toFixed(3)
           noteRef.current.style.transform = `translate(-50%, 0) scale(${(1 / z).toFixed(4)})`
         }
       }
