@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { isDevAuthed, devUnauthorized, serviceClient, audit, isMissingSchemaError } from '@/lib/api/dev-auth'
+import { isOwner, OWNER_BAN_REFUSED } from '@/lib/api/owner'
 
 // GET /api/dev/users/:id — full detail for the admin user panel
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -63,6 +64,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   switch (body.action) {
     case 'ban':
+      // The owner cannot be banned — it would take down its own dashboard and
+      // MT5 sync. See lib/api/owner.ts; the database enforces this too.
+      if (await isOwner(id)) {
+        return NextResponse.json({ error: OWNER_BAN_REFUSED }, { status: 409 })
+      }
       update = {
         banned: true,
         banned_reason: body.reason?.slice(0, 500) || null,

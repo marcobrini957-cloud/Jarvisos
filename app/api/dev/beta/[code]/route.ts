@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { normalizeBetaCode } from '@/lib/api/site-lock'
+import { isOwner } from '@/lib/api/owner'
 
 function isAuthed(req: NextRequest) {
   const secret = process.env.DEV_SECRET
@@ -48,12 +49,35 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ code: str
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   if (revoked !== undefined && data?.redeemed_by) {
-    await db.from('user_profiles').update({ banned: !!revoked }).eq('id', data.redeemed_by)
+    // Revoking bans the redeemer — except when the redeemer is the owner. On
+    // 2026-08-01 it was: a test invite had been redeemed with the owner account,
+    // and revoking it killed sync for 19 hours. The code is still revoked; only
+    // the ban is skipped.
+    const ownerRedeemed = await isOwner(data.redeemed_by)
+
+    if (!ownerRedeemed) {
+      // Write the reason and timestamp too. Without them the row said `banned`
+      // and nothing else, so there was no way to tell what had done it.
+      await db.from('user_profiles').update(
+        revoked
+          ? {
+              banned: true,
+              banned_at: new Date().toISOString(),
+              banned_reason: `beta invite ${normalized} revoked`,
+            }
+          : { banned: false, banned_at: null, banned_reason: null },
+      ).eq('id', data.redeemed_by)
+    }
+
     await db.from('admin_audit_log').insert({
       action: revoked ? 'beta_invite_revoked' : 'beta_invite_restored',
       target_user_id: data.redeemed_by,
-      detail: `code ${normalized}`,
+      detail: `code ${normalized}${ownerRedeemed ? ' (owner — ban skipped)' : ''}`,
     }).select().maybeSingle()
+
+    if (ownerRedeemed) {
+      return NextResponse.json({ ...data, ownerBanSkipped: true })
+    }
   }
 
   return NextResponse.json(data)

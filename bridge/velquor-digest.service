@@ -1,0 +1,10 @@
+[Unit]
+Description=VELQUOR daily "what is working" report
+After=network-online.target
+
+[Service]
+Type=oneshot
+# pm2, docker and node are not on a bare systemd PATH.
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/.nvm/versions/node/current/bin
+ExecStart=/opt/velquor-watchdog/digest.sh
+SuccessExitStatus=0 1

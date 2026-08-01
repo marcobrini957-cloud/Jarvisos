@@ -32,6 +32,12 @@ ALERT_WEBHOOK_URL="${ALERT_WEBHOOK_URL:-}"
 BRIDGE_HEALTH_URL="${BRIDGE_HEALTH_URL:-http://127.0.0.1:3001/health?deep=1}"
 DISK_WARN_PCT="${DISK_WARN_PCT:-90}"
 FAIL_THRESHOLD="${FAIL_THRESHOLD:-2}"
+BRIDGE_ADMIN_TOKEN="${BRIDGE_ADMIN_TOKEN:-}"
+# A terminal is running but nothing has synced for this long -> data is not
+# flowing. 8 minutes: the EA posts every ~10s, so this is ~48 missed cycles.
+STALE_SYNC_MIN="${STALE_SYNC_MIN:-8}"
+# Refusals per check that count as "requests are being rejected".
+REJECT_WARN="${REJECT_WARN:-50}"
 
 notify() {
   local msg="$1"
@@ -51,6 +57,15 @@ notify() {
         "$(printf '%s' "$msg" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')")" || true
   fi
 }
+
+# Prior state, loaded before the checks run: section 6 compares counters
+# against the previous pass.
+prev_state="ok"; prev_fails=0
+if [ -f "$STATE_FILE" ]; then
+  # shellcheck disable=SC1090
+  . "$STATE_FILE"
+  prev_state="${STATE:-ok}"; prev_fails="${FAILS:-0}"
+fi
 
 problems=()
 
@@ -92,14 +107,51 @@ dead="$(docker ps -a --filter 'name=velquor-term-' --format '{{.Names}} {{.State
   | awk '$2 != "running" { print $1 }' | tr '\n' ' ')"
 [ -n "${dead// /}" ] && problems+=("terminal container(s) not running: ${dead}")
 
-# ── State machine ───────────────────────────────────────────────────────────
-prev_state="ok"; prev_fails=0
-if [ -f "$STATE_FILE" ]; then
-  # shellcheck disable=SC1090
-  . "$STATE_FILE"
-  prev_state="${STATE:-ok}"; prev_fails="${FAILS:-0}"
+# ── 6. Is data actually FLOWING? ────────────────────────────────────────────
+# Everything above answers "is it running". On 2026-08-01 all five were green
+# for 19 hours while not one trade synced: the owner account had been banned by
+# a beta-invite revoke, so the bridge answered 403 to every post. Liveness is
+# not readiness. This compares the bridge's own counters between runs.
+terminals="$(docker ps --filter 'name=velquor-term-' --format '{{.Names}}' 2>/dev/null | grep -c . || echo 0)"
+syncs=""; rejects=""
+if [ -n "$BRIDGE_ADMIN_TOKEN" ]; then
+  stats="$(curl -sS -m 8 -H "Authorization: Bearer ${BRIDGE_ADMIN_TOKEN}" \
+    http://127.0.0.1:3001/admin/stats 2>/dev/null || echo '')"
+  if [ -n "$stats" ]; then
+    syncs="$(printf '%s' "$stats" | python3 -c 'import json,sys
+try:
+    m = json.load(sys.stdin)["metrics"]
+    print(int(m.get("syncs", 0)))
+except Exception: pass' 2>/dev/null || echo '')"
+    rejects="$(printf '%s' "$stats" | python3 -c 'import json,sys
+try:
+    m = json.load(sys.stdin)["metrics"]
+    print(int(m.get("banned_rejects", 0)) + int(m.get("unauthorized", 0)))
+except Exception: pass' 2>/dev/null || echo '')"
+  fi
 fi
 
+# Counters reset when the bridge restarts; a drop means restart, not a stall.
+prev_syncs="${PREV_SYNCS:-}"; prev_rejects="${PREV_REJECTS:-}"; stale_for="${STALE_FOR:-0}"
+if [ -n "$syncs" ] && [ -n "$prev_syncs" ] && [ "$syncs" -ge "$prev_syncs" ] && [ "$terminals" -gt 0 ]; then
+  if [ "$syncs" -eq "$prev_syncs" ]; then
+    stale_for=$((stale_for + 1))
+  else
+    stale_for=0
+  fi
+  [ "$stale_for" -ge "$STALE_SYNC_MIN" ] && \
+    problems+=("no successful sync in ~${stale_for} min while ${terminals} terminal(s) run — data is not flowing")
+else
+  stale_for=0
+fi
+
+if [ -n "$rejects" ] && [ -n "$prev_rejects" ] && [ "$rejects" -ge "$prev_rejects" ]; then
+  delta=$((rejects - prev_rejects))
+  [ "$delta" -ge "$REJECT_WARN" ] && \
+    problems+=("${delta} sync requests rejected since last check (banned or bad API key)")
+fi
+
+# ── State machine ───────────────────────────────────────────────────────────
 if [ ${#problems[@]} -gt 0 ]; then
   fails=$((prev_fails + 1))
   if [ "$fails" -ge "$FAIL_THRESHOLD" ] && [ "$prev_state" != "down" ]; then
@@ -107,9 +159,11 @@ if [ ${#problems[@]} -gt 0 ]; then
     for p in "${problems[@]}"; do body+="• ${p}"$'\n'; done
     body+=$'\n'"Live trade sync may be down for all users."$'\n'"Box: $(hostname) · $(date -u '+%Y-%m-%d %H:%M UTC')"
     notify "$body"
-    printf 'STATE=down\nFAILS=%s\n' "$fails" > "$STATE_FILE"
+    printf 'STATE=down\nFAILS=%s\nPREV_SYNCS=%s\nPREV_REJECTS=%s\nSTALE_FOR=%s\n' \
+      "$fails" "$syncs" "$rejects" "$stale_for" > "$STATE_FILE"
   else
-    printf 'STATE=%s\nFAILS=%s\n' "$prev_state" "$fails" > "$STATE_FILE"
+    printf 'STATE=%s\nFAILS=%s\nPREV_SYNCS=%s\nPREV_REJECTS=%s\nSTALE_FOR=%s\n' \
+      "$prev_state" "$fails" "$syncs" "$rejects" "$stale_for" > "$STATE_FILE"
   fi
   # Non-zero exit records the failure in `systemctl status` / journalctl too.
   printf 'watchdog: %s\n' "${problems[*]}" >&2
@@ -119,5 +173,6 @@ fi
 if [ "$prev_state" = "down" ]; then
   notify "🟢 VELQUOR bridge RECOVERED"$'\n\n'"All checks passing again."$'\n'"Box: $(hostname) · $(date -u '+%Y-%m-%d %H:%M UTC')"
 fi
-printf 'STATE=ok\nFAILS=0\n' > "$STATE_FILE"
+printf 'STATE=ok\nFAILS=0\nPREV_SYNCS=%s\nPREV_REJECTS=%s\nSTALE_FOR=%s\n' \
+  "$syncs" "$rejects" "$stale_for" > "$STATE_FILE"
 exit 0

@@ -1,0 +1,11 @@
+[Unit]
+Description=Send the VELQUOR daily report
+
+[Timer]
+# 07:30 UTC — before the London session, so a broken sync is known about
+# before it costs a trading day.
+OnCalendar=*-*-* 07:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

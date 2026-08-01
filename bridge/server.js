@@ -776,6 +776,58 @@ app.get('/admin/stats', wrap(async (req, res) => {
   });
 }));
 
+/**
+ * A plain-language answer to "is everything working?".
+ *
+ * Built after 2026-08-01, when every liveness check on the box was green for 19
+ * hours while not one trade synced — the owner account had been banned by a
+ * beta-invite revoke and the bridge was answering 403 to every post. Uptime
+ * said nothing useful. This reports *flow*: who synced, how long ago, and who
+ * is being refused.
+ */
+app.get('/admin/digest', wrap(async (req, res) => {
+  if (!adminAuthed(req, res)) return;
+  const now = Date.now();
+
+  const { data: users } = await supabase
+    .from('user_profiles')
+    .select('email, subscription_tier, banned, is_owner, ea_connected, ea_last_seen');
+
+  const accounts = (users || []).map((u) => {
+    const seen = u.ea_last_seen ? new Date(u.ea_last_seen).getTime() : null;
+    const ageMin = seen ? Math.round((now - seen) / 60000) : null;
+    return {
+      email: u.email,
+      tier: u.subscription_tier,
+      banned: u.banned === true,
+      owner: u.is_owner === true,
+      connected: u.ea_connected === true,
+      last_sync_min: ageMin,
+      // Connected but silent for over an hour is the shape of a real fault.
+      stale: u.ea_connected === true && (ageMin === null || ageMin > 60),
+    };
+  });
+
+  res.json({
+    ts: new Date().toISOString(),
+    bridge: {
+      version: VERSION,
+      uptime_h: Math.round((now - STARTED_AT.getTime()) / 3600000),
+      settings_source: settingsSource,
+      sync_enabled: settings.sync_enabled,
+      maintenance: settings.maintenance_mode,
+    },
+    metrics: { ...metrics },
+    accounts,
+    problems: [
+      ...accounts.filter((a) => a.stale).map((a) => `${a.email}: no sync for ${a.last_sync_min ?? '\u221e'} min`),
+      ...accounts.filter((a) => a.banned).map((a) => `${a.email}: BANNED`),
+      ...(settings.maintenance_mode ? ['bridge is in maintenance mode'] : []),
+      ...(settings.sync_enabled ? [] : ['sync is disabled in bridge_settings']),
+    ],
+  });
+}));
+
 app.post('/admin/reload', wrap(async (req, res) => {
   if (!adminAuthed(req, res)) return;
   await refreshSettings();
