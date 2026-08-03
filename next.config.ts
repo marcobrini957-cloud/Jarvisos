@@ -26,6 +26,15 @@ const nextConfig: NextConfig = {
   // (would risk the mic used for voice dictation) and HSTS without includeSubDomains
   // (so the bridge/other subdomains are never forced). SAMEORIGIN, not DENY, since
   // Google One Tap / GIS embed their own frames into our pages.
+  // The landing preview URL was passed around for a couple of days before the
+  // design went live at /. Done here rather than with redirect() in a page:
+  // that renders an HTML shell and redirects on the client, which is a 200 to
+  // a crawler. This is a real 308 at the routing layer.
+  async redirects() {
+    return [
+      { source: '/preview/landing', destination: '/', permanent: true },
+    ]
+  },
   async headers() {
     return [
       {

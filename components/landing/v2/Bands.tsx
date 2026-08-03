@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Reveal } from './Reveal'
 import { Eyebrow, H2, Body, PillLink, Glass, Shell } from './ui'
 import { LogoMark } from '@/components/ui/LogoMark'
+import { FAQS } from './faqData'
 
 /**
  * The rest of the landing, ported from the live page into the v2 language.
@@ -516,14 +517,6 @@ export function PricingBand() {
 
 /* ── FAQ ─────────────────────────────────────────────────────────────────── */
 
-const FAQS = [
-  ['Do I have to give VELQUOR my MT5 password?', 'No. VELQUOR works through an Expert Advisor that runs inside your own MT5 terminal — your broker login never leaves your machine. The EA authenticates with a personal API key you can reset at any time.'],
-  ['Which brokers are supported?', 'Every broker that offers MetaTrader 5 — IC Markets, Pepperstone, Blueberry, Vantage, FTMO, Eightcap and hundreds more. If it runs MT5, it works with VELQUOR.'],
-  ['How fast is the trade copier?', 'Signals travel from your leader account to your followers in about half a second, with the broker fill on top. Lot sizing is 1:1, proportional or fixed — you choose per group.'],
-  ['Is my trading data safe?', 'Your data is stored on EU servers, isolated per account, and encrypted in transit. Nobody else can see your trades, and VELQUOR never has the ability to withdraw or move your money.'],
-  ['Do I need a credit card for the free plan?', 'No. The free plan is free forever — no card, no trial countdown. You get auto-sync, the journal and core stats. Upgrade only when you want AI analysis, unlimited history or the copier.'],
-  ['Can I use it during a prop firm challenge?', 'Yes — that is exactly what Prop Firm Mode is for. VELQUOR tracks your max daily loss, total drawdown and profit target in real time, and warns you before you breach a rule.'],
-]
 
 export function FaqBand() {
   return (
