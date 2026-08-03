@@ -1,14 +1,25 @@
 'use client'
 
-import { useState } from 'react'
 import type { Trade } from '@/types'
 import { useClassifier } from '@/context/UserProfileContext'
+import { calcConsistency } from './helpers'
 
 // ── FIFA-style Trader Radar ───────────────────────────────────────────────────
+//
+// Six skills, each scored 0–100, each carrying its own grading rule in plain
+// words directly under the number. The rule used to live in a collapsed "How is
+// this graded?" drawer, which is the wrong default: a score nobody can audit is
+// a score nobody should trust, and hiding the method behind a click says we'd
+// rather not be asked.
+//
+// The sixth axis is Consistency, not Avg R:R. Graded R:R punishes a style
+// rather than a skill — a scalper at 0.8R and 70% wins is not worse than a
+// swing trader at 3R — which is the same reason it was pulled from the KPI
+// cards in favour of Expectancy. Consistency (share of trading days closed
+// green) grades the trader, not the timeframe.
 
 export function TraderRadar({ closed }: { closed: Trade[] }) {
   const { isWin, isLoss } = useClassifier()
-  const [showLegend, setShowLegend] = useState(false)
   const N  = 6
   // Give the hex generous room so labels never clip
   const W  = 600, H = 520
@@ -29,18 +40,9 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
   // Linear: score = 33 + (PF − 1) × 44.67, clamped 0–100.
   const pfScore   = Math.min(100, Math.max(0, 33 + (pf - 1) * (67 / 1.5)))
 
-  // 3. Avg realized R:R — quality of entry & exit
-  const rrTrades = closed.filter(t => t.stop_loss && t.open_price && t.close_price && t.trade_type)
-  const avgRR    = rrTrades.length > 0
-    ? rrTrades.reduce((s, t) => {
-        const dir      = t.trade_type === 'buy' ? 1 : -1
-        const realized = dir * ((t.close_price ?? 0) - (t.open_price ?? 0))
-        const risk     = Math.abs((t.open_price ?? 0) - (t.stop_loss ?? 0))
-        return s + (risk > 0 ? realized / risk : 0)
-      }, 0) / rrTrades.length
-    : null
-  // -1R = 0, 0R = 33, +2R = 100
-  const rrScore = avgRR !== null ? Math.min(100, Math.max(0, (avgRR + 1) / 3 * 100)) : 50
+  // 3. Consistency — share of trading days that closed green. The score IS the
+  // percentage: 10 green days out of 14 traded is a 71, no curve applied.
+  const consistency = calcConsistency(closed)
 
   // 4. Discipline — plan adherence
   const planTrades = closed.filter(t => t.followed_plan !== null && t.followed_plan !== undefined)
@@ -66,6 +68,9 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
   // Axes: order = top, TR, BR, bottom, BL, TL (clockwise from 12 o'clock)
   // `has` = this skill has enough logged data to score honestly. Un-logged skills
   // are shown as "—" and EXCLUDED from the OVR (rather than silently counting 50).
+  // `how` is the grading rule in the trader's own language, rendered under the
+  // number rather than hidden in a drawer. `unlock` says what to log to score an
+  // axis that has no data yet — a "—" should always come with its remedy.
   const axes = [
     {
       id: 'wr',
@@ -74,6 +79,8 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
       sub:   `${wins}W · ${losses}L`,
       score: winRate,
       has:   (wins + losses) > 0,
+      how:   'Wins ÷ (wins + losses). Break-even trades count for neither side, so they cannot drag the number down. The score is the percentage itself.',
+      unlock: 'Close a few trades to score this.',
     },
     {
       id: 'pf',
@@ -82,14 +89,20 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
       sub:   pf >= 1.75 ? 'elite edge' : pf >= 1.25 ? 'solid edge' : pf >= 1 ? 'marginal' : 'losing',
       score: pfScore,
       has:   closed.length > 0 && (grossWin > 0 || grossLoss > 0),
+      how:   'Gross profit ÷ gross loss, graded against industry norms: 1.00× is break-even and scores 33, 1.75× scores 67, 2.50× and above scores 100.',
+      unlock: 'Close a few trades to score this.',
     },
     {
-      id: 'rr',
-      label: 'AVG R:R',
-      value: avgRR !== null ? `${avgRR >= 0 ? '+' : ''}${avgRR.toFixed(2)}R` : '—',
-      sub:   rrTrades.length > 0 ? `${rrTrades.length} trades w/ SL` : 'add SL to trades',
-      score: rrScore,
-      has:   rrTrades.length > 0,
+      id: 'cons',
+      label: 'CONSISTENCY',
+      value: consistency.totalDays > 0 ? `${consistency.pct.toFixed(0)}%` : '—',
+      sub:   consistency.totalDays > 0
+        ? `${consistency.green}/${consistency.totalDays} days green`
+        : 'no trading days yet',
+      score: consistency.pct,
+      has:   consistency.totalDays > 0,
+      how:   'Share of your trading days that closed in profit. Days you did not trade are ignored. Deliberately blind to style — a scalper and a swing trader can both score 100.',
+      unlock: 'Trade on a few separate days to score this.',
     },
     {
       id: 'disc',
@@ -98,6 +111,8 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
       sub:   planTrades.length > 0 ? `${planTrades.length} annotated` : 'log plan adherence',
       score: discScore,
       has:   planTrades.length > 0,
+      how:   'Share of annotated trades where you marked that you followed your plan. Only trades you have annotated count, so an honest "no" costs you here and nowhere else.',
+      unlock: 'Tick “followed plan” when annotating a trade.',
     },
     {
       id: 'risk',
@@ -106,6 +121,8 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
       sub:   `${slTrades.length}/${closed.length} with SL`,
       score: riskScore,
       has:   closed.length > 0,
+      how:   'Two parts: how many trades carried a stop-loss (70% of the score) and how few were tagged “No SL”, “No stop” or “Oversize” (the other 30%).',
+      unlock: 'Close a few trades to score this.',
     },
     {
       id: 'mind',
@@ -116,6 +133,8 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         : 'log emotions',
       score: mindsetScore,
       has:   emotionTrades.length > 0 || revengeCount > 0,
+      how:   'Starts at 100 and comes down for trades entered on FOMO, anxious or tired, and for anything tagged a revenge or emotional trade. Tilt costs more than the tags do.',
+      unlock: 'Log how you felt before a trade to score this.',
     },
   ]
 
@@ -313,76 +332,66 @@ export function TraderRadar({ closed }: { closed: Trade[] }) {
         )}
       </svg>
 
-      {/* ── Score breakdown pills — flex-wrap so 6-col on desktop, 3-col on mobile ── */}
+      {/* ── How the OVR itself is built. Said once, above the axes it governs. ── */}
+      <div style={{ width: '100%', maxWidth: '620px', marginTop: '6px' }}>
+        <p style={{ color: 'var(--color-ink-3)', fontSize: 'var(--text-sm)', lineHeight: 1.6, margin: 0 }}>
+          Your <strong style={{ color: 'var(--color-ink-1)' }}>OVR</strong> is the plain average of the
+          six skills below, each scored 0–100. A skill you have not logged data for shows{' '}
+          <span style={{ color: 'var(--color-ink-2)' }}>“—”</span> and is left out of the average
+          rather than counted as a zero. Scores read{' '}
+          <span style={{ color: 'var(--color-key)' }}>blue at 70+</span>,{' '}
+          <span style={{ color: 'var(--color-ink-2)' }}>grey from 45–69</span> and{' '}
+          <span style={{ color: 'var(--color-warn)' }}>amber below 45</span> — these grade skill, not
+          money, so they never borrow green and red.
+        </p>
+      </div>
+
+      {/* ── The six skills, each with its grading rule underneath ──────────────
+          One row per axis: name, score bar, value, then the rule in words. This
+          replaced a 6-across pill strip whose grading lived behind a toggle. */}
       <div style={{
-        display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
-        gap: '6px', width: '100%', maxWidth: '560px', marginTop: '8px',
+        display: 'flex', flexDirection: 'column', gap: '2px',
+        width: '100%', maxWidth: '620px', marginTop: '14px',
       }}>
         {axes.map(a => {
-          const col = a.has ? scoreCol(a.score) : 'rgba(255,255,255,0.38)'
-          const bg  = !a.has
-            ? 'rgba(255,255,255,0.02)' : a.score >= 70
-            ? 'rgba(255,255,255,0.08)' : a.score >= 45
-            ? 'rgba(255,255,255,0.08)' : 'rgba(240,80,75,0.08)'
+          const col = a.has ? scoreCol(a.score) : 'var(--color-ink-4)'
           return (
             <div key={a.id} style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
-              padding: '8px 12px', borderRadius: 'var(--radius-md)',
-              background: bg, border: '1px solid var(--color-line-1)',
-              minWidth: '80px', flex: '1 1 80px', opacity: a.has ? 1 : 0.7,
+              padding: '12px 0',
+              borderTop: '1px solid var(--color-line-1)',
+              opacity: a.has ? 1 : 0.72,
             }}>
-              <span className="vq-label" style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                {a.label}
-              </span>
-              <span className="vq-num" style={{ fontSize: 'var(--text-md)', color: col }}>
-                {a.value}
-              </span>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)', color: 'var(--color-ink-4)', textAlign: 'center' }}>
-                {a.sub}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
+                <span className="vq-label" style={{ whiteSpace: 'nowrap' }}>{a.label}</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexShrink: 0 }}>
+                  <span style={{
+                    fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+                    color: 'var(--color-ink-4)',
+                  }}>{a.sub}</span>
+                  <span className="vq-num" style={{ fontSize: 'var(--text-md)', color: col, minWidth: '56px', textAlign: 'right', display: 'inline-block' }}>
+                    {a.value}
+                  </span>
+                </div>
+              </div>
+
+              {/* Score bar — the 0–100 the radar actually plots, made literal. */}
+              <div style={{ height: '2px', background: 'var(--color-surface-2)', marginTop: '8px', overflow: 'hidden' }}>
+                <div style={{
+                  width: `${a.has ? Math.max(1, Math.min(100, a.score)) : 0}%`,
+                  height: '100%', background: col,
+                  transition: 'width 0.6s cubic-bezier(0.16,1,0.3,1)',
+                }} />
+              </div>
+
+              <p style={{
+                margin: '8px 0 0', color: 'var(--color-ink-3)',
+                fontSize: 'var(--text-sm)', lineHeight: 1.55,
+              }}>
+                {a.how}{!a.has && ` ${a.unlock}`}
+              </p>
             </div>
           )
         })}
-      </div>
-
-      {/* ── "How it's graded" legend — client-ready explainer ── */}
-      <div style={{ width: '100%', maxWidth: '560px', marginTop: '14px' }}>
-        <button
-          onClick={() => setShowLegend(v => !v)}
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-            width: '100%', padding: '8px 12px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
-            background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
-            color: 'var(--color-ink-2)', fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
-          }}
-        >
-          <span>{showLegend ? 'Hide' : 'How is this graded?'}</span>
-          <span style={{ fontSize: 'var(--text-2xs)', color: 'var(--t3)', transform: showLegend ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▾</span>
-        </button>
-
-        {showLegend && (
-          <div style={{ marginTop: '10px', padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
-              Your <strong style={{ color: 'var(--t1)' }}>OVR</strong> is the average of the skills below, each scored 0–100.
-              Skills you haven&apos;t logged data for show <span style={{ color: 'var(--t2)' }}>“—”</span> and are left out of the average — they don&apos;t drag your score down.
-              Colours: <span style={{ color: 'var(--color-key)' }}>blue ≥ 70</span> · <span style={{ color: 'var(--color-ink-2)' }}>grey 45–69</span> · <span style={{ color: 'var(--color-warn)' }}>amber &lt; 45</span>. These are skill scores, not money, so they do not borrow green and red.
-            </p>
-
-            {[
-              { label: 'Win Rate',      how: 'Your win % directly. Wins ÷ (wins + losses); breakeven trades excluded.' },
-              { label: 'Profit Factor', how: 'Gross profit ÷ gross loss. PF 1.0 = breakeven (33), 1.75 = strong (67), 2.5+ = elite (100).' },
-              { label: 'Avg R:R',       how: 'Average realised reward-to-risk per trade. −1R = 0, break-even = 33, +2R = 100. Needs a stop-loss on trades.' },
-              { label: 'Discipline',    how: 'Share of trades where you followed your plan. Log “followed plan” when annotating a trade.' },
-              { label: 'Risk Mgmt',     how: '% of trades with a stop-loss (70% weight) plus absence of “No SL / Oversize” tags (30% weight).' },
-              { label: 'Mindset',       how: 'Starts at 100, penalised for FOMO / anxious / tired emotions and revenge-trade tags. Log emotions to activate.' },
-            ].map(item => (
-              <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <span style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 600 }}>{item.label}</span>
-                <span style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', lineHeight: 1.5 }}>{item.how}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   )

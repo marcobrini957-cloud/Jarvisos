@@ -13,7 +13,7 @@ import SessionAnalyticsChart from '@/components/ui/SessionAnalyticsChart'
 import type { Trade } from '@/types'
 import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
 import {
-  filterByPeriod, calcPnl, calcWinRate, calcPips,
+  filterByPeriod, calcPnl, calcWinRate, calcPips, calcConsistency,
   fmtPnl, fmtPips, fmtDate, fmtTime, MON, buildHeatmap, heatColor,
 } from './trading/helpers'
 import { TradeAnnotationModal } from './trading/TradeAnnotationModal'
@@ -37,19 +37,6 @@ const PERIOD_PHRASE: Record<Period, string> = {
   D: 'today', W: 'this week', M: 'this month', Q: 'this quarter', Y: 'this year',
 }
 const eur = (v: number) => `€${Math.abs(v).toFixed(2)}`
-
-// Consistency = share of trading days that closed in profit (style-agnostic).
-function calcConsistency(trades: Trade[]): { green: number; totalDays: number; pct: number } {
-  const byDay = new Map<string, number>()
-  for (const t of trades) {
-    if (!t.close_time) continue
-    const d = t.close_time.split('T')[0]
-    byDay.set(d, (byDay.get(d) ?? 0) + (t.net_profit ?? 0))
-  }
-  const totalDays = byDay.size
-  const green     = [...byDay.values()].filter(v => v > 0).length
-  return { green, totalDays, pct: totalDays > 0 ? (green / totalDays) * 100 : 0 }
-}
 
 export default function TradingTab() {
   const { isWin } = useClassifier()

@@ -85,6 +85,23 @@ export function calcPips(trades: Trade[]): number {
   return trades.reduce((s, t) => s + (tradePips(t) ?? 0), 0)
 }
 
+// Consistency = share of trading days that closed in profit.
+//
+// Style-agnostic on purpose: a scalper and a swing trader can both score 100,
+// which is why it belongs on the radar where a graded R:R never did. Lives here
+// rather than in TradingTab so the KPI card and the radar grade it identically.
+export function calcConsistency(trades: Trade[]): { green: number; totalDays: number; pct: number } {
+  const byDay = new Map<string, number>()
+  for (const t of trades) {
+    if (!t.close_time) continue
+    const d = t.close_time.split('T')[0]
+    byDay.set(d, (byDay.get(d) ?? 0) + (t.net_profit ?? 0))
+  }
+  const totalDays = byDay.size
+  const green     = [...byDay.values()].filter(v => v > 0).length
+  return { green, totalDays, pct: totalDays > 0 ? (green / totalDays) * 100 : 0 }
+}
+
 export function fmtPnl(n: number | null): string {
   if (n === null) return '—'
   return `${n >= 0 ? '+' : '-'}€${Math.abs(n).toFixed(2)}`
