@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { LogoMark } from '@/components/ui/LogoMark'
 import Icon from '@/components/ui/Icon'
+import { Atmosphere } from '@/components/landing/v2/Atmosphere'
+import { MarketClock } from '@/components/landing/v2/MarketClock'
 
 type Mode = 'signin' | 'signup' | 'reset'
 
@@ -283,144 +285,222 @@ export default function LoginPage() {
     }
   }
 
+  // Fields on the landing's language: glass over the shader rather than a solid
+  // panel, and the same +0.28em micro-caps the sections use for their eyebrows.
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    background: 'var(--s2)',
-    border: '1px solid var(--color-line-1)',
-    borderRadius: 'var(--radius-sm)',
-    padding: '11px 12px',
-    color: 'var(--color-ink-1)',
+    background: 'rgba(255,255,255,0.045)',
+    border: '1px solid rgba(255,255,255,0.11)',
+    borderRadius: '10px',
+    padding: '13px 14px',
+    color: '#fff',
     fontFamily: 'var(--font-display)',
-    fontSize: 'var(--text-md)',
+    fontSize: '15px',
+    letterSpacing: '-0.01em',
     outline: 'none',
-    transition: 'border-color 0.15s',
+    transition: 'border-color 0.2s, background 0.2s',
     boxSizing: 'border-box',
   }
 
   const labelStyle: React.CSSProperties = {
     display: 'block',
     fontFamily: 'var(--font-display)',
-    fontSize: 'var(--text-2xs)',
-    letterSpacing: '0.16em',
+    fontSize: '11px',
+    letterSpacing: '0.22em',
     textTransform: 'uppercase',
-    color: 'var(--color-ink-3)',
-    marginBottom: '7px',
+    color: 'rgba(255,255,255,0.42)',
+    marginBottom: '9px',
+  }
+
+  // The primary action, matching the landing's white pill.
+  const primaryBtn = (disabled: boolean): React.CSSProperties => ({
+    width: '100%',
+    padding: '14px',
+    background: disabled ? 'rgba(255,255,255,0.09)' : '#fff',
+    border: '1px solid transparent',
+    borderRadius: '999px',
+    color: disabled ? 'rgba(255,255,255,0.38)' : '#000',
+    fontFamily: 'var(--font-display)',
+    fontSize: '15px',
+    letterSpacing: '-0.01em',
+    cursor: disabled ? 'default' : 'pointer',
+    transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1), background 0.2s',
+  })
+
+  // Quiet inline links. The landing has no accent-coloured CTA and this page
+  // should not reintroduce one — white on dark, weight carried by contrast.
+  const linkBtn: React.CSSProperties = {
+    background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+    fontFamily: 'var(--font-display)', fontSize: '13px',
+    color: 'rgba(255,255,255,0.86)', textDecoration: 'underline',
+    textUnderlineOffset: '3px', textDecorationColor: 'rgba(255,255,255,0.28)',
   }
 
   const isDisabled = loading || !email || !password
 
   return (
     <div className="vq2" style={{
+      position: 'relative',
       minHeight: '100vh',
-      background: 'var(--bg)',
+      background: '#05070a',
       display: 'flex',
       fontFamily: 'inherit',
     }}>
-      {/* ── Left panel ────────────────────────────────────────────────────
-          Was the hero's decoration set again at half scale: Aurora bars, three
-          radial glows, a blue badge pill, a blue→magenta gradient border with
-          three coloured shadows around the preview, and green ticks against
-          "Any MT5 Broker". The panel's job is to show the product, so it shows
-          the product on a hairline. */}
+      {/* The landing's shader, behind the whole page. Sign-in is the first
+          screen after the front door, so it should feel like the same room —
+          the old page dropped you onto flat grey the moment you clicked. */}
+      <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
+        <Atmosphere />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(90deg, rgba(5,7,10,0.10) 0%, rgba(5,7,10,0.55) 46%, rgba(5,7,10,0.88) 100%)',
+        }} />
+      </div>
+
+      {/* ── Left panel: the product ─────────────────────────────────────── */}
       <div style={{
         display: 'none',
+        position: 'relative',
+        zIndex: 1,
         width: '52%',
         flexShrink: 0,
-        background: 'var(--color-void)',
-        borderRight: '1px solid var(--color-line-1)',
         flexDirection: 'column',
       }} className="login-left-panel">
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '28px 32px 24px' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none' }}>
-            <LogoMark size={22} />
+          <Link href="/" style={{
+            display: 'inline-flex', alignItems: 'center', gap: '10px', textDecoration: 'none',
+            alignSelf: 'flex-start',
+          }}>
+            <LogoMark size={26} showBackground={false} />
             <span style={{
-              fontFamily: 'var(--font-mark)', fontSize: 'var(--text-xl)', lineHeight: 1,
-              letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--color-ink-1)',
-            }}>Velquor</span>
+              fontFamily: 'var(--font-display)', fontSize: '18px', lineHeight: 1,
+              letterSpacing: '0.04em', color: '#fff',
+            }}>VELQUOR</span>
           </Link>
 
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '22px', paddingTop: '12px' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '26px', paddingTop: '12px' }}>
             <p style={{
-              fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
-              letterSpacing: '0.16em', textTransform: 'uppercase',
-              color: 'var(--color-ink-3)', margin: 0,
+              fontFamily: 'var(--font-display)', fontSize: '11px',
+              letterSpacing: '0.28em', textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.40)', margin: 0,
             }}>
               Built for serious MT5 traders
             </p>
 
             <div>
               <h2 style={{
-                fontFamily: 'var(--font-display)', fontSize: 'clamp(var(--text-3xl),3.4vw,var(--text-d2))',
-                lineHeight: 0.99, letterSpacing: '-0.035em', margin: '0 0 14px',
+                fontFamily: 'var(--font-display)', fontSize: 'clamp(34px, 3.8vw, 56px)',
+                lineHeight: 1.02, letterSpacing: '-0.035em', margin: '0 0 18px', color: '#fff',
               }}>
-                <span style={{ color: 'var(--color-ink-1)' }}>See the truth.</span><br />
-                <span style={{ color: 'var(--color-ink-3)' }}>Trade the edge.</span>
+                See the truth.<br />
+                <span style={{ color: 'rgba(255,255,255,0.46)' }}>Trade the edge.</span>
               </h2>
               <p style={{
-                margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
-                color: 'var(--color-ink-3)', lineHeight: 1.65, maxWidth: '46ch',
+                margin: 0, fontFamily: 'var(--font-display)', fontSize: 'clamp(15px, 1.2vw, 18px)',
+                color: 'rgba(255,255,255,0.66)', lineHeight: 1.45,
+                letterSpacing: '-0.015em', maxWidth: '44ch',
               }}>
-                Connect your MT5 account and instantly see what&apos;s working, what&apos;s not, and exactly where you&apos;re leaking money.
+                Connect MetaTrader once and see what is working, what is not, and
+                exactly where you are giving money back.
               </p>
             </div>
 
-            <div style={{
-              border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-md)',
-              overflow: 'hidden', background: 'var(--s1)',
-            }}>
-              <LoginDashboardPreview />
+            {/* The replica in a lit case, the same treatment the landing gives it. */}
+            <div style={{ position: 'relative' }}>
+              <div aria-hidden style={{
+                position: 'absolute', inset: '-10% -5% -14%',
+                background: 'radial-gradient(58% 50% at 50% 10%, rgba(77,143,255,0.18), transparent 70%)',
+                filter: 'blur(26px)', pointerEvents: 'none',
+              }} />
+              <div style={{
+                position: 'relative',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '14px',
+                overflow: 'hidden',
+                background: 'rgba(6,9,14,0.80)',
+                backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+                boxShadow: '0 40px 90px -45px rgba(0,0,0,0.95)',
+              }}>
+                <div aria-hidden style={{
+                  position: 'absolute', top: 0, left: '10%', right: '10%', height: '1px',
+                  background: 'linear-gradient(90deg, transparent, rgba(180,210,255,0.75), transparent)',
+                }} />
+                <LoginDashboardPreview />
+              </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap', paddingTop: '16px', borderTop: '1px solid var(--color-line-1)' }}>
-            {['Any MT5 broker', 'Live & demo accounts', 'AI-powered', 'Free to start'].map(b => (
+          <div style={{
+            display: 'flex', gap: '20px', flexWrap: 'wrap', paddingTop: '18px',
+            borderTop: '1px solid rgba(255,255,255,0.10)',
+          }}>
+            {['Any MT5 broker', 'Live & demo accounts', 'Free to start'].map(b => (
               <span key={b} style={{
-                fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
-                letterSpacing: '0.04em', color: 'var(--color-ink-3)',
+                fontFamily: 'var(--font-mono)', fontSize: '11px',
+                letterSpacing: '0.06em', color: 'rgba(255,255,255,0.34)',
               }}>{b}</span>
             ))}
+            <span style={{ marginLeft: 'auto' }}><MarketClock /></span>
           </div>
         </div>
       </div>
 
       {/* ── Right panel (form) ─────────────────────────────────────────── */}
       <div style={{
+        position: 'relative',
+        zIndex: 1,
         flex: 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '24px',
-        background: 'var(--bg)',
+        padding: 'clamp(20px, 4vw, 40px)',
       }}>
-        <div style={{
+        <div className="login-card" style={{
           width: '100%',
-          maxWidth: '380px',
+          maxWidth: '420px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '28px',
+          gap: '24px',
+          // Glass, so the shader stays faintly visible through the form and
+          // this reads as the same surface language as the landing.
+          background: 'rgba(255,255,255,0.035)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: '18px',
+          padding: 'clamp(24px, 3vw, 36px)',
+          backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
+          boxShadow: '0 50px 100px -50px rgba(0,0,0,0.95)',
         }}>
 
           {/* Back link */}
           <Link href="/" style={{
-            display: 'inline-flex', alignItems: 'center', gap: '5px',
-            color: 'var(--t3)', fontSize: '12px', textDecoration: 'none',
+            display: 'inline-flex', alignItems: 'center', gap: '7px',
+            color: 'rgba(255,255,255,0.44)', fontFamily: 'var(--font-display)',
+            fontSize: '13px', letterSpacing: '-0.01em', textDecoration: 'none',
             alignSelf: 'flex-start',
           }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'var(--t2)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'var(--t3)')}
+            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.80)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.44)')}
           >
             ← Back to home
           </Link>
 
-          {/* Logo + heading */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-            <LogoMark size={48} />
-            <div style={{ textAlign: 'center' }}>
-              <h1 style={{ color: 'var(--t1)', fontSize: '20px', fontWeight: 700, letterSpacing: '-0.02em', margin: 0 }}>
-                Velquor
+          {/* Mark + heading. Ranged left, like every other heading on the site —
+              the centred logo-over-centred-title stack was the template look. */}
+          <div className="login-head" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <LogoMark size={40} showBackground={false} />
+            <div style={{ minWidth: 0 }}>
+              <h1 style={{
+                margin: 0, color: '#fff', fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(22px, 2.2vw, 28px)', lineHeight: 1.05,
+                letterSpacing: '-0.032em',
+              }}>
+                {mode === 'signin' ? 'Welcome back.' : mode === 'signup' ? 'Create your account.' : 'Reset your password.'}
               </h1>
-              <p style={{ color: 'var(--t3)', fontSize: '13px', marginTop: '4px' }}>
-                {mode === 'signin' ? 'Sign in to your account' : 'Create your account'}
+              <p style={{
+                margin: '6px 0 0', color: 'rgba(255,255,255,0.48)',
+                fontFamily: 'var(--font-display)', fontSize: '14px', letterSpacing: '-0.01em',
+              }}>
+                {mode === 'signin' ? 'Your trades are already logged.' : mode === 'signup' ? 'Free forever. No card.' : 'We will email you a link.'}
               </p>
             </div>
           </div>
@@ -437,8 +517,8 @@ export default function LoginPage() {
                   disabled={loading}
                   style={{
                     width: '100%', padding: '12px 16px',
-                    background: 'var(--s2)', border: '1px solid var(--color-line-1)',
-                    borderRadius: 'var(--radius-sm)', cursor: loading ? 'default' : 'pointer',
+                    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '999px', cursor: loading ? 'default' : 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
                     color: 'var(--t1)', fontSize: '14px', fontWeight: 500,
                     transition: 'border-color 0.15s',
@@ -458,9 +538,9 @@ export default function LoginPage() {
               )}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ flex: 1, height: '1px', background: 'var(--bd)' }} />
-                <span style={{ color: 'var(--t3)', fontSize: '11px', flexShrink: 0 }}>or continue with email</span>
-                <div style={{ flex: 1, height: '1px', background: 'var(--bd)' }} />
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.10)' }} />
+                <span style={{ color: 'rgba(255,255,255,0.38)', fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.08em', flexShrink: 0 }}>or continue with email</span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.10)' }} />
               </div>
             </>
           )}
@@ -469,9 +549,9 @@ export default function LoginPage() {
           {signedUp ? (
             <div style={{
               padding: '20px',
-              background: 'var(--s1)',
-              border: '1px solid var(--color-line-1)',
-              borderRadius: 'var(--radius-md)',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.10)',
+              borderRadius: '12px',
               textAlign: 'center',
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
             }}>
@@ -486,7 +566,7 @@ export default function LoginPage() {
                 onClick={() => switchMode('signin')}
                 style={{
                   marginTop: '8px', background: 'none', border: 'none',
-                  color: 'var(--ac)', fontSize: '13px', cursor: 'pointer', fontWeight: 500,
+                  color: 'rgba(255,255,255,0.86)', fontSize: '13px', cursor: 'pointer',
                 }}
               >
                 Back to sign in
@@ -507,8 +587,8 @@ export default function LoginPage() {
                       required
                       autoComplete="email"
                       style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
-                      onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
+                      onFocus={e => (e.target.style.borderColor = 'rgba(255,255,255,0.34)')}
+                      onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.11)')}
                     />
                   </div>
                   <div>
@@ -517,7 +597,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => switchMode('reset')}
-                        style={{ background: 'none', border: 'none', color: 'var(--ac)', fontSize: '12px', cursor: 'pointer', padding: 0 }}
+                        style={{ ...linkBtn, fontSize: '12px' }}
                       >
                         Forgot password?
                       </button>
@@ -530,8 +610,8 @@ export default function LoginPage() {
                       required
                       autoComplete="current-password"
                       style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
-                      onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
+                      onFocus={e => (e.target.style.borderColor = 'rgba(255,255,255,0.34)')}
+                      onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.11)')}
                     />
                   </div>
 
@@ -549,16 +629,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={isDisabled}
-                    style={{
-                      width: '100%', padding: '13px',
-                      background: isDisabled ? 'var(--s2)' : 'var(--color-ink-1)',
-                      border: 'none', borderRadius: 'var(--radius-sm)',
-                      color: isDisabled ? 'var(--color-ink-4)' : 'var(--color-void)',
-                      fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
-                      cursor: isDisabled ? 'default' : 'pointer',
-                      transition: 'all 0.15s',
-                      marginTop: '4px',
-                    }}
+                    style={{ ...primaryBtn(isDisabled), marginTop: '4px' }}
                   >
                     {loading ? 'Signing in…' : 'Sign in'}
                   </button>
@@ -577,8 +648,8 @@ export default function LoginPage() {
                       placeholder="Trader"
                       autoComplete="name"
                       style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
-                      onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
+                      onFocus={e => (e.target.style.borderColor = 'rgba(255,255,255,0.34)')}
+                      onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.11)')}
                     />
                   </div>
                   <div>
@@ -591,8 +662,8 @@ export default function LoginPage() {
                       required
                       autoComplete="email"
                       style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
-                      onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
+                      onFocus={e => (e.target.style.borderColor = 'rgba(255,255,255,0.34)')}
+                      onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.11)')}
                     />
                   </div>
                   <div>
@@ -605,8 +676,8 @@ export default function LoginPage() {
                       required
                       autoComplete="new-password"
                       style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
-                      onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
+                      onFocus={e => (e.target.style.borderColor = 'rgba(255,255,255,0.34)')}
+                      onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.11)')}
                     />
                   </div>
 
@@ -624,16 +695,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={isDisabled}
-                    style={{
-                      width: '100%', padding: '13px',
-                      background: isDisabled ? 'var(--s2)' : 'var(--color-ink-1)',
-                      border: 'none', borderRadius: 'var(--radius-sm)',
-                      color: isDisabled ? 'var(--color-ink-4)' : 'var(--color-void)',
-                      fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
-                      cursor: isDisabled ? 'default' : 'pointer',
-                      transition: 'all 0.15s',
-                      marginTop: '4px',
-                    }}
+                    style={{ ...primaryBtn(isDisabled), marginTop: '4px' }}
                   >
                     {loading ? 'Creating account…' : 'Create account'}
                   </button>
@@ -675,8 +737,8 @@ export default function LoginPage() {
                         required
                         autoComplete="email"
                         style={inputStyle}
-                        onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
-                        onBlur={e  => (e.target.style.borderColor = 'var(--color-line-1)')}
+                        onFocus={e => (e.target.style.borderColor = 'rgba(255,255,255,0.34)')}
+                        onBlur={e  => (e.target.style.borderColor = 'rgba(255,255,255,0.11)')}
                       />
                     </div>
                     {error && (
@@ -687,15 +749,7 @@ export default function LoginPage() {
                     <button
                       type="submit"
                       disabled={loading || !email}
-                      style={{
-                        width: '100%', padding: '13px',
-                        background: loading || !email ? 'var(--s2)' : 'var(--color-ink-1)',
-                        border: 'none', borderRadius: 'var(--radius-sm)',
-                        color: loading || !email ? 'var(--color-ink-4)' : 'var(--color-void)',
-                        fontFamily: 'var(--font-display)', fontSize: 'var(--text-md)',
-                        cursor: loading || !email ? 'default' : 'pointer',
-                        transition: 'all 0.15s',
-                      }}
+                      style={primaryBtn(loading || !email)}
                     >
                       {loading ? 'Sending…' : 'Send reset link'}
                     </button>
@@ -708,12 +762,12 @@ export default function LoginPage() {
 
               {/* Toggle mode */}
               {mode !== 'reset' && (
-              <p style={{ textAlign: 'center', color: 'var(--t3)', fontSize: '13px', margin: 0 }}>
+              <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.44)', fontFamily: 'var(--font-display)', fontSize: '13px', margin: 0 }}>
                 {mode === 'signin' ? (
                   <>Don&apos;t have an account?{' '}
                     <button
                       onClick={() => switchMode('signup')}
-                      style={{ background: 'none', border: 'none', color: 'var(--ac)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                      style={linkBtn}
                     >
                       Sign up
                     </button>
@@ -722,7 +776,7 @@ export default function LoginPage() {
                   <>Already have an account?{' '}
                     <button
                       onClick={() => switchMode('signin')}
-                      style={{ background: 'none', border: 'none', color: 'var(--ac)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                      style={linkBtn}
                     >
                       Sign in
                     </button>
@@ -740,6 +794,13 @@ export default function LoginPage() {
         @media (min-width: 768px) {
           .login-left-panel { display: flex !important; }
         }
+        /* align-items needs !important: the element carries an inline
+           alignItems:'center', which beats a stylesheet rule regardless of the
+           media query — the heading stayed centred over left-aligned labels. */
+        @media (max-width: 420px) {
+          .login-head { flex-direction: column; align-items: flex-start !important; gap: 12px; }
+        }
+        .login-card button[type="submit"]:not(:disabled):hover { transform: translateY(-1px); }
       `}</style>
     </div>
   )
