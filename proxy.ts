@@ -51,6 +51,9 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/ea') ||
     pathname.startsWith('/brand') ||
     pathname.startsWith('/trailer') ||
+    // Landing design previews. Noindex'd in their own metadata; public here so
+    // they can be looked at signed-out, which is the state they design for.
+    pathname.startsWith('/preview') ||
     pathname.startsWith('/pricing') ||
     pathname.startsWith('/impressum') ||
     pathname.startsWith('/privacy') ||
