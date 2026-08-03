@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Reveal } from './Reveal'
 import { Eyebrow, H2, Body, PillLink, Glass, Shell } from './ui'
+import { LogoMark } from '@/components/ui/LogoMark'
 
 /**
  * The rest of the landing, ported from the live page into the v2 language.
@@ -571,7 +572,10 @@ export function FooterBand() {
     <footer style={{ padding: 'clamp(50px, 7vh, 80px) 0 clamp(40px, 6vh, 64px)', borderTop: '1px solid rgba(255,255,255,0.10)' }}>
       <Shell>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '18px', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: '15px', letterSpacing: '0.04em', color: 'rgba(255,255,255,0.80)' }}>VELQUOR © 2026</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--font-display)', fontSize: '15px', letterSpacing: '0.04em', color: 'rgba(255,255,255,0.80)' }}>
+            <LogoMark size={22} showBackground={false} />
+            VELQUOR © 2026
+          </span>
           <nav style={{ display: 'flex', flexWrap: 'wrap', gap: '22px' }}>
             {[['Privacy', '/privacy'], ['Terms', '/terms'], ['Impressum', '/impressum'], ['Pricing', '/pricing']].map(([l, h]) => (
               <a key={l} href={h} style={{

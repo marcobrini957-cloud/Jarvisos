@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { LogoMark } from '@/components/ui/LogoMark'
+import { MarketClock } from './MarketClock'
 
 /**
  * Landing hero, second direction.
@@ -63,13 +65,17 @@ export function HeroV2() {
           gap: '20px',
         }}
       >
+        {/* The real sculpted-V mark, not a text wordmark — the one thing on the
+            page that could not belong to any other product. */}
         <Link
           href="/"
           style={{
+            display: 'inline-flex', alignItems: 'center', gap: '10px',
             fontFamily: 'var(--font-display)', fontSize: 'clamp(15px, 1.4vw, 18px)',
             letterSpacing: '0.04em', color: '#fff', textDecoration: 'none', whiteSpace: 'nowrap',
           }}
         >
+          <LogoMark size={26} showBackground={false} />
           VELQUOR
         </Link>
 
@@ -158,6 +164,12 @@ export function HeroV2() {
           >
             Auto-sync · Analysis · Copier
           </p>
+
+          {/* Live session state. The same sessions the dashboard grades trades
+              by, so the landing is already speaking the product's language. */}
+          <div style={{ marginTop: '14px' }}>
+            <MarketClock />
+          </div>
         </div>
 
         {/* Right: the argument, and the way in */}

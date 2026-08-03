@@ -112,10 +112,13 @@ void main(){
   float v = max(bodyLum, backLum * (1.0 - inside * 0.55)) + rim * 0.85;
 
   // -- 5. Grade --------------------------------------------------------------
-  // Monochrome, faintly cool. Deliberately capped well below white so the
-  // headline stays the brightest thing on the page.
-  vec3 col = mix(vec3(0.011, 0.014, 0.020), vec3(0.30, 0.345, 0.435), clamp(v, 0.0, 1.0));
-  col += vec3(0.10, 0.13, 0.18) * pow(rim, 2.0);       // rim keeps a cool cast
+  // Pulled 35% toward VELQUOR's own blue (--ac #4D8FFF, rgb 0.302/0.561/1.0)
+  // rather than the reference's neutral blue-grey. Done by rotating the hue at
+  // constant brightness — red and green come down, blue holds — so the frame
+  // reads as our colour without the art getting any lighter. The headline still
+  // has to be the brightest thing on the page.
+  vec3 col = mix(vec3(0.010, 0.014, 0.026), vec3(0.255, 0.330, 0.480), clamp(v, 0.0, 1.0));
+  col += vec3(0.085, 0.130, 0.225) * pow(rim, 2.0);    // rim carries the brand cast
   col *= 1.0 - 0.30 * smoothstep(0.25, 1.25, distance(uv, vec2(0.32, 0.62)));  // vignette
 
   // Film grain, animated. Clean gradients are the tell of a cheap render.
