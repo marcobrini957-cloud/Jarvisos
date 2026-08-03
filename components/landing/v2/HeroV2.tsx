@@ -231,10 +231,31 @@ export function HeroV2() {
 
       <style>{`
         .hero2-nav a:hover { color: #fff; background: rgba(255,255,255,0.07); }
+
+        /* ⚠️ Every declaration below that has a matching inline style needs
+           !important. These elements are styled with the style attribute, which
+           beats a stylesheet rule regardless of media query — without it the
+           mobile nav kept its desktop padding and the "Get started" pill never
+           hid, pushing the bar 117px past the right edge of a 390px screen. */
         @media (max-width: 880px) {
-          .hero2-body  { flex-direction: column; align-items: flex-start; gap: 30px; }
-          .hero2-right { flex: 1 1 auto; width: 100%; }
-          .hero2-nav a:not(:last-child) { display: none; }
+          /* Stack, and keep the whole block bottom-aligned the way the desktop
+             composition is. Without the flex reset, the left column's
+             "flex: 1 1 auto" grows down the column axis and opens ~350px of
+             dead space between the headline and the buttons. */
+          .hero2-body { flex-direction: column; align-items: stretch !important; justify-content: flex-end; gap: 26px !important; }
+          .hero2-body > div { flex: 0 0 auto !important; width: 100%; }
+
+          /* The nav used to hide every link except the CTA, which left a phone
+             with no way to reach Product / How it works / Pricing at all. Keep
+             the anchors — they are the navigation — and drop the "Get started"
+             pill, which only duplicates the "Start free" button in the fold. */
+          .hero2-nav { padding: 5px 6px !important; gap: 0 !important; }
+          .hero2-nav a { padding: 8px 9px !important; font-size: 12px !important; }
+          .hero2-nav a:last-child { display: none !important; }
+        }
+
+        @media (max-width: 400px) {
+          .hero2-nav a { padding: 8px 7px !important; font-size: 11px !important; }
         }
       `}</style>
     </section>

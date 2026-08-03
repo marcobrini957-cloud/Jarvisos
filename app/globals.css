@@ -1026,3 +1026,8 @@ html { scroll-behavior: smooth; }
 /* v2 FAQ accordion — the marker rotates, and Safari needs the marker killed. */
 .v2-faq summary::-webkit-details-marker { display: none; }
 .v2-faq[open] .v2-faq-mark { transform: rotate(45deg); }
+@media (max-width: 900px) {
+  /* A 4:3 panel at phone width is only ~260px tall, which crowds the six-bar
+     visual against its index number. Square gives the contents room. */
+  .v2-visual { aspect-ratio: 1 / 1 !important; }
+}

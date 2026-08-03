@@ -87,7 +87,7 @@ export function FeatureRow({
           </div>
 
           <Reveal delay={100} style={{ direction: 'ltr', minWidth: 0 }}>
-            <Glass style={{ position: 'relative', overflow: 'hidden', aspectRatio: '4 / 3' }}>
+            <Glass className="v2-visual" style={{ position: 'relative', overflow: 'hidden', aspectRatio: '4 / 3' }}>
               <span style={{
                 position: 'absolute', top: '18px', left: '20px', zIndex: 2,
                 fontFamily: 'var(--font-mono)', fontSize: '12px',
