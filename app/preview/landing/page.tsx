@@ -3,9 +3,12 @@ import { HeroV2 } from '@/components/landing/v2/HeroV2'
 import { Atmosphere } from '@/components/landing/v2/Atmosphere'
 import { SmoothScroll } from '@/components/landing/v2/SmoothScroll'
 import {
-  FeatureRow, StickyAudiences, ClosingCTA,
+  FeatureRow, ClosingCTA,
   VisualAutoSync, VisualAnalysis, VisualCopier,
 } from '@/components/landing/v2/Sections'
+import { SolutionsStack } from '@/components/landing/v2/Solutions'
+import { TrailerBand } from '@/components/landing/v2/TrailerBand'
+import { StatsBand } from '@/components/landing/v2/StatsBand'
 import {
   BrokerStrip, TraderDnaBand, BeforeAfterBand, FeatureGrid,
   HowItWorksBand, AnalystBand, PropFirmBand, TrustBand,
@@ -48,6 +51,8 @@ export default function LandingPreviewPage() {
       <div style={{ position: 'relative', zIndex: 1 }}>
         <HeroV2 />
 
+        <StatsBand />
+
         <BrokerStrip />
 
         {/* The three pillars, as full-bleed alternating rows. */}
@@ -84,13 +89,15 @@ export default function LandingPreviewPage() {
           />
         </div>
 
+        <TrailerBand />
+
         <BeforeAfterBand />
         <TraderDnaBand />
         <FeatureGrid />
         <HowItWorksBand />
         <AnalystBand />
         <PropFirmBand />
-        <StickyAudiences />
+        <SolutionsStack />
         <TrustBand />
         <PricingBand />
         <FaqBand />

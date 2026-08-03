@@ -1035,3 +1035,8 @@ html { scroll-behavior: smooth; }
 @keyframes vq-live-ping { 0% { transform: scale(1); opacity: 0.55; } 70%, 100% { transform: scale(2.6); opacity: 0; } }
 .vq-live-ping { animation: vq-live-ping 2.4s cubic-bezier(0,0,0.2,1) infinite; }
 @media (prefers-reduced-motion: reduce) { .vq-live-ping { animation: none; } }
+/* The animated dashboard replica is built at desktop proportions. Scaling it
+   below its design width beats squeezing it into a phone column, where the
+   figures collapse into unreadable soup. */
+.v2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(16px, 3vw, 40px); }
+@media (max-width: 760px) { .v2-stats { grid-template-columns: repeat(2, 1fr); } }
