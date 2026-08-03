@@ -1023,3 +1023,6 @@ html { scroll-behavior: smooth; }
   .v2-sticky-head { position: static !important; }
   .v2-stack-card  { position: static !important; }
 }
+/* v2 FAQ accordion — the marker rotates, and Safari needs the marker killed. */
+.v2-faq summary::-webkit-details-marker { display: none; }
+.v2-faq[open] .v2-faq-mark { transform: rotate(45deg); }

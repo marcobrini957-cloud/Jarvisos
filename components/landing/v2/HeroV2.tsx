@@ -23,9 +23,11 @@ import Link from 'next/link'
  */
 
 const NAV = [
+  // In-page anchors: Lenis intercepts these and eases to the section rather
+  // than jumping, which is the scroll Marco asked for on the nav links.
   { label: 'Product',      href: '#product' },
   { label: 'How it works', href: '#how' },
-  { label: 'Pricing',      href: '/pricing' },
+  { label: 'Pricing',      href: '#pricing' },
 ]
 
 export function HeroV2() {

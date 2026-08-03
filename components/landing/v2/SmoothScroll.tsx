@@ -62,7 +62,11 @@ export function SmoothScroll() {
       const target = document.querySelector(id)
       if (!target) return
       e.preventDefault()
-      lenis.scrollTo(target as HTMLElement, { offset: -80 })
+      // No offset here on purpose. Lenis already honours the target's
+      // scroll-margin-top, so adding one on top stacked with it and landed the
+      // section 170px low — and the native jump (reduced motion, JS off) would
+      // still have used 90. One number, set in CSS, applies to both paths.
+      lenis.scrollTo(target as HTMLElement)
     }
     document.addEventListener('click', onClick)
 
