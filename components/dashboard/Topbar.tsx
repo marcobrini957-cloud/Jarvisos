@@ -7,6 +7,7 @@ import MT5ConnectModal from './MT5ConnectModal'
 import AccountMenu from './AccountMenu'
 import { LogoMark } from '@/components/ui/LogoMark'
 import { MobileMenuButton } from './MobileNav'
+import { QuickSearch } from './QuickSearch'
 import { useDisplayMode } from '@/context/DisplayModeContext'
 import { useUserProfile } from '@/context/UserProfileContext'
 import { createClient } from '@/lib/supabase/client'
@@ -34,7 +35,7 @@ interface TopbarProps {
   /** Mobile menu wiring — absent on screens that use the desktop tab bar. */
   menuOpen?:     boolean
   onMenuToggle?: () => void
-  /** Name of the section currently on screen, shown on mobile in place of the wordmark. */
+  /** Name of the section currently on screen. */
   sectionLabel?: string
 }
 
@@ -208,15 +209,18 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
   return (
     <>
       <div
-        className="topbar-root flex items-center justify-between flex-shrink-0"
+        className="topbar-root flex items-center flex-shrink-0"
         style={{
-          height: '40px',
-          padding: '0 12px',
+          gap: '10px',
+          height: '62px',
+          padding: '0 clamp(14px, 1.4vw, 22px)',
           background: 'var(--color-void)',
           borderBottom: '1px solid var(--color-line-1)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0 }}>
+        {/* flex:1 so everything after it is pushed into one cluster on the
+            right, rather than being spaced out by justify-between. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '9px', minWidth: 0, flex: 1 }}>
           {/* Mobile navigation lives here now — the bottom bar is gone. */}
           {onMenuToggle && (
             <div className="sm:hidden">
@@ -225,29 +229,35 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
           )}
 
           {/* Wordmark — Coolvetica Heavy Compressed, the one place it appears */}
-          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none', minWidth: 0 }}>
-            <LogoMark size={20} />
-            <span className="topbar-brand-text" style={{
-              fontFamily: 'var(--font-mark)', fontSize: 'var(--text-lg)', lineHeight: 1,
-              letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--color-ink-1)',
-            }}>
-              Velquor
-            </span>
+          {/* The wordmark lives in the sidebar now. On a phone there is no
+              sidebar, so it stays here. */}
+          <Link href="/dashboard" className="topbar-mark" style={{ display: 'flex', alignItems: 'center', gap: '9px', textDecoration: 'none', minWidth: 0 }}>
+            <LogoMark size={20} showBackground={false} />
           </Link>
 
           {/* Where you are. Without the tab bar, mobile had no answer to that
               question — the screen just changed under you. */}
           {sectionLabel && (
-            <span className="topbar-section sm:hidden" style={{
-              fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
-              letterSpacing: '0.14em', textTransform: 'uppercase',
-              color: 'var(--color-ink-3)', whiteSpace: 'nowrap',
-              overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>
-              {sectionLabel}
-            </span>
+            <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1px' }}>
+              <span className="topbar-crumb" style={{
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+                letterSpacing: '0.14em', textTransform: 'uppercase',
+                color: 'var(--color-ink-4)', whiteSpace: 'nowrap',
+              }}>
+                Velquor / {sectionLabel}
+              </span>
+              <span style={{
+                fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)',
+                lineHeight: 1.1, letterSpacing: '-0.03em', color: 'var(--color-ink-1)',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>
+                {sectionLabel}
+              </span>
+            </div>
           )}
         </div>
+
+        <QuickSearch />
 
         {/* MT5 status pill + account switcher */}
         <AccountMenu

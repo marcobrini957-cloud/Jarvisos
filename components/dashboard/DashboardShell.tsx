@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Topbar from './Topbar'
 import { UserProfileProvider } from '@/context/UserProfileContext'
-import TabBar from './TabBar'
+import { Sidebar } from './Sidebar'
 import MobileNav from './MobileNav'
 import OverviewTab    from './tabs/OverviewTab'
 import TradingTab     from './tabs/TradingTab'
@@ -151,40 +151,41 @@ export default function DashboardShell({ initialTab = 0, initialSettings = false
       {/* Exactly one viewport tall, and it owns its own scrolling — the page
           behind it no longer needs to be locked. */}
       <div className="vq2" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
-        <Topbar
-          menuOpen={menuOpen}
-          onMenuToggle={() => setMenuOpen(v => !v)}
-          sectionLabel={tabLabel(activeTab, showSettings)}
-        />
-
-        {/* Desktop tab bar — hidden on mobile */}
-        <div className="hidden sm:block">
-          <TabBar
+        {/* Navigation is a column now, with the header above the content it
+            describes rather than above the whole window. */}
+        <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <Sidebar
             activeTab={activeTab}
-            onTabChange={handleTabChange}
             showSettings={showSettings}
+            onTabChange={handleTabChange}
             onSettingsToggle={handleSettingsToggle}
           />
-        </div>
 
-        {/* Content row: main + (free-user) partner rail on wide screens */}
-        <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          {/* Main content — padded bottom on mobile for the nav bar */}
-          <main
-            ref={mainRef}
-            className="flex-1 overflow-y-auto overflow-x-hidden dashboard-main"
-            style={{ padding: 'clamp(12px, 1.1vw, 18px)' }}
-          >
-            {/* keyed wrapper re-mounts on tab change → vq-tab-in entrance plays */}
-            <div key={showSettings ? 'settings' : activeTab} className="vq-tab-in">
-              {showSettings ? <SettingsTab /> : <ActiveTab />}
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, minHeight: 0 }}>
+            <Topbar
+              menuOpen={menuOpen}
+              onMenuToggle={() => setMenuOpen(v => !v)}
+              sectionLabel={tabLabel(activeTab, showSettings)}
+            />
+
+            <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <main
+                ref={mainRef}
+                className="flex-1 overflow-y-auto overflow-x-hidden dashboard-main"
+                style={{ padding: 'clamp(14px, 1.3vw, 22px)' }}
+              >
+                {/* keyed wrapper re-mounts on tab change → vq-tab-in entrance plays */}
+                <div key={showSettings ? 'settings' : activeTab} className="vq-tab-in">
+                  {showSettings ? <SettingsTab /> : <ActiveTab />}
+                </div>
+              </main>
+
+              {/* Free-tier affiliate rail — hidden on the Partners tab (redundant) */}
+              {!showSettings && activeTab !== 9 && (
+                <PartnerRail className="hidden xl:flex xl:flex-col" />
+              )}
             </div>
-          </main>
-
-          {/* Free-tier affiliate rail — hidden on the Partners tab (redundant) */}
-          {!showSettings && activeTab !== 9 && (
-            <PartnerRail className="hidden lg:flex lg:flex-col" />
-          )}
+          </div>
         </div>
 
         {/* Mobile navigation — a sheet from the top bar, not a bottom bar */}

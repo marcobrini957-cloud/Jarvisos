@@ -78,27 +78,35 @@ export function Surface({ title, action, children, padded = false, className = '
       style={{
         background: 'var(--color-surface-1)',
         border: '1px solid var(--color-line-1)',
-        borderRadius: 'var(--radius-md)',
+        // 14px, and the same figure everywhere. The card is the unit the whole
+        // dashboard is built from, so its corner is the one radius that has to
+        // be right — the old 10px read as a widget, not a panel.
+        borderRadius: '14px',
         display: 'flex', flexDirection: 'column', minWidth: 0,
         ...style,
       }}
     >
       {title && (
+        // No divider under the heading. A rule between a title and the thing it
+        // titles cuts one object into two, and with ten of these on a screen it
+        // was the busiest line in the room. Space separates them instead.
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: '10px', padding: '9px 14px',
-          borderBottom: '1px solid var(--color-line-1)',
+          gap: '10px', padding: '16px 18px 10px',
         }}>
           <span style={{
-            fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
-            color: 'var(--color-ink-1)', letterSpacing: '0.01em',
+            fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)',
+            color: 'var(--color-ink-1)', letterSpacing: '-0.02em',
           }}>
             {title}
           </span>
           {action}
         </div>
       )}
-      <div style={{ flex: 1, minWidth: 0, padding: padded ? '14px' : undefined }}>
+      <div style={{
+        flex: 1, minWidth: 0,
+        padding: padded ? (title ? '0 18px 18px' : '18px') : undefined,
+      }}>
         {children}
       </div>
     </div>

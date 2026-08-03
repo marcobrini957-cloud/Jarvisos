@@ -1040,3 +1040,7 @@ html { scroll-behavior: smooth; }
    figures collapse into unreadable soup. */
 .v2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(16px, 3vw, 40px); }
 @media (max-width: 760px) { .v2-stats { grid-template-columns: repeat(2, 1fr); } }
+
+/* Dashboard shell: the wordmark moved into the sidebar, so the header only
+   carries it where there is no sidebar. */
+@media (min-width: 901px) { .topbar-mark { display: none !important; } }
