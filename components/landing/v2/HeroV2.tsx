@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { Atmosphere } from './Atmosphere'
 
 /**
  * Landing hero, second direction.
@@ -38,13 +37,10 @@ export function HeroV2() {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        background: '#05070a',
       }}
     >
-      {/* ── The weather ── */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-        <Atmosphere />
-      </div>
+      {/* The background is fixed at page level (see the preview route) so it
+          runs continuously behind every section, the way the reference does. */}
 
       {/* A floor of shadow so the bottom-aligned type always has contrast,
           whatever the shader happens to be doing down there. */}

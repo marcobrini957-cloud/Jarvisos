@@ -1012,3 +1012,14 @@ html { scroll-behavior: smooth; }
   .vq-tier-grid { grid-template-columns: 1fr; }
   .vq-tier-grid > * + * { border-left: none; border-top: 1px solid var(--color-line-1); }
 }
+
+/* ── Landing v2 (preview) ────────────────────────────────────────────────────
+   Hover and responsive rules for /preview/landing. Scoped so nothing here can
+   reach the live landing while the two directions sit side by side. */
+.v2-pill:hover { transform: translateY(-2px); }
+@media (max-width: 900px) {
+  .v2-feature { grid-template-columns: 1fr !important; direction: ltr !important; }
+  .v2-sticky  { grid-template-columns: 1fr !important; }
+  .v2-sticky-head { position: static !important; }
+  .v2-stack-card  { position: static !important; }
+}
