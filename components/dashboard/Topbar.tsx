@@ -134,33 +134,31 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
   /**
    * Read the account pill from the newest snapshot.
    *
-   * This used to POST /api/mt5-sync?quick=true every 30 seconds — the legacy
-   * MetaAPI pull. Accounts now reach us the other way round: the EA or a cloud
-   * terminal pushes to the bridge, which writes account_snapshots, and the GET
-   * below reads it. For anyone without MetaAPI credentials — which is every
-   * user who signed up after Instant Connect — the POST could only fail, so a
-   * brand-new account was met by a red "Reconnect MT5" before it had ever
-   * connected anything.
+   * Accounts reach us by push: the EA or a cloud terminal posts to the bridge,
+   * which writes account_snapshots, and this reads the primary account back out
+   * of /api/accounts/overview. (Until 2026-08-03 it read the same row through
+   * /api/mt5-sync, a leftover of the deleted MetaAPI pull.)
    *
-   * `connected` now means "we have a snapshot for you". How fresh it is shows
-   * as the timestamp beside the balance, which is the honest way to say it.
+   * `connected` means "we have a snapshot for you". How fresh it is shows as
+   * the timestamp beside the balance, which is the honest way to say it.
    */
   const runSync = useCallback(async () => {
     if (syncingRef.current) return
     syncingRef.current = true
     setSyncing(true)
     try {
-      const res = await fetch('/api/mt5-sync')
+      const res = await fetch('/api/accounts/overview')
       const d = await res.json() as {
-        snapshot?: { balance: number; equity: number; open_trades_count?: number; snapshot_at: string } | null
+        accounts?: { kind: string; balance: number | null; equity: number | null; openCount?: number; lastSeen: string | null }[]
       }
-      if (d.snapshot) {
+      const primary = d.accounts?.find(a => a.kind === 'primary') ?? null
+      if (primary) {
         setStatus({
           connected:     true,
-          balance:       d.snapshot.balance,
-          equity:        d.snapshot.equity,
-          openPositions: d.snapshot.open_trades_count ?? 0,
-          syncedAt:      d.snapshot.snapshot_at,
+          balance:       primary.balance,
+          equity:        primary.equity,
+          openPositions: primary.openCount ?? 0,
+          syncedAt:      primary.lastSeen ?? null,
           error:         null,
         })
         window.dispatchEvent(new CustomEvent('mt5-synced'))

@@ -115,7 +115,7 @@ export default function AccountMenu({
     accounts.find(a => a.login === selected) ?? primary ?? null
   const showingPrimary = !selectedAcc || selectedAcc.kind === 'primary'
 
-  // Pill figures: primary rides the fast mt5-sync status; copy accounts use
+  // Pill figures: primary rides the Topbar's polled status; copy accounts use
   // the bridge-heartbeat figures from the overview.
   const pillBalance = showingPrimary ? status.balance : selectedAcc?.balance ?? null
   const pillOpen    = showingPrimary ? status.openPositions : selectedAcc?.openCount ?? 0
