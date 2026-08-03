@@ -1044,3 +1044,7 @@ html { scroll-behavior: smooth; }
 /* Dashboard shell: the wordmark moved into the sidebar, so the header only
    carries it where there is no sidebar. */
 @media (min-width: 901px) { .topbar-mark { display: none !important; } }
+
+/* Metric cards wrap rather than crush into five columns on a narrow screen. */
+@media (max-width: 1200px) { .vq-metric-strip { grid-template-columns: repeat(3, minmax(0,1fr)) !important; } }
+@media (max-width: 760px)  { .vq-metric-strip { grid-template-columns: repeat(2, minmax(0,1fr)) !important; } }

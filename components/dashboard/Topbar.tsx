@@ -212,10 +212,9 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
         className="topbar-root flex items-center flex-shrink-0"
         style={{
           gap: '10px',
-          height: '62px',
+          height: '74px',
           padding: '0 clamp(14px, 1.4vw, 22px)',
           background: 'var(--color-void)',
-          borderBottom: '1px solid var(--color-line-1)',
         }}
       >
         {/* flex:1 so everything after it is pushed into one cluster on the
@@ -247,8 +246,8 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
                 Velquor / {sectionLabel}
               </span>
               <span style={{
-                fontFamily: 'var(--font-display)', fontSize: 'var(--text-xl)',
-                lineHeight: 1.1, letterSpacing: '-0.03em', color: 'var(--color-ink-1)',
+                fontFamily: 'var(--font-display)', fontSize: 'clamp(20px, 1.7vw, 26px)',
+                lineHeight: 1.1, letterSpacing: '-0.032em', color: 'var(--color-ink-1)',
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>
                 {sectionLabel}

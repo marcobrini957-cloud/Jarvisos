@@ -95,8 +95,8 @@ export function Surface({ title, action, children, padded = false, className = '
           gap: '10px', padding: '16px 18px 10px',
         }}>
           <span style={{
-            fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)',
-            color: 'var(--color-ink-1)', letterSpacing: '-0.02em',
+            fontFamily: 'var(--font-display)', fontSize: 'clamp(16px, 1.25vw, 19px)',
+            color: 'var(--color-ink-1)', letterSpacing: '-0.025em',
           }}>
             {title}
           </span>
@@ -124,34 +124,41 @@ export interface Metric {
 }
 
 /**
- * One bordered band of figures. Replaces the old hero: five numbers now occupy
- * the height a single padded card used to.
+ * The headline figures, one card each.
+ *
+ * They used to be a single bordered band divided by vertical hairlines — five
+ * numbers welded into one object, and the hairlines carried more weight on
+ * screen than the figures did. Separate cards on a gap read as five facts, let
+ * each one breathe, and match the surface every other panel on the page uses.
+ * They wrap on a narrow screen instead of being crushed into five columns.
  */
 export function MetricStrip({ metrics }: { metrics: Metric[] }) {
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: `repeat(${metrics.length}, minmax(0, 1fr))`,
-      border: '1px solid var(--color-line-1)',
-      borderRadius: 'var(--radius-md)',
-      background: 'var(--color-surface-1)',
-      overflow: 'hidden',
-    }}>
-      {metrics.map((m, i) => (
+    <div
+      className="vq-metric-strip"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${metrics.length}, minmax(0, 1fr))`,
+        gap: '12px',
+      }}
+    >
+      {metrics.map(m => (
         <div
           key={m.label}
           style={{
-            padding: '11px 14px', minWidth: 0,
-            borderRight: i < metrics.length - 1 ? '1px solid var(--color-line-1)' : undefined,
+            padding: '16px 18px', minWidth: 0,
+            background: 'var(--color-surface-1)',
+            border: '1px solid var(--color-line-1)',
+            borderRadius: '14px',
           }}
         >
           <Label>{m.label}</Label>
-          <div style={{ marginTop: '5px' }}>
+          <div style={{ marginTop: '9px' }}>
             <Num size="xl" tone={m.tone ?? 'auto'} value={m.num}>{m.value}</Num>
           </div>
           {m.meta && (
             <div style={{
-              marginTop: '3px', fontSize: 'var(--text-xs)',
+              marginTop: '6px', fontSize: 'var(--text-xs)',
               color: 'var(--color-ink-3)', fontFamily: 'var(--font-display)',
               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             }}>
@@ -308,9 +315,12 @@ export function Segmented<T extends string>({ options, value, onChange, titles }
   titles?:  Partial<Record<T, string>>
 }) {
   return (
+    // Capsule track, and the selected segment is a solid light pill rather than
+    // a slightly-lighter grey. The old state was a 4% lift on a 6% surface —
+    // technically selected, and unreadable at a glance from across the desk.
     <div style={{
-      display: 'flex', gap: '1px', padding: '1px',
-      background: 'var(--color-surface-2)', borderRadius: 'var(--radius-sm)',
+      display: 'flex', gap: '2px', padding: '3px',
+      background: 'var(--color-surface-2)', borderRadius: '999px',
     }}>
       {options.map(o => {
         const on = o.key === value
@@ -321,11 +331,11 @@ export function Segmented<T extends string>({ options, value, onChange, titles }
             title={titles?.[o.key]}
             style={{
               fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
-              letterSpacing: '0.1em', textTransform: 'uppercase',
-              padding: '3px 9px', borderRadius: 'var(--radius-xs)', border: 'none',
-              background: on ? 'var(--color-surface-3)' : 'transparent',
-              color: on ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
-              cursor: 'pointer', transition: 'background 0.12s, color 0.12s',
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+              padding: '4px 11px', borderRadius: '999px', border: 'none',
+              background: on ? 'var(--color-ink-1)' : 'transparent',
+              color: on ? 'var(--color-void)' : 'var(--color-ink-3)',
+              cursor: 'pointer', transition: 'background 0.14s, color 0.14s',
             }}
           >
             {o.label}
