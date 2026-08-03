@@ -7,6 +7,7 @@ import {
   VisualAutoSync, VisualAnalysis, VisualCopier,
 } from '@/components/landing/v2/Sections'
 import { SolutionsStack } from '@/components/landing/v2/Solutions'
+import { TrailerBand } from '@/components/landing/v2/TrailerBand'
 import { StatsBand } from '@/components/landing/v2/StatsBand'
 import {
   BrokerStrip, TraderDnaBand, BeforeAfterBand, FeatureGrid,
@@ -49,6 +50,8 @@ export default function LandingPreviewPage() {
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <HeroV2 />
+
+        <TrailerBand />
 
         <StatsBand />
 
