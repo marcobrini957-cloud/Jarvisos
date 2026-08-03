@@ -12,6 +12,7 @@ import { useUserProfile }     from '@/context/UserProfileContext'
 import { generateInsights }   from '@/lib/intelligence'
 import { formatValue }        from '@/lib/utils/formatting'
 import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
+import { hasCredit } from '@/lib/trading/capital'
 import { Surface, MetricStrip, Label, Num } from '@/components/ui/vq'
 import InsightCard            from '@/components/ui/InsightCard'
 import { NetWorthCurve }      from './trading/NetWorthCurve'
@@ -66,6 +67,7 @@ export default function MobileOverviewTab() {
 
   const balance  = snapshot?.balance ?? 0
   const equity   = snapshot?.equity  ?? 0
+  const credit   = snapshot?.credit  ?? null
   const netWorth = balance + totalValueEur
 
   const todayPnl = useMemo(() =>
@@ -170,7 +172,11 @@ export default function MobileOverviewTab() {
       <div data-tour="stat-strip">
       <MetricStrip metrics={[
         { label: 'MT5 Balance', value: fmtEur(balance, 0), tone: 'neutral',
-          meta: equity > 0 && equity !== balance ? `Eq ${fmtEur(equity, 0)}` : `${wins}W/${losses}L` },
+          // Credit keeps equity above balance forever — say "credit", not "Eq",
+          // or it reads as floating profit. Matches the desktop strip.
+          meta: hasCredit(credit)
+            ? `+${fmtEur(Number(credit), 0)} broker credit`
+            : equity > 0 && equity !== balance ? `Eq ${fmtEur(equity, 0)}` : `${wins}W/${losses}L` },
         { label: 'Month', value: stats ? formatValue(monthPnl, monthPnlPct, displayMode, { showSign: true }) : '—',
           num: monthPnl, meta: `${monthWins}W · ${monthLosses}L` },
         { label: 'Today', value: todayPnl !== 0 ? fmtPnl(todayPnl) : '€0',

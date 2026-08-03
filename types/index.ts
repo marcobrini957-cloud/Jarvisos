@@ -53,6 +53,8 @@ export interface AccountSnapshot {
   snapshot_at: string
   balance: number | null
   equity: number | null
+  /** Broker credit/bonus counted inside equity but not the trader's money. null = not recorded. */
+  credit: number | null
   margin_used: number | null
   free_margin: number | null
   margin_level_pct: number | null

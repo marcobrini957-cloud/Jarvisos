@@ -8,6 +8,7 @@ import {
   decided, realClosedTrades, monthlyFacts, groupBy, segmentLine, describeWindow,
 } from '@/lib/ai/chatFacts'
 import { BE_PIPS } from '@/lib/trading/stats'
+import { ownCapital, hasCredit } from '@/lib/trading/capital'
 
 export const maxDuration = 60
 
@@ -40,7 +41,7 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>, 
       .limit(10),
     supabase
       .from('account_snapshots')
-      .select('balance,equity,daily_pnl,weekly_pnl,monthly_pnl')
+      .select('balance,equity,credit,daily_pnl,weekly_pnl,monthly_pnl')
       .eq('user_id', userId)
       .order('snapshot_at', { ascending: false })
       .limit(1)
@@ -105,8 +106,20 @@ async function buildContext(supabase: Awaited<ReturnType<typeof createClient>>, 
   ).join(', ')
 
   const snapshot = snapshotRes.data
+  // Equity includes broker credit, so the Analyst must be told what is actually
+  // the trader's before it reasons about risk or position sizing off it.
   const acct = snapshot
-    ? `Balance: €${snapshot.balance} | Equity: €${snapshot.equity} | Daily P&L: €${snapshot.daily_pnl} | Weekly P&L: €${snapshot.weekly_pnl} | Monthly P&L: €${snapshot.monthly_pnl}`
+    ? [
+        `Balance: €${snapshot.balance}`,
+        `Equity: €${snapshot.equity}`,
+        ...(hasCredit(snapshot.credit)
+          ? [`Broker credit (inside equity, NOT the trader's money): €${snapshot.credit}`,
+             `Own capital (equity minus credit — use this for risk and sizing): €${ownCapital(snapshot.equity, snapshot.credit).toFixed(2)}`]
+          : []),
+        `Daily P&L: €${snapshot.daily_pnl}`,
+        `Weekly P&L: €${snapshot.weekly_pnl}`,
+        `Monthly P&L: €${snapshot.monthly_pnl}`,
+      ].join(' | ')
     : 'No account snapshot available'
 
   return `

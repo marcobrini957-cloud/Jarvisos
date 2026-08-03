@@ -31,8 +31,12 @@ export async function GET(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const points = (data ?? []).map((r: { day: string; balance: number; equity: number }) => ({
+  // credit rides along so the curve can plot the trader's own capital rather
+  // than equity — see lib/trading/capital.ts. null on rows written before the
+  // column existed, which the consumer reads as "unknown, leave as-is".
+  const points = (data ?? []).map((r: { day: string; balance: number; equity: number; credit: number | null }) => ({
     date: r.day, balance: Number(r.balance), equity: Number(r.equity),
+    credit: r.credit == null ? null : Number(r.credit),
   }))
 
   return NextResponse.json({ points })

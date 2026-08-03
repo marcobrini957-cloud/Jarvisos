@@ -281,6 +281,12 @@ app.post('/sync', wrap(async (req, res) => {
 
   // 1. account snapshot — tagged with the terminal's login so multi-terminal
   // users (copy leader + followers on one API key) don't blend balances.
+  //
+  // credit (EA 2.24+) is the broker's money — a bonus or credit line that MT5
+  // counts inside equity but the trader cannot withdraw. Stored so the app can
+  // subtract it from "your capital" instead of quietly inflating net worth.
+  // undefined (pre-2.24 EA) is written as null = never recorded, which the app
+  // treats differently from a broker-confirmed 0.
   if (body.account) {
     const acc = body.account;
     await supabase.from('account_snapshots').insert({
@@ -288,6 +294,7 @@ app.post('/sync', wrap(async (req, res) => {
       mt5_login:         loginNum,
       balance:           acc.balance           ?? 0,
       equity:            acc.equity            ?? 0,
+      credit:            acc.credit == null ? null : Number(acc.credit),
       margin_used:       acc.margin_used       ?? 0,
       free_margin:       acc.free_margin       ?? 0,
       margin_level_pct:  acc.margin_level_pct  ?? 0,

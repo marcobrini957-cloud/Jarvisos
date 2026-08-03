@@ -2,10 +2,16 @@
 
 import { useAccountSnapshot } from '@/hooks/useAccountSnapshot'
 import { Label, Num } from '@/components/ui/vq'
+import { ownCapital, hasCredit } from '@/lib/trading/capital'
 import { fmtEur } from './helpers'
 
-// Total Net Worth = MT5 trading equity (latest snapshot) + investment holdings.
-// The one number that answers "how much money do I actually have".
+// Total Net Worth = the trader's own MT5 capital (latest snapshot) + investment
+// holdings. The one number that answers "how much money do I actually have".
+//
+// Broker credit is deliberately NOT in it: MT5 counts a bonus or credit line
+// inside equity, but it is the broker's money and cannot be withdrawn. Using
+// raw equity here overstated the total by exactly the credit. See
+// lib/trading/capital.ts.
 //
 // It used to be a 42px figure inside a gradient card with a corner glow, taking
 // ~180px of the fold to say one thing. Now it's a band: the total on the left,
@@ -16,7 +22,10 @@ export function NetWorthCard({ holdingsValueEur, holdingsLoading }: {
 }) {
   const { snapshot, loading: snapLoading } = useAccountSnapshot()
 
-  const tradingEur = snapshot?.equity ?? snapshot?.balance ?? 0
+  const credit     = snapshot?.credit ?? null
+  const tradingEur = snapshot
+    ? ownCapital(snapshot.equity ?? snapshot.balance ?? 0, credit)
+    : 0
   const loading    = snapLoading || holdingsLoading
   const total      = tradingEur + holdingsValueEur
 
@@ -24,7 +33,7 @@ export function NetWorthCard({ holdingsValueEur, holdingsLoading }: {
   const holdingsPct = total > 0 ? 100 - tradingPct : 0
 
   const rows = [
-    { label: 'Trading accounts', sub: snapshot ? 'MT5 equity, live' : 'Connect MT5 to include', value: tradingEur, pct: tradingPct, ink: 'var(--color-ink-1)' },
+    { label: 'Trading accounts', sub: snapshot ? 'Your MT5 capital, live' : 'Connect MT5 to include', value: tradingEur, pct: tradingPct, ink: 'var(--color-ink-1)' },
     { label: 'Investments',      sub: 'Stocks · ETFs · Metals',      value: holdingsValueEur,   pct: holdingsPct, ink: 'var(--color-ink-3)' },
   ]
 
@@ -44,6 +53,13 @@ export function NetWorthCard({ holdingsValueEur, holdingsLoading }: {
           <p style={{ margin: '4px 0 0', color: 'var(--color-ink-3)', fontSize: 'var(--text-xs)' }}>
             Trading capital plus long-term assets.
           </p>
+          {/* The broker's money is named, not silently dropped — otherwise the
+              total no longer ties out against the equity shown in MT5. */}
+          {!loading && hasCredit(credit) && (
+            <p style={{ margin: '2px 0 0', color: 'var(--color-ink-4)', fontSize: 'var(--text-xs)' }}>
+              Excludes {fmtEur(Number(credit))} broker credit — lent, not yours.
+            </p>
+          )}
         </div>
 
         <div style={{ minWidth: 'min(300px, 100%)' }}>

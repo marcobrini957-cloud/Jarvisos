@@ -12,6 +12,7 @@ import { useDisplayMode }     from '@/context/DisplayModeContext'
 import { generateInsights }   from '@/lib/intelligence'
 import { formatValue }        from '@/lib/utils/formatting'
 import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
+import { hasCredit }           from '@/lib/trading/capital'
 import Icon                   from '@/components/ui/Icon'
 import { Surface, MetricStrip, Label, Num } from '@/components/ui/vq'
 import SessionClock           from '@/components/ui/SessionClock'
@@ -75,6 +76,7 @@ export default function OverviewTab() {
 
   const balance = snapshot?.balance ?? 0
   const equity  = snapshot?.equity  ?? 0
+  const credit  = snapshot?.credit  ?? null
 
   const todayPnl = useMemo(() =>
     allRows.filter(t => t.close_time?.startsWith(today) && t.symbol !== 'BALANCE')
@@ -209,7 +211,12 @@ export default function OverviewTab() {
           label: 'MT5 Balance',
           value: fmtEur(balance),
           tone:  'neutral',
-          meta:  equity > 0 && equity !== balance ? `Equity ${fmtEur(equity)}` : `${stats?.totalTrades ?? 0} trades`,
+          // With a broker credit, equity is permanently above balance even with
+          // nothing open — showing bare "Equity" there reads as floating profit.
+          // Name the credit instead; keep Equity for genuine open-position drift.
+          meta:  hasCredit(credit)
+            ? `Plus ${fmtEur(Number(credit))} broker credit — not yours`
+            : equity > 0 && equity !== balance ? `Equity ${fmtEur(equity)}` : `${stats?.totalTrades ?? 0} trades`,
         },
         {
           label: 'Month',

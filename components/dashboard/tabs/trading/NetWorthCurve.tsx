@@ -2,10 +2,12 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { Surface, Label, Num, Segmented } from '@/components/ui/vq'
+import { ownCapital } from '@/lib/trading/capital'
 import { MON } from './helpers'
 
 // ── Net Worth Curve ───────────────────────────────────────────────────────────
-// Absolute net worth over a calendar year = MT5 account equity (daily snapshots)
+// Absolute net worth over a calendar year = the trader's own MT5 capital (daily
+// snapshots, equity minus broker credit)
 // + current portfolio holdings value. Toggle the year at the top; the axis always
 // runs January → end of year (→ today for the current year). Same look as the
 // Equity Curve. Portfolio has no stored history yet, so today's holdings value is
@@ -45,7 +47,7 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
   }, [currentYear])
 
   const [year, setYear] = useState(currentYear)
-  const [raw, setRaw] = useState<{ date: string; equity: number }[]>([])
+  const [raw, setRaw] = useState<{ date: string; equity: number; credit: number | null }[]>([])
   const [loading, setLoading] = useState(true)
   const [hover, setHover] = useState<{ x: number; y: number; idx: number } | null>(null)
   const svgRef  = useRef<SVGSVGElement>(null)
@@ -63,8 +65,11 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
     return () => { cancelled = true }
   }, [year])
 
+  // Plot the trader's own capital, not raw equity: broker credit sits inside
+  // MT5 equity and would draw a curve €{credit} above the real one. Days with
+  // no recorded credit pass through unchanged (lib/trading/capital.ts).
   const points: SnapPoint[] = useMemo(() =>
-    raw.map(p => ({ date: p.date, equity: p.equity, ms: Date.parse(`${p.date}T00:00:00Z`) })),
+    raw.map(p => ({ date: p.date, equity: ownCapital(p.equity, p.credit), ms: Date.parse(`${p.date}T00:00:00Z`) })),
     [raw]
   )
   const series = useMemo(() => points.map(p => p.equity + portfolioValue), [points, portfolioValue])

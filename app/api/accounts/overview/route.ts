@@ -9,6 +9,8 @@ export interface AccountOverview {
   status:    'live' | 'stale' | 'offline'
   balance:   number | null
   equity:    number | null
+  /** Broker credit inside equity, not the trader's money. null = not recorded. */
+  credit:    number | null
   openCount: number
   broker:    string | null
   groupName: string | null
@@ -34,7 +36,7 @@ export async function GET() {
   const [{ data: snap }, { data: profile }, { data: copyAccounts }] = await Promise.all([
     supabase
       .from('account_snapshots')
-      .select('mt5_login, balance, equity, open_trades_count, snapshot_at')
+      .select('mt5_login, balance, equity, credit, open_trades_count, snapshot_at')
       .eq('user_id', user.id)
       .order('snapshot_at', { ascending: false })
       .limit(1)
@@ -61,6 +63,7 @@ export async function GET() {
       status:    liveness(profile?.ea_last_seen ?? snap.snapshot_at),
       balance:   snap.balance,
       equity:    snap.equity,
+      credit:    snap.credit ?? null,
       openCount: snap.open_trades_count ?? 0,
       broker:    profile?.ea_broker ?? null,
       groupName: null,
@@ -87,6 +90,9 @@ export async function GET() {
       status:    liveness(acc.last_seen_at),
       balance:   acc.balance,
       equity:    acc.equity,
+      // copy_accounts carries only the heartbeat figures the bridge writes;
+      // credit is not among them, so it stays unknown rather than a false 0.
+      credit:    null,
       openCount: acc.open_trades_count ?? 0,
       broker:    null,
       groupName,
