@@ -34,3 +34,31 @@ export function tabLabel(id: number, showSettings: boolean): string {
   if (showSettings) return 'Settings'
   return TABS.find(t => t.id === id)?.label ?? 'Home'
 }
+
+/**
+ * The section you are in belongs in the URL.
+ *
+ * The shell held the active tab in useState(0), so a refresh — or a link
+ * someone sent you — always dropped you back on Home no matter which section
+ * you were reading. The slug lives in ?tab= so the server can render the right
+ * section on the first paint (no flash of Home) and reloading keeps you where
+ * you were. The shell writes it with replaceState, so switching sections does
+ * not stack history entries — Back leaves the dashboard, it does not walk back
+ * through the tabs you visited.
+ */
+export const TAB_QUERY_KEY = 'tab'
+
+export function tabSlug(id: number): string | null {
+  if (id === SETTINGS_TAB) return 'settings'
+  const label = TABS.find(t => t.id === id)?.label
+  return label ? label.toLowerCase() : null
+}
+
+/** Slug → tab id. Unknown or missing slugs fall back to Home. */
+export function tabFromSlug(slug: string | null | undefined): { id: number; settings: boolean } {
+  const s = (slug ?? '').trim().toLowerCase()
+  if (!s) return { id: 0, settings: false }
+  if (s === 'settings') return { id: 0, settings: true }
+  const hit = TABS.find(t => t.label.toLowerCase() === s)
+  return { id: hit?.id ?? 0, settings: false }
+}

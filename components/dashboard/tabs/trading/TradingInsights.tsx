@@ -254,61 +254,78 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
 
       {/* ── Visual setup charts ───────────────────────────────────────────── */}
       {setupPnlChart.length > 0 && (() => {
-        const ROW_H   = 36
-        const LABEL_W = 160
-        const BAR_MAX = 180
-        const PAD_R   = 56
-        const W       = LABEL_W + BAR_MAX * 2 + PAD_R
         const fmt     = (v: number) => `€${v >= 0 ? '+' : ''}${v.toFixed(0)}`
         const fmtRR   = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}R`
         const pnlMax  = Math.max(...setupPnlChart.map(d => Math.abs(d.total)), 0.01)
         const rrMax   = setupRRChart.length > 0 ? Math.max(...setupRRChart.map(d => Math.abs(d.avgRR)), 0.01) : 1
 
-        const HorizBar = ({ data, formatVal, maxAbs, id }: {
+        // These bars used to be an SVG with a fixed 576-unit viewBox and
+        // width="100%". The viewBox scaled to whatever width the column had —
+        // measured at 674px, a 1.17× blow-up — so font-size="12" and "11" both
+        // rasterised to ~17px: text bigger than the rest of the dashboard,
+        // smeared at a fractional scale, and resizing with the viewport. HTML
+        // renders at real pixel sizes with the product's own type tokens, and a
+        // long setup name can truncate instead of running out of its gutter.
+        //
+        // `money` picks the palette. P&L is money and keeps green/red; R:R is a
+        // ratio, so it borrows neither (see the colour rule: green and red mean
+        // money, blue means important non-money).
+        const HorizBar = ({ data, formatVal, maxAbs, money }: {
           data: { label: string; value: number }[]
           formatVal: (v: number) => string
           maxAbs: number
-          id: string
-        }) => {
-          const H = data.length * ROW_H
-          return (
-            <svg key={id} width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
-              {/* zero line */}
-              <line x1={LABEL_W + BAR_MAX} y1={0} x2={LABEL_W + BAR_MAX} y2={H}
-                stroke="rgba(255,255,255,0.10)" strokeWidth="1" />
-              {data.map((d, i) => {
-                const barW  = Math.max(2, (Math.abs(d.value) / maxAbs) * BAR_MAX)
-                const isPos = d.value >= 0
-                const y     = i * ROW_H
-                const barColor = isPos ? 'var(--color-up)' : 'var(--color-down)'
-                const barX  = isPos ? LABEL_W + BAR_MAX : LABEL_W + BAR_MAX - barW
-                return (
-                  <g key={d.label}>
-                    {/* Row bg on hover handled via CSS — skip for now */}
-                    <text
-                      x={LABEL_W - 8} y={y + ROW_H / 2 + 4}
-                      textAnchor="end" fontSize="12" fill="rgba(255,255,255,0.65)"
-                      fontFamily="var(--font-display)"
-                    >
-                      {d.label}
-                    </text>
-                    <rect x={barX} y={y + 8} width={barW} height={ROW_H - 16} rx="3" fill={barColor} opacity="0.85" />
-                    <text
-                      x={isPos ? barX + barW + 5 : barX - 5}
-                      y={y + ROW_H / 2 + 4}
-                      textAnchor={isPos ? 'start' : 'end'}
-                      fontSize="11" fill={barColor}
-                      fontFamily="var(--font-mono)"
-                      fontWeight="600"
-                    >
-                      {formatVal(d.value)}
-                    </text>
-                  </g>
-                )
-              })}
-            </svg>
-          )
-        }
+          money: boolean
+        }) => (
+          <div>
+            {data.map(d => {
+              const isPos = d.value >= 0
+              // The longest bar stops at 38% of the track rather than the full
+              // 50%, because the value sits just past the bar's end — at 50%
+              // the biggest number ran off the column and landed on top of the
+              // chart next to it. Floored so a near-zero row still reads.
+              const pct   = Math.max(0.8, (Math.abs(d.value) / maxAbs) * 38)
+              const col   = money
+                ? (isPos ? 'var(--color-up)' : 'var(--color-down)')
+                : (isPos ? 'var(--color-key)' : 'var(--color-warn)')
+              return (
+                <div key={d.label} style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 116px) 1fr',
+                  gap: '10px', alignItems: 'center', height: '34px',
+                }}>
+                  <span title={d.label} style={{
+                    textAlign: 'right', overflow: 'hidden',
+                    textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)',
+                    color: 'var(--color-ink-2)',
+                  }}>{d.label}</span>
+
+                  <div style={{ position: 'relative', height: '100%' }}>
+                    {/* zero line */}
+                    <div style={{
+                      position: 'absolute', left: '50%', top: 0, bottom: 0,
+                      width: '1px', background: 'var(--color-line-1)',
+                    }} />
+                    <div style={{
+                      position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+                      left:  isPos ? '50%' : `${50 - pct}%`,
+                      width: `${pct}%`, height: '18px', borderRadius: '3px',
+                      background: col, opacity: 0.85,
+                    }} />
+                    <span style={{
+                      position: 'absolute', top: '50%', transform: 'translateY(-50%)',
+                      ...(isPos
+                        ? { left:  `calc(${50 + pct}% + 6px)` }
+                        : { right: `calc(${50 + pct}% + 6px)` }),
+                      fontFamily: 'var(--font-mono)', fontSize: 'var(--text-2xs)',
+                      fontWeight: 600, color: col, whiteSpace: 'nowrap',
+                    }}>{formatVal(d.value)}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
 
         return (
           <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--bd)' }}>
@@ -320,10 +337,10 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
                   Setup Performance (Grouped)
                 </p>
                 <HorizBar
-                  id="setup-pnl"
                   data={setupPnlChart.map(d => ({ label: d.label, value: d.total }))}
                   formatVal={fmt}
                   maxAbs={pnlMax}
+                  money
                 />
               </div>
 
@@ -334,10 +351,10 @@ export function TradingInsights({ trades, allRows }: { trades: Trade[]; allRows:
                 </p>
                 {setupRRChart.length > 0 ? (
                   <HorizBar
-                    id="setup-rr"
                     data={setupRRChart.map(d => ({ label: d.label, value: d.avgRR }))}
                     formatVal={fmtRR}
                     maxAbs={rrMax}
+                    money={false}
                   />
                 ) : (
                   <p style={{ color: 'var(--t3)', fontSize: 'var(--text-base)', fontStyle: 'italic', padding: '8px 0' }}>

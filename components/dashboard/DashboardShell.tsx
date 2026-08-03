@@ -20,7 +20,7 @@ import WelcomeGreeting from './WelcomeGreeting'
 import PartnerRail     from './PartnerRail'
 import FeedbackButton  from './FeedbackButton'
 import TourHost        from './tour/TourHost'
-import { tabLabel }    from './tabs'
+import { tabLabel, tabSlug, tabFromSlug, TAB_QUERY_KEY } from './tabs'
 
 const TAB_COMPONENTS: Record<number, React.ComponentType> = {
   0: OverviewTab,
@@ -35,11 +35,39 @@ const TAB_COMPONENTS: Record<number, React.ComponentType> = {
   9: PartnersTab,
 }
 
-export default function DashboardShell() {
-  const [activeTab,    setActiveTab]    = useState(0)
-  const [showSettings, setShowSettings] = useState(false)
+export default function DashboardShell({ initialTab = 0, initialSettings = false }: {
+  initialTab?: number
+  initialSettings?: boolean
+}) {
+  const [activeTab,    setActiveTab]    = useState(initialTab)
+  const [showSettings, setShowSettings] = useState(initialSettings)
   const [menuOpen,     setMenuOpen]     = useState(false)
   const mainRef = useRef<HTMLElement>(null)
+
+  // Keep ?tab= in step with the section on screen, so a refresh lands you back
+  // here instead of on Home. replaceState rather than push: switching sections
+  // is not navigation, and stacking history entries would make Back feel broken.
+  // The server has already read this param for the first paint (app/dashboard).
+  useEffect(() => {
+    const slug = showSettings ? 'settings' : tabSlug(activeTab)
+    if (!slug) return
+    const url = new URL(window.location.href)
+    if (url.searchParams.get(TAB_QUERY_KEY) === slug) return
+    url.searchParams.set(TAB_QUERY_KEY, slug)
+    window.history.replaceState(null, '', url)
+  }, [activeTab, showSettings])
+
+  // Back/forward between sections: the URL is the source of truth, so follow it.
+  useEffect(() => {
+    const onPop = () => {
+      const slug = new URL(window.location.href).searchParams.get(TAB_QUERY_KEY)
+      const { id, settings } = tabFromSlug(slug)
+      setActiveTab(id)
+      setShowSettings(settings)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
 
   // The 2.0 language is scoped to `.vq2` (see globals.css). It sits on the
   // shell below, and on <body> as well so InfoTip's portal — which renders
