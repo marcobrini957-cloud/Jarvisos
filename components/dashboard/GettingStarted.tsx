@@ -6,7 +6,7 @@ import Icon from '@/components/ui/Icon'
 import { Surface, Label, Button, Num } from '@/components/ui/vq'
 
 /**
- * What a new account meets first.
+ * What a new account meets first — and nothing at all to anyone else.
  *
  * What it replaces, and why: a four-screen /onboarding flow followed by a
  * spotlight tour that started itself on the dashboard. Both were scripts. They
@@ -78,33 +78,20 @@ export default function GettingStarted({ counts }: { counts: SetupCounts }) {
   // whatever the heartbeat says this second.
   const isConnected = Boolean(connected) || counts.trades > 0
 
+  // Setup only, and setup means one thing: is your account connected.
+  //
+  // It used to also ask for a journal entry and a habit, which turned a setup
+  // card into a chore list — so an account with a year of trades still met
+  // "write one line about a session" at the top of Home, for ever, because it
+  // had never used the journal. Nagging a settled user about optional features
+  // is not onboarding. Those belong in the sections that own them.
   const steps: Step[] = [
     {
       id: 'connect',
       title: 'Connect your trading account',
-      body: 'VELQUOR reads your trades straight out of MetaTrader, so you never type a trade in by hand.',
+      body: 'VELQUOR reads your history straight out of MetaTrader — every trade you have already taken, and every one after.',
       done: isConnected,
       cta: { label: 'Connect MetaTrader', href: '/connect' },
-    },
-    {
-      id: 'trades',
-      title: 'Close a trade',
-      body: 'Your next closed position shows up here on its own, with a screenshot of the chart at the moment you were in it.',
-      done: counts.trades > 0,
-    },
-    {
-      id: 'journal',
-      title: 'Write one line about a session',
-      body: 'How you felt and what you saw. This is what turns a list of numbers into a pattern you can do something about.',
-      done: counts.entries > 0,
-      cta: { label: 'Open the journal', tab: 3 },
-    },
-    {
-      id: 'rule',
-      title: 'Set one rule you want to keep',
-      body: 'Something like "no trading after two losses". VELQUOR tracks whether you keep it, so your discipline gets measured like your P&L.',
-      done: counts.habits > 0,
-      cta: { label: 'Add a rule', tab: 5 },
     },
   ]
 
@@ -112,10 +99,12 @@ export default function GettingStarted({ counts }: { counts: SetupCounts }) {
   const allDone   = doneCount === steps.length
   const current   = steps.find(s => !s.done)
 
-  // Nothing to show: everything done, dismissed, or still loading the counts
-  // that decide it. Loading matters — a card that appears and then vanishes a
-  // moment later is worse than one that waits.
-  if (hidden || allDone || counts.loading) return null
+  // Nothing to show once connected, and nothing at all until we are sure.
+  //
+  // `connected === null` means the check has not answered yet: rendering
+  // before it does is what made this card flicker into view halfway down Home
+  // on an account that had been connected for weeks. It waits.
+  if (hidden || allDone || counts.loading || connected === null) return null
 
   function hide() {
     localStorage.setItem(HIDDEN_KEY, '1')
@@ -130,15 +119,8 @@ export default function GettingStarted({ counts }: { counts: SetupCounts }) {
 
   return (
     <Surface
-      title="Getting started"
-      action={
-        <>
-          <Label>
-            <Num size="2xs">{doneCount}</Num> of <Num size="2xs">{steps.length}</Num>
-          </Label>
-          <Button size="sm" variant="ghost" onClick={hide}>Hide</Button>
-        </>
-      }
+      title="One thing to set up"
+      action={<Button size="sm" variant="ghost" onClick={hide}>Hide</Button>}
       padded
     >
       <p style={{
@@ -147,8 +129,8 @@ export default function GettingStarted({ counts }: { counts: SetupCounts }) {
         color: 'var(--color-ink-3)', lineHeight: 1.55,
       }}>
         VELQUOR watches how you actually trade and tells you what is costing you money.
-        For that it needs your trades and a little of your own read on them — four things,
-        and the first is the only one that takes any setup.
+        It needs one thing from you to start: the account you trade on. Everything after
+        that happens without you.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>

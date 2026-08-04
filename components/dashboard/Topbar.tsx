@@ -9,7 +9,7 @@ import { LogoMark } from '@/components/ui/LogoMark'
 import { MobileMenuButton } from './MobileNav'
 import { QuickSearch } from './QuickSearch'
 import { useDisplayMode } from '@/context/DisplayModeContext'
-import { useUserProfile } from '@/context/UserProfileContext'
+import { useUserProfile, useUserName } from '@/context/UserProfileContext'
 import { createClient } from '@/lib/supabase/client'
 import { Label, Num, Segmented, Select } from '@/components/ui/vq'
 
@@ -43,6 +43,7 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
   const router = useRouter()
   const { displayMode, toggleDisplayMode } = useDisplayMode()
   const { profile, updateProfile } = useUserProfile()
+  const userName = useUserName()
 
   const [showModal,    setShowModal]    = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
@@ -65,7 +66,7 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
 
   // Sync edit state when profile changes
   useEffect(() => {
-    setEditName(profile.display_name)
+    setEditName(profile.display_name === 'Trader' ? '' : profile.display_name)
     setEditTz(profile.timezone)
     setEditCurrency(profile.currency)
     setAvatarUrl(profile.avatar_url ?? null)
@@ -184,7 +185,7 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
   }, [runSync])
 
 
-  const avatarLetter = (profile.display_name || 'T')[0].toUpperCase()
+  const avatarLetter = (userName || 'T')[0].toUpperCase()
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
@@ -211,11 +212,22 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
       <div
         className="topbar-root flex items-center flex-shrink-0"
         style={{
+          // The header has to own a layer above the page, not merely sit before
+          // it in the DOM. Its backdrop-filter already makes it a stacking
+          // context; without a z-index of its own that context painted *under*
+          // <main>, so the account panel — fully opaque at rgb(15,15,15) — had
+          // the Streaks card drawn straight over the top of it. It read as a
+          // transparency bug and was a paint-order one.
+          position: 'relative', zIndex: 30,
           gap: '10px',
           height: '74px',
           padding: '0 clamp(14px, 1.4vw, 22px)',
-          background: 'rgba(0,0,0,0.45)',
-          backdropFilter: 'blur(26px)', WebkitBackdropFilter: 'blur(26px)',
+          // Chrome, not a window. At 45% the trade log scrolled visibly through
+          // the header and the account row on top of it — legible enough to read
+          // two things at once, which is the definition of a broken surface.
+          // Opaque enough to sit still, translucent enough to keep the render.
+          background: 'rgba(6,8,11,0.88)',
+          backdropFilter: 'blur(26px) saturate(1.2)', WebkitBackdropFilter: 'blur(26px) saturate(1.2)',
         }}
       >
         {/* flex:1 so everything after it is pushed into one cluster on the
@@ -314,7 +326,7 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
             </div>
             <div className="hidden sm:flex flex-col" style={{ lineHeight: 1.25 }}>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)', color: 'var(--color-ink-1)' }}>
-                {profile.display_name}
+                {userName}
               </span>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-ink-3)' }}>
                 {profile.timezone.split('/')[1]?.replace('_', ' ')} · {profile.currency}
@@ -339,6 +351,7 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
                 <input
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
+                  placeholder={userName}
                   style={inputStyle}
                   onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
                   onBlur={e => (e.target.style.borderColor = 'var(--color-line-1)')}

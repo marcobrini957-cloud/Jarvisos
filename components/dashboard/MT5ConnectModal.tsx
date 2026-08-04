@@ -213,11 +213,34 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
         </div>
         )}
 
-        {/* Error */}
+        {/* Error.
+            A failed connection used to be one red line and no way forward: the
+            three things that actually go wrong here — a typo in the login, the
+            wrong server of a broker's several, an investor password where a
+            trading one is needed — are invisible from our side, and the person
+            staring at the message cannot tell which one it was. So the message
+            says what to check, and then hands over an address. Nobody should
+            have to work out on their own how to reach us. */}
         {error && (
-          <p style={{ color: 'var(--re)', fontSize: 'var(--text-base)', background: 'rgba(240,80,75,0.08)', padding: '8px 12px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(240,80,75,0.2)' }}>
-            {error}
-          </p>
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: '8px',
+            color: 'var(--color-down)', fontSize: 'var(--text-base)',
+            background: 'var(--color-down-dim)', padding: '11px 13px',
+            borderRadius: 'var(--radius-lg)', border: '1px solid var(--color-down-dim)',
+          }}>
+            <span>{error}</span>
+            <span style={{ color: 'var(--color-ink-2)', lineHeight: 1.55 }}>
+              Check the login number, the broker server, and that the password is the
+              one you sign in to MetaTrader with. If it still will not connect, send us
+              the login number and broker and we will look at it:{' '}
+              <a
+                href="mailto:support@velquor.app?subject=Cannot%20connect%20my%20MetaTrader%20account"
+                style={{ color: 'var(--color-ink-1)', textDecoration: 'underline' }}
+              >
+                support@velquor.app
+              </a>
+            </span>
+          </div>
         )}
 
         {/* Actions */}

@@ -86,7 +86,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value, be_pips, tour_shown_count, tour_completed_at, setup_types, trade_tags')
+      .select('email, display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value, be_pips, tour_shown_count, tour_completed_at, setup_types, trade_tags')
       .eq('id', user.id)
       .single()
 
@@ -183,7 +183,7 @@ export async function PATCH(request: Request) {
     const { data, error } = await supabase
       .from('user_profiles')
       .upsert(update, { onConflict: 'id' })
-      .select('display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value, be_pips, tour_shown_count, tour_completed_at, setup_types, trade_tags')
+      .select('email, display_name, avatar_color, avatar_url, timezone, currency, daily_loss_mode, daily_loss_value, be_pips, tour_shown_count, tour_completed_at, setup_types, trade_tags')
       .single()
 
     if (error) {

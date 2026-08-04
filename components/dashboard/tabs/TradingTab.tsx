@@ -118,49 +118,31 @@ export default function TradingTab() {
     )
   }
 
-  // ── Empty state — no trades yet ────────────────────────────────────────────
+  // ── Not connected ─────────────────────────────────────────────────────────
   //
-  // Two different situations wear the same "no trades" face, and telling them
-  // apart is the whole point. An account whose terminal is already syncing —
-  // balance on screen, heartbeat live — was being told to go and connect a
-  // MetaTrader account it had connected days ago, with a three-step setup guide
-  // under it. Asking someone to do a thing they have already done is the fastest
-  // way to make a product feel like it is not paying attention.
+  // There is no "connected but empty" state any more, and there should never
+  // have been one. Connecting pulls the account's whole history, so a connected
+  // account has its trades the moment it finishes — telling someone to "close a
+  // trade so it can log" describes a product that starts from today, which is
+  // not what this is. If a connected account really has no trades, the tab is
+  // simply the tab, with empty tables that say so themselves.
   //
-  // A snapshot is the proof: it can only exist if a terminal reported this
-  // account's balance to us.
-  if (!loading && trades.length === 0) {
-    const isConnected = snapshot != null
-
+  // A snapshot is the proof of connection: it can only exist if a terminal has
+  // reported this account's balance to us.
+  if (!loading && trades.length === 0 && snapshot == null) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '20px', padding: '40px 20px', textAlign: 'center' }}>
         <LogoMark size={72} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <p style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-lg)' }}>No trades yet</p>
+          <p style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-lg)' }}>No account connected</p>
           <p style={{ color: 'var(--color-ink-3)', fontSize: 'var(--text-base)', maxWidth: '340px', lineHeight: 1.6 }}>
-            {isConnected
-              ? 'Your account is connected. The next position you close lands here by itself, with a screenshot of the chart at the time.'
-              : 'Connect your trading account and every trade you close is logged here by itself — you never type one in.'}
+            Connect the account you trade on and your whole history arrives with it — every
+            trade you have already taken, and every one after.
           </p>
         </div>
-
-        {!isConnected && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '300px' }}>
-            {[
-              'Add the VELQUOR connector to MetaTrader — the guide walks you through it',
-              'Paste in your setup key when it asks',
-              'Every trade logs itself from then on',
-            ].map((text, i) => (
-              <div key={text} style={{ padding: '10px 12px', borderRadius: 'var(--radius-lg)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
-                <Num size="sm" tone="muted">{i + 1}</Num>
-                <span style={{ color: 'var(--color-ink-2)', fontSize: 'var(--text-base)' }}>{text}</span>
-              </div>
-            ))}
-            <Link href="/connect" style={{ textDecoration: 'none', marginTop: '6px' }}>
-              <Button variant="primary" full>Connect MetaTrader</Button>
-            </Link>
-          </div>
-        )}
+        <Link href="/connect" style={{ textDecoration: 'none' }}>
+          <Button variant="primary">Connect MetaTrader</Button>
+        </Link>
       </div>
     )
   }

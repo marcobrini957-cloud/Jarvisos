@@ -6,6 +6,8 @@ import { BE_PIPS, makeClassifier, type Classifier } from '@/lib/trading/stats'
 export type Tier = 'free' | 'pro' | 'ultra'
 
 export interface UserProfile {
+  /** Only ever shown as the part before the @ — see `userName` below. */
+  email:         string | null
   display_name:  string
   avatar_color:  string
   avatar_url:    string | null
@@ -27,6 +29,7 @@ export interface UserProfile {
 }
 
 const DEFAULT_PROFILE: UserProfile = {
+  email:         null,
   display_name:  'Trader',
   avatar_color:  'var(--ac)',
   avatar_url:    null,
@@ -94,6 +97,22 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
 
 export function useUserProfile() {
   return useContext(UserProfileContext)
+}
+
+/**
+ * What to call this person on screen.
+ *
+ * The stored default is the literal string "Trader", which is what every
+ * account that has never opened Settings was greeted by — including in the
+ * header, every day. Their email's local part is not a great name either, but
+ * it is *theirs*: rolandsolomon443 is recognisably you in a way that "Trader"
+ * is not. A name they actually set always wins.
+ */
+export function useUserName(): string {
+  const { profile } = useUserProfile()
+  if (profile.display_name && profile.display_name !== 'Trader') return profile.display_name
+  const local = profile.email?.split('@')[0]
+  return local || 'Trader'
 }
 
 /**
