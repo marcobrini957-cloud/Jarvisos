@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import Icon from '@/components/ui/Icon'
+import { Button } from '@/components/ui/vq'
 import type { CopyGroup } from './copy/types'
 import { CreateGroupModal } from './copy/CreateGroupModal'
 import { GroupCard, type CloudInfo } from './copy/GroupCard'
@@ -58,25 +60,17 @@ export default function CopyTradingTab() {
     // No extra padding or overflow here — DashboardShell's <main> handles both
     <div style={{ maxWidth: '1100px' }}>
 
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-        <div>
-          <div style={{ fontSize: 'var(--text-lg)', color: 'var(--color-ink-1)' }}>Copy trading</div>
-          <div style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', marginTop: '4px' }}>
-            Mirror trades across multiple MT5 accounts in real time
-          </div>
+      {/* Header. The section is named "Copy" in the header above this and in the
+          sidebar beside it; a third title saying it again is one heading too
+          many. What is left is the line that actually explains the section. */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+        <div style={{ fontSize: 'var(--text-base)', color: 'var(--color-ink-3)' }}>
+          Mirror trades across multiple MT5 accounts in real time
         </div>
         {tier !== 'free' && (
-          <button
-            onClick={() => setShowCreateGroup(true)}
-            style={{
-              padding: '9px 18px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)', fontWeight: 600,
-              background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
-              color: 'var(--ac)', cursor: 'pointer', flexShrink: 0,
-            }}
-          >
-            + New group
-          </button>
+          <Button variant="primary" onClick={() => setShowCreateGroup(true)} style={{ flexShrink: 0 }}>
+            <Icon name="plus" size={13} /> New group
+          </Button>
         )}
       </div>
 
@@ -87,7 +81,7 @@ export default function CopyTradingTab() {
           {groups.length === 0 ? (
             <div style={{
               textAlign: 'center', padding: '48px 20px',
-              background: 'var(--s1)', border: '1px dashed var(--bd)', borderRadius: 'var(--radius-xl)',
+              background: 'var(--s1)', border: '1px dashed var(--bd)', borderRadius: 'var(--radius-card)',
             }}>
               <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: '8px' }}>
                 No copy groups yet
@@ -95,16 +89,9 @@ export default function CopyTradingTab() {
               <div style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', marginBottom: '20px' }}>
                 Create your first group to start mirroring trades
               </div>
-              <button
-                onClick={() => setShowCreateGroup(true)}
-                style={{
-                  padding: '10px 24px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)', fontWeight: 600,
-                  background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
-                  color: 'var(--ac)', cursor: 'pointer',
-                }}
-              >
-                Create Copy Group
-              </button>
+              <Button variant="primary" onClick={() => setShowCreateGroup(true)}>
+                Create copy group
+              </Button>
             </div>
           ) : (
             groups.map(g => <GroupCard key={g.id} group={g} cloud={cloud} onRefresh={load} />)
@@ -116,7 +103,7 @@ export default function CopyTradingTab() {
 
       {/* MT5 URL whitelist reminder — only relevant for own-MetaTrader (EA) accounts */}
       <div style={{
-        marginTop: '20px', padding: '10px 16px', borderRadius: 'var(--radius-md)',
+        marginTop: '20px', padding: '10px 16px', borderRadius: 'var(--radius-card)',
         background: 'var(--s1)', border: '1px solid var(--bd)',
         fontSize: 'var(--text-sm)', color: 'var(--t3)', lineHeight: 1.6, opacity: 0.85,
       }}>

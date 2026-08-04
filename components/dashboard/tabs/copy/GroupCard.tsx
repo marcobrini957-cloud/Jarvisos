@@ -7,6 +7,7 @@ import { AddAccountModal } from './AddAccountModal'
 import { HostAccountModal } from './HostAccountModal'
 import { SignalLog } from './SignalLog'
 import Icon from '@/components/ui/Icon'
+import { Button, IconButton } from '@/components/ui/vq'
 
 export interface CloudInfo {
   hostedIds: string[]           // copy_accounts ids running in a cloud terminal
@@ -76,29 +77,13 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
   )
 
   const hostButton = (acc: CopyAccount) => isHosted(acc) ? (
-    <button
-      onClick={() => unhostAccount(acc)}
-      title="Stop the hosted cloud terminal"
-      style={{
-        fontSize: 'var(--text-xs)', padding: '4px 10px', borderRadius: 'var(--radius-md)',
-        background: 'var(--s1)', border: '1px solid var(--bd)',
-        color: 'var(--t3)', cursor: 'pointer',
-      }}
-    >
+    <Button size="sm" variant="ghost" onClick={() => unhostAccount(acc)} title="Stop the hosted cloud terminal">
       Unhost
-    </button>
+    </Button>
   ) : (
-    <button
-      onClick={() => setHostAccount(acc)}
-      title="Run this account in a VELQUOR cloud terminal"
-      style={{
-        fontSize: 'var(--text-xs)', padding: '4px 10px', borderRadius: 'var(--radius-md)', fontWeight: 600,
-        background: 'transparent', border: '1px solid var(--color-line-2)',
-        color: 'var(--color-ink-1)', cursor: 'pointer', whiteSpace: 'nowrap',
-      }}
-    >
-      Host in Cloud
-    </button>
+    <Button size="sm" onClick={() => setHostAccount(acc)} title="Run this account in a VELQUOR cloud terminal">
+      Host in cloud
+    </Button>
   )
 
   return (
@@ -129,28 +114,12 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
           </div>
 
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={toggleActive} disabled={toggling}
-              style={{
-                padding: '5px 12px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)',
-                background: 'transparent',
-                border:     '1px solid var(--color-line-1)',
-                color:      'var(--color-ink-2)',
-                cursor:     'pointer', fontWeight: 600,
-              }}
-            >
+            <Button size="sm" onClick={toggleActive} disabled={toggling}>
               {group.active ? 'Pause' : 'Resume'}
-            </button>
-            <button
-              onClick={deleteGroup}
-              style={{
-                padding: '5px 12px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)',
-                background: 'var(--s2)', border: '1px solid var(--bd)',
-                color: 'var(--t3)', cursor: 'pointer',
-              }}
-            >
+            </Button>
+            <Button size="sm" variant="danger" onClick={deleteGroup}>
               Delete
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -165,15 +134,9 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             }}>
               <span>LEADER ACCOUNT</span>
               {!leader && (
-                <button
-                  onClick={() => setAddAccountRole('leader')}
-                  style={{
-                    fontSize: 'var(--text-xs)', color: 'var(--color-ink-1)', background: 'none', border: 'none',
-                    cursor: 'pointer', padding: 0, fontWeight: 600, letterSpacing: '0.06em',
-                  }}
-                >
-                  + ADD LEADER
-                </button>
+                <Button size="sm" variant="ghost" onClick={() => setAddAccountRole('leader')}>
+                  <Icon name="plus" size={12} /> Add leader
+                </Button>
               )}
             </div>
 
@@ -197,12 +160,9 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                 </div>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   {hostButton(leader)}
-                  <button
-                    onClick={() => removeAccount(leader.id)}
-                    style={{ fontSize: 'var(--text-sm)', color: 'var(--color-down)', background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
+                  <Button size="sm" variant="danger" onClick={() => removeAccount(leader.id)}>
                     Remove
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -211,7 +171,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                 background: 'var(--s2)', border: '1px dashed var(--bd)',
                 fontSize: 'var(--text-base)', color: 'var(--t3)',
               }}>
-                No leader account — click <strong style={{ color: 'var(--ac)' }}>+ ADD LEADER</strong> above
+                No leader account yet — add one above
               </div>
             )}
           </div>
@@ -223,15 +183,9 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
               marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             }}>
               <span>FOLLOWER ACCOUNTS ({followers.length})</span>
-              <button
-                onClick={() => setAddAccountRole('follower')}
-                style={{
-                  fontSize: 'var(--text-xs)', color: 'var(--color-ink-1)', background: 'none', border: 'none',
-                  cursor: 'pointer', padding: 0, fontWeight: 600, letterSpacing: '0.06em',
-                }}
-              >
-                + ADD FOLLOWER
-              </button>
+              <Button size="sm" variant="ghost" onClick={() => setAddAccountRole('follower')}>
+                <Icon name="plus" size={12} /> Add follower
+              </Button>
             </div>
 
             {followers.length === 0 ? (
@@ -264,22 +218,12 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       {hostButton(follower)}
-                      <button
-                        onClick={() => toggleAccountStatus(follower)}
-                        style={{
-                          fontSize: 'var(--text-xs)', padding: '4px 10px', borderRadius: 'var(--radius-md)',
-                          background: 'var(--s1)', border: '1px solid var(--bd)',
-                          color: 'var(--t3)', cursor: 'pointer',
-                        }}
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => toggleAccountStatus(follower)}>
                         {follower.status === 'paused' ? 'Resume' : 'Pause'}
-                      </button>
-                      <button
-                        onClick={() => removeAccount(follower.id)}
-                        style={{ fontSize: 'var(--text-sm)', color: 'var(--color-down)', background: 'none', border: 'none', cursor: 'pointer' }}
-                      >
+                      </Button>
+                      <IconButton variant="danger" title="Remove account" onClick={() => removeAccount(follower.id)}>
                         <Icon name="close" size={13} />
-                      </button>
+                      </IconButton>
                     </div>
                   </div>
                 ))}
@@ -308,7 +252,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
               <span style={{
                 fontSize: 'var(--text-xs)', color: 'var(--t3)', display: 'inline-block',
                 transform: showEaConfig ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.15s',
-              }}>▾</span>
+              }}><Icon name="chevronDown" size={12} /></span>
             </button>
             {showEaConfig && <div style={{ marginTop: '8px' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--t2)', lineHeight: '1.7' }}>
@@ -344,7 +288,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
               display: 'inline-block',
               transform: showLog ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.15s',
-            }}>▾</span>
+            }}><Icon name="chevronDown" size={12} /></span>
           </button>
           {showLog && (
             <div style={{ padding: '0 20px 16px' }}>

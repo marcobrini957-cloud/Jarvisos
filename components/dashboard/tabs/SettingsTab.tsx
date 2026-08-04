@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Panel from '@/components/ui/Panel'
+import Icon from '@/components/ui/Icon'
+import { Button } from '@/components/ui/vq'
 import { useUserProfile } from '@/context/UserProfileContext'
 import { BE_PIPS, BE_PIPS_MIN, BE_PIPS_MAX } from '@/lib/trading/stats'
 
@@ -126,17 +128,10 @@ function MT5AccountsPanel() {
           </div>
 
           {/* Setup guide */}
-          <Link
-            href="/connect"
-            style={{
-              padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)', fontWeight: 600,
-              background: connected ? 'var(--s3)' : 'var(--color-ink-1)',
-              color: connected ? 'var(--t2)' : 'var(--color-void)',
-              border: connected ? '1px solid var(--bd2)' : 'none',
-              textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
-            }}
-          >
-            {connected ? 'Add account' : 'Connect MT5 →'}
+          <Link href="/connect" style={{ textDecoration: 'none', flexShrink: 0 }}>
+            <Button variant={connected ? 'secondary' : 'primary'} size="sm">
+              {connected ? 'Add account' : 'Connect MT5'}
+            </Button>
           </Link>
         </div>
 
@@ -156,18 +151,15 @@ function MT5AccountsPanel() {
             }}>
               {status ? status.api_key : '…'}
             </code>
-            <button
+            <Button
               onClick={copyKey}
               disabled={!status?.api_key}
-              style={{
-                padding: '4px 10px', borderRadius: 'var(--radius-md)', border: 'none',
-                background: copied ? 'rgba(0,196,106,0.15)' : 'var(--s3)',
-                color: copied ? 'var(--color-up)' : 'var(--color-ink-2)',
-                fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
-              }}
+              size="sm"
+              variant="secondary"
+              style={copied ? { color: 'var(--color-up)', borderColor: 'var(--color-up-dim)' } : undefined}
             >
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
+              {copied ? 'Copied' : 'Copy'}
+            </Button>
           </div>
           <p style={{ margin: '5px 0 0', fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
             Keep this private — it gives write access to your VELQUOR data.
@@ -175,14 +167,16 @@ function MT5AccountsPanel() {
         </div>
 
         {/* ── Setup guide ───────────────────────────────────────────────────── */}
+        {/* A drawn chevron, not a ▶ — a glyph doing an icon's job is on the
+            ban list, and it inherits the text face rather than the icon set. */}
         <Link
           href="/connect"
           style={{
-            display: 'flex', alignItems: 'center', gap: '5px',
-            color: 'var(--ac)', fontSize: 'var(--text-base)', fontWeight: 600, textDecoration: 'none',
+            display: 'flex', alignItems: 'center', gap: '6px', alignSelf: 'flex-start',
+            color: 'var(--color-ink-2)', fontSize: 'var(--text-base)', textDecoration: 'none',
           }}
         >
-          Step-by-step setup guide <span style={{ fontSize: 'var(--text-xs)' }}>▶</span>
+          Step-by-step setup guide <Icon name="chevronRight" size={13} />
         </Link>
       </div>
     </Panel>
@@ -270,14 +264,38 @@ export default function SettingsTab() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '760px' }}>
-      <div>
-        <h1 style={{ color: 'var(--t1)', fontSize: 'var(--text-lg)', fontWeight: 600 }}>Settings</h1>
-        <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', marginTop: '4px' }}>MT5 connection, integrations and preferences</p>
+    // Two columns, because one 760px column on a 1440px screen left more than
+    // half the page empty and made the section look unfinished next to every
+    // other tab. The header says "Settings" already — a page that repeats its
+    // own name under the title it was given is one heading too many.
+    <div
+      className="vq-settings-grid"
+      style={{
+        display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+        gap: '12px', alignItems: 'start',
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 }}>
+        {/* ── MT5 Accounts ── */}
+        <MT5AccountsPanel />
+
+        {/* ── System status ──────────────────────────────────────────────────
+            Capabilities, not suppliers. This panel used to read "Supabase",
+            "Groq AI", "Yahoo Finance", "Forex Factory" — our vendor list, shown
+            to every user. Which services we buy is not their concern, it tells
+            them nothing about whether the product is working, and it goes stale
+            the day one is swapped. The real names live in the admin console. */}
+        <Panel title={checking ? 'System status (checking…)' : 'System status'}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {healthRow('Database', 'database')}
+            {healthRow('VELQUOR AI', 'ai')}
+            {staticRow('Portfolio & metals prices')}
+            {staticRow('Economic calendar', true)}
+          </div>
+        </Panel>
       </div>
 
-      {/* ── MT5 Accounts ── */}
-      <MT5AccountsPanel />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 }}>
 
       {/* ── Personalization ── */}
       <Panel title="Personalization">
@@ -301,7 +319,8 @@ export default function SettingsTab() {
               The walkthrough of each section. Easy to dismiss by reflex on day one.
             </p>
           </div>
-          <button
+          <Button
+            style={{ flexShrink: 0 }}
             onClick={async () => {
               await fetch('/api/user/tour', {
                 method: 'POST',
@@ -310,15 +329,9 @@ export default function SettingsTab() {
               }).catch(() => {})
               window.dispatchEvent(new CustomEvent('vq-replay-tour'))
             }}
-            style={{
-              padding: '8px 14px', borderRadius: 'var(--radius-sm)', flexShrink: 0,
-              background: 'transparent', border: '1px solid var(--color-line-1)',
-              color: 'var(--color-ink-1)', fontFamily: 'var(--font-display)',
-              fontSize: 'var(--text-base)', cursor: 'pointer',
-            }}
           >
             Replay tour
-          </button>
+          </Button>
         </div>
       </Panel>
 
@@ -365,20 +378,7 @@ export default function SettingsTab() {
         )}
       </Panel>
 
-      {/* ── System status ──────────────────────────────────────────────────
-          Capabilities, not suppliers. This panel used to read "Supabase",
-          "Groq AI", "Yahoo Finance", "Forex Factory" — our vendor list, shown
-          to every user. Which services we buy is not their concern, it tells
-          them nothing about whether the product is working, and it goes stale
-          the day one is swapped. The real names live in the admin console. */}
-      <Panel title={checking ? 'System status (checking…)' : 'System status'}>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {healthRow('Database', 'database')}
-          {healthRow('VELQUOR AI', 'ai')}
-          {staticRow('Portfolio & metals prices')}
-          {staticRow('Economic calendar', true)}
-        </div>
-      </Panel>
+      </div>
     </div>
   )
 }

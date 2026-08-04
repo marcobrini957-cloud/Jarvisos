@@ -308,6 +308,120 @@ export function Select<T extends string>({
   )
 }
 
+// ── Button ────────────────────────────────────────────────────────────────────
+
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+export type ButtonSize = 'sm' | 'md'
+
+/**
+ * The pressable thing, in four voices.
+ *
+ * There were a hundred and fifty-nine hand-styled `<button>`s in the dashboard
+ * and no two agreed: eight background values, radii from 4 to 999, red text on
+ * one tab for the same destructive action that was a grey outline on the next.
+ * A screen with four buttons in four shapes reads as four different products.
+ *
+ *   primary   — the one action a card is for. Ink fill, void text; there is no
+ *               brand accent to make it out of.
+ *   secondary — everything else with a border around it.
+ *   ghost     — repeated row actions, where a border per row would draw a grid.
+ *   danger    — destructive. It rests as ink and turns red on hover, so a wall
+ *               of Remove links does not paint the screen with the loss colour
+ *               (see the colour rule: red is money).
+ */
+export function Button({
+  children, onClick, variant = 'secondary', size = 'md', disabled = false,
+  title, type = 'button', full = false, style, className,
+}: {
+  children: ReactNode
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
+  variant?: ButtonVariant
+  size?:    ButtonSize
+  disabled?: boolean
+  title?:   string
+  type?:    'button' | 'submit'
+  /** Fill the container's width — for a button at the foot of a form. */
+  full?:    boolean
+  style?:   CSSProperties
+  className?: string
+}) {
+  const [hover, setHover] = useState(false)
+  const on = hover && !disabled
+
+  const base: CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '7px',
+    fontFamily: 'var(--font-display)',
+    fontSize: size === 'sm' ? 'var(--text-sm)' : 'var(--text-base)',
+    padding:  size === 'sm' ? '5px 11px' : '8px 15px',
+    borderRadius: 'var(--radius-lg)',
+    letterSpacing: '-0.01em', whiteSpace: 'nowrap',
+    cursor: disabled ? 'default' : 'pointer',
+    opacity: disabled ? 0.4 : 1,
+    width: full ? '100%' : undefined,
+    transition: 'background 0.14s, border-color 0.14s, color 0.14s',
+  }
+
+  const skin: Record<ButtonVariant, CSSProperties> = {
+    primary: {
+      background: on ? 'var(--color-ink-2)' : 'var(--color-ink-1)',
+      color: 'var(--color-void)', border: '1px solid transparent',
+    },
+    secondary: {
+      background: on ? 'var(--color-surface-2)' : 'transparent',
+      color: 'var(--color-ink-1)', border: '1px solid var(--color-line-1)',
+    },
+    ghost: {
+      background: on ? 'var(--color-state-hover)' : 'transparent',
+      color: on ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
+      border: '1px solid transparent',
+    },
+    danger: {
+      background: 'transparent',
+      color: on ? 'var(--color-down)' : 'var(--color-ink-3)',
+      border: `1px solid ${on ? 'var(--color-down-dim)' : 'var(--color-line-1)'}`,
+    },
+  }
+
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className={className}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{ ...base, ...skin[variant], ...style }}
+    >
+      {children}
+    </button>
+  )
+}
+
+/** Square, icon-only. Same skins, sized to sit level with a `sm` Button. */
+export function IconButton({ children, onClick, title, variant = 'secondary', disabled = false, style }: {
+  children: ReactNode
+  onClick?: () => void
+  title:    string
+  variant?: ButtonVariant
+  disabled?: boolean
+  style?:   CSSProperties
+}) {
+  return (
+    <Button
+      variant={variant}
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      style={{ padding: 0, width: '28px', height: '28px', flexShrink: 0, ...style }}
+    >
+      <span aria-hidden style={{ display: 'flex' }}>{children}</span>
+      <span className="sr-only">{title}</span>
+    </Button>
+  )
+}
+
 // ── Segmented control ─────────────────────────────────────────────────────────
 
 export function Segmented<T extends string>({ options, value, onChange, titles }: {

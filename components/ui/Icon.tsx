@@ -13,7 +13,7 @@ export type IconName =
   | 'shield' | 'key' | 'lock' | 'mail' | 'upload' | 'camera' | 'doc' | 'bolt'
   | 'home' | 'briefcase' | 'globe' | 'checkSquare' | 'swap' | 'gift'
   | 'more' | 'settings' | 'close' | 'pencil' | 'repeat' | 'folder' | 'download'
-  | 'search'
+  | 'search' | 'chevronLeft' | 'chevronRight' | 'chevronDown' | 'plus'
 
 /** Runtime guard — anything persisted as an icon (habits) is validated against this. */
 export function isIconName(v: unknown): v is IconName {
@@ -58,6 +58,13 @@ const PATHS: Record<IconName, React.ReactNode> = {
   folder:    <><path d="M2 4.5a1 1 0 0 1 1-1h3l1.5 1.75h5.5a1 1 0 0 1 1 1v6.25a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4.5Z" /></>,
   download:  <><path d="M8 2.5v8" /><path d="m5 7.5 3 3 3-3" /><path d="M2.5 12v1a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1" /></>,
   search:    <><circle cx="7" cy="7" r="4.5" /><path d="M10.4 10.4 14 14" /></>,
+  // Direction. These exist because ‹ › ▶ ▾ were doing the work in four places —
+  // typographic glyphs inherit the text face and its weight, so they never
+  // matched the drawn set beside them.
+  chevronLeft:  <path d="M10 3.5 5.5 8l4.5 4.5" />,
+  chevronRight: <path d="M6 3.5 10.5 8 6 12.5" />,
+  chevronDown:  <path d="M3.5 6 8 10.5 12.5 6" />,
+  plus:      <><path d="M8 3.5v9" /><path d="M3.5 8h9" /></>,
 }
 
 export default function Icon({

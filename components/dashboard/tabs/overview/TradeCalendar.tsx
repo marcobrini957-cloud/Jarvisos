@@ -360,7 +360,7 @@ export function TradeCalendar({ allRows }: { allRows: Trade[] }) {
                     <span style={{ fontSize: 'var(--text-base)', fontWeight: 700, letterSpacing: '-0.02em', color: weekPnl >= 0 ? 'var(--color-up)' : 'var(--color-down)' }}>
                       {fmtSigned(weekPnl)}
                     </span>
-                    <span style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', lineHeight: 1 }}>›</span>
+                    <span style={{ color: 'var(--t3)', display: 'flex' }}><Icon name="chevronRight" size={12} /></span>
                   </div>
                 </div>
               )}

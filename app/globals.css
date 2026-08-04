@@ -1055,3 +1055,8 @@ html { scroll-behavior: smooth; }
 /* Metric cards wrap rather than crush into five columns on a narrow screen. */
 @media (max-width: 1200px) { .vq-metric-strip { grid-template-columns: repeat(3, minmax(0,1fr)) !important; } }
 @media (max-width: 760px)  { .vq-metric-strip { grid-template-columns: repeat(2, minmax(0,1fr)) !important; } }
+
+/* Settings is two columns on a desk and one on a laptop or a phone. The
+   !important is not decoration: these grids are declared as inline styles, so a
+   plain media-query rule loses to them silently. */
+@media (max-width: 1100px) { .vq-settings-grid { grid-template-columns: 1fr !important; } }

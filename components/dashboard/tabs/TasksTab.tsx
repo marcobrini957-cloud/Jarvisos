@@ -170,14 +170,17 @@ function TaskRow({ task, onToggle, onDelete }: {
           {task.is_recurring && (
             <span style={{ color: 'var(--t3)', fontSize: 'var(--text-xs)' }} className="inline-flex items-center gap-1"><Icon name="repeat" size={10} />{task.recurrence}</span>
           )}
+          {/* Amber, not red. Red is money — and Discipline already renders this
+              exact state as a warning, so the two tabs disagreed about the
+              colour of the same fact. */}
           {isOverdue && (
-            <span style={{ color: 'var(--color-down)', fontSize: 'var(--text-xs)' }}>overdue</span>
+            <span style={{ color: 'var(--color-warn)', fontSize: 'var(--text-xs)' }}>overdue</span>
           )}
         </div>
       </div>
 
       {task.due_date && (
-        <span className="vq-num" style={{ color: isOverdue ? 'var(--color-down)' : 'var(--color-ink-3)', fontSize: 'var(--text-xs)', flexShrink: 0 }}>
+        <span className="vq-num" style={{ color: isOverdue ? 'var(--color-warn)' : 'var(--color-ink-3)', fontSize: 'var(--text-xs)', flexShrink: 0 }}>
           {new Date(task.due_date + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
         </span>
       )}
@@ -186,7 +189,7 @@ function TaskRow({ task, onToggle, onDelete }: {
       <button
         onClick={() => onDelete(task.id)}
         className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-        style={{ background: 'none', border: 'none', color: 'var(--re)', cursor: 'pointer', fontSize: 'var(--text-lg)', padding: '0 2px', lineHeight: 1 }}
+        style={{ background: 'none', border: 'none', color: 'var(--color-ink-3)', cursor: 'pointer', fontSize: 'var(--text-lg)', padding: '0 2px', lineHeight: 1 }}
         title="Delete task">
         <Icon name="close" size={13} />
       </button>
@@ -219,7 +222,7 @@ export default function TasksTab() {
         {[
           { title: 'Done today', value: `${doneToday}/${todayTasks.length}`,  sub: 'tasks completed', color: 'var(--color-ink-1)' },
           { title: 'Open',       value: String(tasks.filter(t => t.status !== 'done').length), sub: 'pending', color: 'var(--color-ink-1)' },
-          { title: 'Overdue',    value: String(overdueTasks.length), sub: 'needs attention', color: overdueTasks.length > 0 ? 'var(--color-down)' : 'var(--color-ink-1)' },
+          { title: 'Overdue',    value: String(overdueTasks.length), sub: 'needs attention', color: overdueTasks.length > 0 ? 'var(--color-warn)' : 'var(--color-ink-1)' },
           { title: 'Total done', value: String(doneTasks.length),    sub: 'all time',        color: 'var(--color-ink-1)' },
         ].map(m => (
           <div key={m.title}

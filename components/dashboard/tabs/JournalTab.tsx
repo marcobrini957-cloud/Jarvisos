@@ -5,7 +5,7 @@ import { useJournalEntries } from '@/hooks/useJournalEntries'
 import { useTrades } from '@/hooks/useTrades'
 import MetricCard from '@/components/ui/MetricCard'
 import Panel from '@/components/ui/Panel'
-import { Label, Num, Segmented } from '@/components/ui/vq'
+import { Label, Num, Segmented, IconButton } from '@/components/ui/vq'
 import type { JournalEntry } from '@/types'
 import { type Mood, MOOD_COLOR, MOOD_SCORE, MOODS, getDaysInMonth, toDateStr, isWeekday } from './journal/helpers'
 import { EntryModal } from './journal/EntryModal'
@@ -163,9 +163,9 @@ export default function JournalTab() {
           } title="">
             {/* Month nav */}
             <div className="flex items-center justify-between" style={{ padding: '8px 14px', borderBottom: '1px solid var(--color-line-1)' }}>
-              <button onClick={prevMonth} style={{ background: 'none', border: 'none', color: 'var(--color-ink-3)', cursor: 'pointer', fontSize: 'var(--text-md)' }}>‹</button>
+              <IconButton variant="ghost" title="Previous month" onClick={prevMonth}><Icon name="chevronLeft" size={14} /></IconButton>
               <Num size="sm" tone="neutral">{monthName}</Num>
-              <button onClick={nextMonth} style={{ background: 'none', border: 'none', color: 'var(--color-ink-3)', cursor: 'pointer', fontSize: 'var(--text-md)' }}>›</button>
+              <IconButton variant="ghost" title="Next month" onClick={nextMonth}><Icon name="chevronRight" size={14} /></IconButton>
             </div>
 
             {/* Day labels */}

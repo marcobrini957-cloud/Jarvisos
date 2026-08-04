@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { eur } from '@/lib/utils/formatting'
 import { Label, Num } from '@/components/ui/vq'
+import Icon from '@/components/ui/Icon'
 
 interface AccountOverview {
   kind:      'primary' | 'copy'
@@ -183,7 +184,7 @@ export default function AccountMenu({
             <span style={{
               color: 'var(--color-ink-4)', fontSize: 'var(--text-2xs)',
               transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s',
-            }}>▾</span>
+            }}><Icon name="chevronDown" size={11} /></span>
           </div>
         ) : status.error ? (
           <span style={{ fontFamily: 'var(--font-display)', color: 'var(--color-down)', fontSize: 'var(--text-base)' }}>Reconnect MT5</span>
