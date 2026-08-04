@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { searchServers } from '@/lib/brokers'
+import { useState, useEffect, useMemo } from 'react'
+import { BROKERS } from '@/lib/brokers'
 import Icon from '@/components/ui/Icon'
 import { Select } from '@/components/ui/vq'
 
@@ -17,11 +17,43 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
   const [password, setPassword] = useState('')
   const [server,     setServer]     = useState('')
   const [serverOpen, setServerOpen] = useState(false)
+  // MetaTrader's own directory, ~2,700 servers. Fetched once when the form
+  // opens; the field filters it locally, which is what makes typing "vantage"
+  // feel instant rather than like a search box.
+  const [allServers, setAllServers] = useState<string[]>([])
   const [saving,   setSaving]  = useState(false)
   const [error,    setError]   = useState('')
   const [done,     setDone]    = useState(false)
 
-  const matches = searchServers(server)
+  useEffect(() => {
+    let live = true
+    fetch('/api/mt5/servers')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (live && Array.isArray(d?.servers)) setAllServers(d.servers) })
+      .catch(() => {})
+    return () => { live = false }
+  }, [])
+
+  // Which of ours we can resolve to an address without the user finding a host.
+  const knownNames = useMemo(
+    () => new Set(BROKERS.flatMap(b => b.servers.map(x => x.name.toLowerCase()))),
+    [],
+  )
+
+  const matches = useMemo(() => {
+    const q = server.trim().toLowerCase()
+    if (!q) return allServers.slice(0, 8)
+    // Names that START with what was typed come first — someone typing "ic"
+    // means IC Markets, not the 90 servers with "ic" somewhere inside them.
+    const starts: string[] = [], contains: string[] = []
+    for (const name of allServers) {
+      const l = name.toLowerCase()
+      if (l.startsWith(q)) starts.push(name)
+      else if (l.includes(q)) contains.push(name)
+      if (starts.length >= 8) break
+    }
+    return [...starts, ...contains].slice(0, 8)
+  }, [server, allServers])
 
   async function handleSave() {
     if (!login.trim() || !password.trim() || !server.trim()) {
@@ -163,7 +195,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
               value={server}
               onChange={e => { setServer(e.target.value); setServerOpen(true) }}
               onFocus={() => setServerOpen(true)}
-              placeholder="e.g. BlueberryMarkets-Live02"
+              placeholder="Start typing your broker — e.g. ICMarkets, Vantage"
               autoComplete="off"
               style={{
                 background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
@@ -179,11 +211,11 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
                 background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
                 borderRadius: 'var(--radius-lg)', padding: '4px',
               }}>
-                {matches.slice(0, 8).map(({ broker: bName, server: srv }) => (
+                {matches.map(name => (
                   <button
-                    key={srv.name}
+                    key={name}
                     type="button"
-                    onMouseDown={e => { e.preventDefault(); setServer(srv.name); setServerOpen(false) }}
+                    onMouseDown={e => { e.preventDefault(); setServer(name); setServerOpen(false) }}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
                       width: '100%', textAlign: 'left', cursor: 'pointer',
@@ -194,10 +226,12 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
                     onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-state-hover)' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                   >
-                    <span>{srv.name}</span>
-                    <span style={{ color: 'var(--color-ink-3)', fontSize: 'var(--text-sm)', flexShrink: 0 }}>
-                      {bName}{srv.demo ? ' · demo' : ''}
-                    </span>
+                    <span>{name}</span>
+                    {knownNames.has(name.toLowerCase()) && (
+                      <span style={{ color: 'var(--color-ink-3)', fontSize: 'var(--text-sm)', flexShrink: 0 }}>
+                        verified
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
