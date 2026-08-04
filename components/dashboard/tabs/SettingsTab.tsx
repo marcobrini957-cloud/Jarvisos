@@ -312,7 +312,7 @@ export default function SettingsTab() {
 
       {/* ── Tour ── */}
       <Panel title="Getting started">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
           <div>
             <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500, margin: 0 }}>Setup checklist</p>
             <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '2px', lineHeight: 1.6 }}>
@@ -330,28 +330,7 @@ export default function SettingsTab() {
           </Button>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', paddingTop: '14px', borderTop: '1px solid var(--color-line-1)' }}>
-          <div>
-            <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500, margin: 0 }}>Tour of the sections</p>
-            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '2px', lineHeight: 1.6 }}>
-              A walk through what each section is for. It no longer starts by itself — it is here when you want it.
-            </p>
-          </div>
-          <Button
-            style={{ flexShrink: 0 }}
-            onClick={async () => {
-              await fetch('/api/user/tour', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'replay' }),
-              }).catch(() => {})
-              window.dispatchEvent(new CustomEvent('vq-replay-tour'))
-            }}
-          >
-            Replay tour
-          </Button>
-        </div>
-      </Panel>
+</Panel>
 
       {/* ── How a trade is scored ──
           This is the one number that changes what every win rate, streak and

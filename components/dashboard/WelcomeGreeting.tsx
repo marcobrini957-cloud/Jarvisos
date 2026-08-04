@@ -64,6 +64,11 @@ export default function WelcomeGreeting() {
     if (loading) return
     const enabled = localStorage.getItem(KEY_ENABLED)
     if (enabled === 'false') return
+    // Not on a phone. On a laptop this is a pleasant half-second; on a 390px
+    // screen it is a full-screen blocker between someone and their account,
+    // every day, on top of a cookie banner and a feedback button. A phone has
+    // room for the product or for overlays, and it should be the product.
+    if (window.matchMedia('(max-width: 639px)').matches) return
     const today    = new Date().toDateString()
     const lastSeen = localStorage.getItem(KEY_DATE)
     if (lastSeen === today) return

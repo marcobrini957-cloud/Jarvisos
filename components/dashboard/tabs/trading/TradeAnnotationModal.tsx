@@ -5,6 +5,7 @@ import Badge from '@/components/ui/Badge'
 import type { Trade } from '@/types'
 import Icon from '@/components/ui/Icon'
 import { Select } from '@/components/ui/vq'
+import { ImageLightbox, type LightboxShot } from '@/components/ui/ImageLightbox'
 import { useClassifier, useUserProfile } from '@/context/UserProfileContext'
 import { LabelEditor } from './LabelEditor'
 import { DEFAULT_SETUP_TYPES, DEFAULT_TRADE_TAGS, resolveLabels } from '@/lib/trading/labels'
@@ -19,6 +20,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
   // empty stored array is respected — see lib/trading/labels.
   const setupTypes  = resolveLabels(profile.setup_types, DEFAULT_SETUP_TYPES)
   const mistakeTags = resolveLabels(profile.trade_tags,  DEFAULT_TRADE_TAGS)
+  const [lightbox, setLightbox] = useState<{ shots: LightboxShot[]; index: number } | null>(null)
   const [editSetups, setEditSetups] = useState(false)
   const [editTags,   setEditTags]   = useState(false)
 
@@ -309,9 +311,21 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
             <div className="flex gap-2">
               {[{ url: trade.screenshot_open_url, label: 'Entry' },
                 { url: trade.screenshot_close_url, label: 'Exit' }].map(shot => shot.url && (
-                <a key={shot.label} href={shot.url} target="_blank" rel="noreferrer"
+                // Opens in place, not in a browser tab. Throwing someone into a
+                // new tab holding a bare image — with the trade they were
+                // reading now behind a tab switch — is the worst way to show a
+                // picture that only means anything next to its trade.
+                <button
+                  key={shot.label} type="button"
+                  onClick={() => {
+                    const list = [
+                      trade.screenshot_open_url  && { url: trade.screenshot_open_url,  label: 'Entry', meta: trade.symbol },
+                      trade.screenshot_close_url && { url: trade.screenshot_close_url, label: 'Exit',  meta: trade.symbol },
+                    ].filter(Boolean) as { url: string; label: string; meta?: string }[]
+                    setLightbox({ shots: list, index: list.findIndex(x => x.label === shot.label) })
+                  }}
                   className="relative flex-1 vq-r overflow-hidden"
-                  style={{ border: '1px solid var(--bd2)', maxHeight: '110px' }}>
+                  style={{ border: '1px solid var(--bd2)', maxHeight: '110px', padding: 0, background: 'none', cursor: 'pointer' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={shot.url} alt={`${shot.label} chart`}
                     style={{ width: '100%', height: '110px', objectFit: 'cover' }} />
@@ -322,7 +336,7 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
                   }}>
                     {shot.label}
                   </span>
-                </a>
+                </button>
               ))}
             </div>
           </div>
@@ -334,7 +348,11 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
           {screenshotUrl ? (
             <div className="relative vq-r overflow-hidden" style={{ maxHeight: '180px' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={screenshotUrl} alt="Chart screenshot" style={{ width: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--bd2)' }} />
+              <img
+                src={screenshotUrl} alt="Chart screenshot"
+                onClick={() => setLightbox({ shots: [{ url: screenshotUrl, label: 'Your chart', meta: trade.symbol }], index: 0 })}
+                style={{ width: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--bd2)', cursor: 'zoom-in' }}
+              />
               <button onClick={() => setScreenshotUrl('')}
                 style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(0,0,0,0.7)', border: 'none', color: 'white', borderRadius: 'var(--radius-sm)', padding: '2px 6px', cursor: 'pointer', fontSize: 'var(--text-base)' }}>
                 Remove
@@ -386,6 +404,15 @@ export function TradeAnnotationModal({ trade, onClose }: { trade: Trade; onClose
           </div>
         )}
       </div>
+
+      {lightbox && (
+        <ImageLightbox
+          shots={lightbox.shots}
+          index={lightbox.index}
+          onIndex={i => setLightbox(l => l && { ...l, index: i })}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </>
   )
 }

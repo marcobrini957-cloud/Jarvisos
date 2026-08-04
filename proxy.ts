@@ -32,7 +32,6 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/login') ||
     pathname === '/gate' ||
     pathname.startsWith('/auth/') ||
-    pathname.startsWith('/onboarding') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/icon') ||

@@ -27,7 +27,7 @@ import { TradeCalendar } from './overview/TradeCalendar'
 import { WinRing } from './overview/WinRing'
 import { PnlDonut } from './trading/PnlDonut'
 import { MetricRing } from './trading/MetricRing'
-import { Label, Num } from '@/components/ui/vq'
+import { Label, Num, Button } from '@/components/ui/vq'
 import { useClassifier } from '@/context/UserProfileContext'
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -119,39 +119,48 @@ export default function TradingTab() {
   }
 
   // ── Empty state — no trades yet ────────────────────────────────────────────
+  //
+  // Two different situations wear the same "no trades" face, and telling them
+  // apart is the whole point. An account whose terminal is already syncing —
+  // balance on screen, heartbeat live — was being told to go and connect a
+  // MetaTrader account it had connected days ago, with a three-step setup guide
+  // under it. Asking someone to do a thing they have already done is the fastest
+  // way to make a product feel like it is not paying attention.
+  //
+  // A snapshot is the proof: it can only exist if a terminal reported this
+  // account's balance to us.
   if (!loading && trades.length === 0) {
+    const isConnected = snapshot != null
+
     return (
-      <div data-tour="trade-log" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '20px', padding: '40px 20px', textAlign: 'center' }}>
-        {/* Icon */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '20px', padding: '40px 20px', textAlign: 'center' }}>
         <LogoMark size={72} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <p style={{ color: 'var(--color-ink-1)', fontSize: 'var(--text-lg)' }}>No trades yet</p>
-          <p style={{ color: 'var(--color-ink-3)', fontSize: 'var(--text-base)', maxWidth: '320px', lineHeight: 1.6 }}>
-            Connect your MT5 account to start syncing trades automatically. VELQUOR will analyse your performance in real time.
+          <p style={{ color: 'var(--color-ink-3)', fontSize: 'var(--text-base)', maxWidth: '340px', lineHeight: 1.6 }}>
+            {isConnected
+              ? 'Your account is connected. The next position you close lands here by itself, with a screenshot of the chart at the time.'
+              : 'Connect your trading account and every trade you close is logged here by itself — you never type one in.'}
           </p>
         </div>
-        <div data-tour="equity" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '280px' }}>
-          {[
-            'Add the VELQUOR connector to MetaTrader — the guide walks you through it',
-            'Paste in your setup key when it asks',
-            'Every trade syncs by itself from then on',
-          ].map((text, i) => (
-            <div key={text} style={{ padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
-              <Num size="sm" tone="muted">{i + 1}</Num>
-              <span style={{ color: 'var(--color-ink-2)', fontSize: 'var(--text-base)' }}>{text}</span>
-            </div>
-          ))}
-          <Link
-            href="/connect"
-            style={{
-              marginTop: '6px', padding: '11px 16px', borderRadius: 'var(--radius-sm)',
-              background: 'var(--color-ink-1)', color: 'var(--color-void)', fontSize: 'var(--text-base)',
-              textAlign: 'center',
-            }}
-          >
-            Connect MetaTrader 5 →
-          </Link>
-        </div>
+
+        {!isConnected && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '300px' }}>
+            {[
+              'Add the VELQUOR connector to MetaTrader — the guide walks you through it',
+              'Paste in your setup key when it asks',
+              'Every trade logs itself from then on',
+            ].map((text, i) => (
+              <div key={text} style={{ padding: '10px 12px', borderRadius: 'var(--radius-lg)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
+                <Num size="sm" tone="muted">{i + 1}</Num>
+                <span style={{ color: 'var(--color-ink-2)', fontSize: 'var(--text-base)' }}>{text}</span>
+              </div>
+            ))}
+            <Link href="/connect" style={{ textDecoration: 'none', marginTop: '6px' }}>
+              <Button variant="primary" full>Connect MetaTrader</Button>
+            </Link>
+          </div>
+        )}
       </div>
     )
   }

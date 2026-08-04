@@ -19,7 +19,6 @@ import SettingsTab     from './tabs/SettingsTab'
 import WelcomeGreeting from './WelcomeGreeting'
 import PartnerRail     from './PartnerRail'
 import FeedbackButton  from './FeedbackButton'
-import TourHost        from './tour/TourHost'
 import { DashboardAtmosphere } from './DashboardAtmosphere'
 import { tabLabel, tabSlug, tabFromSlug, TAB_QUERY_KEY } from './tabs'
 
@@ -148,7 +147,6 @@ export default function DashboardShell({ initialTab = 0, initialSettings = false
       <WelcomeGreeting />
       {/* Outside the tab wrapper on purpose — see FeedbackButton's header. */}
       <FeedbackButton activeTab={activeTab} showSettings={showSettings} />
-      <TourHost />
       {/* Exactly one viewport tall, and it owns its own scrolling — the page
           behind it no longer needs to be locked. */}
       <div className="vq2" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>

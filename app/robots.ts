@@ -17,7 +17,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/dashboard', '/api/', '/dev', '/onboarding', '/auth/'],
+      disallow: ['/dashboard', '/api/', '/dev', '/auth/'],
     },
     sitemap: 'https://velquor.app/sitemap.xml',
     host: 'https://velquor.app',

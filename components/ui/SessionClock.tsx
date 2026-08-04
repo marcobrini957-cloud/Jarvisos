@@ -56,8 +56,17 @@ function Rule() {
  */
 export default function SessionClock() {
   const [, setTick] = useState(0)
+  // The clock is the one thing on the dashboard that CANNOT agree between
+  // server and client: the server renders the second it rendered in, the
+  // browser hydrates a second or two later, and React throws a hydration
+  // mismatch and re-renders the whole tree. suppressHydrationWarning was
+  // sprinkled on two spans and silenced neither, because the mismatch is in
+  // the <Num> inside them. Rendering the times only after mount is the actual
+  // fix — there is no correct server-side value for "now".
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const id = setInterval(() => setTick(t => t + 1), 1000)
     return () => clearInterval(id)
   }, [])
@@ -111,9 +120,9 @@ export default function SessionClock() {
 
       {/* Second-precision strings can never match between server prerender and
           hydration, hence the suppression (React #418) */}
-      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }} suppressHydrationWarning>
-        <Num size="xs" tone="neutral">{formatLocalTime()}</Num>
-        <Num size="xs" tone="muted">{formatUTCTime()} UTC</Num>
+      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <Num size="xs" tone="neutral">{mounted ? formatLocalTime() : '--:--:--'}</Num>
+        <Num size="xs" tone="muted">{mounted ? formatUTCTime() : '--:--:--'} UTC</Num>
       </span>
 
       {next && <Rule />}
@@ -127,7 +136,7 @@ export default function SessionClock() {
             {next.label} in
           </span>
           <Num size="xs" tone="neutral" style={{ letterSpacing: '-0.01em' }}>
-            <span suppressHydrationWarning>{formatCountdown(next.mins)}</span>
+            <span>{mounted ? formatCountdown(next.mins) : '—'}</span>
           </Num>
         </span>
       )}
