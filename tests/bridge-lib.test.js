@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { detectSession, calcPips } from '../bridge/lib.js'
+import { detectSession, calcPips, mergeByTicket } from '../bridge/lib.js'
 
 describe('bridge detectSession (ms timestamps)', () => {
   it('NY: 13:30–22:00 UTC', () => {
@@ -139,5 +139,71 @@ describe('bridge server-time normalisation', () => {
     const sec = Math.floor(Date.UTC(2026, 6, 13, 12, 50, 14) / 1000)
     const r = mapBalanceOp({ ticket: 52021395, amount: 249.34, time: sec }, 'u1', 3 * 3600)
     expect(r.close_time).toBe('2026-07-13T09:50:14.000Z')
+  })
+})
+
+// ── mergeByTicket ────────────────────────────────────────────────────────────
+// A position closed in parts arrives as several deals under one ticket. This is
+// the function that stops that taking a user's entire sync down with it.
+describe('mergeByTicket', () => {
+  const row = (ticket, close, money, lots = 0.5) => ({
+    mt5_ticket: String(ticket),
+    open_time:  '2026-08-01T10:00:00.000Z',
+    close_time: close,
+    lot_size:   lots,
+    profit_usd: money,
+    commission: -1,
+    swap:       0,
+    net_profit: money - 1,
+    close_price: money,        // stands in for "whatever the exit looked like"
+    status: 'closed',
+  })
+
+  it('leaves distinct tickets alone', () => {
+    const out = mergeByTicket([row(1, '2026-08-01T11:00:00.000Z', 10), row(2, '2026-08-01T12:00:00.000Z', 20)])
+    expect(out).toHaveLength(2)
+  })
+
+  it('collapses partial closes into one row per position', () => {
+    const out = mergeByTicket([
+      row(49066312, '2026-08-01T11:00:00.000Z', 7.1),
+      row(49066312, '2026-08-01T11:30:00.000Z', 0.14),
+    ])
+    expect(out).toHaveLength(1)
+  })
+
+  it('adds up the money, so no partial close is silently lost', () => {
+    const [merged] = mergeByTicket([
+      row(1, '2026-08-01T11:00:00.000Z', 10),
+      row(1, '2026-08-01T12:00:00.000Z', 5),
+    ])
+    expect(merged.profit_usd).toBe(15)
+    expect(merged.net_profit).toBe(13)      // (10-1) + (5-1)
+    expect(merged.commission).toBe(-2)
+    expect(merged.lot_size).toBe(1)         // 0.5 out, then 0.5 out
+  })
+
+  it('runs from the first open to the last close, whatever order they arrive in', () => {
+    const [merged] = mergeByTicket([
+      { ...row(1, '2026-08-01T14:00:00.000Z', 5), open_time: '2026-08-01T09:00:00.000Z' },
+      { ...row(1, '2026-08-01T11:00:00.000Z', 10), open_time: '2026-08-01T10:00:00.000Z' },
+    ])
+    expect(merged.open_time).toBe('2026-08-01T09:00:00.000Z')
+    expect(merged.close_time).toBe('2026-08-01T14:00:00.000Z')
+    expect(merged.duration_minutes).toBe(300)
+  })
+
+  it('takes the exit from the last deal, not whichever arrived last', () => {
+    const [merged] = mergeByTicket([
+      row(1, '2026-08-01T14:00:00.000Z', 5),
+      row(1, '2026-08-01T11:00:00.000Z', 10),
+    ])
+    expect(merged.close_price).toBe(5)
+  })
+
+  it('never emits two rows with the same conflict key', () => {
+    const rows = [1, 1, 1, 2, 2, 3].map((t, i) => row(t, `2026-08-01T1${i}:00:00.000Z`, i))
+    const keys = mergeByTicket(rows).map(r => r.mt5_ticket)
+    expect(new Set(keys).size).toBe(keys.length)
   })
 })

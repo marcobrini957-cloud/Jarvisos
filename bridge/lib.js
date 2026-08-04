@@ -168,8 +168,61 @@ function mergeSettings(row) {
   return s;
 }
 
+/**
+ * Collapse partial closes into the position they belong to.
+ *
+ * A trader who scales out — closes 0.5 of a lot now and 0.5 an hour later —
+ * produces two closing deals under ONE position ticket, and the EA reports each
+ * deal. Postgres refuses an INSERT … ON CONFLICT whose batch hits the same
+ * conflict key twice ("ON CONFLICT DO UPDATE command cannot affect row a second
+ * time"), so the entire sync returned 500 — every second, for ever. The account
+ * looked connected and never received a single trade. It cost a real user
+ * (rolandsolomon443) his whole history until it was found: 119 deals, 85
+ * positions, 27 of them closed in parts.
+ *
+ * Merging is the right answer rather than keeping the last row, because to
+ * everyone except MetaTrader a scale-out is still ONE trade. Money adds up,
+ * volume adds up, the position ran from its first open to its last close, and
+ * everything else comes from the final deal (the price it actually finished at).
+ * Dropping the extra rows instead would silently lose the P&L of every partial
+ * close, which is worse than the crash: wrong numbers beat no numbers only when
+ * you can see they are wrong.
+ */
+function mergeByTicket(rows) {
+  const out = new Map();
+  for (const row of rows) {
+    const key = row.mt5_ticket;
+    const prev = out.get(key);
+    if (!prev) { out.set(key, { ...row }); continue; }
+
+    const openTime  = prev.open_time  < row.open_time  ? prev.open_time  : row.open_time;
+    const closeTime = (prev.close_time ?? '') > (row.close_time ?? '') ? prev.close_time : row.close_time;
+    // The later deal wins for anything describing the exit; the earlier one for
+    // the entry. Whichever row that is, the sums below are what matter.
+    const last = (row.close_time ?? '') >= (prev.close_time ?? '') ? row : prev;
+
+    const merged = {
+      ...last,
+      open_time:  openTime,
+      close_time: closeTime,
+      lot_size:   (prev.lot_size   ?? 0) + (row.lot_size   ?? 0),
+      profit_usd: (prev.profit_usd ?? 0) + (row.profit_usd ?? 0),
+      commission: (prev.commission ?? 0) + (row.commission ?? 0),
+      swap:       (prev.swap       ?? 0) + (row.swap       ?? 0),
+      net_profit: (prev.net_profit ?? 0) + (row.net_profit ?? 0),
+    };
+    if (openTime && closeTime) {
+      merged.duration_minutes = Math.round(
+        (new Date(closeTime).getTime() - new Date(openTime).getTime()) / 60000,
+      );
+    }
+    out.set(key, merged);
+  }
+  return [...out.values()];
+}
+
 module.exports = {
   detectSession, calcPips, versionLt, serverSecToUtcMs,
-  mapOpenPosition, mapClosedTrade, mapBalanceOp,
+  mapOpenPosition, mapClosedTrade, mapBalanceOp, mergeByTicket,
   SETTINGS_DEFAULTS, mergeSettings,
 };

@@ -313,11 +313,14 @@ app.post('/sync', wrap(async (req, res) => {
   // stored as real UTC. Older EAs send nothing → 0 → previous behaviour.
   const tzOffset = Number(body.server_gmt_offset_sec) || 0;
 
-  const rows = [
+  // mergeByTicket, not a plain concat: a position closed in parts arrives as
+  // several deals under one ticket, and Postgres rejects a batch that hits the
+  // same conflict key twice — taking the whole sync down with it. See lib.js.
+  const rows = mergeByTicket([
     ...(Array.isArray(body.open_positions) ? body.open_positions.map(p => mapOpenPosition(p, user.id, tzOffset)) : []),
     ...(Array.isArray(body.closed_trades)  ? body.closed_trades.map(t => mapClosedTrade(t, user.id, tzOffset))   : []),
     ...(Array.isArray(body.balance_ops)    ? body.balance_ops.map(o => mapBalanceOp(o, user.id, tzOffset)).filter(Boolean) : []),
-  ].map(r => ({ ...r, mt5_login: loginNum }));
+  ].map(r => ({ ...r, mt5_login: loginNum })));
   if (rows.length > 0) {
     const { error } = await supabase.from('trades').upsert(rows, { onConflict: 'mt5_ticket' });
     if (error) {
@@ -363,12 +366,18 @@ app.post('/sync', wrap(async (req, res) => {
   }
 
   // 4. EA heartbeat on the profile
-  await supabase.from('user_profiles').update({
+  const heartbeat = {
     ea_connected: true,
     ea_last_seen: new Date().toISOString(),
     ea_version:   body.ea_version ?? null,
-    ea_broker:    body.broker     ?? null,
-  }).eq('id', user.id);
+  };
+  // Only when we actually have one. A terminal that has not finished logging in
+  // reports an empty ACCOUNT_COMPANY, and `?? null` let that blank overwrite a
+  // broker name we already knew — leaving "Connected" with nothing after it.
+  if (typeof body.broker === 'string' && body.broker.trim()) {
+    heartbeat.ea_broker = body.broker.trim();
+  }
+  await supabase.from('user_profiles').update(heartbeat).eq('id', user.id);
 
   metrics.syncs++;
   return res.json({ ok: true, ts: Date.now() });
