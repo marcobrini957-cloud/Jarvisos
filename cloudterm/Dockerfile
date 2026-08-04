@@ -46,6 +46,31 @@ WORKDIR /
 # Fonts directory, registering it under the family name "Inter".
 COPY Inter-Bold.ttf "/wine/drive_c/windows/Fonts/Inter-Bold.ttf"
 
+# The MetaTrader server directory.
+#
+# A terminal only knows the servers it has met. A fresh container had none, so
+# a login whose Server= was a NAME — "ICMarkets-MT5", exactly what the platform
+# shows the user — did not fail: it did nothing at all. Not one Network line in
+# the log, no error, no attempt. That is why connecting has needed a host:port
+# for every broker we had not hand-mapped, and why anyone outside our tiny
+# catalog could not connect.
+#
+# This file is that knowledge, harvested from a terminal driven through File →
+# Open an Account for each broker (the search downloads and persists the
+# company's server definitions). With it baked in, the same name-only login
+# reaches the broker and gets a real answer.
+#
+# Proven in the container, before and after, on the same config:
+#   before  (no servers.dat)  → silence
+#   after   (this file)       → Network '1': authorization on ICMarkets-MT5
+#                               failed (Invalid account)
+# — "Invalid account" being the *right* answer to a deliberately fake login.
+#
+# To extend it, run cloudterm/learn-servers.sh with more broker names and
+# commit the result. The terminal keeps updating it at runtime, so this is a
+# floor, not a ceiling.
+COPY servers.dat "/wine/drive_c/Program Files/MetaTrader 5/config/servers.dat"
+
 COPY sidecar.sh /sidecar.sh
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /sidecar.sh /entrypoint.sh
