@@ -152,7 +152,7 @@ export default function MobileOverviewTab() {
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: '5px',
               padding: '2px 7px', borderRadius: 'var(--radius-sm)',
-              background: 'var(--color-down-dim)', color: 'var(--color-down)',
+              background: 'rgba(232,163,61,0.14)', color: 'var(--color-warn)',
               fontFamily: 'var(--font-display)', fontSize: 'var(--text-xs)',
             }}>
               <Icon name="alert" size={11} /> {overdueTasks.length}
@@ -167,8 +167,10 @@ export default function MobileOverviewTab() {
       <AdSlot seed={2} />
 
       {/* ── Instrument cluster ─────────────────────────────────────
-          Two bands of three instead of four tinted tiles: same figures,
-          roughly half the vertical space, one surface treatment. */}
+          One strip of six, not two of three. The strip became separate cards
+          that wrap, and this tree only renders under 640px where they wrap to
+          two columns — so three metrics left an orphan on its own row, twice,
+          with a hole beside each. Six fills 2×3 exactly. */}
       <div data-tour="stat-strip">
       <MetricStrip metrics={[
         { label: 'MT5 Balance', value: fmtEur(balance, 0), tone: 'neutral',
@@ -182,14 +184,11 @@ export default function MobileOverviewTab() {
         { label: 'Today', value: todayPnl !== 0 ? fmtPnl(todayPnl) : '€0',
           num: todayPnl, tone: todayPnl === 0 ? 'muted' : 'auto',
           meta: todayPnl !== 0 ? `${(balance > 0 ? todayPnl / (balance - todayPnl) * 100 : 0).toFixed(2)}%` : 'No trades' },
-      ]} />
-      </div>
-
-      <MetricStrip metrics={[
         { label: 'Net worth', value: fmtEur(netWorth, 0), tone: 'neutral', meta: 'MT5 + portfolio' },
         { label: 'Win rate', value: `${wr.toFixed(1)}%`, tone: 'neutral', meta: `${wins}W / ${losses}L` },
         { label: 'Trades', value: String(stats?.totalTrades ?? 0), tone: 'muted', meta: 'all time' },
       ]} />
+      </div>
 
       {/* ── Net Worth (MT5 balance + portfolio, over time) ── */}
       <NetWorthCurve portfolioValue={totalValueEur} />
@@ -251,9 +250,9 @@ export default function MobileOverviewTab() {
                       <div style={{
                         width: '16px', height: '16px', borderRadius: 'var(--radius-sm)', flexShrink: 0, marginTop: '2px',
                         background: task.status === 'done' ? 'var(--gr)' : 'transparent',
-                        border: `2px solid ${task.status === 'done' ? 'var(--gr2)' : overdue ? 'var(--re)' : 'var(--bd2)'}`,
+                        border: `2px solid ${task.status === 'done' ? 'var(--gr2)' : overdue ? 'var(--color-warn)' : 'var(--bd2)'}`,
                       }} />
-                      <span style={{ fontSize: 'var(--text-base)', lineHeight: 1.45, color: overdue ? 'var(--re)' : 'var(--t2)', textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>
+                      <span style={{ fontSize: 'var(--text-base)', lineHeight: 1.45, color: overdue ? 'var(--color-warn)' : 'var(--t2)', textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>
                         {task.title}
                       </span>
                     </div>

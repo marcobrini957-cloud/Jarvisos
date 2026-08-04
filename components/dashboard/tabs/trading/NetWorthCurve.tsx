@@ -186,16 +186,19 @@ export function NetWorthCurve({ portfolioValue = 0 }: { portfolioValue?: number 
       .nw-area { animation: nwFade 1.1s ease-out both; }
     `}</style>
 
-    {/* Stats header */}
+    {/* Stats header. It wraps rather than colliding: at 390px the date, the
+        headline figure and three right-hand stats do not fit on one line, and
+        the fixed row had "Max DD" breaking its minus sign onto its own line
+        with the value pressed against the total beside it. */}
     <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-      marginBottom: '10px', minHeight: '44px', flex: 'none' }}>
-      <div>
+      flexWrap: 'wrap', gap: '10px 16px', marginBottom: '10px', minHeight: '44px', flex: 'none' }}>
+      <div style={{ minWidth: 0 }}>
         <Label>{activeDateStr}</Label>
         <div style={{ marginTop: '4px' }}>
           <Num size="2xl">€{eur2(activeVal)}</Num>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: '20px', paddingBottom: '2px' }}>
+      <div style={{ display: 'flex', gap: '20px', paddingBottom: '2px', flexWrap: 'wrap' }}>
         <div style={{ textAlign: 'right' }}>
           <Label>{year} change</Label>
           <div style={{ marginTop: '3px' }}>
