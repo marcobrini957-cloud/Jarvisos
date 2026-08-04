@@ -69,7 +69,9 @@ COPY Inter-Bold.ttf "/wine/drive_c/windows/Fonts/Inter-Bold.ttf"
 # To extend it, run cloudterm/learn-servers.sh with more broker names and
 # commit the result. The terminal keeps updating it at runtime, so this is a
 # floor, not a ceiling.
-COPY servers.dat "/wine/drive_c/Program Files/MetaTrader 5/config/servers.dat"
+# JSON form: the destination has spaces in it, and shell-form COPY does not
+# parse the quotes — "failed to process \"/wine/drive_c/Program\"".
+COPY ["servers.dat", "/wine/drive_c/Program Files/MetaTrader 5/config/servers.dat"]
 
 COPY sidecar.sh /sidecar.sh
 COPY entrypoint.sh /entrypoint.sh
