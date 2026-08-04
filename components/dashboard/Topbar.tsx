@@ -7,7 +7,6 @@ import MT5ConnectModal from './MT5ConnectModal'
 import AccountMenu from './AccountMenu'
 import { LogoMark } from '@/components/ui/LogoMark'
 import { MobileMenuButton } from './MobileNav'
-import { QuickSearch } from './QuickSearch'
 import { useDisplayMode } from '@/context/DisplayModeContext'
 import { useUserProfile, useUserName } from '@/context/UserProfileContext'
 import { createClient } from '@/lib/supabase/client'
@@ -268,8 +267,6 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
             </div>
           )}
         </div>
-
-        <QuickSearch />
 
         {/* MT5 status pill + account switcher */}
         <AccountMenu
