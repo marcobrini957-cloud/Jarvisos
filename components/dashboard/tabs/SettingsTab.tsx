@@ -111,7 +111,7 @@ function MT5AccountsPanel() {
                   ? 'Checking…'
                   : connected
                     ? `Connected${status?.ea_broker ? ` · ${status.ea_broker}` : ''}`
-                    : 'EA not connected'}
+                    : 'MetaTrader not connected'}
               </p>
               {connected && status && (status.ea_version || lastSeenTs) && (
                 <p style={{ margin: '2px 0 0', fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
@@ -121,7 +121,7 @@ function MT5AccountsPanel() {
               )}
               {!connected && status !== null && (
                 <p style={{ margin: '2px 0 0', fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
-                  Install the EA and attach it to any chart in MT5
+                  Set it up once and your trades log themselves
                 </p>
               )}
             </div>
@@ -138,7 +138,7 @@ function MT5AccountsPanel() {
         {/* ── API Key ──────────────────────────────────────────────────────── */}
         <div>
           <p style={{ margin: '0 0 6px', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--t3)' }}>
-            API KEY — paste this into the EA inputs when you attach it
+            Setup key — the connector asks for this once, during setup
           </p>
           <div style={{
             display: 'flex', alignItems: 'center', gap: '8px',
@@ -162,7 +162,7 @@ function MT5AccountsPanel() {
             </Button>
           </div>
           <p style={{ margin: '5px 0 0', fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>
-            Keep this private — it gives write access to your VELQUOR data.
+            Keep this private: anyone with it can write to your VELQUOR account.
           </p>
         </div>
 
@@ -312,11 +312,29 @@ export default function SettingsTab() {
 
       {/* ── Tour ── */}
       <Panel title="Getting started">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '14px' }}>
           <div>
-            <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500, margin: 0 }}>Show the tour again</p>
+            <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500, margin: 0 }}>Setup checklist</p>
             <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '2px', lineHeight: 1.6 }}>
-              The walkthrough of each section. Easy to dismiss by reflex on day one.
+              The four first steps, on Home. It hides itself once they are done.
+            </p>
+          </div>
+          <Button
+            style={{ flexShrink: 0 }}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('vq-show-getting-started'))
+              window.dispatchEvent(new CustomEvent('vq-switch-tab', { detail: 0 }))
+            }}
+          >
+            Show on Home
+          </Button>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', paddingTop: '14px', borderTop: '1px solid var(--color-line-1)' }}>
+          <div>
+            <p style={{ color: 'var(--t1)', fontSize: 'var(--text-base)', fontWeight: 500, margin: 0 }}>Tour of the sections</p>
+            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', marginTop: '2px', lineHeight: 1.6 }}>
+              A walk through what each section is for. It no longer starts by itself — it is here when you want it.
             </p>
           </div>
           <Button

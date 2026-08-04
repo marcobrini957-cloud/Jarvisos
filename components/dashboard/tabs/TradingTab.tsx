@@ -132,8 +132,8 @@ export default function TradingTab() {
         </div>
         <div data-tour="equity" style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '280px' }}>
           {[
-            'Install the VELQUOR EA in your MetaTrader 5',
-            'Paste your API key into the EA inputs',
+            'Add the VELQUOR connector to MetaTrader — the guide walks you through it',
+            'Paste in your setup key when it asks',
             'Every trade syncs by itself from then on',
           ].map((text, i) => (
             <div key={text} style={{ padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>

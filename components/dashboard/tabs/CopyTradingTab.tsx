@@ -107,7 +107,7 @@ export default function CopyTradingTab() {
         background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
         fontSize: 'var(--text-sm)', color: 'var(--color-ink-3)', lineHeight: 1.6,
       }}>
-        Running the EA on your own MetaTrader? Add{' '}
+        Running the connector in your own MetaTrader? Add{' '}
         <code style={{ color: 'var(--color-ink-1)', background: 'var(--color-surface-2)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
           https://bridge.velquor.app
         </code>

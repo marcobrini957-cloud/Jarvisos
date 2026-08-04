@@ -15,6 +15,7 @@ import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
 import { hasCredit }           from '@/lib/trading/capital'
 import Icon                   from '@/components/ui/Icon'
 import { Surface, MetricStrip, Label, Num } from '@/components/ui/vq'
+import GettingStarted from '@/components/dashboard/GettingStarted'
 import SessionClock           from '@/components/ui/SessionClock'
 import DailyMaxLoss           from '@/components/ui/DailyMaxLoss'
 import { NetWorthCurve }      from './trading/NetWorthCurve'
@@ -160,6 +161,15 @@ export default function OverviewTab() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }} className="fade-in">
+
+      {/* First-run setup, above everything, and only until it is done. It reads
+          the account rather than running a script — see GettingStarted. */}
+      <GettingStarted counts={{
+        trades:  trades.length,
+        entries: entries.length,
+        habits:  habits.length,
+        loading: tradesLoading,
+      }} />
 
       {/* ── Status line ──────────────────────────────────────────────────────
           The old hero spent ~180px on a greeting and a date. A terminal opens

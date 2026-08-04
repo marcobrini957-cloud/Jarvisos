@@ -9,7 +9,7 @@ import EAConnectWizard from '@/components/ea/EAConnectWizard'
 
 const STEPS = [
   { n: 1, title: 'Welcome to Velquor' },
-  { n: 2, title: 'Connect your MT5 account' },
+  { n: 2, title: 'Connect MetaTrader' },
   { n: 3, title: 'Set your trading limits' },
   { n: 4, title: 'Meet VELQUOR AI' },
 ]
@@ -73,10 +73,10 @@ function Step2({ onNext }: { onNext: () => void }) {
       <div>
         <div style={{ color: 'var(--color-ink-3)', marginBottom: '14px' }}><Icon name="bolt" size={22} /></div>
         <h2 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.02em', margin: '0 0 8px', color: 'var(--t1)' }}>
-          Install the VELQUOR EA
+          Connect MetaTrader
         </h2>
         <p style={{ color: 'var(--t2)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-          A small Expert Advisor runs inside MT5 and sends your data directly to VELQUOR — no third-party cloud access to your account.
+          A small VELQUOR add-on sits inside MetaTrader and sends your trades straight here as you close them. Nobody else touches your account, and it cannot place trades.
         </p>
       </div>
 

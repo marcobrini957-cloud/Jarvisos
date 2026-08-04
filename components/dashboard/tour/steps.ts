@@ -70,7 +70,7 @@ export const TOUR_STEPS: TourStep[] = [
     anchor: 'equity',
     title: 'Your curve, with funding kept out',
     body: 'Deposits and withdrawals move your balance but are not performance, so they are shown separately. What you see here is trading.',
-    emptyBody: 'Three steps and you are done. The EA runs inside MetaTrader and pushes each fill here — you do not have to leave your platform or copy anything by hand.',
+    emptyBody: 'Three steps and you are done. A small VELQUOR add-on sits inside MetaTrader and sends each fill here as it happens — you never leave your platform or copy anything by hand.',
   },
   {
     id: 'portfolio',

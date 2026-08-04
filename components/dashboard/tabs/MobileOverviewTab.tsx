@@ -14,6 +14,7 @@ import { formatValue }        from '@/lib/utils/formatting'
 import { periodReturnPct, type ReturnEvent } from '@/lib/trading/returns'
 import { hasCredit } from '@/lib/trading/capital'
 import { Surface, MetricStrip, Label, Num } from '@/components/ui/vq'
+import GettingStarted from '@/components/dashboard/GettingStarted'
 import InsightCard            from '@/components/ui/InsightCard'
 import { NetWorthCurve }      from './trading/NetWorthCurve'
 import { buildEdgeFacts, Fact } from './overview/EdgeReport'
@@ -131,6 +132,13 @@ export default function MobileOverviewTab() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '80px' }}>
+
+      <GettingStarted counts={{
+        trades:  trades.length,
+        entries: entries.length,
+        habits:  habits.length,
+        loading: tradesLoading,
+      }} />
 
       {/* ── Status line ────────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
