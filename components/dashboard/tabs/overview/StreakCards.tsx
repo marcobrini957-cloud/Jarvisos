@@ -49,7 +49,10 @@ export function StreakCard({ trades, journalStreak, habitStreak, journalDays, ha
   // oldest-first; useTrades sorts newest-first, so the "current" streak was
   // counted from the account's very first trade and never moved. Order is
   // established inside lib/trading/streaks now, not assumed here.
-  const { losses: lossStreak, withoutLoss: tradeStreak } = useMemo(
+  // The heading said "Win streak" and the number underneath was `withoutLoss`
+  // — trades since the last loss, which counts break-evens. So a scratch put
+  // the win streak up by one, which is what Marco saw. It shows wins.
+  const { wins: winStreak, losses: lossStreak, withoutLoss } = useMemo(
     () => currentStreaks(trades), [trades])
 
   const tradeRun = useMemo<RunMark[]>(() => recentRun(trades, 12), [trades])
@@ -59,7 +62,7 @@ export function StreakCard({ trades, journalStreak, habitStreak, journalDays, ha
     return [...Array(Math.max(0, 7 - d.length)).fill('none' as RunMark), ...d]
   }
 
-  const isLosing = lossStreak > 0 && tradeStreak === 0
+  const isLosing = lossStreak > 0 && withoutLoss === 0
 
   return (
     <Surface title="Streaks" action={
@@ -72,10 +75,10 @@ export function StreakCard({ trades, journalStreak, habitStreak, journalDays, ha
         label={isLosing ? 'Loss run' : 'Win streak'}
         unit={isLosing
           ? (lossStreak === 1 ? 'loss in a row' : 'losses in a row')
-          : (tradeStreak === 1 ? 'trade without a loss' : 'trades without a loss')}
-        value={isLosing ? lossStreak : tradeStreak}
+          : (winStreak === 1 ? 'win in a row' : 'wins in a row')}
+        value={isLosing ? lossStreak : winStreak}
         run={tradeRun}
-        tone={isLosing ? 'down' : tradeStreak >= 3 ? 'up' : 'muted'}
+        tone={isLosing ? 'down' : winStreak >= 3 ? 'up' : 'muted'}
       />
       <StreakRow
         icon="journal"

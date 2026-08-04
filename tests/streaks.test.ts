@@ -88,9 +88,30 @@ describe('currentStreaks — break-evens', () => {
     expect(s.withoutLoss).toBe(3)
   })
 
-  it('does stop a "win streak" at a scratch — three wins means three wins', () => {
+  it('skips a scratch rather than ending the win streak', () => {
+    // loss, win, break-even, win. The scratch is not an outcome — it is left
+    // out of both sides of the win rate, and it is left out here too, so this
+    // reads as two wins rather than one.
+    //
+    // The rule used to be the other way round ("a win streak stops at the
+    // first thing that is not a win"), which meant a scratch quietly ended a
+    // run the trader had not actually broken.
     const s = currentStreaks([t(-50, 1), t(80, 2), t(3, 3), t(60, 4)])
-    expect(s.wins).toBe(1)
+    expect(s.wins).toBe(2)
+  })
+
+  it('never counts a scratch as a win', () => {
+    // Two wins, then today's trade scratches. Still two — the number must not
+    // move just because a flat trade closed.
+    const before = currentStreaks([t(70, 1), t(90, 2)])
+    const after  = currentStreaks([t(70, 1), t(90, 2), t(2, 3)])
+    expect(before.wins).toBe(2)
+    expect(after.wins).toBe(2)
+  })
+
+  it('a loss ends it whatever came before', () => {
+    const s = currentStreaks([t(90, 1), t(80, 2), t(3, 3), t(-70, 4)])
+    expect(s.wins).toBe(0)
   })
 
   it('counts consecutive losses only', () => {

@@ -29,7 +29,10 @@ export function newestFirst(trades: Trade[]): Trade[] {
 }
 
 export interface Streaks {
-  /** Consecutive wins from the most recent trade back. Zero if the last was a loss. */
+  /**
+   * Wins in a row from the most recent trade back. A loss ends it; a
+   * break-even is skipped rather than counted or treated as a break.
+   */
   wins:   number
   /** Consecutive losses from the most recent trade back. */
   losses: number
@@ -56,12 +59,20 @@ export function currentStreaks(trades: Trade[]): Streaks {
     else break
   }
 
-  // A win streak stops at the first thing that is not a win, break-evens
-  // included — "3-trade win streak" should mean three wins.
+  // Wins in a row, counting back from the most recent trade. A loss ends it.
+  //
+  // A break-even neither counts nor ends it — it is skipped, exactly as it is
+  // excluded from both sides of the win rate (see decidedStats in
+  // lib/intelligence). The product's whole position on a scratch is that it is
+  // not an outcome: it did not go your way, it did not go against you, and it
+  // should not be able to tell you your run of wins is over. A trader who wins
+  // twice, scratches one, and wins again has won three, and the card that says
+  // otherwise is the one that is wrong.
   let wins = 0
   for (const t of ordered) {
-    if (outcomeOf(t) === 'win') wins++
-    else break
+    const outcome = outcomeOf(t)
+    if (outcome === 'loss') break
+    if (outcome === 'win') wins++
   }
 
   return { wins, losses, withoutLoss }
