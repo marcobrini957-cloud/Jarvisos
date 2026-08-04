@@ -627,3 +627,54 @@ automatically correct for *cards that wrap*. One strip of six fills 2×3.
 
 Measured after, at 1440px and 390px across all eleven sections: no horizontal
 overflow anywhere, no page errors, 233 tests green.
+
+### Stage 7 — the landing's language, inside the product (2026-08-04)
+
+Marco's verdict on Stage 6: "I barely see any changes." Correct, and the
+diagnosis matters more than the fix. Stage 6 made the interior *consistent* —
+one card, one button, one colour for a warning. It did not make it *feel* like
+anything, because the thing that makes the landing feel expensive was never in
+the product at all.
+
+**What the landing actually has that the dashboard did not.** Not the type, not
+the palette — one continuous lit render behind everything, with every panel a
+translucent sheet over it. The dashboard had the second half of that recipe and
+none of the first: panels at 4% white over flat black, so the translucency did
+no work and the screen read as boxes on a void.
+
+| | Landing | Dashboard, before | Dashboard, now |
+|---|---|---|---|
+| Background | shader, full-bleed | `#000` | same shader at 50%, scrim-framed |
+| Panel | white 4.5%, blur 26 | white 4%, no blur | white 4%, over the render |
+| Chrome | translucent + blur | solid black | translucent + blur |
+| Radii | 8 / 12 / 999 | 6 / 8 / 12 / 14 / 999 | 8 / 12 / 999 |
+| Entrance | 18px rise, 900ms | 220ms fade | 14px rise, 620ms, staggered |
+| Gap between boxes | one | 8 / 10 / 12 / 16 | 12 |
+
+⚠️ **Frame the render with the scrim, never with the canvas box.** The shader
+composes its sphere for whatever viewport it is handed, so offsetting or
+oversizing the canvas does not move the sphere — it stretches the limb into a
+diagonal streak across the middle of the trade log. Full-bleed, then shape it
+with a gradient over the top.
+
+⚠️ **The scrim is `#05070A`, not `#000`.** Pure black over the shader drains
+exactly the blue that makes the landing read as lit rather than switched off.
+
+**Charts were the loudest inconsistency, and Marco named them before the pass
+did.** Four ring implementations, three visible at once on Trading: a 48px
+green/red conic donut, a 56px blue one with a ring twice as thick, two more 48px
+dials — and the Portfolio allocation ring drawn as annular sectors with a
+gradient per segment, a specular sweep and a drop shadow, the one object on the
+dashboard lit from its own direction. One `Ring` now, geometry as ratios of the
+diameter (width 11.5%, 2° gaps cut from the geometry, transparent hole) so a
+52px dial and a 168px allocation ring are the same object at two sizes.
+
+**A consistent wrong answer is still wrong.** Once the dials matched, three
+saturated `--color-key` rings sat in one row out-shouting the figures they
+annotate. The arcs are ink; money keeps green and red. Making things identical
+can *raise* a problem that inconsistency was hiding.
+
+**What the dials taught about holes.** Every old ring punched a solid black disc
+in its centre. Over an opaque card nobody noticed; over a translucent panel on a
+lit background it is a hole in the screen. Anything that fakes the background
+colour breaks the moment the background stops being a colour.
