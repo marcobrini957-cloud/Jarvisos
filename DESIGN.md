@@ -578,3 +578,52 @@ per the house rule, it is done from screenshots, never from memory.
 
 **Stage 5.** Delete the legacy palette and the `.vq2` bridge once nothing reads
 the old vars; drop the glow/gradient helper classes.
+
+### Stage 6 — the interior, on the language it already had (2026-08-04)
+
+The landing was rebuilt on 2026-08-03 and the dashboard chrome followed it the
+same afternoon: navigation into a left column, the header down to breadcrumb +
+section title, `Surface` retuned to a 14px corner with a 19px heading and no
+rule under it, `Segmented` to a capsule with a solid light pill. That commit
+said all ten tabs inherited it.
+
+**They did not, and the reason is worth writing down.** Five files use
+`Surface`. Twelve tabs are built from `Panel`, which *restated* Surface's styles
+by hand and had been in sync until the moment Surface changed. So Home looked
+redesigned while Journal, Trading, Discipline, Portfolio and Settings kept the
+6px corner, the 13px title and the divider — and the interior read as
+half-finished for a day.
+
+Panel is now literally `Surface`, keeping only the props its callers need
+(`accent`, `noPadding`, `fill`). **A primitive that describes another primitive
+in prose will drift; one that composes it cannot.**
+
+| | Before | After |
+|---|---|---|
+| Card corners in play | 6px (Panel ×12 tabs), 14px (Surface ×5), 12px (copy group) | one, `--radius-card` |
+| Button shapes | 159 hand-styled, 8 background values, radii 4–999 | `Button` / `IconButton`, 4 variants |
+| Selected-state controls | Segmented capsule *and* four sets of drawn pills | Segmented |
+| Red on non-money | overdue ×5, `high`/`risk`/`screenshot` badges, Watch Out, 4 destructive controls | 0 |
+| Sections announcing their own name | Settings, Copy | 0 |
+
+**The corner is a token.** It was a literal `14` inside two primitives while
+thirteen hand-drawn cards sat at `--radius-md`. Panels carry `--radius-card`;
+boxes nested *inside* a card stay on the small steps, or a 14px corner ends up
+inside a 14px corner.
+
+**Danger rests as ink.** A copy group with three followers drew five red
+controls before anyone touched anything. `danger` is ink at rest and red on
+hover, which keeps the loss colour for losses.
+
+**Amber is not a smaller red.** Overdue was red in Tasks and amber in
+Discipline — the same fact, two colours, decided twice. Worse, `Badge` mapped
+`screenshot` to the loss hue, so "there is a picture attached" rendered in the
+colour that means "this trade lost money".
+
+**What the mobile tree taught.** Making the metric strip wrap fixed the desktop
+and broke the phone: two strips of three, under 640px, each put two cards on a
+row and left the third alone. A layout that was correct for a *band* is not
+automatically correct for *cards that wrap*. One strip of six fills 2×3.
+
+Measured after, at 1440px and 390px across all eleven sections: no horizontal
+overflow anywhere, no page errors, 233 tests green.
