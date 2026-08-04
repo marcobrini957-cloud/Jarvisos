@@ -449,7 +449,9 @@ export function Segmented<T extends string>({ options, value, onChange, titles }
             style={{
               fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
               letterSpacing: '0.08em', textTransform: 'uppercase',
-              padding: '4px 11px', borderRadius: '999px', border: 'none',
+              // A segment that wraps stops being a pill: "P&L %" broke over two
+              // lines in the Portfolio header and made the whole track an oval.
+              padding: '4px 11px', borderRadius: '999px', border: 'none', whiteSpace: 'nowrap',
               background: on ? 'var(--color-ink-1)' : 'transparent',
               color: on ? 'var(--color-void)' : 'var(--color-ink-3)',
               cursor: 'pointer', transition: 'background 0.14s, color 0.14s',

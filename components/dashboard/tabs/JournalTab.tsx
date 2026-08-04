@@ -265,27 +265,14 @@ export default function JournalTab() {
                     style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--t3)', cursor: 'pointer', fontSize: 'var(--text-lg)', lineHeight: 1 }}><Icon name="close" size={13} /></button>
                 )}
               </div>
-              {/* Mood filter chips */}
-              <div className="flex gap-1.5 flex-wrap">
-                <button
-                  onClick={() => setMoodFilter('')}
-                  style={{
-                    padding: '2px 9px', borderRadius: 'var(--radius-xs)', fontSize: 'var(--text-xs)', cursor: 'pointer',
-                    background: moodFilter === '' ? 'var(--color-surface-3)' : 'transparent',
-                    border: '1px solid var(--color-line-1)',
-                    color: moodFilter === '' ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
-                  }}>All</button>
-                {MOODS.map(m => (
-                  <button key={m} onClick={() => setMoodFilter(moodFilter === m ? '' : m)}
-                    style={{
-                      padding: '2px 9px', borderRadius: 'var(--radius-xs)', fontSize: 'var(--text-xs)', cursor: 'pointer',
-                      background: moodFilter === m ? 'var(--color-surface-3)' : 'transparent',
-                      border: '1px solid var(--color-line-1)',
-                      color: moodFilter === m ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
-                      textTransform: 'capitalize',
-                    }}>{m}</button>
-                ))}
-              </div>
+              {/* Mood filter. It was six outlined chips whose selected state was
+                  a slightly lighter grey — the same unreadable state Segmented
+                  was rebuilt to fix, so it is that control now. */}
+              <Segmented
+                options={[{ key: '', label: 'All' }, ...MOODS.map(m => ({ key: m, label: m }))]}
+                value={moodFilter}
+                onChange={v => setMoodFilter(v as Mood | '')}
+              />
             </div>
 
             {loading ? (

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { usePortfolio, type HoldingWithPrice } from '@/hooks/usePortfolio'
 import MetricCard from '@/components/ui/MetricCard'
 import Panel from '@/components/ui/Panel'
-import { Label, Num, Segmented } from '@/components/ui/vq'
+import { Label, Num, Segmented, Button, IconButton } from '@/components/ui/vq'
 import { CsvImportModal, type CsvRow } from './portfolio/CsvImportModal'
 import { METAL_OPTIONS, fmtEur, fmtPct, sign, holdingColor } from './portfolio/helpers'
 import { HoldingModal } from './portfolio/HoldingModal'
@@ -255,10 +255,9 @@ export default function PortfolioTab() {
               Showing cost basis only. Error: {priceError}
             </p>
           </div>
-          <button onClick={() => reload()}
-            style={{ background: 'var(--re)', border: 'none', color: 'white', fontSize: 'var(--text-base)', padding: '6px 14px', borderRadius: 'var(--radius-md)', cursor: 'pointer', flexShrink: 0 }}>
+          <Button onClick={() => reload()} style={{ flexShrink: 0 }}>
             Retry
-          </button>
+          </Button>
         </div>
       )}
 
@@ -319,43 +318,27 @@ export default function PortfolioTab() {
                       fontSize: 'var(--text-base)', outline: 'none',
                     }}
                   />
-                  <button
-                    onClick={() => { setSearch(''); setSearchOpen(false) }}
-                    aria-label="Clear search"
-                    style={{ background: 'none', border: 'none', color: 'var(--color-ink-3)', cursor: 'pointer', display: 'flex', padding: '4px' }}
-                  >
+                  <IconButton variant="ghost" title="Clear search" onClick={() => { setSearch(''); setSearchOpen(false) }}>
                     <Icon name="close" size={12} />
-                  </button>
+                  </IconButton>
                 </div>
               ) : (
-                <button
-                  onClick={() => setSearchOpen(true)}
-                  aria-label="Search holdings"
-                  title="Search holdings"
-                  className="flex items-center"
-                  style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', background: 'transparent', border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', cursor: 'pointer' }}
-                >
+                <IconButton title="Search holdings" onClick={() => setSearchOpen(true)}>
                   <Icon name="search" size={12} />
-                </button>
+                </IconButton>
               )}
 
               {/* Only offered when the portfolio actually repeats an
                   instrument; on a clean list the control would do nothing. */}
               {canGroup && (
-                <button
+                <Button
+                  size="sm"
+                  variant={grouped ? 'secondary' : 'ghost'}
                   onClick={() => setGrouped(g => !g)}
-                  aria-pressed={grouped}
                   title={grouped ? 'Showing one line per instrument — click for every purchase' : 'Showing every purchase — click to group by instrument'}
-                  style={{
-                    padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)',
-                    background: grouped ? 'var(--color-surface-3)' : 'transparent',
-                    border: '1px solid var(--color-line-1)',
-                    color: grouped ? 'var(--color-ink-1)' : 'var(--color-ink-3)',
-                    cursor: 'pointer', whiteSpace: 'nowrap',
-                  }}
                 >
                   {grouped ? 'Grouped' : 'All lots'}
-                </button>
+                </Button>
               )}
 
               {/* Sort toggle */}
@@ -364,48 +347,39 @@ export default function PortfolioTab() {
                 value={sortBy}
                 onChange={setSortBy}
               />
-              <button onClick={() => reload()} disabled={priceLoading}
-                className="flex items-center gap-1.5"
-                style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)', background: 'transparent', border: '1px solid var(--color-line-1)', color: priceLoading ? 'var(--color-ink-4)' : 'var(--color-ink-2)', cursor: 'pointer' }}>
-                {priceLoading ? '⟳ …' : '⟳'}
-              </button>
+              <IconButton title="Refresh prices" onClick={() => reload()} disabled={priceLoading}>
+                <Icon name="repeat" size={12} />
+              </IconButton>
               {selectMode ? (
                 <>
-                  <button onClick={toggleSelectAll}
-                    style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)', background: 'transparent', border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', cursor: 'pointer' }}>
+                  <Button size="sm" onClick={toggleSelectAll}>
                     {selected.size === sortedHoldings.length ? 'Deselect all' : 'Select all'}
-                  </button>
-                  <button onClick={deleteSelected} disabled={selected.size === 0 || deleting}
-                    style={{ padding: '4px 10px', fontSize: 'var(--text-base)', background: selected.size > 0 ? 'var(--color-down-dim)' : 'transparent', border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-sm)', color: selected.size > 0 ? 'var(--color-down)' : 'var(--color-ink-4)', cursor: selected.size > 0 ? 'pointer' : 'default' }}>
+                  </Button>
+                  <Button size="sm" variant="danger" onClick={deleteSelected} disabled={selected.size === 0 || deleting}>
                     {deleting ? 'Deleting…' : `Delete${selected.size > 0 ? ` (${selected.size})` : ''}`}
-                  </button>
-                  <button onClick={() => { setSelectMode(false); setSelected(new Set()) }}
-                    style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)', background: 'transparent', border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', cursor: 'pointer' }}>
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setSelectMode(false); setSelected(new Set()) }}>
                     Cancel
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>
-                  <button onClick={() => setSelectMode(true)}
-                    style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)', background: 'transparent', border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', cursor: 'pointer' }}>
+                  <Button size="sm" variant="ghost" onClick={() => setSelectMode(true)}>
                     Select
-                  </button>
-                  <button onClick={() => setCsvModal('add')}
-                    className="flex items-center gap-1.5"
-                    style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)', background: 'transparent', border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', cursor: 'pointer' }}>
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setCsvModal('add')}>
                     <Icon name="upload" size={11} /> CSV
-                  </button>
-                  <button onClick={() => setCsvModal('update')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 vq-r"
+                  </Button>
+                  <Button
+                    size="sm" variant="ghost"
+                    onClick={() => setCsvModal('update')}
                     title="Upload a CSV to refresh existing holdings and add new ones — never creates duplicates"
-                    style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)', background: 'transparent', border: '1px solid var(--color-line-1)', color: 'var(--color-ink-2)', cursor: 'pointer' }}>
-                    ⟳ Update
-                  </button>
-                  <button onClick={() => setModal({ open: true })}
-                    className="flex items-center gap-1.5"
-                    style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-base)', background: 'var(--color-ink-1)', border: 'none', color: 'var(--color-void)', cursor: 'pointer' }}>
-                    + Add
-                  </button>
+                  >
+                    <Icon name="repeat" size={11} /> Update
+                  </Button>
+                  <Button size="sm" variant="primary" onClick={() => setModal({ open: true })}>
+                    <Icon name="plus" size={12} /> Add
+                  </Button>
                 </>
               )}
             </div>

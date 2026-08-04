@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { Trade } from '@/types'
 import { AdvancedChart } from '@/components/widgets/TradingViewWidget'
+import { Segmented } from '@/components/ui/vq'
 
 // Live Chart — the real, real-time price chart, straight from TradingView's
 // data (no MT5 relay in the middle). Follows the instrument you're viewing and
@@ -35,13 +36,6 @@ const TIMEFRAMES: { label: string; interval: string }[] = [
   { label: 'H4', interval: '240' },
 ]
 
-const pillBtn = (active: boolean) => ({
-  padding: '4px 11px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
-  fontSize: 'var(--text-sm)', fontWeight: 600,
-  background: active ? 'var(--color-surface-3)' : 'var(--s3)', color: active ? 'var(--color-ink-1)' : 'var(--t3)',
-  transition: 'all 0.12s',
-} as const)
-
 export function LiveChart({ trades, openPositions }: { trades: Trade[]; openPositions: Trade[] }) {
   const symbols = useMemo(() => {
     const set = new Set<string>()
@@ -59,18 +53,19 @@ export function LiveChart({ trades, openPositions }: { trades: Trade[]; openPosi
       {/* Instrument + timeframe controls */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px',
         flexWrap: 'wrap', padding: '10px 14px', borderBottom: '1px solid var(--bd)' }}>
-        <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>
-          {symbols.map(s => (
-            <button key={s} onClick={() => setSymbol(s)} style={pillBtn(sym === s)}>{s}</button>
-          ))}
-        </div>
-        <div style={{ display: 'flex', gap: '3px' }}>
-          {TIMEFRAMES.map(t => (
-            <button key={t.interval} onClick={() => setTf(t.interval)} style={pillBtn(tf === t.interval)}>
-              {t.label}
-            </button>
-          ))}
-        </div>
+        {/* Both rows were drawn pills with their own selected state — a lighter
+            grey on grey, which is the exact state Segmented was rebuilt to fix.
+            They are the same control as every other timeframe switch now. */}
+        <Segmented
+          options={symbols.map(s => ({ key: s, label: s }))}
+          value={sym}
+          onChange={setSymbol}
+        />
+        <Segmented
+          options={TIMEFRAMES.map(t => ({ key: t.interval, label: t.label }))}
+          value={tf}
+          onChange={setTf}
+        />
       </div>
 
       {/* The chart. key forces a clean reload when symbol/interval changes. */}

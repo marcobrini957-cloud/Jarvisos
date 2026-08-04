@@ -144,7 +144,9 @@ export function TraderDnaVisual({ dna, focus }: { dna: DnaShape; focus?: string 
 }
 
 function Trait({ label, value, good, bad }: { label: string; value: string; good?: boolean; bad?: boolean }) {
-  const color = good ? 'var(--color-ink-1)' : bad ? 'var(--color-down)' : 'var(--color-ink-2)'
+  // A condition to watch for is a warning about behaviour, not money lost.
+  // Red here made "When deviating from your plan" read like a P&L figure.
+  const color = good ? 'var(--color-ink-1)' : bad ? 'var(--color-warn)' : 'var(--color-ink-2)'
   return (
     <div style={{ padding: '7px 11px', borderRadius: 4, background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)' }}>
       <div style={{ fontSize: 'var(--text-2xs)', letterSpacing: '0.14em', color: 'var(--color-ink-4)', marginBottom: 3 }}>{label.toUpperCase()}</div>
