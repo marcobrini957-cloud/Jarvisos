@@ -201,16 +201,42 @@ function mergeByTicket(rows) {
     // the entry. Whichever row that is, the sums below are what matter.
     const last = (row.close_time ?? '') >= (prev.close_time ?? '') ? row : prev;
 
+    const volPrev = prev.lot_size ?? 0;
+    const volRow  = row.lot_size  ?? 0;
+    const volume  = volPrev + volRow;
+
+    // The exit is the volume-weighted average of the closes, not the last one.
+    //
+    // This is not cosmetic. `pips` decides win / loss / scratch (see
+    // lib/trading/stats.ts — the classification is a pip distance, never a euro
+    // amount), and taking it from the final deal describes only the last slice
+    // of the position. Someone who banks 50 pips on half and trails the rest out
+    // for 2 would have the whole trade filed as a scratch: right money, wrong
+    // verdict, and the verdict is what every win rate, streak and calendar
+    // colour in the product is built from.
+    //
+    // The fold is correct because `prev` already carries the running weighted
+    // average and the accumulated volume, so each step weights old against new.
+    const closePrice = volume > 0
+      ? ((prev.close_price ?? 0) * volPrev + (row.close_price ?? 0) * volRow) / volume
+      : (last.close_price ?? null);
+
     const merged = {
       ...last,
-      open_time:  openTime,
-      close_time: closeTime,
-      lot_size:   (prev.lot_size   ?? 0) + (row.lot_size   ?? 0),
-      profit_usd: (prev.profit_usd ?? 0) + (row.profit_usd ?? 0),
-      commission: (prev.commission ?? 0) + (row.commission ?? 0),
-      swap:       (prev.swap       ?? 0) + (row.swap       ?? 0),
-      net_profit: (prev.net_profit ?? 0) + (row.net_profit ?? 0),
+      open_time:   openTime,
+      close_time:  closeTime,
+      close_price: closePrice,
+      lot_size:    volume,
+      profit_usd:  (prev.profit_usd ?? 0) + (row.profit_usd ?? 0),
+      commission:  (prev.commission ?? 0) + (row.commission ?? 0),
+      swap:        (prev.swap       ?? 0) + (row.swap       ?? 0),
+      net_profit:  (prev.net_profit ?? 0) + (row.net_profit ?? 0),
     };
+    // Recomputed from the entry to that weighted exit — the move the position
+    // actually made, over the size it actually held.
+    if (closePrice != null && merged.open_price != null) {
+      merged.pips = calcPips(merged.symbol, merged.open_price, closePrice, merged.trade_type);
+    }
     if (openTime && closeTime) {
       merged.duration_minutes = Math.round(
         (new Date(closeTime).getTime() - new Date(openTime).getTime()) / 60000,

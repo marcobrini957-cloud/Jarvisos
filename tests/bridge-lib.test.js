@@ -193,17 +193,71 @@ describe('mergeByTicket', () => {
     expect(merged.duration_minutes).toBe(300)
   })
 
-  it('takes the exit from the last deal, not whichever arrived last', () => {
+  it('prices the exit by volume rather than by the last deal', () => {
+    // Written the other way round when this was first added — "the exit comes
+    // from the final deal" — which is the bug the weighted average exists to
+    // fix. Equal halves at 5 and 10 exit at 7.5, whatever order they arrive in.
     const [merged] = mergeByTicket([
       row(1, '2026-08-01T14:00:00.000Z', 5),
       row(1, '2026-08-01T11:00:00.000Z', 10),
     ])
-    expect(merged.close_price).toBe(5)
+    expect(merged.close_price).toBeCloseTo(7.5, 6)
   })
 
   it('never emits two rows with the same conflict key', () => {
     const rows = [1, 1, 1, 2, 2, 3].map((t, i) => row(t, `2026-08-01T1${i}:00:00.000Z`, i))
     const keys = mergeByTicket(rows).map(r => r.mt5_ticket)
     expect(new Set(keys).size).toBe(keys.length)
+  })
+})
+
+// A scale-out has to end up with the verdict the whole position earned, not the
+// one its last slice did — `pips` is what decides win/loss/scratch.
+describe('mergeByTicket — the exit of a scaled-out position', () => {
+  const deal = (close, lots, price) => ({
+    mt5_ticket: '77', symbol: 'XAUUSD', trade_type: 'buy',
+    open_time: '2026-08-01T10:00:00.000Z', close_time: close,
+    open_price: 4000, close_price: price,
+    lot_size: lots, profit_usd: 0, commission: 0, swap: 0, net_profit: 0,
+    pips: calcPips('XAUUSD', 4000, price, 'buy'),
+  })
+
+  it('prices the exit by volume, not by whichever closed last', () => {
+    // Half out at +50 pips, the rest trailed out at +2.
+    const [m] = mergeByTicket([
+      deal('2026-08-01T11:00:00.000Z', 0.5, 4005),
+      deal('2026-08-01T12:00:00.000Z', 0.5, 4000.2),
+    ])
+    expect(m.close_price).toBeCloseTo(4002.6, 6)   // (4005 + 4000.2) / 2
+    expect(m.lot_size).toBe(1)
+  })
+
+  it('rescores the trade on the move the position actually made', () => {
+    const [m] = mergeByTicket([
+      deal('2026-08-01T11:00:00.000Z', 0.5, 4005),
+      deal('2026-08-01T12:00:00.000Z', 0.5, 4000.2),
+    ])
+    const lastSlice = calcPips('XAUUSD', 4000, 4000.2, 'buy')
+    expect(m.pips).toBe(calcPips('XAUUSD', 4000, 4002.6, 'buy'))
+    // The bug this exists to stop: a 26-pip trade filed as a 2-pip scratch.
+    expect(m.pips).toBeGreaterThan(lastSlice * 5)
+  })
+
+  it('weights by size, so a small final clip cannot swing the exit', () => {
+    const [m] = mergeByTicket([
+      deal('2026-08-01T11:00:00.000Z', 0.9, 4010),
+      deal('2026-08-01T12:00:00.000Z', 0.1, 4000),
+    ])
+    expect(m.close_price).toBeCloseTo(4009, 6)     // 0.9×4010 + 0.1×4000
+  })
+
+  it('stays right across three closes, folded pairwise', () => {
+    const [m] = mergeByTicket([
+      deal('2026-08-01T11:00:00.000Z', 0.4, 4010),
+      deal('2026-08-01T12:00:00.000Z', 0.4, 4020),
+      deal('2026-08-01T13:00:00.000Z', 0.2, 4030),
+    ])
+    expect(m.lot_size).toBeCloseTo(1, 6)
+    expect(m.close_price).toBeCloseTo(4018, 6)     // .4×4010 + .4×4020 + .2×4030
   })
 })
