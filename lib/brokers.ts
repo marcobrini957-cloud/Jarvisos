@@ -9,8 +9,9 @@
 
 export interface BrokerServer {
   name:    string   // exactly as shown in MT5 (also accepted as free-text)
-  label:   string   // button label in the UI
-  address: string   // host:port we connect to
+  address: string   // host:port we actually connect to
+  /** 'demo' entries are sorted last and marked; everything else is live. */
+  demo?:   boolean
 }
 
 export interface Broker {
@@ -24,14 +25,34 @@ export const BROKERS: Broker[] = [
     id: 'blueberry',
     name: 'Blueberry Markets',
     servers: [
-      { name: 'BlueberryMarkets-Live',   label: 'Live 1', address: 'live.mt5.ts.blueberrymarkets.com:443' },
-      { name: 'BlueberryMarkets-Live02', label: 'Live 2', address: 'live2.mt5.ts.blueberrymarkets.com:443' },
-      { name: 'BlueberryMarkets-Demo',   label: 'Demo',   address: 'demo.mt5.ts.blueberrymarkets.com:443' },
+      { name: 'BlueberryMarkets-Live',   address: 'live.mt5.ts.blueberrymarkets.com:443' },
+      { name: 'BlueberryMarkets-Live02', address: 'live2.mt5.ts.blueberrymarkets.com:443' },
+      { name: 'BlueberryMarkets-Demo',   address: 'demo.mt5.ts.blueberrymarkets.com:443', demo: true },
     ],
   },
-  // Add more brokers here as users request them. Each new entry needs only the
-  // server name(s) and the matching access-server address(es).
+  // Add more brokers here as users bring them. Each entry needs the server name
+  // exactly as MetaTrader shows it, and the access-server address behind it.
+  //
+  // ⚠️ Do not add a broker from memory of its naming pattern. The address is the
+  // thing that has to be right, a wrong one fails as a silent login timeout,
+  // and "ICMarkets-Live02 is probably icmarkets…" is a guess. Take both values
+  // from a connection that actually worked — see `lib/brokers.md` for how.
 ]
+
+/** Every known server, flattened, with its broker — what the picker lists. */
+export function allServers(): Array<{ broker: string; server: BrokerServer }> {
+  return BROKERS.flatMap(b => b.servers.map(server => ({ broker: b.name, server })))
+    .sort((a, b) => Number(a.server.demo ?? false) - Number(b.server.demo ?? false))
+}
+
+/** Substring match over broker and server name, for the search field. */
+export function searchServers(query: string) {
+  const q = query.trim().toLowerCase()
+  const all = allServers()
+  if (!q) return all
+  return all.filter(({ broker, server }) =>
+    broker.toLowerCase().includes(q) || server.name.toLowerCase().includes(q))
+}
 
 // Resolve whatever the user submitted (a friendly name, a broker+server pick,
 // or a raw host:port) to a connectable address. Returns null if it's neither a

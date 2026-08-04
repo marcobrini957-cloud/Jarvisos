@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BROKERS } from '@/lib/brokers'
+import { searchServers } from '@/lib/brokers'
 import Icon from '@/components/ui/Icon'
 import { Select } from '@/components/ui/vq'
 
@@ -15,14 +15,13 @@ interface MT5ConnectModalProps {
 export default function MT5ConnectModal({ onClose, onConnected, currentAccountId, isConnected }: MT5ConnectModalProps) {
   const [login,    setLogin]   = useState(currentAccountId ?? '')
   const [password, setPassword] = useState('')
-  const [brokerId, setBrokerId] = useState(BROKERS[0]?.id ?? '')
-  const [server,   setServer]  = useState(BROKERS[0]?.servers[0]?.name ?? '')
+  const [server,     setServer]     = useState('')
+  const [serverOpen, setServerOpen] = useState(false)
   const [saving,   setSaving]  = useState(false)
   const [error,    setError]   = useState('')
   const [done,     setDone]    = useState(false)
 
-  const broker = BROKERS.find(b => b.id === brokerId) ?? null
-  const isOther = brokerId === '__other'
+  const matches = searchServers(server)
 
   async function handleSave() {
     if (!login.trim() || !password.trim() || !server.trim()) {
@@ -76,7 +75,7 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
           <div>
             <h2 style={{ color: 'var(--t1)', fontSize: 'var(--text-md)', fontWeight: 500 }}>Connect MetaTrader 5</h2>
             <p style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', marginTop: '2px' }}>
-              Investor password is read-only — no trading access.
+              We read your account. We cannot trade it.
             </p>
           </div>
           <button
@@ -126,12 +125,14 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Investor Password <span style={{ color: 'var(--t3)', fontWeight: 400 }}>(read-only)</span></label>
+            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>
+              Password <span style={{ color: 'var(--t3)', fontWeight: 400 }}>(your investor password works too — it is read-only)</span>
+            </label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Your investor / read-only password"
+              placeholder="MetaTrader password"
               style={{
                 background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
                 padding: '10px 12px', color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none',
@@ -139,77 +140,76 @@ export default function MT5ConnectModal({ onClose, onConnected, currentAccountId
               onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
               onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
             />
-            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>
-              In MT5: Tools → Options → Server → Change investor password. This gives read-only access — no trades can be placed.
+            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', lineHeight: 1.55 }}>
+              We only ever read this account — we cannot place, change or close a trade with it,
+              and we cannot move money. If you would rather not hand over your main password,
+              MetaTrader gives you a read-only one: Tools → Options → Server → Change investor
+              password. Either works here.
             </p>
           </div>
 
+          {/* Broker + server as ONE searchable field.
+              It used to be a broker dropdown and then Live 1 / Live 2 / Demo
+              buttons. Those labels are ours, not MetaTrader's: a trader reads
+              "BlueberryMarkets-Live02" off their own terminal and then has to
+              work out which of our three buttons that is. And the shape only
+              fits a broker with exactly that many servers — it says nothing
+              useful to someone on IC Markets or Vantage. Type what your
+              terminal shows; if we know it we resolve it, and if we do not you
+              can paste the address instead. */}
           <div className="flex flex-col gap-1.5">
-            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Broker</label>
-            <Select
-              ariaLabel="Broker"
-              value={brokerId}
-              onChange={id => {
-                setBrokerId(id)
-                const b = BROKERS.find(x => x.id === id)
-                setServer(b?.servers[0]?.name ?? '')
+            <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Server</label>
+            <input
+              value={server}
+              onChange={e => { setServer(e.target.value); setServerOpen(true) }}
+              onFocus={() => setServerOpen(true)}
+              placeholder="e.g. BlueberryMarkets-Live02"
+              autoComplete="off"
+              style={{
+                background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
+                padding: '10px 12px', color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none',
               }}
-              options={[
-                ...BROKERS.map(b => ({ key: b.id, label: b.name })),
-                { key: '__other', label: 'Other / not listed' },
-              ]}
+              onBlur={e => { e.target.style.borderColor = 'var(--bd2)'; setTimeout(() => setServerOpen(false), 150) }}
             />
-          </div>
 
-          {broker && !isOther && (
-            <div className="flex flex-col gap-1.5">
-              <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Server</label>
-              <div className="flex gap-2 flex-wrap">
-                {broker.servers.map(srv => {
-                  const active = server === srv.name
-                  return (
-                    <button
-                      key={srv.name}
-                      type="button"
-                      onClick={() => setServer(srv.name)}
-                      style={{
-                        flex: '1 1 30%', padding: '9px 8px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
-                        fontSize: 'var(--text-base)', fontWeight: 500,
-                        background: active ? 'var(--color-surface-3)' : 'var(--s2)',
-                        color: active ? 'white' : 'var(--t2)',
-                        border: `1px solid ${active ? 'var(--color-line-3)' : 'var(--bd2)'}`,
-                      }}
-                    >
-                      {srv.label}
-                    </button>
-                  )
-                })}
+            {serverOpen && matches.length > 0 && (
+              <div style={{
+                display: 'flex', flexDirection: 'column', gap: '2px',
+                maxHeight: '168px', overflowY: 'auto',
+                background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
+                borderRadius: 'var(--radius-lg)', padding: '4px',
+              }}>
+                {matches.slice(0, 8).map(({ broker: bName, server: srv }) => (
+                  <button
+                    key={srv.name}
+                    type="button"
+                    onMouseDown={e => { e.preventDefault(); setServer(srv.name); setServerOpen(false) }}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+                      width: '100%', textAlign: 'left', cursor: 'pointer',
+                      padding: '7px 9px', borderRadius: 'var(--radius-md)', border: 'none',
+                      background: 'transparent', color: 'var(--color-ink-1)',
+                      fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-state-hover)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+                  >
+                    <span>{srv.name}</span>
+                    <span style={{ color: 'var(--color-ink-3)', fontSize: 'var(--text-sm)', flexShrink: 0 }}>
+                      {bName}{srv.demo ? ' · demo' : ''}
+                    </span>
+                  </button>
+                ))}
               </div>
-              <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>
-                The server shown next to your account in MT5 (File → Login to Trade Account)
-              </p>
-            </div>
-          )}
+            )}
 
-          {isOther && (
-            <div className="flex flex-col gap-1.5">
-              <label style={{ color: 'var(--t2)', fontSize: 'var(--text-base)', fontWeight: 500 }}>Server Address</label>
-              <input
-                value={server}
-                onChange={e => setServer(e.target.value)}
-                placeholder="e.g. live2.mybroker.com:443"
-                style={{
-                  background: 'var(--s2)', border: '1px solid var(--bd2)', borderRadius: 'var(--radius-md)',
-                  padding: '10px 12px', color: 'var(--t1)', fontSize: 'var(--text-base)', outline: 'none',
-                }}
-                onFocus={e => (e.target.style.borderColor = 'var(--color-line-3)')}
-                onBlur={e => (e.target.style.borderColor = 'var(--bd2)')}
-              />
-              <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)' }}>
-                Your broker&apos;s MT5 server address and port. Ask support if unsure, then let us know so we add a button for it.
-              </p>
-            </div>
-          )}
+            <p style={{ color: 'var(--t3)', fontSize: 'var(--text-sm)', lineHeight: 1.55 }}>
+              The server name shown beside your account in MetaTrader (File → Login to Trade
+              Account). If your broker is not in the list, that is fine — paste the name and we
+              will take it from there, or enter the address your broker gave you
+              (host:port).
+            </p>
+          </div>
         </div>
         )}
 

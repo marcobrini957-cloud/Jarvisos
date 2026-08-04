@@ -84,7 +84,7 @@ export function HostAccountModal({
                       cursor: 'pointer',
                     }}
                   >
-                    {b.name.split(' ')[0]} {s.label}
+                    {s.name}
                   </button>
                 )))}
               </div>
