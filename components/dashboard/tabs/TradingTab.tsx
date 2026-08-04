@@ -22,6 +22,7 @@ import { TradingInsights } from './trading/TradingInsights'
 import { YourEdge } from './trading/YourEdge'
 import { EquityCurve } from './trading/EquityCurve'
 import { ReportDownloadBar } from './trading/ReportDownloadBar'
+import { CaptureNotice } from '@/components/dashboard/CaptureNotice'
 import { LiveChart } from './trading/LiveChart'
 import { TradeCalendar } from './overview/TradeCalendar'
 import { WinRing } from './overview/WinRing'
@@ -149,6 +150,13 @@ export default function TradingTab() {
 
   return (
     <div className="flex flex-col gap-3">
+
+      {/* Said once: history arrives complete, but chart captures can only be
+          taken while a position is open, so they begin with the next trade. */}
+      <CaptureNotice
+        hasTrades={trades.length > 0}
+        hasShots={trades.some(t => t.screenshot_open_url || t.screenshot_close_url)}
+      />
 
       {/* ── Report download bar ── */}
       <ReportDownloadBar />
