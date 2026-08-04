@@ -310,7 +310,7 @@ export default function TradingTab() {
             // Pips are a distance, not a euro figure, so the arc carries the
             // key accent rather than money's green/red; the signed centre value
             // is what says which way it went.
-            return <MetricRing pct={(wonPips / tot) * 100} color="var(--color-key)" track="var(--color-key-dim)" center={`${net >= 0 ? '+' : ''}${Math.round(net)}`} sub="pips" />
+            return <MetricRing pct={(wonPips / tot) * 100} color="var(--color-ink-1)" center={`${net >= 0 ? '+' : ''}${Math.round(net)}`} sub="pips" />
           }}
         />
         <PeriodMetricCard
@@ -336,7 +336,7 @@ export default function TradingTab() {
             if (totalDays === 0) return null
             // Consistency is a behaviour score, not a P&L. Same reasoning as
             // the win-rate ring: the percentage states the verdict itself.
-            return <MetricRing pct={pct} color="var(--color-key)" track="var(--color-key-dim)" center={`${pct.toFixed(0)}%`} sub="green" />
+            return <MetricRing pct={pct} color="var(--color-ink-1)" center={`${pct.toFixed(0)}%`} sub="green" />
           }}
         />
       </div>

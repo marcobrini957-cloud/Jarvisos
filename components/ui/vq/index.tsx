@@ -17,6 +17,9 @@ import { useEffect, useRef, useState } from 'react'
 import type { ReactNode, CSSProperties } from 'react'
 import { splitFigures } from '@/lib/ui/figures'
 
+export { Ring } from './Ring'
+export type { RingSegment } from './Ring'
+
 // ── Figures ───────────────────────────────────────────────────────────────────
 
 export type Tone = 'auto' | 'neutral' | 'muted' | 'flat' | 'up' | 'down'

@@ -298,7 +298,10 @@ export default function PortfolioTab() {
         {/* Holdings table */}
         <div className="lg:col-span-3">
           <Panel data-tour="portfolio-add" title="Holdings" noPadding action={
-            <div className="portfolio-panel-actions flex gap-2">
+            // Wraps. Eight controls in a card header do not fit beside the title
+            // at every width, and the card clips its overflow — so the last one
+            // (Add, the only one that matters) simply vanished off the edge.
+            <div className="portfolio-panel-actions flex gap-2" style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               {/* Search — an icon until it is needed, then an input. A permanent
                   search box in a header this crowded costs more room than it is
                   worth on a portfolio with six rows. */}

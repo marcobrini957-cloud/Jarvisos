@@ -1,53 +1,29 @@
 'use client'
 
-import { Num } from '@/components/ui/vq'
+import { Num, Ring } from '@/components/ui/vq'
 
 // ── MetricRing ────────────────────────────────────────────────────────────────
-// Shared 48px gauge so every metric card carries the same circular visual in the
-// same position. `pct` fills the arc; `track` is the remainder. `center` is the
-// number shown in the hole (kept identical to the card's big value so the
-// figures never disagree); omit it for a plain proportion donut.
+// The metric-card dial. Geometry, track and hole now come from the shared Ring
+// (components/ui/vq/Ring) — this is only the metric card's arrangement of it:
+// the arc, the card's own figure repeated in the hole, and a micro-caption.
 //
-// The ring used to sit inside two glows — a radial halo and a 14px box-shadow.
-// 2.0 has no glow: the arc is 3px of colour on a hairline groove, and the hole
-// is the panel surface, not a lighter disc.
+// It used to draw its own 48px conic gradient over a solid black disc, one of
+// four ring implementations on the same screen. See Ring's header.
 
 export function MetricRing({
-  pct, color, glow, track = 'var(--color-surface-2)', center, sub,
+  pct, color, track, center, sub,
 }: {
   pct: number
   color: string
-  /** Kept for callers; 2.0 draws no halo. */
-  glow?: string
+  /** @deprecated The shared ring owns the track. Accepted so callers need no edit. */
   track?: string
   center?: string
   sub?: string
 }) {
-  const p   = Math.min(100, Math.max(0, pct))
-  const deg = (p / 100) * 360
-
+  const p = Math.min(100, Math.max(0, pct))
   return (
-    <div style={{ position: 'relative', width: '48px', height: '48px', flexShrink: 0 }}>
-      <div style={{
-        position: 'absolute', inset: 0, borderRadius: '50%',
-        background: `conic-gradient(${color} ${deg}deg, ${track} ${deg}deg)`,
-      }} />
-      <div style={{
-        position: 'absolute', inset: '3px', borderRadius: '50%',
-        background: 'var(--color-void)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        lineHeight: 1, gap: '1px',
-      }}>
-        {center && <Num size="xs" style={{ color }}>{center}</Num>}
-        {sub && (
-          <span style={{
-            fontFamily: 'var(--font-display)', color: 'var(--color-ink-3)',
-            fontSize: 'var(--text-2xs)', letterSpacing: '0.14em', textTransform: 'uppercase',
-          }}>
-            {sub}
-          </span>
-        )}
-      </div>
-    </div>
+    <Ring segments={[{ pct: p, color }]} size={52} sub={sub}>
+      {center && <Num size="xs" style={{ color }}>{center}</Num>}
+    </Ring>
   )
 }
