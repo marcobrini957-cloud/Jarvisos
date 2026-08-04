@@ -6,7 +6,7 @@ const rateLimit = require('express-rate-limit');
 const sharp = require('sharp');
 const { createClient } = require('@supabase/supabase-js');
 const {
-  mapOpenPosition, mapClosedTrade, mapBalanceOp, versionLt,
+  mapOpenPosition, mapClosedTrade, mapBalanceOp, mergeByTicket, versionLt,
   SETTINGS_DEFAULTS, mergeSettings,
 } = require('./lib');
 
