@@ -13,14 +13,34 @@ const {
 const VERSION    = '2.0.0';
 const STARTED_AT = new Date();
 
-// VELQUOR logo, composited bottom-left onto every chart screenshot.
-// Pre-rendered once at boot: 104px mark + a transparent margin so a
-// `southwest` gravity composite insets it neatly off the corner.
-// If the asset is missing/unreadable, screenshots simply ship un-branded.
+// VELQUOR mark, composited bottom-left onto every chart screenshot.
+//
+// vq-logo.png is now the sculpted V mark — white on transparent — rather than
+// the old rounded VQ tile, which was a black box sitting on a black chart with
+// a logo inside it. A mark with no plate behind it belongs to the image; a
+// tile sits on top of it like a sticker.
+//
+// Pre-rendered once at boot: 96px + a transparent margin so a `southwest`
+// gravity composite insets it off the corner. Held at 72% so it reads as a
+// maker's stamp rather than a label — full white on a dark chart pulls the eye
+// off the price, which is the one thing the screenshot exists to show.
+// If the asset is missing or unreadable, screenshots simply ship un-branded.
+const LOGO_OPACITY = 0.72;
 let LOGO_BUF = null;
 sharp(__dirname + '/vq-logo.png')
-  .resize(104, 104, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-  .extend({ top: 0, right: 0, bottom: 22, left: 24, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  .resize(96, 96, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  // dest-out subtracts alpha, so a flat 28% black scrim leaves the mark at 72%.
+  // (sharp has no opacity knob; ensureAlpha only fills images that lack one.)
+  .composite([{
+    input: {
+      create: {
+        width: 96, height: 96, channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 1 - LOGO_OPACITY },
+      },
+    },
+    blend: 'dest-out',
+  }])
+  .extend({ top: 0, right: 0, bottom: 20, left: 22, background: { r: 0, g: 0, b: 0, alpha: 0 } })
   .png()
   .toBuffer()
   .then(buf => { LOGO_BUF = buf; })
