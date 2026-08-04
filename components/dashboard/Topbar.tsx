@@ -214,7 +214,8 @@ export default function Topbar({ menuOpen = false, onMenuToggle, sectionLabel }:
           gap: '10px',
           height: '74px',
           padding: '0 clamp(14px, 1.4vw, 22px)',
-          background: 'var(--color-void)',
+          background: 'rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(26px)', WebkitBackdropFilter: 'blur(26px)',
         }}
       >
         {/* flex:1 so everything after it is pushed into one cluster on the

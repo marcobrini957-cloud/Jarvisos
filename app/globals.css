@@ -566,6 +566,32 @@ h1, h2, h3 { text-wrap: balance; }
   animation: vq-tab-enter 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
 }
 
+/* ── Panels rise in, the way the landing's sections do ──────────────────────
+   Same curve and the same restraint: 14px of travel on the landing's
+   cubic-bezier(0.16,1,0.3,1), staggered a few frames apart so a section
+   assembles rather than appearing. The landing does this with an
+   IntersectionObserver because it is a long page; a tab is one screenful, so
+   the entrance is enough and it costs no JS.
+
+   `backwards`, never `both` — a retained transform on a card makes it the
+   containing block for any fixed-position modal inside it. That bug has been
+   paid for once already, in the tab wrapper above. */
+@keyframes vq-surface-rise {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+.vq-tab-in .vq-surface {
+  animation: vq-surface-rise 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.vq-tab-in .vq-surface:nth-child(1) { animation-delay: 0ms }
+.vq-tab-in .vq-surface:nth-child(2) { animation-delay: 45ms }
+.vq-tab-in .vq-surface:nth-child(3) { animation-delay: 90ms }
+.vq-tab-in .vq-surface:nth-child(4) { animation-delay: 120ms }
+.vq-tab-in .vq-surface:nth-child(n+5) { animation-delay: 150ms }
+@media (prefers-reduced-motion: reduce) {
+  .vq-tab-in .vq-surface { animation: none !important; }
+}
+
 /* ── Landing scroll reveal ─────────────────────────────────────────────── */
 /* Both classes are applied by JS (ScrollSetup) — no-JS visitors and crawlers
    always see fully visible content. */
@@ -756,8 +782,12 @@ html { scroll-behavior: smooth; }
      Controls stay on the small steps above; a *panel* is the unit the whole
      dashboard is built from, so its radius is a token rather than a number
      repeated in twenty files — which is exactly how half the dashboard ended
-     up at 6px while the other half was drawn at 14. */
-  --radius-card: 14px;
+     up at 6px while the other half was drawn at 14.
+
+     12px, because that is the landing's card corner. The landing allows itself
+     exactly three radii — 8, 12 and 999 — and the product now answers to the
+     same three. */
+  --radius-card: 12px;
 }
 
 /* Every figure is mono + tabular. Applied by the primitives, not globally,

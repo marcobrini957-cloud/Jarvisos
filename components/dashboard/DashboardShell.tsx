@@ -20,6 +20,7 @@ import WelcomeGreeting from './WelcomeGreeting'
 import PartnerRail     from './PartnerRail'
 import FeedbackButton  from './FeedbackButton'
 import TourHost        from './tour/TourHost'
+import { DashboardAtmosphere } from './DashboardAtmosphere'
 import { tabLabel, tabSlug, tabFromSlug, TAB_QUERY_KEY } from './tabs'
 
 const TAB_COMPONENTS: Record<number, React.ComponentType> = {
@@ -151,9 +152,14 @@ export default function DashboardShell({ initialTab = 0, initialSettings = false
       {/* Exactly one viewport tall, and it owns its own scrolling — the page
           behind it no longer needs to be locked. */}
       <div className="vq2" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: 'var(--bg)', overflow: 'hidden' }}>
+        {/* The landing's lit render, behind everything. Panels are translucent
+            sheets over it — which is what makes the whole screen read as one
+            object instead of boxes on a void. */}
+        <DashboardAtmosphere />
+
         {/* Navigation is a column now, with the header above the content it
             describes rather than above the whole window. */}
-        <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <Sidebar
             activeTab={activeTab}
             showSettings={showSettings}

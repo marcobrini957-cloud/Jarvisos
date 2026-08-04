@@ -204,12 +204,23 @@ export function Atmosphere({ className, style }: { className?: string; style?: R
     }, { threshold: 0 })
     io.observe(canvas)
 
+    // …and when the tab is in the background. On a landing page that is a
+    // nicety; the dashboard runs this behind a window a trader leaves open all
+    // day, and a GPU loop drawing to a tab nobody is looking at is pure battery.
+    const onVisibility = () => {
+      const hidden = document.hidden
+      if (hidden) { cancelAnimationFrame(raf); raf = 0 }
+      else if (visible && !reduced && !raf) raf = requestAnimationFrame(draw)
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+
     const onResize = () => { if (reduced || !visible) draw(performance.now()) }
     window.addEventListener('resize', onResize)
 
     return () => {
       cancelAnimationFrame(raf)
       io.disconnect()
+      document.removeEventListener('visibilitychange', onVisibility)
       window.removeEventListener('resize', onResize)
       gl.deleteProgram(prog); gl.deleteShader(vs); gl.deleteShader(fs); gl.deleteBuffer(buf)
     }

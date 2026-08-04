@@ -72,7 +72,10 @@ export function Sidebar({
       style={{
         width: '224px', flexShrink: 0,
         display: 'flex', flexDirection: 'column',
-        background: 'var(--color-void)',
+        // Translucent over the shell's render, like the landing's nav. Solid
+        // black chrome on top of a lit background reads as a hole in it.
+        background: 'rgba(0,0,0,0.55)',
+        backdropFilter: 'blur(26px)', WebkitBackdropFilter: 'blur(26px)',
         borderRight: '1px solid var(--color-line-1)',
         padding: '14px 12px 12px',
         overflowY: 'auto',

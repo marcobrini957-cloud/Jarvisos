@@ -75,7 +75,10 @@ export function Surface({ title, action, children, padded = false, fill = false,
 }) {
   return (
     <div
-      className={className}
+      // vq-surface is what lets the stylesheet reach every panel at once — the
+      // rise-in on tab entry, and anything else the language wants of a card.
+      // It only became possible when Panel stopped drawing its own box.
+      className={`vq-surface ${className}`}
       data-tour={dataTour}
       style={{
         background: 'var(--color-surface-1)',
@@ -352,8 +355,10 @@ export function Button({
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '7px',
     fontFamily: 'var(--font-display)',
     fontSize: size === 'sm' ? 'var(--text-sm)' : 'var(--text-base)',
-    padding:  size === 'sm' ? '5px 11px' : '8px 15px',
-    borderRadius: 'var(--radius-lg)',
+    padding:  size === 'sm' ? '5px 13px' : '8px 18px',
+    // A pill, because the landing's every action is one and Segmented already
+    // is. An 8px rectangle beside a 999px capsule is two design systems.
+    borderRadius: '999px',
     letterSpacing: '-0.01em', whiteSpace: 'nowrap',
     cursor: disabled ? 'default' : 'pointer',
     opacity: disabled ? 0.4 : 1,
