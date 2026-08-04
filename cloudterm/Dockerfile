@@ -66,6 +66,12 @@ COPY Inter-Bold.ttf "/wine/drive_c/windows/Fonts/Inter-Bold.ttf"
 #                               failed (Invalid account)
 # — "Invalid account" being the *right* answer to a deliberately fake login.
 #
+# Coverage: every company in MetaQuotes' MT5 directory. Their list holds 2,723
+# servers across 1,841 company tokens; collapsing those to shared stems gives
+# 1,632, and 980 three-character prefixes reach all of them. The sweep ran the
+# wizard once per prefix — IC Markets, Vantage, Pepperstone, Exness, XM, FTMO,
+# the lot — and took the file from nothing to 1.1 MB.
+#
 # To extend it, run cloudterm/learn-servers.sh with more broker names and
 # commit the result. The terminal keeps updating it at runtime, so this is a
 # floor, not a ceiling.
