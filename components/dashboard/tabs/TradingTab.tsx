@@ -212,7 +212,7 @@ export default function TradingTab() {
       </Panel>
 
       {/* Metrics with period selectors */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <PeriodMetricCard
           title="P&L"
           barColor="var(--gr)"

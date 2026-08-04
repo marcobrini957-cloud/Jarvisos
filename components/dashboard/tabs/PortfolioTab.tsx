@@ -265,7 +265,7 @@ export default function PortfolioTab() {
       <NetWorthCard holdingsValueEur={totalValueEur} holdingsLoading={loading || priceLoading} />
 
       {/* Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <MetricCard
           title="Total value"
           value={loading ? '—' : fmtEur(totalValueEur)}

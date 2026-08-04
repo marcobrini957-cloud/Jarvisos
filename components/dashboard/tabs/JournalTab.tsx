@@ -120,7 +120,7 @@ export default function JournalTab() {
 
       {view === 'journal' && <>
       {/* Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <MetricCard title="Entries this month" value={`${entries.filter(e => e.entry_date.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`)).length}`} change={`of ${calDays.filter(isWeekday).length} trading days`} changePositive={null} />
         <MetricCard title="Avg mood"     value={avgMoodScore > 0 ? `${avgMoodScore.toFixed(1)}/10` : '—'} change={entries.length > 0 ? 'Based on entries' : 'No entries yet'} changePositive={null} />
         {(() => {

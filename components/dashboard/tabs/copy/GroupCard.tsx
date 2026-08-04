@@ -90,7 +90,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
     <>
       <div style={{
         background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-card)',
-        overflow: 'hidden', marginBottom: '16px',
+        overflow: 'hidden', marginBottom: '12px',
       }}>
         {/* Group header */}
         <div style={{

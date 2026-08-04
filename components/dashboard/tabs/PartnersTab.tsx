@@ -56,7 +56,7 @@ export default function PartnersTab() {
       )}
 
       {/* ── Cards ────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {items.map(p => <BrokerCard key={p.id} partner={p} />)}
       </div>
 

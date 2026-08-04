@@ -103,7 +103,7 @@ export default function CopyTradingTab() {
 
       {/* MT5 URL whitelist reminder — only relevant for own-MetaTrader (EA) accounts */}
       <div style={{
-        marginTop: '20px', padding: '10px 16px', borderRadius: 'var(--radius-card)',
+        marginTop: '12px', padding: '10px 16px', borderRadius: 'var(--radius-card)',
         background: 'var(--s1)', border: '1px solid var(--bd)',
         fontSize: 'var(--text-sm)', color: 'var(--t3)', lineHeight: 1.6, opacity: 0.85,
       }}>

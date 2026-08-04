@@ -218,7 +218,7 @@ export default function TasksTab() {
   return (
     <div className="flex flex-col gap-3">
       {/* Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { title: 'Done today', value: `${doneToday}/${todayTasks.length}`,  sub: 'tasks completed', color: 'var(--color-ink-1)' },
           { title: 'Open',       value: String(tasks.filter(t => t.status !== 'done').length), sub: 'pending', color: 'var(--color-ink-1)' },
