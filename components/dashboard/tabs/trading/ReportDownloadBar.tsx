@@ -63,7 +63,7 @@ export function ReportDownloadBar() {
 
   return (
     <div style={{
-      borderRadius: 'var(--radius-md)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
+      borderRadius: 'var(--radius-card)', background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
       overflow: 'hidden',
     }}>
       {/* ── Main bar ── */}

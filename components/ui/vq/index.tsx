@@ -61,11 +61,13 @@ export function Label({ children, style }: { children: ReactNode; style?: CSSPro
 
 // ── Surface ───────────────────────────────────────────────────────────────────
 
-export function Surface({ title, action, children, padded = false, className = '', style, 'data-tour': dataTour }: {
+export function Surface({ title, action, children, padded = false, fill = false, className = '', style, 'data-tour': dataTour }: {
   title?:   ReactNode
   action?:  ReactNode
   children: ReactNode
   padded?:  boolean
+  /** Let the content area grow to the card's height — for charts that fill. */
+  fill?:    boolean
   className?: string
   style?:   CSSProperties
   /** Anchor name for the first-run tour (components/dashboard/tour). */
@@ -78,10 +80,10 @@ export function Surface({ title, action, children, padded = false, className = '
       style={{
         background: 'var(--color-surface-1)',
         border: '1px solid var(--color-line-1)',
-        // 14px, and the same figure everywhere. The card is the unit the whole
-        // dashboard is built from, so its corner is the one radius that has to
-        // be right — the old 10px read as a widget, not a panel.
-        borderRadius: '14px',
+        // The card is the unit the whole dashboard is built from, so its corner
+        // is the one radius that has to be right — the old 10px read as a
+        // widget, not a panel. One token, so nothing can drift off it again.
+        borderRadius: 'var(--radius-card)',
         display: 'flex', flexDirection: 'column', minWidth: 0,
         ...style,
       }}
@@ -106,6 +108,7 @@ export function Surface({ title, action, children, padded = false, className = '
       <div style={{
         flex: 1, minWidth: 0,
         padding: padded ? (title ? '0 18px 18px' : '18px') : undefined,
+        ...(fill ? { display: 'flex', flexDirection: 'column', minHeight: 0 } : null),
       }}>
         {children}
       </div>
@@ -149,7 +152,7 @@ export function MetricStrip({ metrics }: { metrics: Metric[] }) {
             padding: '16px 18px', minWidth: 0,
             background: 'var(--color-surface-1)',
             border: '1px solid var(--color-line-1)',
-            borderRadius: '14px',
+            borderRadius: 'var(--radius-card)',
           }}
         >
           <Label>{m.label}</Label>

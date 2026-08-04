@@ -41,7 +41,7 @@ export function NetWorthCard({ holdingsValueEur, holdingsLoading }: {
     <div style={{
       background: 'var(--color-surface-1)',
       border: '1px solid var(--color-line-1)',
-      borderRadius: 'var(--radius-md)',
+      borderRadius: 'var(--radius-card)',
       padding: '12px 14px',
     }}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between" style={{ gap: '16px' }}>

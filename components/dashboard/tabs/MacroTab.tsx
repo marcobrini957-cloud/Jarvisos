@@ -164,7 +164,7 @@ export default function MacroTab() {
       {/* ── Terminal header ── */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
-        background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-md)',
+        background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-card)',
         padding: '10px 14px',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -237,7 +237,7 @@ export default function MacroTab() {
 
       {/* ── Week table ── */}
       <div style={{
-        background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-md)',
+        background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-card)',
         overflow: 'hidden',
       }}>
         <div style={{

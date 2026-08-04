@@ -34,7 +34,7 @@ export default function PartnerCard({
         display: 'flex', flexDirection: 'column', gap: compact ? '8px' : '12px',
         padding: compact ? '14px' : '18px',
         background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
-        borderRadius: 'var(--radius-md)',
+        borderRadius: 'var(--radius-card)',
         textDecoration: 'none', position: 'relative', overflow: 'hidden',
         transition: 'border-color 0.15s',
       }}

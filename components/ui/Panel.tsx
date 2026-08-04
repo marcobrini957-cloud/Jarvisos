@@ -1,11 +1,19 @@
 import { ReactNode } from 'react'
+import { Surface } from '@/components/ui/vq'
 
 /**
- * Panel is the legacy box that twelve tabs already compose. It now renders the
- * same thing `Surface` does in components/ui/vq — hairline, 6px radius, 9/14
- * title bar, no shadow, no shimmer, no accent glow — so converting a tab is a
- * content job, not a re-boxing job. Kept as a separate component only because
- * of the prop surface (`accent`, `noPadding`, `fill`) callers rely on.
+ * Panel is the legacy box that twelve tabs already compose. It is now literally
+ * `Surface` — same corner, same heading size, same padding, no divider under
+ * the title — and survives as its own component only for the prop surface
+ * (`accent`, `noPadding`, `fill`) its callers rely on.
+ *
+ * It had *claimed* to render the same thing for a while, and that stopped being
+ * true the moment Surface was retuned: the card moved to a 14px corner, a 19px
+ * heading and no rule under it, while every Panel on screen stayed at 6px with
+ * a 13px title in a bar. Home looked redesigned and Journal, Trading,
+ * Discipline and Settings did not, because those tabs are built from this
+ * component. Composing Surface instead of restating its styles is what makes
+ * that class of drift impossible rather than merely unlikely.
  */
 interface PanelProps {
   /** Anchor name for the first-run tour (components/dashboard/tour). */
@@ -24,40 +32,24 @@ interface PanelProps {
 
 export default function Panel({ title, children, className = '', action, noPadding = false, accent, fill = false, 'data-tour': dataTour }: PanelProps) {
   return (
-    <div
+    <Surface
+      title={title}
+      // Callers pass fragments of two or three controls here, and Surface's
+      // heading row is space-between — unwrapped, they would be spread across
+      // it instead of sitting together on the right.
+      action={action ? <div className="flex items-center" style={{ gap: '8px' }}>{action}</div> : undefined}
+      padded={!noPadding}
+      fill={fill}
+      className={className}
       data-tour={dataTour}
-      className={`flex flex-col ${className}`}
       style={{
-        background:   'var(--color-surface-1)',
-        border:       '1px solid var(--color-line-1)',
-        borderLeft:   accent ? `2px solid ${accent}` : undefined,
-        borderRadius: 'var(--radius-md)',
-        overflow:     'hidden',
-        position:     'relative',
-        minWidth:     0,
+        borderLeft: accent ? `2px solid ${accent}` : undefined,
+        // Tables and charts run to the card's edge, so the corner has to clip.
+        overflow: 'hidden',
+        position: 'relative',
       }}
     >
-      {title && (
-        <div className="flex items-center justify-between" style={{
-          gap: '10px', padding: '9px 14px',
-          borderBottom: '1px solid var(--color-line-1)',
-        }}>
-          <span style={{
-            fontFamily: 'var(--font-display)', fontSize: 'var(--text-base)',
-            color: 'var(--color-ink-1)', letterSpacing: '0.01em',
-          }}>
-            {title}
-          </span>
-          {action && <div className="flex items-center" style={{ gap: '8px' }}>{action}</div>}
-        </div>
-      )}
-
-      <div
-        className={fill ? 'flex-1 flex flex-col min-h-0' : ''}
-        style={{ padding: noPadding ? undefined : '12px 14px', minWidth: 0 }}
-      >
-        {children}
-      </div>
-    </div>
+      {children}
+    </Surface>
   )
 }

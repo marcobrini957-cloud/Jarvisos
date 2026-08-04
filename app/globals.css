@@ -751,6 +751,13 @@ html { scroll-behavior: smooth; }
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
+
+  /* The card corner, and the only one that carries weight.
+     Controls stay on the small steps above; a *panel* is the unit the whole
+     dashboard is built from, so its radius is a token rather than a number
+     repeated in twenty files — which is exactly how half the dashboard ended
+     up at 6px while the other half was drawn at 14. */
+  --radius-card: 14px;
 }
 
 /* Every figure is mono + tabular. Applied by the primitives, not globally,

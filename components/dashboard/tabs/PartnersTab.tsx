@@ -28,7 +28,7 @@ export default function PartnersTab() {
           headline. The odometer is the interesting part; it now sits on one
           hairline band with the wordmark face carrying the line. */}
       <div style={{
-        borderRadius: 'var(--radius-md)', border: '1px solid var(--color-line-1)',
+        borderRadius: 'var(--radius-card)', border: '1px solid var(--color-line-1)',
         background: 'var(--color-surface-1)',
         padding: '18px 20px', marginBottom: '12px', textAlign: 'center',
       }}>
@@ -62,7 +62,7 @@ export default function PartnersTab() {
 
       {/* ── Affiliate transparency disclosure ────────────────────── */}
       <div style={{
-        marginTop: '12px', padding: '10px 12px', borderRadius: 'var(--radius-md)',
+        marginTop: '12px', padding: '10px 12px', borderRadius: 'var(--radius-card)',
         background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
         fontSize: 'var(--text-xs)', color: 'var(--color-ink-3)', lineHeight: 1.6,
       }}>

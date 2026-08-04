@@ -36,7 +36,7 @@ export default function AdSlot({
     if (!showPaidNote) return null
     return (
       <div style={{
-        padding: '10px 14px', borderRadius: 'var(--radius-md)',
+        padding: '10px 14px', borderRadius: 'var(--radius-card)',
         background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
         fontSize: 'var(--text-sm)', color: 'var(--t3)',
         display: 'flex', gap: '7px', alignItems: 'center', justifyContent: 'center',

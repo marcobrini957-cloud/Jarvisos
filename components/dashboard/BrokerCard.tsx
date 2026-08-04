@@ -22,7 +22,7 @@ export default function BrokerCard({ partner }: { partner: Partner }) {
     <div
       style={{
         position: 'relative', overflow: 'hidden',
-        borderRadius: 'var(--radius-md)',
+        borderRadius: 'var(--radius-card)',
         border: '1px solid var(--color-line-1)',
         background: 'var(--color-surface-1)',
         padding: '18px 20px',
