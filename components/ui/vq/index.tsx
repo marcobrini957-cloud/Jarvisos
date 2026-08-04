@@ -108,7 +108,15 @@ export function Surface({ title, action, children, padded = false, fill = false,
           }}>
             {title}
           </span>
-          {action}
+          {/* Always its own flex row. The heading row is space-between, so an
+              unwrapped fragment of two controls becomes two more flex children
+              and gets spread across the card — Pause in the middle of the
+              header, Delete at the far edge. */}
+          {action && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              {action}
+            </div>
+          )}
         </div>
       )}
       <div style={{

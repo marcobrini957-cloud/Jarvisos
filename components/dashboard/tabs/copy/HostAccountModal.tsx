@@ -1,5 +1,7 @@
 'use client'
 
+import Icon from '@/components/ui/Icon'
+
 import { useState } from 'react'
 import type { CopyAccount } from './types'
 import { inputStyle, btnPrimary, btnSecondary } from './styles'
@@ -49,7 +51,7 @@ export function HostAccountModal({
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
     }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
+        background: 'var(--s1)', border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-card)',
         padding: '28px', width: '100%', maxWidth: '400px',
         }}>
         <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--t1)', marginBottom: '6px' }}>
@@ -62,7 +64,7 @@ export function HostAccountModal({
 
         {isMain ? (
           <div style={{ fontSize: 'var(--text-base)', color: 'var(--color-up)', padding: '10px 12px', background: 'var(--color-up-dim)', borderLeft: '2px solid var(--color-up)', borderRadius: 'var(--radius-md)', marginBottom: '16px', lineHeight: 1.5 }}>
-            ✓ This is your connected VELQUOR terminal — no password needed. It will be restarted in
+            <Icon name="check" size={12} /> This is your connected VELQUOR terminal — no password needed. It will be restarted in
             {' '}{account.role} mode and keeps syncing your dashboard as before.
           </div>
         ) : (
@@ -76,9 +78,9 @@ export function HostAccountModal({
                     onClick={() => setServer(s.name)}
                     style={{
                       fontSize: 'var(--text-sm)', padding: '5px 10px', borderRadius: 'var(--radius-xl)',
-                      background: server === s.name ? 'rgba(255,255,255,0.15)' : 'var(--s2)',
-                      border:     server === s.name ? '1px solid rgba(255,255,255,0.5)' : '1px solid var(--bd)',
-                      color:      server === s.name ? 'var(--ac)' : 'var(--t3)',
+                      background: server === s.name ? 'var(--color-ink-1)' : 'var(--color-surface-2)',
+                      border:     '1px solid ' + (server === s.name ? 'transparent' : 'var(--color-line-1)'),
+                      color:      server === s.name ? 'var(--color-void)' : 'var(--color-ink-3)',
                       cursor: 'pointer',
                     }}
                   >

@@ -60,7 +60,7 @@ export function SignalLog({ groupId }: { groupId: string }) {
             alignItems: 'center',
             padding: '7px 14px',
             borderRadius: 'var(--radius-md)',
-            background: 'var(--s2)',
+            background: 'var(--color-surface-2)',
             gap: '10px',
             fontSize: 'var(--text-sm)',
           }}>

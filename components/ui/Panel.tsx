@@ -34,10 +34,7 @@ export default function Panel({ title, children, className = '', action, noPaddi
   return (
     <Surface
       title={title}
-      // Callers pass fragments of two or three controls here, and Surface's
-      // heading row is space-between — unwrapped, they would be spread across
-      // it instead of sitting together on the right.
-      action={action ? <div className="flex items-center" style={{ gap: '8px' }}>{action}</div> : undefined}
+      action={action}
       padded={!noPadding}
       fill={fill}
       className={className}

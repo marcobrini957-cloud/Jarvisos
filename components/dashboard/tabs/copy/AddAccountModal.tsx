@@ -1,5 +1,8 @@
 'use client'
 
+import Icon from '@/components/ui/Icon'
+import { Label, Segmented } from '@/components/ui/vq'
+
 import { useState } from 'react'
 import { inputStyle, btnPrimary, btnSecondary } from './styles'
 import { BROKERS } from '@/lib/brokers'
@@ -83,7 +86,7 @@ export function AddAccountModal({
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
     }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
+        background: 'var(--s1)', border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-card)',
         padding: '28px', width: '100%', maxWidth: '420px', maxHeight: '90vh', overflowY: 'auto',
         }}>
         <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--t1)', marginBottom: '20px' }}>
@@ -93,25 +96,12 @@ export function AddAccountModal({
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {/* Role */}
           <div>
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', marginBottom: '6px' }}>ROLE</div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {(['leader', 'follower'] as const).map(r => (
-                <button
-                  key={r} type="button"
-                  onClick={() => setRole(r)}
-                  style={{
-                    flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)',
-                    fontWeight: role === r ? 700 : 400,
-                    background: role === r ? 'rgba(255,255,255,0.15)' : 'var(--s2)',
-                    border:     role === r ? '1px solid rgba(255,255,255,0.5)' : '1px solid var(--bd)',
-                    color:      role === r ? 'var(--ac)' : 'var(--t3)',
-                    cursor:     'pointer', textTransform: 'uppercase', letterSpacing: '0.06em',
-                  }}
-                >
-                  {r === 'leader' ? 'Leader' : 'Follower'}
-                </button>
-              ))}
-            </div>
+            <div style={{ marginBottom: '6px' }}><Label>Role</Label></div>
+            <Segmented
+              options={[{ key: 'leader', label: 'Leader' }, { key: 'follower', label: 'Follower' }]}
+              value={role}
+              onChange={setRole}
+            />
             <div style={hint}>
               {role === 'leader'
                 ? 'This account places the real trades — others will copy it.'
@@ -157,7 +147,7 @@ export function AddAccountModal({
             />
             {isMainAccount && method === 'cloud' && (
               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-up)' }}>
-                ✓ This is your connected VELQUOR terminal — no password needed, we reuse it.
+                <Icon name="check" size={12} /> This is your connected VELQUOR terminal — no password needed, we reuse it.
               </span>
             )}
           </label>
@@ -166,17 +156,18 @@ export function AddAccountModal({
           {method === 'cloud' && !isMainAccount && (
             <>
               <div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', marginBottom: '6px' }}>BROKER SERVER</div>
+                <div style={{ marginBottom: '6px' }}><Label>Broker server</Label></div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
                   {BROKERS.flatMap(b => b.servers.map(s => (
                     <button
                       key={s.name} type="button"
                       onClick={() => setMt5Server(s.name)}
                       style={{
-                        fontSize: 'var(--text-sm)', padding: '5px 10px', borderRadius: 'var(--radius-xl)',
-                        background: mt5Server === s.name ? 'rgba(255,255,255,0.15)' : 'var(--s2)',
-                        border:     mt5Server === s.name ? '1px solid rgba(255,255,255,0.5)' : '1px solid var(--bd)',
-                        color:      mt5Server === s.name ? 'var(--ac)' : 'var(--t3)',
+                        fontFamily: 'var(--font-display)', fontSize: 'var(--text-sm)',
+                        padding: '5px 12px', borderRadius: '999px',
+                        background: mt5Server === s.name ? 'var(--color-ink-1)' : 'var(--color-surface-2)',
+                        border:     '1px solid ' + (mt5Server === s.name ? 'transparent' : 'var(--color-line-1)'),
+                        color:      mt5Server === s.name ? 'var(--color-void)' : 'var(--color-ink-3)',
                         cursor: 'pointer',
                       }}
                     >

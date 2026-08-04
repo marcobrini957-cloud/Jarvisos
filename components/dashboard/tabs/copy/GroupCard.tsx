@@ -7,7 +7,7 @@ import { AddAccountModal } from './AddAccountModal'
 import { HostAccountModal } from './HostAccountModal'
 import { SignalLog } from './SignalLog'
 import Icon from '@/components/ui/Icon'
-import { Button, IconButton } from '@/components/ui/vq'
+import { Button, IconButton, Label, Surface } from '@/components/ui/vq'
 
 export interface CloudInfo {
   hostedIds: string[]           // copy_accounts ids running in a cloud terminal
@@ -88,51 +88,52 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
 
   return (
     <>
-      <div style={{
-        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-card)',
-        overflow: 'hidden', marginBottom: '12px',
-      }}>
-        {/* Group header */}
-        <div style={{
-          padding: '16px 20px', display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', borderBottom: '1px solid var(--bd)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: 8, height: 8, borderRadius: '50%',
-              background: group.active ? 'var(--color-up)' : 'var(--color-ink-4)',
-                          }} />
-            <span style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: 'var(--t1)' }}>{group.name}</span>
+      {/* The group is a card like every other card. It used to draw its own —
+          --s1 on --bd, the opaque legacy composites — so on a lit background it
+          was the one black slab in the product while every other panel was a
+          translucent sheet. Surface also brings the heading size, the corner and
+          the rise-in for free. */}
+      <Surface
+        style={{ marginBottom: '12px' }}
+        title={
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
             <span style={{
-              fontSize: 'var(--text-xs)', padding: '2px 8px', borderRadius: 'var(--radius-xl)',
-              background: 'var(--s2)', color: 'var(--t3)', letterSpacing: '0.06em',
+              width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+              background: group.active ? 'var(--color-up)' : 'var(--color-ink-4)',
+            }} />
+            {group.name}
+            <span style={{
+              fontFamily: 'var(--font-display)', fontSize: 'var(--text-2xs)',
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+              padding: '3px 9px', borderRadius: '999px',
+              background: 'var(--color-surface-2)', color: 'var(--color-ink-3)',
             }}>
               {group.lot_mode === 'fixed'
                 ? `${group.lot_fixed} lots fixed`
                 : `${group.lot_multiplier}× lots`}
             </span>
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
+          </span>
+        }
+        action={
+          <>
             <Button size="sm" onClick={toggleActive} disabled={toggling}>
               {group.active ? 'Pause' : 'Resume'}
             </Button>
             <Button size="sm" variant="danger" onClick={deleteGroup}>
               Delete
             </Button>
-          </div>
-        </div>
-
+          </>
+        }
+      >
         {/* Accounts */}
-        <div style={{ padding: '16px 20px' }}>
+        <div style={{ padding: '4px 18px 0' }}>
 
           {/* Leader section */}
           <div style={{ marginBottom: '12px' }}>
             <div style={{
-              fontSize: 'var(--text-xs)', color: 'var(--t3)', letterSpacing: '0.08em',
-              marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '28px',
             }}>
-              <span>LEADER ACCOUNT</span>
+              <Label>Leader account</Label>
               {!leader && (
                 <Button size="sm" variant="ghost" onClick={() => setAddAccountRole('leader')}>
                   <Icon name="plus" size={12} /> Add leader
@@ -143,8 +144,8 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             {leader ? (
               <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '10px 14px', borderRadius: 'var(--radius-md)',
-                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)',
+                padding: '10px 14px', borderRadius: 'var(--radius-lg)',
+                background: 'var(--color-surface-2)', border: '1px solid var(--color-line-1)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {statusDot(leader.status, leader.last_seen_at)}
@@ -167,9 +168,9 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
               </div>
             ) : (
               <div style={{
-                padding: '12px 14px', borderRadius: 'var(--radius-md)', textAlign: 'center',
-                background: 'var(--s2)', border: '1px dashed var(--bd)',
-                fontSize: 'var(--text-base)', color: 'var(--t3)',
+                padding: '12px 14px', borderRadius: 'var(--radius-lg)', textAlign: 'center',
+                background: 'transparent', border: '1px dashed var(--color-line-2)',
+                fontSize: 'var(--text-base)', color: 'var(--color-ink-3)',
               }}>
                 No leader account yet — add one above
               </div>
@@ -179,10 +180,9 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
           {/* Follower section */}
           <div>
             <div style={{
-              fontSize: 'var(--text-xs)', color: 'var(--t3)', letterSpacing: '0.08em',
-              marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '28px',
             }}>
-              <span>FOLLOWER ACCOUNTS ({followers.length})</span>
+              <Label>Follower accounts ({followers.length})</Label>
               <Button size="sm" variant="ghost" onClick={() => setAddAccountRole('follower')}>
                 <Icon name="plus" size={12} /> Add follower
               </Button>
@@ -190,9 +190,9 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
 
             {followers.length === 0 ? (
               <div style={{
-                padding: '12px 14px', borderRadius: 'var(--radius-md)', textAlign: 'center',
-                background: 'var(--s2)', border: '1px dashed var(--bd)',
-                fontSize: 'var(--text-base)', color: 'var(--t3)',
+                padding: '12px 14px', borderRadius: 'var(--radius-lg)', textAlign: 'center',
+                background: 'transparent', border: '1px dashed var(--color-line-2)',
+                fontSize: 'var(--text-base)', color: 'var(--color-ink-3)',
               }}>
                 No follower accounts yet
               </div>
@@ -201,8 +201,8 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
                 {followers.map(follower => (
                   <div key={follower.id} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '10px 14px', borderRadius: 'var(--radius-md)',
-                    background: 'var(--s2)', border: '1px solid var(--bd)',
+                    padding: '10px 14px', borderRadius: 'var(--radius-lg)',
+                    background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       {statusDot(follower.status, follower.last_seen_at)}
@@ -236,7 +236,7 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             accounts, so collapsed by default to keep the card clean */}
         {(leader || followers.length > 0) && (
           <div style={{
-            margin: '0 20px 16px', padding: '12px 14px', borderRadius: 'var(--radius-md)',
+            margin: '12px 18px 0', padding: '12px 14px', borderRadius: 'var(--radius-lg)',
             background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
           }}>
             <button
@@ -272,17 +272,16 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
         )}
 
         {/* Activity log */}
-        <div style={{ borderTop: '1px solid var(--bd)' }}>
+        <div style={{ marginTop: '12px', borderTop: '1px solid var(--color-line-1)' }}>
           <button
             onClick={() => setShowLog(v => !v)}
             style={{
-              width: '100%', padding: '10px 20px',
+              width: '100%', padding: '11px 18px',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               background: 'transparent', border: 'none', cursor: 'pointer',
-              fontSize: 'var(--text-sm)', color: 'var(--t3)', fontWeight: 600, letterSpacing: '0.06em',
             }}
           >
-            <span>ACTIVITY LOG</span>
+            <Label>Activity log</Label>
             <span style={{
               fontSize: 'var(--text-xs)', color: 'var(--t3)',
               display: 'inline-block',
@@ -291,12 +290,12 @@ export function GroupCard({ group, cloud, onRefresh }: { group: CopyGroup; cloud
             }}><Icon name="chevronDown" size={12} /></span>
           </button>
           {showLog && (
-            <div style={{ padding: '0 20px 16px' }}>
+            <div style={{ padding: '0 18px 16px' }}>
               <SignalLog groupId={group.id} />
             </div>
           )}
         </div>
-      </div>
+      </Surface>
 
       {addAccountRole !== null && (
         <AddAccountModal

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { inputStyle, btnPrimary, btnSecondary } from './styles'
+import { Label, Segmented } from '@/components/ui/vq'
 
 // ── Create Group Modal ────────────────────────────────────────────────────────
 export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
@@ -41,37 +42,36 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
     }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
-        background: 'var(--s1)', border: '1px solid var(--bd)', borderRadius: 'var(--radius-xl)',
+        background: 'var(--s1)', border: '1px solid var(--color-line-1)', borderRadius: 'var(--radius-card)',
         padding: '28px', width: '100%', maxWidth: '400px',
         }}>
-        <div style={{ fontSize: 'var(--text-md)', fontWeight: 700, color: 'var(--t1)', marginBottom: '20px' }}>
-          New Copy Group
+        <div style={{
+          fontFamily: 'var(--font-display)', fontSize: 'clamp(16px, 1.25vw, 19px)',
+          letterSpacing: '-0.025em', color: 'var(--color-ink-1)', marginBottom: '20px',
+        }}>
+          New copy group
         </div>
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>GROUP NAME</span>
+            <Label>Group name</Label>
             <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
           </label>
 
           <div>
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)', marginBottom: '6px' }}>LOT SIZING</div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {([['mirror', '1:1 Mirror'], ['multiplier', 'Multiplier'], ['fixed', 'Fixed']] as const).map(([m, label]) => (
-                <button
-                  key={m} type="button" onClick={() => setSizing(m)}
-                  style={{
-                    flex: 1, padding: '9px 0', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-base)',
-                    fontWeight: sizing === m ? 700 : 400,
-                    background: sizing === m ? 'rgba(255,255,255,0.15)' : 'var(--s2)',
-                    border:     sizing === m ? '1px solid rgba(255,255,255,0.5)' : '1px solid var(--bd)',
-                    color:      sizing === m ? 'var(--ac)' : 'var(--t3)',
-                    cursor:     'pointer',
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            <div style={{ marginBottom: '6px' }}><Label>Lot sizing</Label></div>
+            {/* The same segmented control as every other choice in the product.
+                It was three drawn boxes whose selected state was a white 15%
+                fill with a 50% border — louder than the modal's own primary
+                action, and the fourth different way to show "this one". */}
+            <Segmented
+              options={[
+                { key: 'mirror',     label: '1:1 Mirror' },
+                { key: 'multiplier', label: 'Multiplier' },
+                { key: 'fixed',      label: 'Fixed' },
+              ]}
+              value={sizing}
+              onChange={setSizing}
+            />
           </div>
 
           {sizing === 'mirror' && (
@@ -81,14 +81,14 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
           )}
           {sizing === 'multiplier' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>LOT MULTIPLIER</span>
+              <Label>Lot multiplier</Label>
               <input value={lotMult} onChange={e => setLotMult(e.target.value)} type="number" step="0.01" min="0.01" style={inputStyle} />
               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)' }}>Follower lots = leader lots × {lotMult || '1.0'}</span>
             </label>
           )}
           {sizing === 'fixed' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>FIXED LOT SIZE</span>
+              <Label>Fixed lot size</Label>
               <input value={lotFixed} onChange={e => setLotFixed(e.target.value)} type="number" step="0.01" min="0.01" style={inputStyle} />
               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--t3)' }}>Follower always trades exactly {lotFixed || '0.01'} lots</span>
             </label>
@@ -96,7 +96,7 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
 
           {sizing !== 'mirror' && (
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--t3)' }}>MAX LOT CAP</span>
+              <Label>Max lot cap</Label>
               <input value={maxLot} onChange={e => setMaxLot(e.target.value)} type="number" step="0.1" min="0.01" style={inputStyle} />
             </label>
           )}
@@ -110,7 +110,7 @@ export function CreateGroupModal({ onClose, onCreated }: { onClose: () => void; 
           <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
             <button type="button" onClick={onClose} style={btnSecondary}>Cancel</button>
             <button type="submit" disabled={loading} style={btnPrimary}>
-              {loading ? 'Creating…' : 'Create Group'}
+              {loading ? 'Creating…' : 'Create group'}
             </button>
           </div>
         </form>

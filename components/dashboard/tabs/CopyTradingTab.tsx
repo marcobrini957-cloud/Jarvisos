@@ -50,7 +50,7 @@ export default function CopyTradingTab() {
 
   if (loading) {
     return (
-      <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t3)', fontSize: 'var(--text-base)' }}>
+      <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--color-ink-3)', fontSize: 'var(--text-base)' }}>
         Loading…
       </div>
     )
@@ -81,12 +81,12 @@ export default function CopyTradingTab() {
           {groups.length === 0 ? (
             <div style={{
               textAlign: 'center', padding: '48px 20px',
-              background: 'var(--s1)', border: '1px dashed var(--bd)', borderRadius: 'var(--radius-card)',
+              background: 'var(--color-surface-1)', border: '1px dashed var(--color-line-2)', borderRadius: 'var(--radius-card)',
             }}>
-              <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--t1)', marginBottom: '8px' }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 'var(--text-lg)', color: 'var(--color-ink-1)', marginBottom: '8px' }}>
                 No copy groups yet
               </div>
-              <div style={{ fontSize: 'var(--text-base)', color: 'var(--t3)', marginBottom: '20px' }}>
+              <div style={{ fontSize: 'var(--text-base)', color: 'var(--color-ink-3)', marginBottom: '20px' }}>
                 Create your first group to start mirroring trades
               </div>
               <Button variant="primary" onClick={() => setShowCreateGroup(true)}>
@@ -104,15 +104,15 @@ export default function CopyTradingTab() {
       {/* MT5 URL whitelist reminder — only relevant for own-MetaTrader (EA) accounts */}
       <div style={{
         marginTop: '12px', padding: '10px 16px', borderRadius: 'var(--radius-card)',
-        background: 'var(--s1)', border: '1px solid var(--bd)',
-        fontSize: 'var(--text-sm)', color: 'var(--t3)', lineHeight: 1.6, opacity: 0.85,
+        background: 'var(--color-surface-1)', border: '1px solid var(--color-line-1)',
+        fontSize: 'var(--text-sm)', color: 'var(--color-ink-3)', lineHeight: 1.6,
       }}>
         Running the EA on your own MetaTrader? Add{' '}
-        <code style={{ color: 'var(--color-ink-1)', background: 'var(--s2)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
+        <code style={{ color: 'var(--color-ink-1)', background: 'var(--color-surface-2)', padding: '1px 6px', borderRadius: 'var(--radius-sm)' }}>
           https://bridge.velquor.app
         </code>
         {' '}under <em>Tools → Options → Expert Advisors → Allow WebRequest</em>. Cloud-hosted accounts need no setup.
-        {' '}<Link href="/connect" style={{ color: 'var(--ac)', fontWeight: 600 }}>Step-by-step guide →</Link>
+        {' '}<Link href="/connect" style={{ color: 'var(--color-ink-1)' }}>Step-by-step guide →</Link>
       </div>
 
       {showCreateGroup && (
